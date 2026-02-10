@@ -1,0 +1,28 @@
+Interview Scheduled - {{jobTitle}} at {{companyName}}
+
+Hi {{candidateName}},
+
+Great news! We're excited to move forward with your application and would like to schedule an interview with you.
+
+POSITION: {{jobTitle}}
+COMPANY: {{companyName}}
+INTERVIEW DATE & TIME: {{interviewDate}}
+
+JOIN INTERVIEW: {{meetingLink}}
+
+PREPARATION TIPS:
+- Please arrive 5 minutes early to test your connection
+- Have your resume and any relevant documents ready
+- Ensure you have a quiet, well-lit space for the video call
+- Test your microphone and camera beforehand
+
+If you have any questions or need to reschedule, please reply to this email as soon as possible.
+
+We look forward to speaking with you!
+
+Best regards,
+{{companyName}} Team
+
+---
+This is an automated message from HireBit.
+

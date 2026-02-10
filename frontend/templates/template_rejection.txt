@@ -1,0 +1,28 @@
+📋 APPLICATION UPDATE - {{job_title}}
+
+Dear {{candidate_name}},
+
+Thank you for your interest in the {{job_title}} position at {{company_name}} and for taking the time to apply through our platform.
+
+After careful review of all applications, we have decided to move forward with other candidates whose qualifications more closely align with our current requirements for this role.
+
+While this application was not successful, we encourage you to:
+- Keep an eye on our platform for future opportunities
+- Update your profile with any new skills or experiences
+- Consider similar positions that may be a better fit
+
+We appreciate the effort you put into your application and wish you the best in your job search.
+
+If you have any feedback about your experience with OptioHire, we'd love to hear it.
+
+View all your applications: {{application_link}}
+
+Best regards,
+The {{company_name}} Recruitment Team
+Powered by OptioHire
+
+---
+OptioHire - AI-Powered Recruitment Solutions
+© 2025 OptioHire. All rights reserved.
+
+This is an automated message. Please do not reply to this email.

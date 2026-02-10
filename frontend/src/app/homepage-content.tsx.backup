@@ -1,0 +1,273 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { ArrowRight, Clock, Users, Target, Shield, CheckCircle, TrendingUp, Zap } from 'lucide-react'
+
+export default function HomePageContent() {
+  const router = useRouter()
+
+  return (
+    <div>
+      {/* What OptioHire Changes - Outcomes Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              What OptioHire Changes
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Real outcomes that transform how teams hire, from the moment candidates apply to the day they start.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {[
+              {
+                icon: Clock,
+                title: "3x Faster Hiring",
+                description: "Reduce time-to-hire from weeks to days with intelligent automation and smart candidate matching.",
+                metric: "75% less time"
+              },
+              {
+                icon: Target,
+                title: "40% Better Hires",
+                description: "Improve hire quality with data-driven insights that predict long-term success and cultural fit.",
+                metric: "Higher retention"
+              },
+              {
+                icon: TrendingUp,
+                title: "60% Cost Savings",
+                description: "Cut recruitment costs dramatically while maintaining quality standards and compliance.",
+                metric: "Lower expenses"
+              }
+            ].map((outcome, index) => (
+              <motion.div
+                key={outcome.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.2, duration: 0.6 }}
+                className="bg-gray-50 rounded-xl p-8 text-center hover:shadow-lg transition-shadow duration-300"
+              >
+                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <outcome.icon className="w-8 h-8 text-teal-600" />
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">{outcome.title}</h3>
+                <p className="text-gray-600 mb-4">{outcome.description}</p>
+                <div className="text-teal-600 font-semibold">{outcome.metric}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Preview - 3 Steps Short */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+              A simple 3-step process that brings clarity and confidence to every hiring decision.
+            </p>
+            <button
+              onClick={() => router.push('/how-it-works')}
+              className="inline-flex items-center px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors duration-200"
+            >
+              See Full Process
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </button>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "1",
+                title: "Smart Screening",
+                description: "AI analyzes resumes and applications to identify candidates with the specific skills your role requires."
+              },
+              {
+                step: "2",
+                title: "Fair Evaluation",
+                description: "Each candidate receives an objective assessment, reducing bias and ensuring consistent evaluation criteria."
+              },
+              {
+                step: "3",
+                title: "Confident Decisions",
+                description: "Teams receive clear recommendations with detailed insights, making confident hiring choices."
+              }
+            ].map((step, index) => (
+              <motion.div
+                key={step.step}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.2, duration: 0.6 }}
+                className="text-center"
+              >
+                <div className="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white">
+                  {step.step}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">{step.title}</h3>
+                <p className="text-gray-600">{step.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases Preview */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              Built for Every Hiring Scenario
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+              Whether you're a startup hiring fast or an enterprise managing complex recruitment,
+              OptioHire adapts to your needs.
+            </p>
+            <button
+              onClick={() => router.push('/use-cases')}
+              className="inline-flex items-center px-6 py-3 border-2 border-teal-600 text-teal-600 font-semibold rounded-lg hover:bg-teal-600 hover:text-white transition-colors duration-200"
+            >
+              Explore Use Cases
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </button>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { name: "Startups", description: "Hiring fast in competitive markets" },
+              { name: "Growing SMEs", description: "Scaling teams efficiently" },
+              { name: "HR Teams", description: "Managing high-volume recruitment" },
+              { name: "Specialized Roles", description: "Finding technical experts" }
+            ].map((useCase, index) => (
+              <motion.div
+                key={useCase.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                className="bg-gray-50 rounded-lg p-6 text-center hover:shadow-md transition-shadow duration-300"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{useCase.name}</h3>
+                <p className="text-gray-600 text-sm">{useCase.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust & Security Preview */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              Trust & Security First
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+              Your data and your candidates' privacy are protected with enterprise-grade security
+              and responsible AI practices.
+            </p>
+            <button
+              onClick={() => router.push('/trust-security')}
+              className="inline-flex items-center px-6 py-3 border-2 border-gray-900 text-gray-900 font-semibold rounded-lg hover:bg-gray-900 hover:text-white transition-colors duration-200"
+            >
+              Learn About Security
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </button>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: Shield,
+                title: "Data Protection",
+                description: "GDPR compliant with end-to-end encryption for all sensitive information."
+              },
+              {
+                icon: Users,
+                title: "Bias Reduction",
+                description: "Built-in algorithms that minimize unconscious bias in hiring decisions."
+              },
+              {
+                icon: CheckCircle,
+                title: "Transparent AI",
+                description: "Human oversight with clear explanations of how AI recommendations are made."
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.2, duration: 0.6 }}
+                className="text-center"
+              >
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                  <feature.icon className="w-8 h-8 text-teal-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="py-20 px-4 bg-teal-600">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+              Ready to Transform Your Hiring?
+            </h2>
+            <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
+              Join hundreds of teams who've discovered that better hiring isn't about having more data — it's about having the right insights.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => router.push('/auth/signup')}
+                className="px-8 py-4 bg-white text-teal-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 text-lg"
+              >
+                Request a Demo
+              </button>
+              <button
+                onClick={() => router.push('/contact')}
+                className="px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors duration-200 text-lg"
+              >
+                Contact Sales
+              </button>
+            </div>
+            <p className="text-teal-100 mt-6 text-sm">
+              Free consultation • No commitment required • Start transforming your hiring today
+            </p>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  )
+}

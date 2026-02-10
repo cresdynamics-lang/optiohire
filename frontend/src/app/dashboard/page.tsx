@@ -1,0 +1,113 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/use-auth'
+import dynamic from 'next/dynamic'
+
+// Dynamically import the dashboard layout to prevent SSR issues
+const OptimizedDashboardLayout = dynamic(
+  () => {
+    return import('@/components/dashboard/optimized-dashboard-layout')
+      .then((mod) => {
+        if (!mod || !mod.OptimizedDashboardLayout) {
+          throw new Error('OptimizedDashboardLayout component not found')
+        }
+        return { default: mod.OptimizedDashboardLayout }
+      })
+      .catch((err) => {
+        console.error('Failed to load OptimizedDashboardLayout:', err)
+        // Return a fallback component
+        return {
+          default: function OptimizedDashboardLayoutFallback() {
+            return (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    Failed to load dashboard
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    Please refresh the page or contact support if the issue persists.
+                  </p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-[#2D2DDD] text-white rounded-lg hover:bg-[#2D2DDD]"
+                  >
+                    Refresh Page
+                  </button>
+                </div>
+              </div>
+            )
+          }
+        }
+      })
+  },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+)
+
+export default function DashboardPage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    // Don't redirect while loading - give auth time to initialize
+    if (loading) return
+    
+    // Redirect admin to admin dashboard
+    if (user && user.role === 'admin') {
+      router.push('/admin')
+      return
+    }
+    
+    // Only redirect to sign-in if there's no user AND no token
+    // This prevents redirecting when API call is still in progress or failed
+    if (!user) {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        // No token and no user - definitely need to sign in
+        router.push('/auth/signin')
+        return
+      }
+      // If token exists but no user, wait a bit more for auth to complete
+      // The auth hook will set user from token eventually
+      // Give it a moment before redirecting
+      const timeout = setTimeout(() => {
+        const stillNoUser = !user
+        const stillHasToken = localStorage.getItem('token')
+        if (stillNoUser && !stillHasToken) {
+          router.push('/auth/signin')
+        }
+      }, 2000) // Wait 2 seconds for auth to complete
+      
+      return () => clearTimeout(timeout)
+    }
+  }, [user, loading, router])
+
+  // Show loading while checking
+  if (loading || (user && user.role === 'admin')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // Show loading while redirecting (brief moment)
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // Render the dashboard layout - ErrorBoundary in layout.tsx will catch any errors
+  return <OptimizedDashboardLayout />
+}

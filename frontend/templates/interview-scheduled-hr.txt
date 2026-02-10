@@ -1,0 +1,26 @@
+Interview Scheduled - Confirmation
+
+Hi {{hrName}},
+
+An interview has been successfully scheduled. Details below:
+
+JOB POSITION: {{jobTitle}}
+COMPANY: {{companyName}}
+INTERVIEW DATE & TIME: {{interviewDate}}
+MEETING LINK: {{meetingLink}}
+
+CANDIDATE INFORMATION:
+Name: {{candidateName}}
+Email: {{candidateEmail}}
+AI Score: {{candidateScore}}
+
+Please ensure you're available at the scheduled time and have the meeting link ready.
+
+This interview was scheduled through HireBit.
+
+Best regards,
+HireBit Team
+
+---
+This is an automated confirmation message.
+

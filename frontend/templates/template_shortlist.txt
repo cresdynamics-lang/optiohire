@@ -1,0 +1,36 @@
+🎉 CONGRATULATIONS! You've Been Shortlisted for {{job_title}}
+
+Dear {{candidate_name}},
+
+Great news! Your application for the {{job_title}} position at {{company_name}} has been shortlisted!
+
+WHAT'S NEXT?
+🚀 You're now in the final round of consideration. Here's what to expect:
+📅 Interview: {{interview_date}}
+📍 Format: {{interview_type}}
+⏰ Duration: Approximately {{interview_duration}}
+
+INTERVIEW PREPARATION TIPS:
+💡 Research {{company_name}} and our recent projects
+💡 Prepare examples of your relevant experience
+💡 Think about why you're interested in this role
+💡 Test your technology if it's a virtual interview
+
+Your strong qualifications and fit for this role stood out among many excellent candidates. We're excited about the possibility of working together!
+
+Join Interview: {{interview_link}}
+View Application: {{application_link}}
+
+If you have any questions or need to reschedule, please don't hesitate to contact us.
+
+We look forward to speaking with you soon!
+
+Best regards,
+The {{company_name}} Recruitment Team
+Powered by OptioHire
+
+---
+OptioHire - AI-Powered Recruitment Solutions
+© 2025 OptioHire. All rights reserved.
+
+This email was sent to {{candidate_email}}. If you have any questions, please reply to this email.

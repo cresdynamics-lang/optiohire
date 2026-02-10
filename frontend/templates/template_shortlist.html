@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Congratulations - You've Been Shortlisted!</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+    .celebration { text-align: center; margin: 20px 0; }
+    .next-steps { background: #e8f5e8; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #4CAF50; }
+    .button { display: inline-block; background: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+    .info-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎉 Congratulations!</h1>
+      <p>You've Been Shortlisted for {{job_title}}</p>
+    </div>
+
+    <div class="content">
+      <div class="celebration">
+        <h2>Dear {{candidate_name}},</h2>
+        <p><strong>Great news!</strong> Your application for the <strong>{{job_title}}</strong> position at <strong>{{company_name}}</strong> has been shortlisted!</p>
+      </div>
+
+      <div class="next-steps">
+        <h3>🚀 What's Next?</h3>
+        <p>You're now in the final round of consideration. Here's what to expect:</p>
+        <ul>
+          <li>📅 <strong>Interview:</strong> {{interview_date}}</li>
+          <li>📍 <strong>Format:</strong> {{interview_type}}</li>
+          <li>⏰ <strong>Duration:</strong> Approximately {{interview_duration}}</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <h4>💡 Interview Preparation Tips:</h4>
+        <ul>
+          <li>Research {{company_name}} and our recent projects</li>
+          <li>Prepare examples of your relevant experience</li>
+          <li>Think about why you're interested in this role</li>
+          <li>Test your technology if it's a virtual interview</li>
+        </ul>
+      </div>
+
+      <p>Your strong qualifications and fit for this role stood out among many excellent candidates. We're excited about the possibility of working together!</p>
+
+      <div style="text-align: center;">
+        <a href="{{interview_link}}" class="button">📅 Join Interview</a>
+        <br>
+        <a href="{{application_link}}" class="button" style="background: #3B82F6;">📊 View Application</a>
+      </div>
+
+      <p>If you have any questions or need to reschedule, please don't hesitate to contact us.</p>
+
+      <p>We look forward to speaking with you soon!</p>
+
+      <p>Best regards,<br>
+      <strong>The {{company_name}} Recruitment Team</strong><br>
+      <em>Powered by OptioHire</em></p>
+    </div>
+
+    <div class="footer">
+      <p>OptioHire - AI-Powered Recruitment Solutions<br>
+      © 2025 OptioHire. All rights reserved.</p>
+      <p>This email was sent to {{candidate_email}}. If you have any questions, please reply to this email.</p>
+    </div>
+  </div>
+</body>
+</html>
