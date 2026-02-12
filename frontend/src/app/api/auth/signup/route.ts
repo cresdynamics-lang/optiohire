@@ -224,6 +224,20 @@ export async function POST(request: NextRequest) {
       // Commit transaction
       await client.query('COMMIT')
 
+      // Send email verification code (backend sends email with code; user confirms on /auth/verify-email)
+      let needsEmailVerification = false
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+        const res = await fetch(`${backendUrl}/auth/send-signup-verification-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.toLowerCase(), name: name.trim() })
+        })
+        if (res.ok) needsEmailVerification = true
+      } catch (e) {
+        console.error('Could not send verification email:', e)
+      }
+
       // Generate JWT token
       const token = jwt.sign(
         { sub: userId, email: email.toLowerCase() },
@@ -234,6 +248,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           token,
+          needsEmailVerification,
           user: {
             user_id: userId,
             id: userId,

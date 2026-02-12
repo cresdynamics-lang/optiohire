@@ -41,22 +41,24 @@ const config: Config = {
           800: '#007480',
           900: '#005A64',
         },
-        background: {
-          DEFAULT: '#FFFFFF',
-          dark: '#000000',
-        },
+        background: 'rgb(var(--background))',
         foreground: {
-          DEFAULT: '#000000',
+          DEFAULT: 'rgb(var(--foreground))',
           dark: '#FFFFFF',
         },
         border: {
-          DEFAULT: '#E5E7EB',
+          DEFAULT: 'rgb(var(--border))',
           dark: '#374151',
         },
         muted: {
-          DEFAULT: '#F9FAFB',
+          DEFAULT: 'rgb(var(--muted))',
           dark: '#1F2937',
         },
+        'muted-foreground': 'rgb(var(--muted-foreground))',
+        popover: 'rgb(var(--popover))',
+        'popover-foreground': 'rgb(var(--popover-foreground))',
+        accent: 'rgb(var(--accent))',
+        'accent-foreground': 'rgb(var(--accent-foreground))',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

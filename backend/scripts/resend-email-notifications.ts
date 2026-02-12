@@ -54,8 +54,7 @@ async function resendEmailNotifications() {
             jobTitle: app.job_title,
             companyName: app.company_name,
             companyEmail: app.company_email,
-            companyDomain: app.company_domain,
-            interviewLink: app.meeting_link
+            companyDomain: app.company_domain
           })
           logger.info(`✅ Shortlist email sent successfully to ${app.email}`)
           successCount++

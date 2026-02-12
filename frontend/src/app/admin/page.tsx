@@ -66,6 +66,11 @@ export default function AdminDashboard() {
   const [adminSession, setAdminSession] = useState<string | null>(null)
   const [adminEmail, setAdminEmail] = useState<string | null>(null)
   const [adminName, setAdminName] = useState<string | null>(null)
+  const [isSecure, setIsSecure] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    setIsSecure(typeof window !== 'undefined' && window.location.protocol === 'https:')
+  }, [])
 
   // Use admin session if available, otherwise use regular user
   const currentUser = adminSession ? {
@@ -86,7 +91,7 @@ export default function AdminDashboard() {
     setAdminName(name)
   }, [])
 
-  const isSeniorAdmin = currentUser?.email === 'hirebitapplications@gmail.com'
+  const isSeniorAdmin = currentUser?.email === 'nelsonochieng516@gmail.com'
 
   useEffect(() => {
     // Check for admin session directly
@@ -346,6 +351,15 @@ export default function AdminDashboard() {
                   Settings
                 </Button>
               </Link>
+              <Link href="/admin/logins">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2"
+                >
+                  <Key className="w-4 h-4" />
+                  Login Activity
+                </Button>
+              </Link>
               <Link href="/admin/activity">
                 <Button
                   variant="ghost"
@@ -353,6 +367,15 @@ export default function AdminDashboard() {
                 >
                   <BarChart3 className="w-4 h-4" />
                   Activity
+                </Button>
+              </Link>
+              <Link href="/admin/help">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2"
+                >
+                  <Shield className="w-4 h-4" />
+                  Help
                 </Button>
               </Link>
               <Button
@@ -394,6 +417,12 @@ export default function AdminDashboard() {
                       Your administrator account information
                     </CardDescription>
                   </div>
+                  {isSecure !== null && (
+                    <div className={`ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${isSecure ? 'bg-green-500/20 text-green-700 dark:text-green-300 border border-green-500/40' : 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40'}`}>
+                      <Shield className="w-3.5 h-3.5" />
+                      {isSecure ? 'SSL' : 'HTTP'}
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>

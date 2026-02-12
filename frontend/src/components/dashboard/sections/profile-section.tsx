@@ -390,22 +390,33 @@ export function ProfileSection() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                     <div className="flex items-center gap-2 mb-2">
                       <Mail className="w-4 h-4 text-white/80" />
                       <span className="text-xs text-white/70 uppercase tracking-wide">Email</span>
                     </div>
-                    <p className="text-white font-medium text-sm">{user?.email || 'N/A'}</p>
+                    <p className="text-white font-medium text-sm break-all">{user?.email || 'N/A'}</p>
                   </div>
                   
-                  {user?.companyName && (
+                  {(user?.companyName || company?.company_name) && (
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                       <div className="flex items-center gap-2 mb-2">
                         <Building2 className="w-4 h-4 text-white/80" />
                         <span className="text-xs text-white/70 uppercase tracking-wide">Company</span>
                       </div>
-                      <p className="text-white font-medium text-sm">{user.companyName}</p>
+                      <p className="text-white font-medium text-sm">{user?.companyName || company?.company_name}</p>
+                      <p className="text-xs text-white/70 mt-1">As entered during signup</p>
+                    </div>
+                  )}
+                  
+                  {user?.companyRole && (
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Key className="w-4 h-4 text-white/80" />
+                        <span className="text-xs text-white/70 uppercase tracking-wide">Role in company</span>
+                      </div>
+                      <p className="text-white font-medium text-sm capitalize">{user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
                     </div>
                   )}
                   
@@ -601,6 +612,22 @@ export function ProfileSection() {
                 </div>
 
                 <div className="space-y-4">
+                  {/* Email for applications – read-only summary */}
+                  <div className="flex items-center gap-2 p-3 bg-[#2D2DDD]/10 dark:bg-[#2D2DDD]/20 border border-[#2D2DDD]/30 dark:border-[#2D2DDD]/40 rounded-lg mb-2">
+                    <Mail className="w-5 h-5 text-[#2D2DDD] dark:text-[#2D2DDD] flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        Email for applications & candidate contact
+                      </p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 break-all">
+                        {formData.hr_email || formData.company_email || '—'}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        Applications and candidate replies use this address. It is shown in shortlist and rejection emails as the company contact.
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="company_name" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
                       <Building2 className="w-4 h-4" />
@@ -614,6 +641,7 @@ export function ProfileSection() {
                       placeholder="Enter company name"
                       className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                     />
+                    <p className="text-xs text-gray-500 dark:text-gray-500">As entered during account creation</p>
                     {user?.companyName && formData.company_name === user.companyName && (
                       <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" />
@@ -636,6 +664,7 @@ export function ProfileSection() {
                         className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                       />
                     </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">Used as sender for candidate emails (shortlist, rejection)</p>
                     {user?.companyEmail && formData.company_email === user.companyEmail && (
                       <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" />
@@ -646,7 +675,7 @@ export function ProfileSection() {
                   <div className="space-y-2">
                     <Label htmlFor="hr_email" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
                       <Mail className="w-4 h-4" />
-                      HR Email
+                      HR Email (applications & candidate contact)
                     </Label>
                     <div className="relative">
                       <Input
@@ -658,6 +687,7 @@ export function ProfileSection() {
                         className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                       />
                     </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">Contact shown to candidates; primary email for applications to flow into</p>
                     {user?.hrEmail && formData.hr_email === user.hrEmail && (
                       <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" />

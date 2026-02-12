@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { logger } from '../utils/logger.js'
+import { groqService } from '../services/ai/groqService.js'
 
 export interface ScoringResult {
   score: number // 0-100
@@ -27,9 +28,17 @@ export interface ScoringInput {
 export class AIScoringEngine {
   private geminiClient: GoogleGenerativeAI | null = null
   private useGemini: boolean = false
+  private useGroq: boolean = false
 
   constructor() {
-    // Initialize Gemini
+    const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase()
+
+    if (provider === 'groq' && groqService.isAvailable()) {
+      this.useGroq = true
+      logger.info('Groq API initialized successfully for AI scoring')
+      return
+    }
+
     const geminiKey = this.getGeminiApiKey()
     if (geminiKey) {
       this.geminiClient = new GoogleGenerativeAI(geminiKey)
@@ -37,7 +46,7 @@ export class AIScoringEngine {
       logger.info('Gemini API initialized successfully for AI scoring')
     } else {
       this.useGemini = false
-      logger.warn('No Gemini API key found, will use fallback rule-based scoring')
+      logger.warn('No AI API key found (Groq or Gemini), will use fallback rule-based scoring')
     }
   }
 
@@ -138,17 +147,45 @@ Remember: You are evaluating candidates for ${company.company_name || 'this comp
    * Output: { score: 0-100, status: "SHORTLIST" | "FLAGGED" | "REJECTED", reasoning: string }
    */
   async scoreCandidate(input: ScoringInput): Promise<ScoringResult> {
-    const geminiModelName = process.env.SCORING_MODEL || 'gemini-2.0-flash'
+    const modelName = process.env.SCORING_MODEL || process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
+
+    // Use Groq for scoring when AI_PROVIDER=groq
+    if (this.useGroq) {
+      try {
+        logger.info(`Using Groq model ${modelName} for scoring`)
+        const prompt = this.buildScoringPrompt(input)
+        const systemInstruction = this.buildSystemInstruction(input)
+        const parsed = await groqService.generateJSON<{ score: number; status: string; reasoning: string }>(
+          prompt,
+          modelName,
+          { systemPrompt: systemInstruction, apiKey: 'primary' }
+        )
+        const score = Math.max(0, Math.min(100, Math.round(parsed.score)))
+        let status: 'SHORTLIST' | 'FLAGGED' | 'REJECTED' = 'REJECTED'
+        if (score >= 80) status = 'SHORTLIST'
+        else if (score >= 50) status = 'FLAGGED'
+        else status = 'REJECTED'
+        logger.info(`Scoring successful with Groq ${modelName}, score: ${score}, status: ${status}`)
+        return {
+          score,
+          status,
+          reasoning: parsed.reasoning || 'No reasoning provided'
+        }
+      } catch (error: any) {
+        logger.error(`Groq scoring failed: ${error?.message || String(error)}, falling back to rule-based scoring`)
+        return this.fallbackScoring(input)
+      }
+    }
 
     // Use Gemini for scoring
     if (this.useGemini && this.geminiClient) {
       try {
-        logger.info(`Using Gemini model ${geminiModelName} for scoring`)
+        logger.info(`Using Gemini model ${modelName} for scoring`)
         const prompt = this.buildScoringPrompt(input)
         const systemInstruction = this.buildSystemInstruction(input)
         
         const model = this.geminiClient.getGenerativeModel({ 
-          model: geminiModelName,
+          model: modelName,
           systemInstruction: systemInstruction
         })
         
@@ -175,7 +212,7 @@ Remember: You are evaluating candidates for ${company.company_name || 'this comp
         else if (score >= 50) status = 'FLAGGED'
         else status = 'REJECTED'
 
-        logger.info(`Scoring successful with Gemini ${geminiModelName}, score: ${score}, status: ${status}`)
+        logger.info(`Scoring successful with Gemini ${modelName}, score: ${score}, status: ${status}`)
         return {
           score,
           status,

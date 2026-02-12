@@ -14,9 +14,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     <NextThemesProvider 
       attribute="class" 
       defaultTheme="dark"
-      enableSystem={true}
+      enableSystem={false}
       disableTransitionOnChange={true}
       storageKey="hr-recruitment-theme"
+      enableColorScheme={false}
     >
       {children}
     </NextThemesProvider>

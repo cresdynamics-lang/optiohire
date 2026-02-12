@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Shield, ShieldAlert } from 'lucide-react'
 
 const ADMIN_USERS = [
-  { email: 'manage@optiohire.com', name: 'Admin Manager' }
+  { email: 'admin@optiohire.com', name: 'Admin Manager' }
 ]
 
-const ADMIN_PASSWORD = 'Admin@2026'
+const ADMIN_PASSWORD = 'OptioHire@Admin'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -17,6 +17,11 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isSecure, setIsSecure] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    setIsSecure(typeof window !== 'undefined' && window.location.protocol === 'https:')
+  }, [])
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -79,6 +84,12 @@ export default function AdminLoginPage() {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Admin Login</h1>
             <p className="text-gray-400">Instant access for admin users</p>
+            {isSecure !== null && (
+              <div className={`mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${isSecure ? 'bg-green-500/20 text-green-300 border border-green-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
+                {isSecure ? <Shield className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                {isSecure ? 'Secure connection (SSL)' : 'Connection not secure (use HTTPS in production)'}
+              </div>
+            )}
           </div>
 
           {error && (
@@ -97,7 +108,7 @@ export default function AdminLoginPage() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="manage@optiohire.com"
+                placeholder="admin@optiohire.com"
                 className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-400"
                 required
                 disabled={isLoading}

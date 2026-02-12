@@ -16,7 +16,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     // In production, this should be disabled or require a secure token
     const adminEmail = req.headers['x-admin-email'] as string
     const adminToken = req.headers['x-admin-token'] as string
-    const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['manage@optiohire.com']
+    const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['admin@optiohire.com']
     const ADMIN_SECRET_TOKEN = process.env.ADMIN_SECRET_TOKEN || null
     
     // Only allow admin bypass if:

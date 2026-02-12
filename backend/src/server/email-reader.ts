@@ -920,8 +920,8 @@ export class EmailReader {
               jobTitle: job.job_title,
               companyName: companyData?.company_name || company.company_name,
               companyEmail: companyData?.company_email || company.company_email,
-              companyDomain: companyData?.company_domain || company.company_domain,
-              interviewLink: job.meeting_link
+              companyDomain: companyData?.company_domain || company.company_domain
+              // No interview link/date/time: HR sends those when they use the Schedule button
             })
             logger.info(`✅ Shortlist email sent successfully to ${application.email}`)
           } else if (scoringResult.status === 'REJECTED') {

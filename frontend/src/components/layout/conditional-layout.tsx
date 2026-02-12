@@ -1,7 +1,6 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
 import { Navbar } from '@/components/navigation/navbar'
 import { Footer } from '@/components/footer/footer'
 
@@ -24,11 +23,11 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
     return <>{children}</>
   }
 
-  // Show navbar and footer for all other pages
+  // Show navbar and footer for all other pages (pt-20 gives room for fixed navbar)
   return (
     <>
       <Navbar />
-      <main className="pt-0">{children}</main>
+      <main className="pt-20 min-h-[60vh]">{children}</main>
       <Footer />
     </>
   )

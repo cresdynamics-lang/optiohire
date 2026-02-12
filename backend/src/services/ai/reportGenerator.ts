@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { logger } from '../../utils/logger.js'
+import { groqService } from './groqService.js'
 
 export interface ApplicantData {
   id: string
@@ -115,6 +116,28 @@ Generate a JSON response with this exact structure:
 }
 
 Return ONLY valid JSON, no markdown formatting.`
+
+  const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase()
+
+  // Use Groq when AI_PROVIDER=groq
+  if (provider === 'groq' && groqService.isAvailable()) {
+    try {
+      const groqModel = process.env.REPORT_AI_MODEL || process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
+      logger.info(`Using Groq model: ${groqModel} for report generation`)
+      const parsed = await groqService.generateJSON<ReportAnalysis>(prompt, groqModel, {
+        systemPrompt: 'You are an expert HR analyst. Always return valid JSON only, no markdown or code blocks.',
+        apiKey: 'primary'
+      })
+      if (parsed?.top3Candidates && parsed.top3Candidates.length > 3) {
+        parsed.top3Candidates = parsed.top3Candidates.slice(0, 3)
+      }
+      logger.info('Groq report generation successful')
+      return parsed
+    } catch (error: any) {
+      logger.error(`Groq report generation failed: ${error.message}, using fallback`)
+      return generateBasicAnalysis(job, applicants)
+    }
+  }
 
   // Use Gemini for report generation
   if (geminiKey) {

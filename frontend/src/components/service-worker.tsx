@@ -4,7 +4,20 @@ import { useEffect } from 'react'
 
 export function ServiceWorker() {
   useEffect(() => {
-    // Only register service worker in production to avoid dev refresh issues
+    // Disable service worker completely to prevent any auto-refresh behavior
+    // Unregister any existing service workers
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister().then(() => {
+            console.log('Service Worker unregistered to prevent auto-refresh')
+          })
+        })
+      })
+    }
+    
+    // Original service worker registration disabled
+    /* Only register service worker in production to avoid dev refresh issues
     if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
@@ -40,6 +53,7 @@ export function ServiceWorker() {
         })
       }
     }
+    */
   }, [])
 
   return null

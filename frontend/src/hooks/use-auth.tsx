@@ -21,7 +21,7 @@ interface AuthUser {
 interface AuthContextType {
   user: null | AuthUser
   loading: boolean
-  signUp: (name: string, email: string, password: string, company_role: string, organization_name: string, company_email: string, hiring_manager_email: string) => Promise<{ error: null | { message: string } }>
+  signUp: (name: string, email: string, password: string, company_role: string, organization_name: string, company_email: string, hiring_manager_email: string) => Promise<{ error: null | { message: string }; needsEmailVerification?: boolean; email?: string }>
   signIn: (email: string, password: string) => Promise<{ error: null | { message: string } }>
   signOut: () => Promise<void>
 }
@@ -210,14 +210,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (data?.token) {
         localStorage.setItem('token', data.token)
-        setUser({ 
+        setUser({
           name: data?.user?.name || name,
           email: email.toLowerCase(),
-          id: data?.user?.id || data?.user?.user_id, // Support both formats
+          id: data?.user?.id || data?.user?.user_id,
           created_at: data?.user?.created_at,
           role: data?.user?.role,
           companyRole: data?.user?.company_role || company_role,
-          hasCompany: data?.company ? true : (data?.user?.hasCompany ?? true), // Signup creates company, so should be true
+          hasCompany: data?.company ? true : (data?.user?.hasCompany ?? true),
           companyId: data?.company?.company_id || data?.user?.companyId || null,
           companyName: data?.company?.company_name || data?.user?.companyName || organization_name,
           companyEmail: data?.company?.company_email || data?.user?.companyEmail || company_email,
@@ -225,7 +225,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           hiringManagerEmail: data?.company?.hiring_manager_email || data?.user?.hiringManagerEmail || hiring_manager_email
         })
       }
-      return { error: null }
+      return {
+        error: null,
+        needsEmailVerification: data?.needsEmailVerification === true,
+        email: data?.user?.email || email?.toLowerCase()
+      }
     } catch (err) {
       // Network error or other fetch errors
       const errorMessage = err instanceof Error ? err.message : 'Network error'

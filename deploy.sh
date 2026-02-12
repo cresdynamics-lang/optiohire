@@ -96,7 +96,7 @@ SMTP_USER=nelsonochieng516@gmail.com
 SMTP_PASS=mfbt hngy awnu guou
 
 MAIL_HOST=smtp.gmail.com
-MAIL_USER=hirebitapplications@gmail.com
+MAIL_USER=nelsonochieng516@gmail.com
 MAIL_PASS=mfbt hngy awnu guou
 MAIL_PORT=587
 

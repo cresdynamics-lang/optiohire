@@ -386,7 +386,7 @@ export async function updateFeatureFlag(req: AuthRequest, res: Response) {
 
 export async function getActivityLogs(req: Request, res: Response) {
   try {
-    const { page = '1', limit = '50', userId, actionType, startDate, endDate } = req.query
+    const { page = '1', limit = '50', userId, actionType, startDate, endDate, search } = req.query
     const offset = (Number(page) - 1) * Number(limit)
 
     let whereClause = 'WHERE 1=1'
@@ -394,20 +394,25 @@ export async function getActivityLogs(req: Request, res: Response) {
     let paramIndex = 3
 
     if (userId) {
-      whereClause += ` AND user_id = $${paramIndex++}`
+      whereClause += ` AND tt.user_id = $${paramIndex++}`
       params.push(userId)
     }
     if (actionType) {
-      whereClause += ` AND action_type = $${paramIndex++}`
+      whereClause += ` AND tt.action_type = $${paramIndex++}`
       params.push(actionType)
     }
     if (startDate) {
-      whereClause += ` AND created_at >= $${paramIndex++}`
+      whereClause += ` AND tt.created_at >= $${paramIndex++}`
       params.push(startDate)
     }
     if (endDate) {
-      whereClause += ` AND created_at <= $${paramIndex++}`
+      whereClause += ` AND tt.created_at <= $${paramIndex++}`
       params.push(endDate)
+    }
+    if (search) {
+      whereClause += ` AND (u.email ILIKE $${paramIndex} OR u.name ILIKE $${paramIndex} OR tt.ip_address::text ILIKE $${paramIndex})`
+      params.push(`%${search}%`)
+      paramIndex++
     }
 
     const { rows } = await query(
@@ -420,9 +425,38 @@ export async function getActivityLogs(req: Request, res: Response) {
       params
     )
 
+    // Build count query with same conditions (need to adjust param indices)
+    const countParams: any[] = []
+    let countParamIndex = 1
+    let countWhereClause = 'WHERE 1=1'
+    
+    if (userId) {
+      countWhereClause += ` AND tt.user_id = $${countParamIndex++}`
+      countParams.push(userId)
+    }
+    if (actionType) {
+      countWhereClause += ` AND tt.action_type = $${countParamIndex++}`
+      countParams.push(actionType)
+    }
+    if (startDate) {
+      countWhereClause += ` AND tt.created_at >= $${countParamIndex++}`
+      countParams.push(startDate)
+    }
+    if (endDate) {
+      countWhereClause += ` AND tt.created_at <= $${countParamIndex++}`
+      countParams.push(endDate)
+    }
+    if (search) {
+      countWhereClause += ` AND (u.email ILIKE $${countParamIndex} OR u.name ILIKE $${countParamIndex} OR tt.ip_address::text ILIKE $${countParamIndex})`
+      countParams.push(`%${search}%`)
+    }
+    
     const { rows: countRows } = await query<{ count: string }>(
-      `SELECT COUNT(*) as count FROM time_tracking ${whereClause}`,
-      params.slice(2)
+      `SELECT COUNT(*) as count 
+       FROM time_tracking tt
+       LEFT JOIN users u ON u.user_id = tt.user_id
+       ${countWhereClause}`,
+      countParams
     )
 
     return res.json({

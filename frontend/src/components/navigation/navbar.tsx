@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 
@@ -14,21 +14,39 @@ const navigation = [
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const navRef = useRef<HTMLElement>(null)
 
-  // Close mobile menu when clicking outside or on route change
+  // Close mobile menu when clicking outside, on resize, or route change
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setMobileMenuOpen(false)
       }
     }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileMenuOpen && navRef.current && !navRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false)
+      }
+    }
+
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+    if (mobileMenuOpen) {
+      // Use setTimeout to avoid immediate close when opening
+      setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside)
+      }, 0)
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [mobileMenuOpen])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] px-4 md:px-6 pt-6">
-      <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8 rounded-2xl border border-white/40 bg-black/40 backdrop-blur-xl shadow-2xl shadow-black/50">
+      <nav ref={navRef} className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8 rounded-2xl border border-white/40 bg-black/40 backdrop-blur-xl shadow-2xl shadow-black/50">
         {/* Logo */}
         <div className="flex items-center flex-shrink-0 z-10">
           <Link href="/" className="-m-1.5 p-1.5 flex items-center">
@@ -78,7 +96,7 @@ export function Navbar() {
 
         {/* Mobile menu dropdown - visible on small screens when open */}
         {mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 lg:hidden bg-white/95 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden z-[200]">
+          <div className="absolute top-full left-0 right-0 mt-2 lg:hidden bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[200] opacity-100 transform translate-y-0 transition-all duration-200">
             <div className="px-4 py-4 space-y-2">
               {navigation.map((item) => (
                 <Link

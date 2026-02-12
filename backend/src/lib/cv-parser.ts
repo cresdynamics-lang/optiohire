@@ -37,7 +37,7 @@ export class CVParser {
         const buffer = await fs.readFile(filePath)
         const parser = new PDFParse({ data: buffer })
         const pdfData = await parser.getText()
-        textContent = pdfData.text
+        textContent = pdfData.text ?? ''
       } else if (ext === '.docx' || ext === '.doc') {
         const buffer = await fs.readFile(filePath)
         // Extract both raw text and HTML to catch hidden hyperlinks
@@ -68,9 +68,10 @@ export class CVParser {
 
     try {
       if (mimeType === 'application/pdf') {
+        // Extract plain text so Groq (text-only API) can parse the CV; no binary/base64 sent to AI
         const parser = new PDFParse({ data: buffer })
         const pdfData = await parser.getText()
-        textContent = pdfData.text
+        textContent = pdfData.text ?? ''
       } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
                  mimeType === 'application/msword') {
         // Extract both raw text and HTML to catch hidden hyperlinks
@@ -106,10 +107,12 @@ export class CVParser {
    * Categorizes: LinkedIn, GitHub, Emails (mailto:), Other links
    */
   private extractLinks(textContent: string): ParsedCV {
-    // Clean text: remove excessive spacing and newlines
+    // Clean text for Groq/AI: normalize spaces but preserve paragraph breaks so structure stays readable
     const cleanedText = textContent
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .replace(/\n+/g, ' ') // Replace newlines with space
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\n{3,}/g, '\n\n') // collapse many newlines to double
+      .replace(/[ \t]+/g, ' ') // collapse spaces/tabs within lines
       .trim()
 
     // Extract all URLs using regex: /https?:\/\/[^\s)]+/gi

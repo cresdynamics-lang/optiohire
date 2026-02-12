@@ -7,7 +7,7 @@ const host = process.env.SMTP_HOST || 'localhost'
 const port = Number(process.env.SMTP_PORT || 1025)
 const user = process.env.SMTP_USER || ''
 const pass = process.env.SMTP_PASS || ''
-const from = 'OptioHire <hirebitapplications@gmail.com>'
+const from = 'OptioHire <nelsonochieng516@gmail.com>'
 
 export const transporter = nodemailer.createTransport({
   host,

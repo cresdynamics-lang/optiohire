@@ -1,5 +1,13 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Set workspace root to frontend directory to silence lockfile warning
+  outputFileTracingRoot: path.join(__dirname),
+
+  // Disable Strict Mode to prevent double-mount in dev (can feel like auto-refresh)
+  reactStrictMode: false,
+
   // Performance optimizations
   // Note: swcMinify is deprecated in Next.js 16 (enabled by default)
   compress: true,

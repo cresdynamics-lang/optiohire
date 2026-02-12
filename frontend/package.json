@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:clean": "rm -rf .next && next dev --webpack",
     "build": "NODE_OPTIONS='--max-old-space-size=2048' next build --webpack",
     "build:analyze": "ANALYZE=true NODE_OPTIONS='--max-old-space-size=2048' next build",
     "build:low-memory": "NODE_OPTIONS='--max-old-space-size=1536' next build",
     "postbuild": "next-sitemap",
     "start": "next start",
+    "clean": "rm -rf .next node_modules/.cache",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",

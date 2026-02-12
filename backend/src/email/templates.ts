@@ -22,7 +22,7 @@ export async function sendDecisionEmail(opts: {
 }) {
   let companyData: CompanyData | null = null
   let jobData: JobData | null = null
-  let hrEmail = 'hirebitapplications@gmail.com' // Default HR email
+  let hrEmail = 'nelsonochieng516@gmail.com' // Default HR email
 
   // Fetch company and job details if IDs are provided
   if (opts.jobPostingId) {

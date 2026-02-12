@@ -541,4 +541,116 @@ export async function resetPassword(req: Request, res: Response) {
   }
 }
 
+const VERIFICATION_CODE_EXPIRY_HOURS = 24
+
+/**
+ * Send email verification code after signup (for frontend signup flow).
+ * Body: { email, name }. User must already exist in users.
+ */
+export async function sendSignupVerificationEmail(req: Request, res: Response) {
+  try {
+    const { email, name } = req.body || {}
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' })
+    }
+    const { rows: userRows } = await query<{ user_id: string; name: string | null }>(
+      `SELECT user_id, name FROM users WHERE email = $1`,
+      [email.toLowerCase()]
+    )
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+    const userId = userRows[0].user_id
+    const userName = name || userRows[0].name || 'User'
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + VERIFICATION_CODE_EXPIRY_HOURS)
+
+    try {
+      await query(
+        `INSERT INTO email_verification_codes (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)`,
+        [userId, email.toLowerCase(), code, expiresAt]
+      )
+    } catch (e) {
+      console.error('Email verification table may not exist. Run migration add_email_verification.sql', e)
+      return res.status(503).json({ error: 'Email verification not configured' })
+    }
+
+    const emailService = new EmailService()
+    try {
+      await emailService.sendEmailVerificationCode(email.toLowerCase(), userName, code)
+    } catch (emailErr) {
+      console.error('Send verification email failed (code was saved):', emailErr)
+      return res.status(200).json({
+        message: 'Verification code could not be sent to your email. You can still verify later from the verify-email page with the code we generated.',
+        codeSaved: true
+      })
+    }
+    return res.status(200).json({ message: 'Verification code sent to your email' })
+  } catch (err) {
+    console.error('Send signup verification email error:', err)
+    return res.status(500).json({ error: 'Failed to send verification email' })
+  }
+}
+
+/**
+ * Verify email with code and send welcome email.
+ * Body: { email, code }
+ */
+export async function verifyEmail(req: Request, res: Response) {
+  try {
+    const { email, code } = req.body || {}
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and code are required' })
+    }
+
+    const { rows } = await query<{ code_id: string; user_id: string; expires_at: Date; used: boolean }>(
+      `SELECT code_id, user_id, expires_at, used FROM email_verification_codes
+       WHERE email = $1 AND code = $2 ORDER BY created_at DESC LIMIT 1`,
+      [email.toLowerCase(), code]
+    )
+    if (rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid verification code' })
+    }
+    const row = rows[0]
+    if (row.used) {
+      return res.status(400).json({ error: 'This code has already been used' })
+    }
+    if (new Date(row.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'Verification code has expired' })
+    }
+
+    await query(`UPDATE email_verification_codes SET used = true WHERE code_id = $1`, [row.code_id])
+
+    try {
+      await query(
+        `UPDATE users SET email_verified = true WHERE user_id = $1`,
+        [row.user_id]
+      )
+    } catch (e) {
+      // Column may not exist yet
+    }
+
+    const { rows: userRows } = await query<{ name: string | null }>(
+      `SELECT name FROM users WHERE user_id = $1`,
+      [row.user_id]
+    )
+    const name = userRows[0]?.name || 'User'
+    let welcomeSent = false
+    try {
+      const emailService = new EmailService()
+      await emailService.sendWelcomeEmail(email.toLowerCase(), name)
+      welcomeSent = true
+    } catch (emailErr) {
+      console.error('Welcome email failed (verification still succeeded):', emailErr)
+    }
+    return res.status(200).json({
+      message: welcomeSent ? 'Email confirmed. Welcome email sent.' : 'Email confirmed. Welcome email could not be sent.',
+      verified: true
+    })
+  } catch (err) {
+    console.error('Verify email error:', err)
+    return res.status(500).json({ error: 'Failed to verify email' })
+  }
+}
 

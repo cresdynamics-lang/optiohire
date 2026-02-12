@@ -6,6 +6,20 @@ import { cleanJobTitle } from '../utils/jobTitle.js'
 import { SendGridService } from './sendGridService.js'
 import { ResendService } from './resendService.js'
 
+/** Default from address for candidate emails and fallback when company email is not set */
+const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || 'nelsonochieng516@gmail.com'
+
+/** Derive display name for salutation: use candidate name or email local part so we never show only "Dear Candidate" when we have an email */
+function getCandidateDisplayName(candidateName: string | null | undefined, candidateEmail: string): string {
+  const trimmed = candidateName?.trim()
+  if (trimmed) return trimmed
+  const local = candidateEmail?.split('@')[0]
+  if (!local) return 'Candidate'
+  const cleaned = local.replace(/[._]/g, ' ').replace(/[^a-zA-Z0-9\s]/g, '')
+  if (!cleaned) return 'Candidate'
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase()
+}
+
 export class EmailService {
   private transporter: nodemailer.Transporter | null = null
   private sendGridService: SendGridService | null = null
@@ -16,6 +30,7 @@ export class EmailService {
   private logFile: string
 
   constructor() {
+    this.logFile = path.join(process.cwd(), 'logs', 'email.log')
     // Priority: Resend > SendGrid > SMTP
     this.useResend = process.env.USE_RESEND === 'true' || !!process.env.RESEND_API_KEY
     this.useSendGrid = !this.useResend && (process.env.USE_SENDGRID === 'true' || !!process.env.SENDGRID_API_KEY)
@@ -36,7 +51,7 @@ export class EmailService {
     const mailHost = process.env.MAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com'
     const mailUser = process.env.MAIL_USER || process.env.SMTP_USER
     const mailPass = process.env.MAIL_PASS || process.env.SMTP_PASS
-    const mailFrom = 'hirebitapplications@gmail.com'
+    const mailFrom = process.env.MAIL_FROM || process.env.MAIL_USER || process.env.SMTP_USER || DEFAULT_FROM_EMAIL
 
     // Warn if credentials are missing
     if (!mailUser || !mailPass) {
@@ -131,9 +146,10 @@ export class EmailService {
 
   private async logEmail(to: string, subject: string, status: 'sent' | 'failed', error?: string) {
     try {
+      const logPath = this.logFile || path.join(process.cwd(), 'logs', 'email.log')
       const timestamp = new Date().toISOString()
       const logEntry = `[${timestamp}] ${status.toUpperCase()} | To: ${to} | Subject: ${subject}${error ? ` | Error: ${error}` : ''}\n`
-      await fs.appendFile(this.logFile, logEntry)
+      await fs.appendFile(logPath, logEntry)
     } catch (error) {
       logger.error('Failed to write email log:', error)
     }
@@ -202,6 +218,10 @@ ${data.companyName || 'Hiring Team'}
     })
   }
 
+  /**
+   * Shortlist notification only. Does NOT include interview date/time/link.
+   * Interview details are sent later when HR uses the Schedule button (scheduleInterviewController).
+   */
   async sendShortlistEmail(data: {
     candidateEmail: string
     candidateName: string
@@ -209,17 +229,18 @@ ${data.companyName || 'Hiring Team'}
     companyName: string
     companyEmail?: string | null
     companyDomain?: string | null
-    interviewLink: string | null
+    interviewLink?: string | null
     interviewDate?: string | null
     interviewTime?: string | null
   }) {
-    const hrEmail = data.companyEmail || 'hirebitapplications@gmail.com'
-    const candidateName = data.candidateName || '[Candidate\'s Full Name]'
+    const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
     const companyName = data.companyName || '[Company Name]'
     const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
 
-    const subject = `Final Interview Invitation – ${cleanedJobTitle} at ${companyName}`
-    
+    const subject = `You've been shortlisted – ${cleanedJobTitle} at ${companyName}`
+    const hasInterviewDetails = !!(data.interviewLink || data.interviewDate || data.interviewTime)
+
     const html = `
 <!DOCTYPE html>
 <html>
@@ -235,52 +256,61 @@ ${data.companyName || 'Hiring Team'}
     
     <p>Congratulations! After reviewing your application for the <strong>${cleanedJobTitle}</strong> position at <strong>${companyName}</strong>, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.</p>
     
+    ${hasInterviewDetails ? `
     <p>Your final interview has been scheduled as follows:</p>
-    
     <p><strong>Interview Details:</strong></p>
     <p><strong>Position:</strong> ${cleanedJobTitle}</p>
     <p><strong>Company:</strong> ${companyName}</p>
     ${data.interviewDate ? `<p><strong>Date:</strong> ${data.interviewDate}</p>` : ''}
     ${data.interviewTime ? `<p><strong>Time:</strong> ${data.interviewTime}</p>` : ''}
     ${data.interviewLink ? `<p><strong>Meeting Link:</strong> <a href="${data.interviewLink}">${data.interviewLink}</a></p>` : ''}
-    
     <p>During this session, we will discuss your experience, your fit for the role, and the value you can bring to our team.</p>
+    ` : `
+    <p>Our HR team will send you the interview date, time, and meeting link once your interview has been scheduled. You do not need to take any action at this time.</p>
+    `}
     
-    <p>If you have any questions before the interview or need to make changes, feel free to contact our HR team at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
+    <p>If you have any questions, feel free to contact our HR team at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
     
     <p>We look forward to meeting you and learning more about how you can contribute to our team. Thank you!</p>
     
     <p>Kind regards,<br>
-    <strong>Company Name:</strong> ${companyName}<br>
+    <strong>${companyName}</strong><br>
     <strong>Company Email:</strong> ${hrEmail}</p>
   </div>
 </body>
 </html>
     `
 
-    const text = `Dear ${candidateName},
+    const text = hasInterviewDetails
+      ? `Dear ${candidateName},
 
 Congratulations! After reviewing your application for the ${cleanedJobTitle} position at ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
 
 Your final interview has been scheduled as follows:
 
-Interview Details:
-
 Position: ${cleanedJobTitle}
-
 Company: ${companyName}
-
 ${data.interviewDate ? `Date: ${data.interviewDate}\n` : ''}${data.interviewTime ? `Time: ${data.interviewTime}\n` : ''}${data.interviewLink ? `Meeting Link: ${data.interviewLink}\n` : ''}
+
 During this session, we will discuss your experience, your fit for the role, and the value you can bring to our team.
 
-If you have any questions before the interview or need to make changes, feel free to contact our HR team at ${hrEmail}.
-
-We look forward to meeting you and learning more about how you can contribute to our team. Thank you!
+If you have any questions, feel free to contact our HR team at ${hrEmail}.
 
 Kind regards,
+${companyName}
+Company Email: ${hrEmail}`
+      : `Dear ${candidateName},
 
-Company Name: ${companyName}
+Congratulations! After reviewing your application for the ${cleanedJobTitle} position at ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
 
+Our HR team will send you the interview date, time, and meeting link once your interview has been scheduled. You do not need to take any action at this time.
+
+If you have any questions, feel free to contact our HR team at ${hrEmail}.
+
+We look forward to meeting you. Thank you!
+
+Kind regards,
+${companyName}
 Company Email: ${hrEmail}`
 
     // Generate from email: use company_email, companyDomain, or fallback
@@ -303,8 +333,8 @@ Company Email: ${hrEmail}`
     companyEmail?: string | null
     companyDomain?: string | null
   }) {
-    const hrEmail = data.companyEmail || 'hirebitapplications@gmail.com'
-    const candidateName = data.candidateName || '[Candidate\'s Full Name]'
+    const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
     const companyName = data.companyName || '[Company Name]'
     const jobTitle = data.jobTitle || '[Job Title]'
 
@@ -434,7 +464,9 @@ HireBit System
       to: data.hrEmail,
       subject: `New Applicant Received for ${data.jobTitle}`,
       html,
-      text
+      text,
+      emailType: 'notification',
+      useSecondaryKey: true // Use secondary key for HR notifications
     })
   }
 
@@ -468,8 +500,8 @@ HireBit System
       return `noreply@${sanitized}.com`
     }
     
-    // Final fallback - use hirebitapplications@gmail.com
-    return 'hirebitapplications@gmail.com'
+    // Final fallback - use configured default (nelsonochieng516@gmail.com)
+    return DEFAULT_FROM_EMAIL
   }
 
   /**
@@ -688,7 +720,90 @@ The OptioHire Team
       html,
       text,
       emailType: 'password_reset',
-      recipientName: name
+      recipientName: name,
+      useSecondaryKey: true // Use secondary key for notification emails
+    })
+  }
+
+  /**
+   * Email verification code on account creation – sent to user's email to confirm address
+   */
+  async sendEmailVerificationCode(email: string, name: string, code: string) {
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm Your Email</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">Confirm Your Email</h1>
+  </div>
+  <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+    <p style="font-size: 16px; margin-bottom: 20px;">Hello ${name || 'User'},</p>
+    <p style="font-size: 16px; margin-bottom: 20px;">Thanks for creating your OptioHire account. Please confirm your email address using the code below.</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <div style="background: #fff; border: 2px solid #667eea; border-radius: 10px; padding: 20px; display: inline-block;">
+        <p style="font-size: 36px; font-weight: bold; color: #667eea; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${code}</p>
+      </div>
+    </div>
+    <p style="font-size: 14px; color: #666;">Enter this code on the verification page to activate your account. This code expires in 24 hours.</p>
+    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+    <p style="font-size: 12px; color: #999; margin: 0;">Best regards,<br>The OptioHire Team</p>
+  </div>
+</body>
+</html>
+    `
+    const text = `Confirm Your Email\n\nHello ${name || 'User'},\n\nThanks for creating your OptioHire account. Your verification code is: ${code}\n\nEnter this code on the verification page. This code expires in 24 hours.\n\nBest regards,\nThe OptioHire Team`
+    await this.sendEmail({
+      to: email,
+      subject: 'Confirm your OptioHire account – verification code',
+      html,
+      text,
+      emailType: 'activation',
+      recipientName: name,
+      useSecondaryKey: true
+    })
+  }
+
+  /**
+   * Welcome email from OptioHire – sent after email is confirmed
+   */
+  async sendWelcomeEmail(email: string, name: string) {
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to OptioHire</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to OptioHire</h1>
+  </div>
+  <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+    <p style="font-size: 16px; margin-bottom: 20px;">Hello ${name || 'User'},</p>
+    <p style="font-size: 16px; margin-bottom: 20px;">Your email is confirmed. You're all set to use OptioHire to post jobs, screen candidates, and hire with confidence.</p>
+    <p style="font-size: 16px; margin-bottom: 20px;">Get started by creating your first job posting from your dashboard.</p>
+    <p style="font-size: 14px; color: #666;">If you have any questions, reply to this email or visit our help center.</p>
+    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+    <p style="font-size: 12px; color: #999; margin: 0;">Best regards,<br>The OptioHire Team</p>
+  </div>
+</body>
+</html>
+    `
+    const text = `Welcome to OptioHire\n\nHello ${name || 'User'},\n\nYour email is confirmed. You're all set to use OptioHire to post jobs, screen candidates, and hire with confidence.\n\nGet started by creating your first job posting from your dashboard.\n\nBest regards,\nThe OptioHire Team`
+    await this.sendEmail({
+      to: email,
+      subject: 'Welcome to OptioHire – your account is ready',
+      html,
+      text,
+      emailType: 'welcome',
+      recipientName: name,
+      useSecondaryKey: true
     })
   }
 
@@ -747,7 +862,8 @@ The OptioHire Team
       html,
       text,
       emailType: 'password_reset',
-      recipientName: name
+      recipientName: name,
+      useSecondaryKey: true // Use secondary key for notification emails
     })
   }
 
@@ -761,6 +877,7 @@ The OptioHire Team
     replyTo?: string
     emailType?: string
     recipientName?: string
+    useSecondaryKey?: boolean // Use secondary Resend key for notifications (thanks for joining, welcome, etc.)
   }) {
     const emailType = data.emailType || 'general'
     const recipientName = data.recipientName || null
@@ -790,6 +907,10 @@ The OptioHire Team
     // Priority 1: Use Resend if configured (recommended - domain verification support)
     if (this.useResend && this.resendService) {
       try {
+        // Use secondary key for notification emails (thanks for joining, welcome, password reset, etc.)
+        const useSecondary = data.useSecondaryKey === true || 
+          ['password_reset', 'welcome', 'activation', 'notification', 'thanks'].includes(emailType.toLowerCase())
+        
         const result = await this.resendService.sendEmail({
           to: data.to,
           subject: data.subject,
@@ -798,7 +919,7 @@ The OptioHire Team
           from: data.from,
           fromName: data.fromName,
           replyTo: data.replyTo
-        })
+        }, useSecondary)
         
         // Update email log - Resend service handles success internally
         if (emailLogId) {
@@ -814,20 +935,12 @@ The OptioHire Team
         }
         return
       } catch (error: any) {
-        logger.error(`Resend failed, falling back to SendGrid: ${error.message}`)
-        // Update email log
-        if (emailLogId) {
-          try {
-            const { query } = await import('../db/index.js')
-            await query(
-              `UPDATE email_logs SET status = 'failed', error_message = $1 WHERE email_id = $2`,
-              [error.message, emailLogId]
-            )
-          } catch (updateError) {
-            logger.error('Failed to update email log:', updateError)
-          }
+        logger.warn(`Resend failed (e.g. domain not verified), falling back to SendGrid or SMTP: ${error.message}`)
+        // So we can fall back to SMTP when Resend fails (e.g. sending from @gmail.com)
+        if (!this.transporter) {
+          this.initSMTP()
         }
-        // Fallback to SendGrid if Resend fails
+        // Fallback to SendGrid or SMTP below
       }
     }
 
@@ -854,7 +967,7 @@ The OptioHire Team
 
     // Use SMTP (fallback or if SendGrid not configured)
     try {
-      const from = data.from || 'hirebitapplications@gmail.com'
+      const from = data.from || DEFAULT_FROM_EMAIL
       
       // Verify transporter is configured
       if (!this.transporter) {

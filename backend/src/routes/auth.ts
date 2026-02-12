@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { signup, signin, forgotPassword, verifyResetToken, verifyResetCode, resetPassword } from '../api/authController.js'
+import { signup, signin, forgotPassword, verifyResetToken, verifyResetCode, resetPassword, sendSignupVerificationEmail, verifyEmail } from '../api/authController.js'
 import { authLimiter, passwordResetLimiter } from '../middleware/rateLimiter.js'
 
 export const router = Router()
@@ -11,6 +11,8 @@ router.post('/forgot-password', passwordResetLimiter, forgotPassword)
 router.post('/verify-reset-token', passwordResetLimiter, verifyResetToken)
 router.post('/verify-reset-code', passwordResetLimiter, verifyResetCode)
 router.post('/reset-password', passwordResetLimiter, resetPassword)
+router.post('/send-signup-verification-email', authLimiter, sendSignupVerificationEmail)
+router.post('/verify-email', authLimiter, verifyEmail)
 router.get('/health', (_req, res) => res.json({ ok: true }))
 
 

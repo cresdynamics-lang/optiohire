@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -54,26 +53,29 @@ export default function SignUpPage() {
     setError(null)
 
     try {
-      const { error } = await signUp(
+      const result = await signUp(
         data.name,
-        data.email, 
-        data.password, 
+        data.email,
+        data.password,
         data.company_role,
-        data.organization_name, 
-        data.company_email, 
+        data.organization_name,
+        data.company_email,
         data.hiring_manager_email
       )
-      
+      const { error, needsEmailVerification, email } = result
+
       if (error) {
         setError(error.message)
         setIsLoading(false)
         return
       }
-      
-      // Small delay to ensure state is updated
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // Redirect to dashboard directly (company is already created)
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      if (needsEmailVerification && email) {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
+        return
+      }
       router.push('/dashboard')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
@@ -83,38 +85,29 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex items-start justify-center p-4 py-8">
-      <div className="w-full max-w-4xl flex items-start gap-4">
-        {/* Left Aligned Button */}
-        <div className="flex-shrink-0 pt-2">
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-gray-100 transition-all text-gray-900 font-figtree text-sm shadow-lg border border-gray-200"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Return Back
-          </button>
-        </div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex-1 max-w-md bg-white rounded-3xl shadow-2xl border border-gray-200 relative z-10 max-h-[calc(100vh-4rem)] overflow-y-auto"
+    <div className="min-h-screen w-full bg-gray-900 flex flex-col items-center justify-start pt-8 pb-12 px-4">
+      <div className="w-full max-w-md flex flex-col gap-6">
+        <button
+          onClick={() => router.push('/')}
+          className="self-start px-4 py-2 bg-gray-800 text-gray-200 rounded-full flex items-center gap-2 hover:bg-gray-700 transition-colors font-figtree text-sm border border-gray-700"
         >
-          {/* Create Account Form Card */}
-          <div className="p-8 flex flex-col">
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="p-6 sm:p-8 flex flex-col">
             <div className="mb-6">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extralight font-figtree leading-[1.05] tracking-tight text-gray-900 mb-2">Create an Account</h1>
-            <p className="text-gray-600 font-figtree">
+              <h1 className="text-2xl sm:text-3xl font-semibold font-figtree text-gray-900 mb-2">Create an Account</h1>
+              <p className="text-gray-600 font-figtree text-sm">
               Already have an account?{' '}
               <Link href="/auth/signin" className="text-blue-600 hover:text-blue-700 font-medium">
                 Log in
               </Link>
-            </p>
-          </div>
+              </p>
+            </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
@@ -320,8 +313,8 @@ export default function SignUpPage() {
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
+          </div>
         </div>
-      </motion.div>
       </div>
     </div>
   )

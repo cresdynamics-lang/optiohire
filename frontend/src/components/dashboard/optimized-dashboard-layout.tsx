@@ -38,34 +38,6 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
   }
 }
 
-// Dynamically load ToggleTheme to prevent webpack errors
-const ToggleTheme = dynamic(
-  () => {
-    return import('@/components/ui/toggle-theme')
-      .then((mod) => {
-        if (!mod || !mod.ToggleTheme) {
-          throw new Error('ToggleTheme component not found')
-        }
-        return { default: mod.ToggleTheme }
-      })
-      .catch((err) => {
-        console.error('Failed to load ToggleTheme:', err)
-        // Return a fallback component
-        return {
-          default: function ToggleThemeFallback() {
-            return <div className="h-8 w-24 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-          }
-        }
-      })
-  },
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-8 w-24 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-    )
-  }
-)
-
 // Dynamically load Sidebar to prevent webpack errors
 const Sidebar = dynamic<{ activeSection: string; onSectionChange: (section: string) => void }>(
   () => {
@@ -505,8 +477,6 @@ function DashboardContent() {
               </button>
             </div>
             <div className="flex items-center gap-4 ml-auto">
-              <ToggleTheme />
-              
               {/* Notifications Bell - Moved to far right */}
               <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
                 <PopoverTrigger asChild>

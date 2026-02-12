@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Figtree } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/hooks/use-auth'
-import { ThemeProvider } from '@/components/providers/theme-provider'
 import { ConditionalLayout } from '@/components/layout/conditional-layout'
 import { CookieConsent } from '@/components/ui/cookie-consent'
 import { CookieProvider } from '@/components/providers/cookie-provider'
@@ -76,7 +75,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={figtree.variable} suppressHydrationWarning>
+    <html lang="en" className={`${figtree.variable} dark`} suppressHydrationWarning>
       <head>
         {/* Favicon */}
         <link rel="icon" href="/assets/logo/optiohirelogo.png?v=2027" type="image/png" />
@@ -96,19 +95,17 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>
       <body className={`${figtree.className} antialiased bg-background text-foreground`} suppressHydrationWarning>
-        <ThemeProvider>
-          <CookieProvider>
-            <AuthProvider>
-              <ErrorBoundary>
-                <div className="min-h-screen bg-background">
-                  <ConditionalLayout>{children}</ConditionalLayout>
-                  <CookieConsent />
-                  <ServiceWorker />
-                </div>
-              </ErrorBoundary>
-            </AuthProvider>
-          </CookieProvider>
-        </ThemeProvider>
+        <CookieProvider>
+          <AuthProvider>
+            <ErrorBoundary>
+              <div className="min-h-screen bg-background">
+                <ConditionalLayout>{children}</ConditionalLayout>
+                <CookieConsent />
+                <ServiceWorker />
+              </div>
+            </ErrorBoundary>
+          </AuthProvider>
+        </CookieProvider>
       </body>
     </html>
   )

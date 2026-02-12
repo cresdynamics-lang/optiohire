@@ -63,7 +63,7 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
     echo "Please add these to $ENV_FILE:"
     echo "  IMAP_HOST=imap.gmail.com"
     echo "  IMAP_PORT=993"
-    echo "  IMAP_USER=hirebitapplications@gmail.com"
+    echo "  IMAP_USER=nelsonochieng516@gmail.com"
     echo "  IMAP_PASS=your_app_password"
     echo "  IMAP_SECURE=true"
     echo "  IMAP_POLL_MS=10000"

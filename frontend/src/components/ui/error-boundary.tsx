@@ -1,7 +1,6 @@
 'use client'
 
 import React, { Component, ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
 
 interface Props {
   children: ReactNode
@@ -54,17 +53,14 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-// Functional component wrapper for reload button to use Next.js router
+// Functional component wrapper for reload button - no automatic refresh
 function ErrorBoundaryButton({ onReset, onReload }: { onReset: () => void; onReload?: () => void }) {
-  const router = useRouter()
-  
   const handleReload = () => {
     onReset()
     if (onReload) {
       onReload()
-    } else {
-      router.refresh()
     }
+    // Removed router.refresh() to prevent automatic page refreshes
   }
   
   return (
@@ -72,7 +68,7 @@ function ErrorBoundaryButton({ onReset, onReload }: { onReset: () => void; onRel
       onClick={handleReload}
       className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
     >
-      Reload Page
+      Try Again
     </button>
   )
 }

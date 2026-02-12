@@ -2,10 +2,10 @@ module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {
-      // Suppress outdated gradient syntax warnings
       overrideBrowserslist: ['> 1%', 'last 2 versions'],
-      // Suppress warnings
       grid: false,
+      // Suppress gradient syntax warnings (Tailwind uses older syntax internally)
+      ignoreUnknownVersions: true,
     },
   },
 }

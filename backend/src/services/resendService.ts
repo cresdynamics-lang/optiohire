@@ -8,25 +8,48 @@ import path from 'path'
  * Uses Resend API for reliable email delivery with domain verification
  */
 export class ResendService {
-  private resend: Resend | null = null
-  private apiKey: string
+  private resendPrimary: Resend | null = null
+  private resendSecondary: Resend | null = null
+  private resendFallback: Resend | null = null
+  private apiKeyPrimary: string
+  private apiKeySecondary: string
+  private apiKeyFallback: string
   private fromEmail: string
   private fromName: string
   private logFile: string
 
   constructor() {
-    this.apiKey = process.env.RESEND_API_KEY || ''
-    this.fromEmail = process.env.RESEND_FROM_EMAIL || process.env.RESEND_DOMAIN 
+    // Primary key - for all notifications and email sending
+    this.apiKeyPrimary = process.env.RESEND_API_KEY || ''
+    // Secondary key - for notifications like "thanks for joining"
+    this.apiKeySecondary = process.env.RESEND_API_KEY_SECONDARY || ''
+    // Fallback key - if primary/secondary fail or get rate limited
+    this.apiKeyFallback = process.env.RESEND_API_KEY_FALLBACK || ''
+    
+    this.fromEmail = process.env.RESEND_FROM_EMAIL || (process.env.RESEND_DOMAIN 
       ? `noreply@${process.env.RESEND_DOMAIN}` 
-      : 'noreply@optiohire.com'
+      : 'nelsonochieng516@gmail.com')
     this.fromName = process.env.RESEND_FROM_NAME || 'OptioHire'
 
-    if (!this.apiKey) {
-      logger.warn('Resend API key not configured. Set RESEND_API_KEY in .env')
+    // Initialize Resend clients
+    if (this.apiKeyPrimary) {
+      this.resendPrimary = new Resend(this.apiKeyPrimary)
+      logger.info('Resend primary API key initialized')
+    }
+    if (this.apiKeySecondary) {
+      this.resendSecondary = new Resend(this.apiKeySecondary)
+      logger.info('Resend secondary API key initialized')
+    }
+    if (this.apiKeyFallback) {
+      this.resendFallback = new Resend(this.apiKeyFallback)
+      logger.info('Resend fallback API key initialized')
+    }
+
+    if (!this.apiKeyPrimary && !this.apiKeySecondary && !this.apiKeyFallback) {
+      logger.warn('No Resend API keys configured. Set RESEND_API_KEY in .env')
       logger.warn('Get your API key from: https://resend.com/api-keys')
     } else {
-      this.resend = new Resend(this.apiKey)
-      logger.info('Resend email service initialized')
+      logger.info(`Resend email service initialized with ${[this.resendPrimary, this.resendSecondary, this.resendFallback].filter(Boolean).length} API key(s)`)
     }
 
     // Setup email log file
@@ -53,7 +76,9 @@ export class ResendService {
   }
 
   /**
-   * Send email using Resend API
+   * Send email using Resend API with fallback support
+   * @param data Email data
+   * @param useSecondary If true, use secondary key for notifications (like "thanks for joining")
    */
   async sendEmail(data: {
     to: string
@@ -63,74 +88,123 @@ export class ResendService {
     from?: string
     fromName?: string
     replyTo?: string
-  }): Promise<void> {
-    if (!this.resend) {
-      throw new Error('Resend API key not configured. Set RESEND_API_KEY in .env')
-    }
+  }, useSecondary: boolean = false): Promise<void> {
+    const fromEmail = data.from || this.fromEmail
+    const fromName = data.fromName || this.fromName
+    
+    // Determine which Resend client to use
+    // Priority: useSecondary ? secondary > primary > fallback : primary > secondary > fallback
+    const clients = useSecondary 
+      ? [this.resendSecondary, this.resendPrimary, this.resendFallback]
+      : [this.resendPrimary, this.resendSecondary, this.resendFallback]
+    
+    const clientNames = useSecondary
+      ? ['secondary', 'primary', 'fallback']
+      : ['primary', 'secondary', 'fallback']
 
-    try {
-      const fromEmail = data.from || this.fromEmail
-      const fromName = data.fromName || this.fromName
+    let lastError: Error | null = null
 
-      const result = await this.resend.emails.send({
-        from: `${fromName} <${fromEmail}>`,
-        to: data.to,
-        subject: data.subject,
-        html: data.html,
-        text: data.text,
-        replyTo: data.replyTo,
-      })
-
-      if (result.error) {
-        throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
+    // Try each client in order until one succeeds
+    for (let i = 0; i < clients.length; i++) {
+      const client = clients[i]
+      const clientName = clientNames[i]
+      
+      if (!client) {
+        continue // Skip if this client is not configured
       }
 
-      logger.info(`Email sent via Resend to ${data.to}: ${data.subject} (ID: ${result.data?.id})`)
-      await this.logEmail(data.to, data.subject, 'sent')
-    } catch (error: any) {
-      const errorMsg = error?.message || String(error)
-      logger.error(`Failed to send email via Resend to ${data.to}:`, errorMsg)
-      await this.logEmail(data.to, data.subject, 'failed', errorMsg)
-      throw error
+      try {
+        logger.debug(`Attempting to send email via Resend ${clientName} key`)
+        
+        const result = await client.emails.send({
+          from: `${fromName} <${fromEmail}>`,
+          to: data.to,
+          subject: data.subject,
+          html: data.html,
+          text: data.text,
+          replyTo: data.replyTo,
+        })
+
+        if (result.error) {
+          throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
+        }
+
+        logger.info(`Email sent via Resend ${clientName} to ${data.to}: ${data.subject} (ID: ${result.data?.id})`)
+        await this.logEmail(data.to, data.subject, 'sent', `via ${clientName}`)
+        return // Success - exit function
+      } catch (error: any) {
+        const errorMsg = error?.message || String(error)
+        lastError = error
+        logger.warn(`Resend ${clientName} failed: ${errorMsg}`)
+        
+        // Check if it's a rate limit or quota error - try next client
+        if (errorMsg.includes('rate limit') || errorMsg.includes('quota') || errorMsg.includes('429')) {
+          logger.info(`Rate limit/quota exceeded on ${clientName}, trying next key...`)
+          continue
+        }
+        
+        // For other errors, also try next client
+        if (i < clients.length - 1) {
+          logger.info(`Trying next Resend API key...`)
+          continue
+        }
+      }
     }
+
+    // All clients failed
+    const errorMsg = lastError?.message || 'All Resend API keys failed'
+    logger.error(`Failed to send email via Resend (all keys exhausted) to ${data.to}:`, errorMsg)
+    await this.logEmail(data.to, data.subject, 'failed', errorMsg)
+    throw new Error(`Resend email failed: ${errorMsg}`)
   }
 
   /**
    * Verify Resend API key and domain
    */
   async verifyConnection(): Promise<boolean> {
-    if (!this.resend) {
-      logger.error('Resend API key not configured')
+    const clients = [
+      { name: 'primary', client: this.resendPrimary },
+      { name: 'secondary', client: this.resendSecondary },
+      { name: 'fallback', client: this.resendFallback }
+    ].filter(c => c.client !== null)
+
+    if (clients.length === 0) {
+      logger.error('No Resend API keys configured')
       return false
     }
 
-    try {
-      // Verify API key by checking domains
-      const domainsResponse = await this.resend.domains.list()
-      const domainsList = Array.isArray(domainsResponse.data) ? domainsResponse.data : []
-      logger.info(`Resend API key verified. Found ${domainsList.length} verified domain(s)`)
-      
-      if (domainsList.length > 0) {
-        domainsList.forEach((domain: any) => {
-          logger.info(`  - Domain: ${domain.name} (Status: ${domain.status})`)
-        })
-      } else {
-        logger.warn('No domains found. Please verify your domain in Resend dashboard: https://resend.com/domains')
+    let atLeastOneWorking = false
+
+    for (const { name, client } of clients) {
+      try {
+        const domainsResponse = await client!.domains.list()
+        const domainsList = Array.isArray(domainsResponse.data) ? domainsResponse.data : []
+        logger.info(`Resend ${name} API key verified. Found ${domainsList.length} verified domain(s)`)
+        
+        if (domainsList.length > 0) {
+          domainsList.forEach((domain: any) => {
+            logger.info(`  - Domain: ${domain.name} (Status: ${domain.status})`)
+          })
+        } else {
+          logger.warn(`Resend ${name}: No domains found. Please verify your domain in Resend dashboard: https://resend.com/domains`)
+        }
+        
+        atLeastOneWorking = true
+      } catch (error: any) {
+        logger.error(`Resend ${name} API connection test failed: ${error.message}`)
       }
-      
-      return true
-    } catch (error: any) {
-      logger.error(`Resend API connection test failed: ${error.message}`)
-      return false
     }
+    
+    return atLeastOneWorking
   }
 
   /**
-   * Get domain verification status
+   * Get domain verification status (uses primary key)
    */
   async getDomainStatus(domainName?: string): Promise<any> {
-    if (!this.resend) {
-      throw new Error('Resend API key not configured')
+    const client = this.resendPrimary || this.resendSecondary || this.resendFallback
+    if (!client) {
+      throw new Error('No Resend API keys configured')
     }
 
     try {
@@ -139,7 +213,7 @@ export class ResendService {
         throw new Error('Domain name not provided and RESEND_DOMAIN not set')
       }
 
-      const domainInfo = await this.resend.domains.get(domain)
+      const domainInfo = await client.domains.get(domain)
       return domainInfo
     } catch (error: any) {
       logger.error(`Failed to get domain status: ${error.message}`)
@@ -148,15 +222,16 @@ export class ResendService {
   }
 
   /**
-   * List all domains
+   * List all domains (uses primary key)
    */
   async listDomains(): Promise<any[]> {
-    if (!this.resend) {
-      throw new Error('Resend API key not configured')
+    const client = this.resendPrimary || this.resendSecondary || this.resendFallback
+    if (!client) {
+      throw new Error('No Resend API keys configured')
     }
 
     try {
-      const domainsResponse = await this.resend.domains.list()
+      const domainsResponse = await client.domains.list()
       return Array.isArray(domainsResponse.data) ? domainsResponse.data : []
     } catch (error: any) {
       logger.error(`Failed to list domains: ${error.message}`)

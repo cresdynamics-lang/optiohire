@@ -50,11 +50,11 @@ class GroqService {
   }
 
   /**
-   * Generate text using Groq
+   * Generate text using Groq with fallback across primary → secondary → tertiary
    */
   async generateText(
     prompt: string,
-    model: string = process.env.GROQ_MODEL || 'gemma2-9b-it',
+    model: string = process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
     options: {
       temperature?: number
       maxTokens?: number
@@ -62,48 +62,48 @@ class GroqService {
       apiKey?: 'primary' | 'secondary' | 'tertiary'
     } = {}
   ): Promise<string> {
-    const clientKey = options.apiKey || 'primary'
-    const client = this.clients[clientKey]
+    const requestedKey = options.apiKey || 'primary'
+    const keysToTry: Array<'primary' | 'secondary' | 'tertiary'> =
+      requestedKey === 'primary'
+        ? ['primary', 'secondary', 'tertiary']
+        : requestedKey === 'secondary'
+          ? ['secondary', 'primary', 'tertiary']
+          : ['tertiary', 'primary', 'secondary']
 
-    if (!client) {
-      throw new Error(`Groq ${clientKey} API key not configured`)
-    }
+    let lastError: Error | null = null
+    for (const clientKey of keysToTry) {
+      const client = this.clients[clientKey]
+      if (!client) continue
 
-    try {
-      const messages: Groq.Chat.ChatCompletionMessageParam[] = []
+      try {
+        const messages: Groq.Chat.ChatCompletionMessageParam[] = []
+        if (options.systemPrompt) {
+          messages.push({ role: 'system', content: options.systemPrompt })
+        }
+        messages.push({ role: 'user', content: prompt })
 
-      if (options.systemPrompt) {
-        messages.push({
-          role: 'system',
-          content: options.systemPrompt
+        const completion = await client.chat.completions.create({
+          model: model,
+          messages: messages,
+          temperature: options.temperature ?? 0.7,
+          max_tokens: options.maxTokens ?? 1024,
         })
+        return completion.choices[0]?.message?.content || ''
+      } catch (error: any) {
+        lastError = error
+        console.warn(`Groq ${clientKey} failed: ${error?.message || error}`)
+        continue
       }
-
-      messages.push({
-        role: 'user',
-        content: prompt
-      })
-
-      const completion = await client.chat.completions.create({
-        model: model,
-        messages: messages,
-        temperature: options.temperature || 0.7,
-        max_tokens: options.maxTokens || 1024,
-      })
-
-      return completion.choices[0]?.message?.content || ''
-    } catch (error) {
-      console.error(`Groq ${clientKey} API error:`, error)
-      throw new Error(`Groq ${clientKey} generation failed: ${error}`)
     }
+    throw lastError || new Error('No Groq API key configured')
   }
 
   /**
-   * Parse JSON response from Groq
+   * Parse JSON response from Groq (uses generateText which has fallback)
    */
   async generateJSON<T = any>(
     prompt: string,
-    model: string = process.env.GROQ_MODEL || 'gemma2-9b-it',
+    model: string = process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
     options: {
       temperature?: number
       systemPrompt?: string
@@ -111,20 +111,16 @@ class GroqService {
     } = {}
   ): Promise<T> {
     const systemPrompt = options.systemPrompt || 'You are a helpful assistant that returns valid JSON responses. Always respond with properly formatted JSON.'
-
     const response = await this.generateText(prompt, model, {
       ...options,
       systemPrompt,
-      temperature: 0.1 // Lower temperature for more consistent JSON
+      temperature: 0.1,
     })
 
     try {
-      // Clean the response to extract JSON
       const jsonMatch = response.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0])
-      }
-      return JSON.parse(response)
+      if (jsonMatch) return JSON.parse(jsonMatch[0]) as T
+      return JSON.parse(response) as T
     } catch (error) {
       console.error('Failed to parse JSON from Groq response:', response)
       throw new Error('Invalid JSON response from Groq')
