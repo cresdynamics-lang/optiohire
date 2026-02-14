@@ -81,7 +81,17 @@ pm2 restart optiohire-backend optiohire-frontend
 pm2 save
 ```
 
-## 7. Useful commands on the server
+## 7. Database schema (if "relation job_postings does not exist")
+
+If the backend logs "relation \"job_postings\" does not exist", apply the schema once:
+
+```bash
+sudo -u postgres psql -d optiohire -f /var/www/optiohire/backend/src/db/complete_schema.sql
+```
+
+Then restart the backend: `pm2 restart optiohire-backend`.
+
+## 8. Useful commands on the server
 
 ```bash
 pm2 status
@@ -91,7 +101,7 @@ pm2 restart optiohire-frontend
 nginx -t && systemctl reload nginx
 ```
 
-## 8. Make app live / update after push
+## 9. Make app live / update after push
 
 **If your SSH console disconnects** during the update, use one of these:
 
