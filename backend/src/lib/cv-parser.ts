@@ -1,20 +1,11 @@
 import mammoth from 'mammoth'
 import fs from 'fs/promises'
 import path from 'path'
-import { createRequire } from 'module'
-import { fileURLToPath } from 'url'
+import { extractPDFText } from 'unpdf'
 
-// Lazy-load pdf-parse: it pulls in pdfjs-dist which needs browser APIs (DOMMatrix).
-// Load only when parsing PDFs so server can start without crashing.
-const __filename = fileURLToPath(import.meta.url)
-const require = createRequire(__filename)
-let PDFParseClass: new (opts: { data: Buffer }) => { getText(): Promise<{ text?: string }> } | null = null
-function getPDFParse() {
-  if (!PDFParseClass) {
-    const { PDFParse } = require('pdf-parse')
-    PDFParseClass = PDFParse
-  }
-  return PDFParseClass
+async function extractTextFromPdf(buffer: Buffer): Promise<string> {
+  const { text } = await extractPDFText(new Uint8Array(buffer), { mergePages: true })
+  return (typeof text === 'string' ? text : text?.join('\n') ?? '') || ''
 }
 
 export interface ParsedCV {
@@ -42,9 +33,7 @@ export class CVParser {
     try {
       if (ext === '.pdf') {
         const buffer = await fs.readFile(filePath)
-        const parser = new (getPDFParse())({ data: buffer })
-        const pdfData = await parser.getText()
-        textContent = pdfData.text ?? ''
+        textContent = await extractTextFromPdf(buffer)
       } else if (ext === '.docx' || ext === '.doc') {
         const buffer = await fs.readFile(filePath)
         // Extract both raw text and HTML to catch hidden hyperlinks
@@ -76,9 +65,7 @@ export class CVParser {
     try {
       if (mimeType === 'application/pdf') {
         // Extract plain text so Groq (text-only API) can parse the CV; no binary/base64 sent to AI
-        const parser = new (getPDFParse())({ data: buffer })
-        const pdfData = await parser.getText()
-        textContent = pdfData.text ?? ''
+        textContent = await extractTextFromPdf(buffer)
       } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
                  mimeType === 'application/msword') {
         // Extract both raw text and HTML to catch hidden hyperlinks
@@ -95,9 +82,7 @@ export class CVParser {
       } else {
         // Try PDF as fallback
         try {
-          const parser = new (getPDFParse())({ data: buffer })
-          const pdfData = await parser.getText()
-          textContent = pdfData.text
+          textContent = await extractTextFromPdf(buffer)
         } catch {
           textContent = buffer.toString('utf-8')
         }
