@@ -27,6 +27,7 @@ backend/.env.*
 frontend/.env
 frontend/.env.local
 frontend/start-with-node20.sh
+deploy-update.log
 
 # Build outputs
 dist/

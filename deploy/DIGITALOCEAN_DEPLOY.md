@@ -12,8 +12,10 @@ git push origin main
 
 ## 2. SSH into the droplet
 
+Use keepalive so the connection does not drop during long runs:
+
 ```bash
-ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no root@165.22.128.141
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o PreferredAuthentications=password -o PubkeyAuthentication=no root@165.22.128.141
 # Password: Manage@1Optiohire
 ```
 
@@ -91,7 +93,18 @@ nginx -t && systemctl reload nginx
 
 ## 8. Make app live / update after push
 
-**One command on the server** (after SSH): pulls latest, ensures Node 20 via nvm, builds backend + frontend, restarts PM2.
+**If your SSH console disconnects** during the update, use one of these:
+
+**Option A – Run update in background** (survives disconnect):
+
+```bash
+cd /var/www/optiohire
+git pull origin main
+bash deploy/run-update-in-background.sh
+# You can disconnect. Reconnect later and check: tail /var/www/optiohire/deploy-update.log
+```
+
+**Option B – Run in foreground** (use SSH keepalive in step 2 so the session stays up):
 
 ```bash
 cd /var/www/optiohire
@@ -113,6 +126,41 @@ pm2 save
 ```
 
 (Requires Node ≥20 for frontend; use nvm or upgrade system Node if needed.)
+
+### If frontend build fails with "Bus error (core dumped)"
+
+This usually means the droplet ran out of memory during `next build`. Do one or both:
+
+**1. Add 2GB swap** (on the droplet):
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+Then retry the update (or only the frontend build):
+
+```bash
+cd /var/www/optiohire/frontend
+npm run build:low-memory
+# or if it still fails: npm run build:server
+cd /var/www/optiohire
+pm2 restart optiohire-backend optiohire-frontend
+pm2 save
+```
+
+**2. Use the lowest-memory build** (no swap):
+
+```bash
+cd /var/www/optiohire/frontend
+npm run build:server
+# then from /var/www/optiohire: pm2 restart optiohire-backend optiohire-frontend && pm2 save
+```
+
+The package name for the Baseline warning is **`baseline-browser-mapping`** (with a hyphen). It is now in the repo; after `git pull` and `npm install --legacy-peer-deps` the warning should reduce or go away.
 
 ---
 

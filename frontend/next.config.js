@@ -12,6 +12,9 @@ const nextConfig = {
   // Note: swcMinify is deprecated in Next.js 16 (enabled by default)
   compress: true,
 
+  // Reduce build memory (avoids Bus error on small droplets)
+  productionBrowserSourceMaps: false,
+
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -38,6 +41,7 @@ const nextConfig = {
     scrollRestoration: true,
     webVitalsAttribution: ['CLS', 'LCP'],
     optimizePackageImports: ['lucide-react', '@heroicons/react'],
+    webpackMemoryOptimizations: true, // Lower peak memory during build (small droplets)
   },
 
   // Performance optimizations
