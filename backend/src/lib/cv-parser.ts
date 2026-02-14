@@ -4,11 +4,18 @@ import path from 'path'
 import { createRequire } from 'module'
 import { fileURLToPath } from 'url'
 
-// pdf-parse v2 uses a class-based API
-// Use fileURLToPath for better compatibility with tsx
+// Lazy-load pdf-parse: it pulls in pdfjs-dist which needs browser APIs (DOMMatrix).
+// Load only when parsing PDFs so server can start without crashing.
 const __filename = fileURLToPath(import.meta.url)
 const require = createRequire(__filename)
-const { PDFParse } = require('pdf-parse')
+let PDFParseClass: new (opts: { data: Buffer }) => { getText(): Promise<{ text?: string }> } | null = null
+function getPDFParse() {
+  if (!PDFParseClass) {
+    const { PDFParse } = require('pdf-parse')
+    PDFParseClass = PDFParse
+  }
+  return PDFParseClass
+}
 
 export interface ParsedCV {
   textContent: string
@@ -35,7 +42,7 @@ export class CVParser {
     try {
       if (ext === '.pdf') {
         const buffer = await fs.readFile(filePath)
-        const parser = new PDFParse({ data: buffer })
+        const parser = new (getPDFParse())({ data: buffer })
         const pdfData = await parser.getText()
         textContent = pdfData.text ?? ''
       } else if (ext === '.docx' || ext === '.doc') {
@@ -69,7 +76,7 @@ export class CVParser {
     try {
       if (mimeType === 'application/pdf') {
         // Extract plain text so Groq (text-only API) can parse the CV; no binary/base64 sent to AI
-        const parser = new PDFParse({ data: buffer })
+        const parser = new (getPDFParse())({ data: buffer })
         const pdfData = await parser.getText()
         textContent = pdfData.text ?? ''
       } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
@@ -88,7 +95,7 @@ export class CVParser {
       } else {
         // Try PDF as fallback
         try {
-          const parser = new PDFParse({ data: buffer })
+          const parser = new (getPDFParse())({ data: buffer })
           const pdfData = await parser.getText()
           textContent = pdfData.text
         } catch {
