@@ -153,7 +153,7 @@ export class ResendService {
 
     // All clients failed
     const errorMsg = lastError?.message || 'All Resend API keys failed'
-    logger.error(`Failed to send email via Resend (all keys exhausted) to ${data.to}:`, errorMsg)
+    logger.error('Failed to send email via Resend (all keys exhausted)', { to: data.to, error: errorMsg })
     await this.logEmail(data.to, data.subject, 'failed', errorMsg)
     throw new Error(`Resend email failed: ${errorMsg}`)
   }

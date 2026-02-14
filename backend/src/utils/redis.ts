@@ -39,7 +39,7 @@ export function initRedis(): Redis | null {
     })
 
     redisClient.on('error', (err) => {
-      logger.error('Redis connection error:', err)
+      logger.error('Redis connection error', { err: err instanceof Error ? err.message : String(err) })
       redisClient = null // Set to null on error, cache will fallback to no-op
     })
 

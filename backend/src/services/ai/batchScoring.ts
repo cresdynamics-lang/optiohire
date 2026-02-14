@@ -116,16 +116,16 @@ export class BatchScoringService {
         })
       )
 
-      results.push(...chunkResults.map(r => 
-        r.status === 'fulfilled' ? r.value : {
+      results.push(...chunkResults.map(r =>
+        r.status === 'fulfilled' ? r.value : ({
           id: batch[i].id,
           result: {
             score: 0,
-            status: 'REJECTED',
+            status: 'REJECTED' as const,
             reasoning: 'Batch processing error'
           },
           error: r.reason?.message || 'Unknown error'
-        }
+        }) as BatchScoringResponse
       ))
 
       // Small delay between chunks to avoid rate limiting

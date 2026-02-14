@@ -20,14 +20,14 @@ export function validateResponse(schema: z.ZodTypeAny) {
           logger.error('Response validation failed', {
             path: req.path,
             method: req.method,
-            errors: error.errors
+            errors: (error as { issues: unknown[] }).issues
           })
           
           // In development, return validation errors
           if (process.env.NODE_ENV === 'development') {
             return originalJson({
               error: 'Response validation failed',
-              details: error.errors,
+              details: (error as { issues: unknown[] }).issues,
               originalData: data
             })
           }
