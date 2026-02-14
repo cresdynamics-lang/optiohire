@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { Bell, X, CheckCircle2 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { NotificationProvider, useNotifications } from '@/contexts/notification-context'
+import { Sidebar } from './sidebar'
 
 // Simple Error Boundary component
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
@@ -37,47 +38,6 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
     return this.props.children
   }
 }
-
-// Dynamically load Sidebar to prevent webpack errors
-const Sidebar = dynamic<{ activeSection: string; onSectionChange: (section: string) => void }>(
-  () => {
-    return import('./sidebar')
-      .then((mod: any) => {
-        if (!mod || typeof mod !== 'object') {
-          throw new Error('Sidebar module not found')
-        }
-        const SidebarExport = mod.Sidebar
-        if (!SidebarExport || typeof SidebarExport !== 'function') {
-          console.error('Sidebar export not found. Available exports:', Object.keys(mod))
-          throw new Error('Sidebar component not found')
-        }
-        return { default: SidebarExport }
-      })
-      .catch((err: any) => {
-        console.error('Error loading Sidebar module:', err)
-        // Return a safe fallback
-        return {
-          default: function SidebarFallback({ activeSection, onSectionChange }: { activeSection: string; onSectionChange: (section: string) => void }) {
-            return (
-              <div className="w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen p-4">
-                <p className="text-gray-600 dark:text-gray-400">Loading sidebar...</p>
-              </div>
-            )
-          }
-        }
-      })
-  },
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen">
-        <div className="p-4">
-          <div className="h-10 w-10 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-        </div>
-      </div>
-    )
-  }
-)
 
 // Loading component for sections
 const SectionLoader = ({ sectionName }: { sectionName: string }) => (
@@ -444,22 +404,20 @@ function DashboardContent() {
         />
       )}
       
-      {/* Sidebar - hidden on mobile, visible on tablet and up */}
-      <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto transform transition-transform duration-300 ${
+      {/* Sidebar - hidden on mobile, visible on tablet and up; w-64 so column is always reserved */}
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-64 flex-shrink-0 transform transition-transform duration-300 ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        {user && (
-          <ErrorBoundary fallback={<div className="w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen p-4"><p className="text-gray-600 dark:text-gray-400">Loading sidebar...</p></div>}>
-          <Sidebar 
-            activeSection={activeSection} 
+        <ErrorBoundary fallback={<div className="w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen p-4 flex items-center justify-center"><p className="text-gray-600 dark:text-gray-400">Sidebar unavailable. Refresh the page.</p></div>}>
+          <Sidebar
+            activeSection={activeSection}
             onSectionChange={(section) => {
               handleSectionChange(section)
               setIsMobileMenuOpen(false)
             }}
           />
-          </ErrorBoundary>
-        )}
-      </div>
+        </ErrorBoundary>
+      </aside>
       
       <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 w-full lg:w-auto">
         {/* Top Header with Theme Toggle and Notifications */}
@@ -599,3 +557,5 @@ export function OptimizedDashboardLayout() {
     </NotificationProvider>
   )
 }
+
+export default OptimizedDashboardLayout

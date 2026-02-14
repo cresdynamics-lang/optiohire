@@ -23,7 +23,6 @@ const signUpSchema = z.object({
     errorMap: () => ({ message: 'Please select your role in the company' })
   }),
   organization_name: z.string().min(2, 'Organization name must be at least 2 characters').max(255, 'Organization name is too long'),
-  company_email: z.string().email('Please enter a valid company email address'),
   hiring_manager_email: z.string().email('Please enter a valid hiring manager email address'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -59,7 +58,7 @@ export default function SignUpPage() {
         data.password,
         data.company_role,
         data.organization_name,
-        data.company_email,
+        data.email,
         data.hiring_manager_email
       )
       const { error, needsEmailVerification, email } = result
@@ -88,6 +87,7 @@ export default function SignUpPage() {
     <div className="min-h-screen w-full bg-gray-900 flex flex-col items-center justify-start pt-8 pb-12 px-4">
       <div className="w-full max-w-md flex flex-col gap-6">
         <button
+          type="button"
           onClick={() => router.push('/')}
           className="self-start px-4 py-2 bg-gray-800 text-gray-200 rounded-full flex items-center gap-2 hover:bg-gray-700 transition-colors font-figtree text-sm border border-gray-700"
         >
@@ -107,7 +107,13 @@ export default function SignUpPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSubmit(onSubmit)(e)
+              }}
+              className="space-y-6"
+            >
             {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
@@ -252,27 +258,6 @@ export default function SignUpPage() {
                 {errors.organization_name && (
                   <p className="text-sm text-red-500 mt-1 font-figtree">{errors.organization_name.message}</p>
                 )}
-              </div>
-
-              {/* Company Email Field */}
-              <div className="mb-4">
-                <label htmlFor="company_email" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
-                  Company Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="company_email"
-                  placeholder="company@example.com"
-                  {...register('company_email')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
-                  required
-                />
-                {errors.company_email && (
-                  <p className="text-sm text-red-500 mt-1 font-figtree">{errors.company_email.message}</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1 font-figtree">
-                  This will be used for company communications and job postings
-                </p>
               </div>
 
               {/* Hiring Manager Email Field */}

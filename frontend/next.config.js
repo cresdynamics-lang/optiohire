@@ -18,6 +18,12 @@ const nextConfig = {
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Allow local images under /assets (e.g. /assets/logo/optiohirelogo.png?v=2027)
+    localPatterns: [
+      {
+        pathname: '/assets/**',
+      },
+    ],
     remotePatterns: [
       {
         protocol: 'https',

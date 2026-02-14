@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (name: string, email: string, password: string, company_role: string, organization_name: string, company_email: string, hiring_manager_email: string) => {
     try {
-      setLoading(true)
+      // Don't set global loading here - it can cause AuthProvider to re-render and remount the signup form
       // Use Next.js API route instead of external backend
       // hr_email is set to company_email since the form doesn't have a separate hr_email field
       const resp = await fetch('/api/auth/signup', {
@@ -238,7 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return { error: { message: errorMessage } }
     } finally {
-      setLoading(false)
+      // No setLoading(false) - we didn't set it at start
     }
   }
 

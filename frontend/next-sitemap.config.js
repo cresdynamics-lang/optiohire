@@ -1,6 +1,10 @@
 /** @type {import('next-sitemap').IConfig} */
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL
+  ? (process.env.NEXT_PUBLIC_APP_URL.startsWith('http') ? process.env.NEXT_PUBLIC_APP_URL : `https://${process.env.NEXT_PUBLIC_APP_URL}`)
+  : 'https://optiohire.com'
+
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://optiohire.com',
+  siteUrl,
   generateRobotsTxt: true,
   generateIndexSitemap: false,
   changefreq: 'weekly',
@@ -15,9 +19,7 @@ module.exports = {
         disallow: ['/admin/', '/dashboard/', '/auth/', '/api/']
       }
     ],
-    additionalSitemaps: [
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://optiohire.com'}/server-sitemap.xml`,
-    ],
+    additionalSitemaps: [`${siteUrl}/server-sitemap.xml`],
   },
   transform: async (config, path) => {
     // Custom transform for specific pages

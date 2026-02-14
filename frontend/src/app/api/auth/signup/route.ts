@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
       await client.query('COMMIT')
 
       // Send email verification code (backend sends email with code; user confirms on /auth/verify-email)
-      let needsEmailVerification = false
+      // Always require verify step: send user to verify-email page even if email send fails (they can request resend)
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
         const res = await fetch(`${backendUrl}/auth/send-signup-verification-email`, {
@@ -233,7 +233,9 @@ export async function POST(request: NextRequest) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: email.toLowerCase(), name: name.trim() })
         })
-        if (res.ok) needsEmailVerification = true
+        if (!res.ok) {
+          console.error('Verification email request failed:', res.status, await res.text().catch(() => ''))
+        }
       } catch (e) {
         console.error('Could not send verification email:', e)
       }
@@ -248,7 +250,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           token,
-          needsEmailVerification,
+          needsEmailVerification: true,
           user: {
             user_id: userId,
             id: userId,

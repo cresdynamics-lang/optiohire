@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus, Calendar, Clock } from 'lucide-react'
+import { X, Plus, Calendar, Clock, Video, ExternalLink } from 'lucide-react'
 import { JobPosting } from '@/types'
 
 interface EditJobModalProps {
@@ -219,13 +219,29 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                     
                     <div className="space-y-2">
                       <Label htmlFor="interview_meeting_link">Meeting Link (Optional)</Label>
-                      <Input
-                        id="interview_meeting_link"
-                        value={formData.interview_meeting_link || ''}
-                        onChange={(e) => handleInputChange('interview_meeting_link', e.target.value)}
-                        placeholder="https://meet.google.com/..."
-                        className="text-gray-900 dark:text-white dark:bg-gray-800 focus-visible:ring-[#2D2DDD] hover:border-[#2D2DDD]/50 focus-visible:border-[#2D2DDD]"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="interview_meeting_link"
+                          value={formData.interview_meeting_link || ''}
+                          onChange={(e) => handleInputChange('interview_meeting_link', e.target.value)}
+                          placeholder="https://meet.google.com/..."
+                          className="text-gray-900 dark:text-white dark:bg-gray-800 focus-visible:ring-[#2D2DDD] hover:border-[#2D2DDD]/50 focus-visible:border-[#2D2DDD] flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => window.open('https://meet.google.com/new', '_blank', 'noopener,noreferrer')}
+                          className="flex-shrink-0 border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white dark:border-[#5F5FFF] dark:text-[#5F5FFF] dark:hover:bg-[#5F5FFF] dark:hover:text-white inline-flex items-center gap-2"
+                          aria-label="Open Google Meet to create a new meeting"
+                        >
+                          <Video className="w-4 h-4" aria-hidden />
+                          <span className="hidden sm:inline">Google Meet</span>
+                          <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Open Google Meet to start a new meeting, then copy the link and paste it above.
+                      </p>
                     </div>
                   </div>
 

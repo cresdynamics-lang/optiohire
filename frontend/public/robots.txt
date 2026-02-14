@@ -1,14 +1,8 @@
-# *
+# Fallback robots.txt (dynamic version served from app/robots.ts)
 User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /auth/
 Disallow: /api/
-
-# Host
-Host: https://optiohire.com
-
-# Sitemaps
 Sitemap: https://optiohire.com/sitemap.xml
-Sitemap: https://optiohire.com/server-sitemap.xml

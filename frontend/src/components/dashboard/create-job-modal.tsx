@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus, Calendar, Briefcase, MapPin, Users, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { X, Plus, Calendar, Briefcase, MapPin, Users, Loader2, CheckCircle, AlertCircle, Clock, Video, ExternalLink } from 'lucide-react'
 import { JobPostingFormData } from '@/types'
 import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -165,7 +165,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div key="create-job-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -305,9 +305,9 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                         </Button>
                       </div>
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {formData.required_skills.map((skill) => (
+                        {formData.required_skills.map((skill, index) => (
                           <Badge
-                            key={skill}
+                            key={`skill-${index}-${skill || 'empty'}`}
                             variant="secondary"
                             className="flex items-center gap-1"
                           >
@@ -354,15 +354,32 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                     
                     <div className="space-y-2">
                       <Label htmlFor="interview_meeting_link" className="text-gray-900 dark:text-white">Default Meeting Link (Optional)</Label>
-                      <Input
-                        id="interview_meeting_link"
-                        value={formData.interview_meeting_link}
-                        onChange={(e) => handleInputChange('interview_meeting_link', e.target.value)}
-                        placeholder="https://meet.google.com/..."
-                        className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="interview_meeting_link"
+                          value={formData.interview_meeting_link}
+                          onChange={(e) => handleInputChange('interview_meeting_link', e.target.value)}
+                          placeholder="https://meet.google.com/..."
+                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => window.open('https://meet.google.com/new', '_blank', 'noopener,noreferrer')}
+                          className="flex-shrink-0 border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white dark:border-[#5F5FFF] dark:text-[#5F5FFF] dark:hover:bg-[#5F5FFF] dark:hover:text-white inline-flex items-center gap-2"
+                          aria-label="Open Google Meet to create a new meeting"
+                        >
+                          <Video className="w-4 h-4" aria-hidden />
+                          <span className="hidden sm:inline">Google Meet</span>
+                          <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden />
+                        </Button>
+                      </div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         This will be used as the default meeting link when scheduling interviews for shortlisted candidates
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                        <Video className="w-3.5 h-3.5 flex-shrink-0" />
+                        Click &quot;Google Meet&quot; to open a new meeting in another tab. Copy the meeting link from that tab and paste it above.
                       </p>
                     </div>
                     
@@ -412,7 +429,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
       )}
       
       {/* Success Confirmation Dialog */}
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+      <Dialog key="create-job-success-dialog" open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">

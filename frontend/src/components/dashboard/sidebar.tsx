@@ -72,10 +72,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
   const themeContext = useTheme()
   const resolvedTheme = themeContext?.resolvedTheme || 'dark'
 
-  const logoSrc =
-    resolvedTheme === 'light'
-      ? '/assets/logo/optiohirelogo.png?v=2027'
-      : '/assets/logo/optiohirelogo.png?v=2027'
+  const logoSrc = '/assets/logo/optiohirelogo.png'
 
   return (
     <motion.div
@@ -185,3 +182,5 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
     </motion.div>
   )
 }
+
+export default Sidebar
