@@ -3,6 +3,8 @@
 **Droplet IP:** 165.22.128.141  
 **Domain:** www.optiohire.com, optiohire.com, api.optiohire.com  
 
+**API list:** See [API_REFERENCE.md](../API_REFERENCE.md) in the repo root for all backend endpoints.  
+
 ## 1. Push latest code (from your machine)
 
 ```bash
@@ -81,7 +83,26 @@ pm2 restart optiohire-backend optiohire-frontend
 pm2 save
 ```
 
-## 7. Database schema (if "relation job_postings does not exist")
+## 7. Ensure API is on the server (if api.optiohire.com was missing)
+
+If the API wasn’t set up or needs to be added/updated (backend + NGINX for api.optiohire.com):
+
+```bash
+cd /var/www/optiohire
+git pull origin main
+bash deploy/ensure-api-on-server.sh
+```
+
+This script will:
+
+- Install backend deps, build backend, and start/restart `optiohire-backend` (port 3001)
+- Create or update NGINX so **api.optiohire.com** proxies to port 3001
+- Reload NGINX and run a quick health check
+
+**DNS:** Ensure an **A** record for **api** (or **api.optiohire.com**) points to **165.22.128.141**.  
+**SSL:** After DNS is correct, run certbot for api.optiohire.com (see section 4).
+
+## 8. Database schema (if "relation job_postings does not exist")
 
 If the backend logs "relation \"job_postings\" does not exist", apply the schema once:
 
@@ -91,7 +112,7 @@ sudo -u postgres psql -d optiohire -f /var/www/optiohire/backend/src/db/complete
 
 Then restart the backend: `pm2 restart optiohire-backend`.
 
-## 8. Useful commands on the server
+## 9. Useful commands on the server
 
 ```bash
 pm2 status
@@ -101,7 +122,7 @@ pm2 restart optiohire-frontend
 nginx -t && systemctl reload nginx
 ```
 
-## 9. Make app live / update after push
+## 10. Make app live / update after push
 
 **If your SSH console disconnects** during the update, use one of these:
 
