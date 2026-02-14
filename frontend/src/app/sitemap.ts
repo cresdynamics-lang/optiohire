@@ -31,7 +31,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return {
       url,
       lastModified: new Date(),
-      changeFrequency: (isHome ? 'daily' : 'weekly') as const,
+      changeFrequency: (isHome ? 'daily' : 'weekly') as 'daily' | 'weekly',
       priority: isHome ? 1 : path === '/how-it-works' || path === '/why-optiohire' || path === '/use-cases' || path === '/trust-security' ? 0.9 : 0.7,
     }
   })

@@ -129,7 +129,19 @@ pm2 save
 
 ### If frontend build fails with "Bus error (core dumped)"
 
-This usually means the droplet ran out of memory during `next build`. Do one or both:
+The droplet may not have enough RAM for `next build`. Use **pre-build locally and deploy**:
+
+```bash
+# On your machine (where build works):
+cd /path/to/optiohire
+SERVER=root@165.22.128.141 ./deploy/prebuild-and-deploy-frontend.sh
+```
+
+This builds the frontend locally, rsyncs `.next` to the server, and restarts PM2. Ensure the server has the latest backend (run `git pull` + backend build first if needed).
+
+---
+
+**Alternative** – if you prefer building on the server, try:
 
 **1. Add 2GB swap** (on the droplet):
 
