@@ -4,11 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Shield, ShieldAlert } from 'lucide-react'
 
-const ADMIN_USERS = [
-  { email: 'admin@optiohire.com', name: 'Admin Manager' }
-]
-
-const ADMIN_PASSWORD = 'OptioHire@Admin'
+const ADMIN_EMAIL = 'admin@optiohire.com'
+const ADMIN_NAME = 'Admin Manager'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -31,16 +28,8 @@ export default function AdminLoginPage() {
       return
     }
 
-    // Check if it's one of the admin users
-    const adminUser = ADMIN_USERS.find(u => u.email.toLowerCase() === email.toLowerCase())
-    
-    if (!adminUser) {
+    if (email.toLowerCase() !== ADMIN_EMAIL) {
       setError('Invalid admin email')
-      return
-    }
-
-    if (password !== ADMIN_PASSWORD) {
-      setError('Invalid password')
       return
     }
 
@@ -48,29 +37,52 @@ export default function AdminLoginPage() {
     setError(null)
 
     try {
-      // Create admin session directly without backend authentication
-      const adminSession = {
-        id: adminUser.email,
-        email: adminUser.email,
-        name: adminUser.name,
-        role: 'admin',
-        isAdmin: true
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const res = await fetch(`${backendUrl}/auth/signin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase(), password }),
+      })
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setError(data?.error || 'Invalid credentials')
+        setIsLoading(false)
+        return
       }
 
-      // Store in localStorage
-      localStorage.setItem('admin_session', JSON.stringify(adminSession))
-      localStorage.setItem('admin_email', adminUser.email)
-      localStorage.setItem('admin_name', adminUser.name)
-      
-      // Also set a token for API calls (we'll handle this on backend)
-      // For now, set a simple admin token
-      localStorage.setItem('admin_token', `admin_${adminUser.email}_${Date.now()}`)
+      if (data?.user?.role !== 'admin') {
+        setError('This account does not have admin access')
+        setIsLoading(false)
+        return
+      }
 
-      // Navigate to admin dashboard using Next.js router
+      const token = data.token
+      const user = data.user
+      if (!token) {
+        setError('Login failed: no token received')
+        setIsLoading(false)
+        return
+      }
+
+      const adminSession = {
+        id: user.user_id || user.id,
+        email: user.email,
+        name: user.name || ADMIN_NAME,
+        role: 'admin',
+        isAdmin: true,
+      }
+
+      localStorage.setItem('token', token)
+      localStorage.setItem('admin_token', token)
+      localStorage.setItem('admin_session', JSON.stringify(adminSession))
+      localStorage.setItem('admin_email', user.email)
+      localStorage.setItem('admin_name', user.name || ADMIN_NAME)
+
       router.push('/admin')
-      router.refresh() // Refresh to update auth context
+      router.refresh()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      const errorMessage = err instanceof Error ? err.message : 'Network error. Check backend URL.'
       setError(errorMessage)
       setIsLoading(false)
     }

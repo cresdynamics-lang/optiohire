@@ -347,6 +347,29 @@ pm2 restart optiohire-backend optiohire-frontend
 pm2 save
 ```
 
+### Admin login and API access
+
+Admin login at **https://optiohire.com/admin/login** now uses the backend: it signs in with the backend and stores a real JWT, so admin API calls (users, companies, jobs, etc.) work. Ensure the admin user exists in the database:
+
+**On the droplet (once):**
+
+```bash
+cd /var/www/optiohire/backend
+npx tsx scripts/ensure-admin-user.ts
+```
+
+Then log in with **admin@optiohire.com** / **OptioHire@Admin**. After logout, going to `/admin` will redirect to `/admin/login` (expected).
+
+### OTP / verification emails for signup
+
+Sign-up account creation sends a **verification code (OTP)** to the user’s email. The frontend calls the backend `POST /auth/send-signup-verification-email`; the backend sends the email via **Resend** (or SMTP if Resend is not configured). For codes to be sent in production, set in **backend/.env**:
+
+- `USE_RESEND=true`
+- `RESEND_API_KEY=re_...` (from Resend dashboard)
+- `RESEND_FROM_EMAIL=noreply@optiohire.com` (or your verified domain)
+
+If Resend is not set, the backend may fall back to SMTP (`MAIL_HOST`, `MAIL_USER`, `MAIL_PASS`). Ensure one of these is configured so verification emails are delivered.
+
 ## 7. Ensure API is on the server (if api.optiohire.com was missing)
 
 If the API wasn’t set up or needs to be added/updated (backend + NGINX for api.optiohire.com):
