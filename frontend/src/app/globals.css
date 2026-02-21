@@ -1,3 +1,4 @@
+/* Autoprefixer may warn about "gradient direction syntax" - warning comes from Tailwind's compiled output; safe to ignore. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
