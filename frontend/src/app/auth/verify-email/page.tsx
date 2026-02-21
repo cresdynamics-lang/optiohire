@@ -25,6 +25,8 @@ function VerifyEmailContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
+  const [resendLoading, setResendLoading] = useState(false)
 
   const form = useForm<VerifyEmailFormData>({
     resolver: zodResolver(verifyEmailSchema)
@@ -34,6 +36,33 @@ function VerifyEmailContent() {
     const emailParam = searchParams.get('email')
     if (emailParam) setEmail(decodeURIComponent(emailParam))
   }, [searchParams])
+
+  const handleResendCode = async () => {
+    if (!email) return
+    setResendLoading(true)
+    setResendMessage(null)
+    setError(null)
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const response = await fetch(`${backendUrl}/auth/send-signup-verification-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name: email.split('@')[0] })
+      })
+      const result = await response.json()
+      if (response.ok && !result?.codeSaved) {
+        setResendMessage('New code sent. Check your email.')
+      } else if (response.ok && result?.codeSaved) {
+        setResendMessage('Code could not be sent. Check backend email config (Resend/SMTP).')
+      } else {
+        setResendMessage(result?.error || 'Failed to resend.')
+      }
+    } catch {
+      setResendMessage('Could not resend. Try again.')
+    } finally {
+      setResendLoading(false)
+    }
+  }
 
   const onSubmit = async (data: VerifyEmailFormData) => {
     if (!email) {
@@ -148,17 +177,43 @@ function VerifyEmailContent() {
                   <p className="text-sm text-red-600 font-figtree">{error}</p>
                 </div>
               )}
-              <button
+              {resendMessage && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700 font-figtree">{resendMessage}</p>
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={resendLoading || isLoading}
+                  className="flex-1 py-3 px-4 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 font-figtree"
+                >
+                  {resendLoading ? 'Sending…' : 'Resend code'}
+                </button>
+                <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
+                className="flex-1 bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
               >
                 {isLoading ? 'Verifying…' : 'Confirm email'}
               </button>
+              </div>
             </form>
             <p className="mt-4 text-center text-sm text-gray-500 font-figtree">
               After confirming, you’ll receive a welcome email from OptioHire.
             </p>
+            <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+              <p className="text-sm text-gray-600 font-figtree mb-2">Didn&apos;t receive the code?</p>
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={resendLoading || isLoading}
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-figtree underline underline-offset-2"
+              >
+                {resendLoading ? 'Sending…' : 'Send another code'}
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>

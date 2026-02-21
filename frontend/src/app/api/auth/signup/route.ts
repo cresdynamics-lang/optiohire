@@ -226,6 +226,7 @@ export async function POST(request: NextRequest) {
 
       // Send email verification code (backend sends email with code; user confirms on /auth/verify-email)
       // Always require verify step: send user to verify-email page even if email send fails (they can request resend)
+      let verificationEmailSent = false
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
         const res = await fetch(`${backendUrl}/auth/send-signup-verification-email`, {
@@ -233,8 +234,13 @@ export async function POST(request: NextRequest) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: email.toLowerCase(), name: name.trim() })
         })
-        if (!res.ok) {
-          console.error('Verification email request failed:', res.status, await res.text().catch(() => ''))
+        const resData = await res.json().catch(() => ({}))
+        if (res.ok && resData?.message && !resData?.codeSaved) {
+          verificationEmailSent = true
+        } else if (!res.ok) {
+          console.error('Verification email request failed:', res.status, resData?.error || await res.text().catch(() => ''))
+        } else if (resData?.codeSaved) {
+          console.warn('Verification code saved but email not sent (check backend RESEND_API_KEY or SMTP):', resData?.message)
         }
       } catch (e) {
         console.error('Could not send verification email:', e)
@@ -251,6 +257,7 @@ export async function POST(request: NextRequest) {
         {
           token,
           needsEmailVerification: true,
+          verificationEmailSent,
           user: {
             user_id: userId,
             id: userId,

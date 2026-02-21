@@ -362,13 +362,40 @@ Then log in with **admin@optiohire.com** / **OptioHire@Admin**. After logout, go
 
 ### OTP / verification emails for signup
 
-Sign-up account creation sends a **verification code (OTP)** to the user’s email. The frontend calls the backend `POST /auth/send-signup-verification-email`; the backend sends the email via **Resend** (or SMTP if Resend is not configured). For codes to be sent in production, set in **backend/.env**:
+Sign-up account creation sends a **6-digit verification code** to the user’s email. The frontend calls the backend `POST /auth/send-signup-verification-email`; the backend saves the code in `email_verification_codes` and sends the email via **Resend** (or SMTP). For codes to be sent in production, set in **backend/.env**:
 
 - `USE_RESEND=true`
 - `RESEND_API_KEY=re_...` (from Resend dashboard)
 - `RESEND_FROM_EMAIL=noreply@optiohire.com` (or your verified domain)
 
-If Resend is not set, the backend may fall back to SMTP (`MAIL_HOST`, `MAIL_USER`, `MAIL_PASS`). Ensure one of these is configured so verification emails are delivered.
+If Resend is not set, the backend falls back to SMTP (`MAIL_HOST`, `MAIL_USER`, `MAIL_PASS`). Ensure one of these is configured.
+
+**Ensure the table and permissions exist** (run once on the droplet):
+
+```bash
+# If you added email_verification_codes via a migration, grant access:
+sudo -u postgres psql -d optiohire -c "
+  CREATE TABLE IF NOT EXISTS email_verification_codes (
+    code_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    email text NOT NULL,
+    code text NOT NULL,
+    expires_at timestamptz NOT NULL,
+    used boolean DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now()
+  );
+  GRANT SELECT, INSERT, UPDATE, DELETE ON email_verification_codes TO optiohire_user;
+"
+```
+
+**Test that the 6-digit code is sent** (use an existing user’s email):
+
+```bash
+cd /var/www/optiohire/backend
+npx tsx scripts/send-test-verification-code.ts user@example.com
+```
+
+Check the inbox for that email; the script also prints the code in the terminal. If the script fails, check backend logs (`pm2 logs optiohire-backend`) and that `RESEND_API_KEY` or SMTP is set in backend `.env`.
 
 ## 7. Ensure API is on the server (if api.optiohire.com was missing)
 

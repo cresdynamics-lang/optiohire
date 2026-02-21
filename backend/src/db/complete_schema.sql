@@ -117,6 +117,37 @@ CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tok
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires_at ON password_reset_tokens(expires_at);
 
+-- ============================================================================
+-- EMAIL VERIFICATION CODES (6-digit OTP for signup)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS email_verification_codes (
+  code_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  email text NOT NULL,
+  code text NOT NULL,
+  expires_at timestamptz NOT NULL,
+  used boolean DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_verification_codes_email ON email_verification_codes(email);
+CREATE INDEX IF NOT EXISTS idx_email_verification_codes_code ON email_verification_codes(code);
+CREATE INDEX IF NOT EXISTS idx_email_verification_codes_user_id ON email_verification_codes(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_verification_codes_expires_at ON email_verification_codes(expires_at);
+
+-- Add email_verified to users if not present
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'users' AND column_name = 'email_verified'
+  ) THEN
+    ALTER TABLE users ADD COLUMN email_verified boolean DEFAULT false;
+    RAISE NOTICE 'Added email_verified column to users';
+  END IF;
+END $$;
+
 -- Clean up expired tokens (older than 24 hours)
 CREATE OR REPLACE FUNCTION cleanup_expired_password_reset_tokens()
 RETURNS void AS $$

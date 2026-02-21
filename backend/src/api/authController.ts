@@ -579,6 +579,7 @@ export async function sendSignupVerificationEmail(req: Request, res: Response) {
     const emailService = new EmailService()
     try {
       await emailService.sendEmailVerificationCode(email.toLowerCase(), userName, code)
+      console.log('[Auth] Verification code email sent to', email.toLowerCase())
     } catch (emailErr) {
       console.error('Send verification email failed (code was saved):', emailErr)
       return res.status(200).json({

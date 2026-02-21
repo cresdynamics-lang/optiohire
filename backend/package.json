@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "migrate:remove-username": "tsx src/db/migrations/run-remove-username.ts",
-    "ensure-admin": "tsx scripts/ensure-admin-user.ts"
+    "ensure-admin": "tsx scripts/ensure-admin-user.ts",
+    "test:verification-email": "tsx scripts/send-test-verification-code.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.934.0",
