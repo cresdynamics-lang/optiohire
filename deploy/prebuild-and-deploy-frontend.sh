@@ -12,7 +12,7 @@
 
 set -e
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SERVER="${SERVER:-root@165.22.128.141}"
+SERVER="${SERVER:-root@165.227.56.148}"
 [ -n "$SSH_PASS" ] && [ -z "$SSHPASS" ] && export SSHPASS="$SSH_PASS"
 # Avoid "Too many authentication failures" when using password auth with many keys
 SSH_OPTS="-o IdentitiesOnly=yes -o PubkeyAuthentication=no -o PreferredAuthentications=password -o StrictHostKeyChecking=no"

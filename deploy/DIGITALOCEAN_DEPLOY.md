@@ -1,9 +1,252 @@
 # Deploy OptioHire to DigitalOcean (PM2 + NGINX + SSL)
 
-**Droplet IP:** 165.22.128.141  
-**Domain:** www.optiohire.com, optiohire.com, api.optiohire.com  
+Host the OptioHire app (Next.js frontend + Express backend + PostgreSQL) on a DigitalOcean Droplet using PM2, NGINX, and Let's Encrypt SSL.
 
-**API list:** See [API_REFERENCE.md](../API_REFERENCE.md) in the repo root for all backend endpoints.  
+**Domain:** optiohire.com, www.optiohire.com, api.optiohire.com  
+**API reference:** [API_REFERENCE.md](../API_REFERENCE.md) in the repo root.
+
+---
+
+## Quick start: host this app on Digital Ocean
+
+1. **Create a Droplet** (see [Prerequisites](#0-prerequisites--create-a-droplet)); current IP **165.227.56.148**.
+2. **Push code:** `git push origin main`
+3. **SSH in:** `ssh -o ServerAliveInterval=60 root@165.227.56.148`
+4. **Run the deploy script** or follow [All commands to run on the droplet console](#all-commands-to-run-on-the-droplet-console).
+5. **Point DNS** for `@`, `www`, and `api` to **165.227.56.148**.
+6. **Run Certbot** for SSL (see [§4](#4-add-ssl-lets-encrypt)).
+7. **Add secrets** in `backend/.env` and restart PM2 (see [§6](#6-after-first-deploy-add-secrets)).
+
+**Droplet IP:** **165.227.56.148**  
+**Domain:** optiohire.com, www.optiohire.com, api.optiohire.com
+
+---
+
+## All commands to run on the droplet console
+
+SSH in first: `ssh root@165.227.56.148` (or with keepalive: `ssh -o ServerAliveInterval=60 root@165.227.56.148`). Then run these in order. Replace `your@email.com` in the Certbot command with your real email.
+
+---
+
+### 1. Install Node 20 and npm
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+node --version
+npm --version
+```
+
+### 2. Install PostgreSQL and create DB
+
+```bash
+sudo apt update
+sudo apt install -y postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+sudo -u postgres psql -c "CREATE USER optiohire_user WITH PASSWORD 'optiohire_pass_2024';" 2>/dev/null || true
+sudo -u postgres psql -c "CREATE DATABASE optiohire OWNER optiohire_user;" 2>/dev/null || true
+PG_HBA=$(find /etc/postgresql -name pg_hba.conf 2>/dev/null | head -1)
+if [ -n "$PG_HBA" ] && ! grep -q "optiohire_user" "$PG_HBA" 2>/dev/null; then
+  echo "host    optiohire   optiohire_user   127.0.0.1/32   md5" | sudo tee -a "$PG_HBA"
+  sudo systemctl restart postgresql
+fi
+```
+
+*(If user/db already exist, the create commands may error; that’s OK.)*
+
+### 3. Clone the project
+
+```bash
+sudo mkdir -p /var/www
+cd /var/www
+sudo git clone https://github.com/cresdynamics-lang/optiohire.git
+cd /var/www/optiohire
+```
+
+### 4. Create env files (backend)
+
+```bash
+cat > /var/www/optiohire/backend/.env << 'EOF'
+PORT=3001
+NODE_ENV=production
+DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire
+DB_SSL=false
+JWT_SECRET=optiohire_jwt_secret_change_in_production_2024
+NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com
+CORS_ORIGIN=https://www.optiohire.com
+USE_RESEND=true
+RESEND_FROM_EMAIL=noreply@optiohire.com
+RESEND_FROM_NAME=OptioHire
+ENABLE_EMAIL_READER=false
+EOF
+```
+
+*(Edit later to add RESEND_API_KEY, GROQ_API_KEY, etc.: `nano /var/www/optiohire/backend/.env`.)*
+
+### 5. Create env files (frontend)
+
+```bash
+echo "NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com" > /var/www/optiohire/frontend/.env.local
+echo "NEXTAUTH_URL=https://www.optiohire.com" >> /var/www/optiohire/frontend/.env.local
+echo "NODE_ENV=production" >> /var/www/optiohire/frontend/.env.local
+echo "DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire" >> /var/www/optiohire/frontend/.env.local
+echo "DB_SSL=false" >> /var/www/optiohire/frontend/.env.local
+```
+
+### 6. Apply database schema
+
+```bash
+sudo -u postgres psql -d optiohire -f /var/www/optiohire/backend/src/db/complete_schema.sql
+```
+
+### 7. Install dependencies and build
+
+```bash
+cd /var/www/optiohire/backend
+npm install
+npm run build
+```
+
+```bash
+cd /var/www/optiohire/frontend
+npm install --legacy-peer-deps
+NODE_OPTIONS='--max-old-space-size=2048' npm run build
+```
+
+*(If the frontend build fails with “Bus error”, add swap [see §10 in this doc] or use `npm run build:low-memory` or `npm run build:server`.)*
+
+### 8. Start app with PM2
+
+```bash
+sudo npm i -g pm2
+cd /var/www/optiohire/backend
+pm2 start dist/server.js --name optiohire-backend
+cd /var/www/optiohire/frontend
+pm2 start npm --name optiohire-frontend -- start
+pm2 save
+pm2 startup
+```
+
+*(Run the command `pm2 startup` prints so the app starts on reboot.)*
+
+Check: `pm2 status` — both should be “online”. You can open http://165.227.56.148:3000 and http://165.227.56.148:3001 to test.
+
+### 9. UFW firewall
+
+```bash
+sudo ufw allow ssh
+sudo ufw allow http
+sudo ufw allow https
+sudo ufw --force enable
+sudo ufw status
+```
+
+### 10. Install NGINX and configure reverse proxy
+
+```bash
+sudo apt install -y nginx
+```
+
+```bash
+sudo tee /etc/nginx/sites-available/optiohire << 'EOF'
+# Frontend - optiohire.com & www.optiohire.com
+server {
+    listen 80;
+    listen [::]:80;
+    server_name optiohire.com www.optiohire.com;
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+# Backend API - api.optiohire.com
+server {
+    listen 80;
+    listen [::]:80;
+    server_name api.optiohire.com;
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+EOF
+```
+
+```bash
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo ln -sf /etc/nginx/sites-available/optiohire /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### 11. DNS (do this in DigitalOcean / your registrar)
+
+- In **DigitalOcean** → Networking → Domains, add **optiohire.com**.
+- Add **A** records pointing to **165.227.56.148**:
+  - `@` → 165.227.56.148  
+  - `www` → 165.227.56.148  
+  - `api` → 165.227.56.148  
+
+If the domain is at another registrar (e.g. Namecheap), set **custom nameservers** to:
+
+- `ns1.digitalocean.com`
+- `ns2.digitalocean.com`
+- `ns3.digitalocean.com`
+
+Wait for DNS to propagate, then continue.
+
+### 12. SSL with Let’s Encrypt
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d optiohire.com -d www.optiohire.com -d api.optiohire.com --non-interactive --agree-tos -m your@email.com
+```
+
+*(Replace `your@email.com` with your email.)*
+
+Test renewal:
+
+```bash
+sudo certbot renew --dry-run
+```
+
+---
+
+After this, open **https://optiohire.com** and **https://api.optiohire.com**. Add your real API keys in `/var/www/optiohire/backend/.env` and run `pm2 restart optiohire-backend optiohire-frontend && pm2 save`.
+
+---
+
+## 0. Prerequisites – Create a Droplet
+
+If you don’t have a server yet:
+
+1. **DigitalOcean** → Create → **Droplets**.
+2. **Image:** Ubuntu 24.04 LTS (or 22.04).
+3. **Plan:**  
+   - **2 GB RAM / 1 vCPU** minimum if you build on the server (or add a 2 GB swap; see [§10](#10-make-app-live--update-after-push)).  
+   - **1 GB** is enough if you use [prebuild-and-deploy](#if-frontend-build-fails-with-bus-error-core-dumped) from your machine.
+4. **Datacenter:** Choose one close to your users.
+5. **Authentication:** Add your SSH key (recommended) or use password and keep it safe.
+6. **Hostname:** e.g. `optiohire-prod`.
+7. Create the Droplet and note the **IP address**. Current production IP: **165.227.56.148**.
+
+---
 
 ## 1. Push latest code (from your machine)
 
@@ -17,27 +260,46 @@ git push origin main
 Use keepalive so the connection does not drop during long runs:
 
 ```bash
-ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o PreferredAuthentications=password -o PubkeyAuthentication=no root@165.22.128.141
-# Password: Manage@1Optiohire
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 root@165.227.56.148
+```
+
+If you use password auth instead of SSH keys:
+
+```bash
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o PreferredAuthentications=password -o PubkeyAuthentication=no root@165.227.56.148
 ```
 
 ## 3. Run the deploy script on the server
 
-```bash
-# If not already there, copy the script first (from your machine):
-# scp -o PreferredAuthentications=password -o PubkeyAuthentication=no deploy/digitalocean-deploy.sh root@165.22.128.141:/root/
+**Option A – Script already on server** (e.g. after a previous clone):
 
-# On the droplet:
+```bash
+cd /var/www/optiohire && git pull origin main && bash deploy/digitalocean-deploy.sh
+```
+
+**Option B – First time: copy script then run**
+
+From your machine:
+
+```bash
+scp deploy/digitalocean-deploy.sh root@165.227.56.148:/root/
+```
+
+On the droplet:
+
+```bash
 chmod +x /root/digitalocean-deploy.sh
 bash /root/digitalocean-deploy.sh
 ```
 
+(The script will clone the repo to `/var/www/optiohire` if it’s not there yet.)
+
 The script will:
 
 - Install **Node 20** (required for Next.js 16 and backend)
-- Install **PostgreSQL**, create DB `optiohire` and user `optiohire_user` (password: `optiohire_pass_2024`)
+- Install **PostgreSQL**, create DB `optiohire` and user `optiohire_user` (default password in script; change in production)
 - **Clone** from GitHub: https://github.com/cresdynamics-lang/optiohire.git
-- Create **backend/.env** and **frontend/.env** with production URLs
+- Create **backend/.env** and **frontend/.env.production** / **frontend/.env.local** with production URLs
 - **Build** backend and frontend
 - Start **PM2**: `optiohire-backend` (port 3001), `optiohire-frontend` (port 3000)
 - Configure **UFW** (ssh, http, https)
@@ -45,7 +307,7 @@ The script will:
 
 ## 4. Add SSL (Let's Encrypt)
 
-On the droplet, after DNS for **optiohire.com**, **www.optiohire.com**, and **api.optiohire.com** points to **165.22.128.141**:
+On the droplet, after DNS for **optiohire.com**, **www.optiohire.com**, and **api.optiohire.com** points to your droplet IP:
 
 ```bash
 apt-get install -y certbot python3-certbot-nginx
@@ -60,20 +322,22 @@ certbot renew --dry-run
 
 ## 5. DNS (DigitalOcean / your registrar)
 
-- **A** record: `@` → 165.22.128.141  
-- **A** record: `www` → 165.22.128.141  
-- **A** record: `api` → 165.22.128.141  
+Point all to **165.227.56.148** (or your droplet IP if different).
+
+- **A** record: `@` (or optiohire.com) → **165.227.56.148**  
+- **A** record: `www` → **165.227.56.148**  
+- **A** record: `api` → **165.227.56.148**  
 
 ## 6. After first deploy: add secrets
 
-On the droplet, edit env files and add your keys:
+On the droplet, edit env files and add your real keys and secrets (and change any default passwords):
 
 ```bash
 nano /var/www/optiohire/backend/.env
-# Add: RESEND_API_KEY=..., SMTP_PASS=..., GROQ_API_KEY=..., etc.
+# Add/update: RESEND_API_KEY=..., SMTP_PASS=..., GROQ_API_KEY=..., JWT_SECRET=..., etc.
 
 nano /var/www/optiohire/frontend/.env.local
-# Add DATABASE_URL if needed (same as backend), JWT_SECRET, etc.
+# Add DATABASE_URL if needed (same as backend), JWT_SECRET if used by frontend, etc.
 ```
 
 Then restart PM2:
@@ -99,8 +363,8 @@ This script will:
 - Create or update NGINX so **api.optiohire.com** proxies to port 3001
 - Reload NGINX and run a quick health check
 
-**DNS:** Ensure an **A** record for **api** (or **api.optiohire.com**) points to **165.22.128.141**.  
-**SSL:** After DNS is correct, run certbot for api.optiohire.com (see section 4).
+**DNS:** Ensure an **A** record for **api** (or **api.optiohire.com**) points to your droplet IP.  
+**SSL:** After DNS is correct, run certbot for api.optiohire.com (see [§4](#4-add-ssl-lets-encrypt)).
 
 ## 8. Database schema (if "relation job_postings does not exist")
 
@@ -165,7 +429,7 @@ The droplet may not have enough RAM for `next build`. Use **pre-build locally an
 ```bash
 # On your machine (where build works):
 cd /path/to/optiohire
-SERVER=root@165.22.128.141 ./deploy/prebuild-and-deploy-frontend.sh
+SERVER=root@165.227.56.148 ./deploy/prebuild-and-deploy-frontend.sh
 ```
 
 This builds the frontend locally, rsyncs `.next` to the server, and restarts PM2. Ensure the server has the latest backend (run `git pull` + backend build first if needed).
