@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { motion } from 'framer-motion'
@@ -53,7 +53,7 @@ interface User {
   } | null
 }
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
@@ -629,5 +629,17 @@ export default function AdminDashboard() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
+      </div>
+    }>
+      <AdminDashboardContent />
+    </Suspense>
   )
 }
