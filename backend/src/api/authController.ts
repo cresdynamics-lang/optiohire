@@ -177,11 +177,30 @@ export async function signup(req: Request, res: Response) {
       // Commit transaction
       await client.query('COMMIT')
 
+      // Send OTP (6-digit verification code) to user's email
+      const VERIFICATION_CODE_EXPIRY_HOURS = 24
+      const code = Math.floor(100000 + Math.random() * 900000).toString()
+      const expiresAt = new Date()
+      expiresAt.setHours(expiresAt.getHours() + VERIFICATION_CODE_EXPIRY_HOURS)
+      try {
+        await query(
+          `INSERT INTO email_verification_codes (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)`,
+          [userId, email.toLowerCase(), code, expiresAt]
+        )
+        const emailService = new EmailService()
+        await emailService.sendEmailVerificationCode(email.toLowerCase(), name?.trim() || 'User', code)
+        console.log('[Auth] Signup OTP sent to', email.toLowerCase())
+      } catch (otpErr) {
+        console.error('[Auth] Signup OTP save or send failed (user created):', otpErr)
+        // User is already created; they can request "Resend code" on verify-email page
+      }
+
       const token = jwt.sign({ sub: userId, email: email.toLowerCase(), role: 'user' }, JWT_SECRET, { expiresIn: '7d' })
-      return res.status(201).json({ 
-        token, 
-        user: { 
-          user_id: userId, 
+      return res.status(201).json({
+        token,
+        needsEmailVerification: true,
+        user: {
+          user_id: userId,
           id: userId, // Also include as 'id' for frontend compatibility
           name: name.trim(),
           email: email.toLowerCase(),

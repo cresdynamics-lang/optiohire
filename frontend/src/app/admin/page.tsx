@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -62,7 +62,9 @@ export default function AdminDashboard() {
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [activeSection, setActiveSection] = useState<'users' | 'jobs' | 'applicants' | 'admins'>('users')
+  const searchParams = useSearchParams()
+  const sectionFromUrl = searchParams.get('section') as 'users' | 'admins' | null
+  const [activeSection, setActiveSection] = useState<'users' | 'jobs' | 'applicants' | 'admins'>(sectionFromUrl === 'admins' ? 'admins' : 'users')
   const [adminSession, setAdminSession] = useState<string | null>(null)
   const [adminEmail, setAdminEmail] = useState<string | null>(null)
   const [adminName, setAdminName] = useState<string | null>(null)
@@ -71,6 +73,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     setIsSecure(typeof window !== 'undefined' && window.location.protocol === 'https:')
   }, [])
+
+  useEffect(() => {
+    if (sectionFromUrl === 'admins') setActiveSection('admins')
+    else if (!sectionFromUrl) setActiveSection('users')
+  }, [sectionFromUrl])
 
   // Use admin session if available, otherwise use regular user
   const currentUser = adminSession ? {
@@ -266,132 +273,6 @@ export default function AdminDashboard() {
             </Button>
           </div>
         </motion.div>
-
-        {/* Navigation Sections */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <Link href="/admin/dashboard">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </Button>
-              </Link>
-              <Button
-                variant={activeSection === 'users' ? 'default' : 'ghost'}
-                onClick={() => setActiveSection('users')}
-                className="flex items-center gap-2"
-              >
-                <Users className="w-4 h-4" />
-                Users
-              </Button>
-              <Link href="/admin/companies">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <Building2 className="w-4 h-4" />
-                  Companies
-                </Button>
-              </Link>
-              <Link href="/admin/jobs">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <Briefcase className="w-4 h-4" />
-                  Jobs
-                </Button>
-              </Link>
-              <Link href="/admin/applications">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  Applications
-                </Button>
-              </Link>
-              <Link href="/admin/analytics">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                  Analytics
-                </Button>
-              </Link>
-              <Link href="/admin/signups">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <UserCheck className="w-4 h-4" />
-                  Signups
-                </Button>
-              </Link>
-              <Link href="/admin/emails">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <Mail className="w-4 h-4" />
-                  Emails
-                </Button>
-              </Link>
-              <Link href="/admin/settings">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </Button>
-              </Link>
-              <Link href="/admin/logins">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <Key className="w-4 h-4" />
-                  Login Activity
-                </Button>
-              </Link>
-              <Link href="/admin/activity">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                  Activity
-                </Button>
-              </Link>
-              <Link href="/admin/help">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                >
-                  <Shield className="w-4 h-4" />
-                  Help
-                </Button>
-              </Link>
-              <Button
-                variant={activeSection === 'admins' ? 'default' : 'ghost'}
-                onClick={() => {
-                  setActiveSection('admins')
-                  setSearchTerm('') // Clear search when switching to admins
-                }}
-                className="flex items-center gap-2"
-              >
-                <Shield className="w-4 h-4" />
-                Admins
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Admin Profile Section */}
         {currentUser && (

@@ -103,7 +103,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Start transaction
+    // Prefer backend signup so user is created once and OTP is sent by the backend
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || ''
+    if (backendUrl) {
+      try {
+        const res = await fetch(`${backendUrl}/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name.trim(),
+            email: email.toLowerCase(),
+            password,
+            company_role,
+            company_name,
+            company_email,
+            hr_email: hr_email || company_email,
+            hiring_manager_email,
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok) {
+          return NextResponse.json(data, { status: 201 })
+        }
+        return NextResponse.json(
+          { error: data?.error || data?.details || 'Sign up failed' },
+          { status: res.status }
+        )
+      } catch (e) {
+        console.error('Backend signup failed, falling back to local signup:', e)
+        // Fall through to local signup below
+      }
+    }
+
+    // Start transaction (local signup when no backend or backend failed)
     await client.query('BEGIN')
 
     try {
