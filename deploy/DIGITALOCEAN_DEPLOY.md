@@ -397,6 +397,17 @@ npx tsx scripts/send-test-verification-code.ts user@example.com
 
 Check the inbox for that email; the script also prints the code in the terminal. If the script fails, check backend logs (`pm2 logs optiohire-backend`) and that `RESEND_API_KEY` or SMTP is set in backend `.env`.
 
+**If you see "optiohire.com domain is not verified" or "Found 0 verified domain(s)":**
+
+- The API key(s) in `.env` must be from the **same Resend account** where you verified **optiohire.com** (https://resend.com/domains).
+- On the server, use **one** key from that account. In `backend/.env` set:
+  - `RESEND_API_KEY=re_...` (the key from the account that has optiohire.com verified)
+  - `RESEND_FROM_EMAIL=noreply@optiohire.com`
+  - Leave `RESEND_API_KEY_SECONDARY` and `RESEND_API_KEY_FALLBACK` **unset** if they are from other accounts (otherwise you get 403 then rate limit, and no fallback).
+- Restart: `pm2 restart optiohire-backend && pm2 save`.
+
+**If Resend still fails and fallback fails:** configure SMTP in `backend/.env` (e.g. `MAIL_HOST`, `MAIL_USER`, `MAIL_PASS` for Gmail App Password) so verification emails can send when Resend is unavailable.
+
 ## 7. Ensure API is on the server (if api.optiohire.com was missing)
 
 If the API wasn’t set up or needs to be added/updated (backend + NGINX for api.optiohire.com):
