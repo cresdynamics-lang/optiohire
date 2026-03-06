@@ -126,13 +126,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               hiringManagerEmail: userData.hiring_manager_email || userData.hiringManagerEmail || null
             })
             
-            // STRICT: If user has no company and is not admin, deny access
-            // But be lenient - if companyId exists, assume hasCompany is true
+            // User has no company (e.g. signed up with Google): keep token and user, redirect to company-setup in layout
             if (!userData.hasCompany && !userData.companyId && userData.role !== 'admin') {
-              console.error('Access denied: User has no company profile')
-              localStorage.removeItem('token')
-              setUser(null)
-              // Redirect will be handled by dashboard guard
+              setUser({
+                ...userData,
+                hasCompany: false,
+                companyId: null
+              })
             } else if (userData.companyId && !userData.hasCompany) {
               // If companyId exists but hasCompany is false, set it to true
               setUser({
@@ -273,12 +273,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           hiringManagerEmail: data?.user?.hiringManagerEmail || null
         })
         
-        // STRICT: If user has no company and is not admin, deny access immediately
-        if (!data?.user?.hasCompany && data?.user?.role !== 'admin') {
-          console.error('Access denied: User has no company profile')
-          localStorage.removeItem('token')
-          setUser(null)
-          return { error: { message: 'Access denied: Company profile required. Please contact support.' } }
+        // User has no company: keep them logged in; dashboard will redirect to company-setup
+        if (!data?.user?.hasCompany && !data?.user?.companyId && data?.user?.role !== 'admin') {
+          setUser({
+            ...data.user,
+            hasCompany: false,
+            companyId: null
+          })
+          return { error: null }
         }
       }
       return { error: null }

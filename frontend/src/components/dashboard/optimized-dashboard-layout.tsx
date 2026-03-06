@@ -253,13 +253,9 @@ function DashboardContent() {
       return
     }
 
-    // STRICT: Deny access if user has no company
-    // After signup, hasCompany should be true, but handle undefined/null cases
-    // Only redirect if explicitly false AND no companyId
+    // STRICT: Require company setup before dashboard (e.g. Google sign-in). Keep token; redirect to company-setup.
     if (user.hasCompany === false && !user.companyId) {
-      console.error('Access denied: User has no company profile')
-      localStorage.removeItem('token')
-      router.push('/auth/signin?error=no_company')
+      router.replace('/company-setup')
       return
     }
     // If hasCompany is undefined but companyId exists, allow access (company exists)

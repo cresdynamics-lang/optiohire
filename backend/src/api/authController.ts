@@ -674,3 +674,152 @@ export async function verifyEmail(req: Request, res: Response) {
   }
 }
 
+/**
+ * Google OAuth sign-in. Accepts { code, redirect_uri } or { id_token }.
+ * Creates user if new (no company). Returns JWT and user; hasCompany false until they complete company-setup.
+ */
+export async function googleSignIn(req: Request, res: Response) {
+  try {
+    const { code, redirect_uri, id_token: idTokenFromBody } = req.body || {}
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+    const defaultRedirect = process.env.GOOGLE_REDIRECT_URI
+
+    if (!clientId || !clientSecret) {
+      return res.status(503).json({ error: 'Google sign-in is not configured' })
+    }
+
+    let idToken = idTokenFromBody
+    if (code && !idToken) {
+      const redirectUri = redirect_uri || defaultRedirect
+      if (!redirectUri) {
+        return res.status(400).json({ error: 'redirect_uri required when using code' })
+      }
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code'
+        })
+      })
+      if (!tokenRes.ok) {
+        const errText = await tokenRes.text()
+        console.error('Google token exchange failed:', tokenRes.status, errText)
+        return res.status(401).json({ error: 'Invalid or expired authorization code' })
+      }
+      const tokenData = (await tokenRes.json()) as { id_token?: string }
+      idToken = tokenData.id_token
+    }
+
+    if (!idToken) {
+      return res.status(400).json({ error: 'id_token or code required' })
+    }
+
+    const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`)
+    if (!infoRes.ok) {
+      return res.status(401).json({ error: 'Invalid Google token' })
+    }
+    const info = (await infoRes.json()) as { email?: string; name?: string; sub?: string; email_verified?: string }
+    if (!info.email || info.email_verified !== 'true') {
+      return res.status(401).json({ error: 'Google email not verified' })
+    }
+    const email = info.email.toLowerCase()
+    const name = (info.name || email.split('@')[0] || 'User').trim()
+
+    const { rows: existing } = await query<{ user_id: string; role: string; name: string | null; is_active: boolean }>(
+      `SELECT user_id, role, name, is_active FROM users WHERE email = $1`,
+      [email]
+    )
+
+    let userId: string
+    let userName: string
+    if (existing.length > 0) {
+      if (!existing[0].is_active) {
+        return res.status(403).json({ error: 'Account is inactive' })
+      }
+      userId = existing[0].user_id
+      userName = existing[0].name || name
+    } else {
+      const hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), SALT_ROUNDS)
+      const { rows: colCheck } = await query(`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'users' AND column_name IN ('name', 'company_role')
+      `)
+      const hasName = colCheck.some((r: { column_name: string }) => r.column_name === 'name')
+      const cols = ['email', 'password_hash', 'role', 'is_active']
+      const vals = ['$1', '$2', "'user'", 'true']
+      const params: unknown[] = [email, hash]
+      let n = 3
+      if (hasName) {
+        cols.push('name')
+        vals.push(`$${n++}`)
+        params.push(name)
+      }
+      const { rows: inserted } = await query<{ user_id: string }>(
+        `INSERT INTO users (${cols.join(', ')}) VALUES (${vals.join(', ')}) RETURNING user_id`,
+        params
+      )
+      userId = inserted[0].user_id
+      userName = name
+    }
+
+    let hasCompany = false
+    let companyId: string | null = null
+    let companyName: string | null = null
+    let companyEmail: string | null = null
+    let hrEmail: string | null = null
+    let hiringManagerEmail: string | null = null
+
+    const { rows: companyCheck } = await query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'companies' AND column_name = 'user_id'
+    `)
+    if (companyCheck.length > 0) {
+      const { rows: companyRows } = await query<{ company_id: string; company_name: string; company_email: string; hr_email: string; hiring_manager_email: string | null }>(
+        `SELECT company_id, company_name, company_email, hr_email, hiring_manager_email FROM companies WHERE user_id = $1 LIMIT 1`,
+        [userId]
+      )
+      if (companyRows.length > 0) {
+        hasCompany = true
+        companyId = companyRows[0].company_id
+        companyName = companyRows[0].company_name
+        companyEmail = companyRows[0].company_email
+        hrEmail = companyRows[0].hr_email
+        hiringManagerEmail = companyRows[0].hiring_manager_email ?? null
+      }
+    }
+
+    const token = jwt.sign(
+      { sub: userId, email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+
+    return res.status(200).json({
+      token,
+      user: {
+        user_id: userId,
+        id: userId,
+        name: userName,
+        email,
+        role: existing.length > 0 ? existing[0].role : 'user',
+        company_role: null,
+        created_at: null,
+        hasCompany,
+        companyId,
+        companyName,
+        companyEmail,
+        hrEmail,
+        hiringManagerEmail
+      }
+    })
+  } catch (err) {
+    console.error('Google sign-in error:', err)
+    return res.status(500).json({ error: 'Google sign-in failed' })
+  }
+}
+

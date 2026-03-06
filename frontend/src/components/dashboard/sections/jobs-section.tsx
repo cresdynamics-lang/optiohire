@@ -398,6 +398,19 @@ export function JobsSection() {
         // Don't throw - job was created successfully, refresh can happen later
       }
       
+      // Show success guidance: tell HR to check email for forwarding/subject instructions
+      try {
+        const { toast } = await import('@/hooks/use-toast').then((m) => ({ toast: m.toast }))
+        toast({
+          title: 'Job created successfully',
+          description:
+            'Please check your email for step-by-step instructions on forwarding and the exact subject line to use before sharing this job with candidates.',
+          variant: 'success'
+        })
+      } catch (e) {
+        console.log('Toast not available in this context, skipping:', e)
+      }
+
       return { job: composedJob, company: { id: companyId } }
     } catch (err) {
       console.error('Error creating job:', err)

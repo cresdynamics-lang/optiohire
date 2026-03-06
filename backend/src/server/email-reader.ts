@@ -324,11 +324,47 @@ export class EmailReader {
               
               logger.info(`Processing email #${seq}: Subject="${subject}", From="${sender}"`)
               
-              // Check if email subject matches any active job posting title
-              const matchingJob = await this.findJobByExactSubject(subject)
+              // Check if email subject matches any job posting
+              const match = await this.findJobByExactSubject(subject)
               
-              if (matchingJob) {
-                logger.info(`✅ MATCH FOUND: Email subject matches job posting: "${subject}" -> Job: "${matchingJob.job_title}" (ID: ${matchingJob.job_posting_id})`)
+              if (Array.isArray(match) && match.length > 0) {
+                // Ambiguous title-only match: same role across multiple companies.
+                // Create applications for ALL matching jobs so no company misses this candidate.
+                logger.info(
+                  `📥 Processing email for ${match.length} job(s) sharing this role (title-only match).`
+                )
+                let anyExtracted = false
+                for (const job of match) {
+                  try {
+                    const extracted = await this.processEmailForJob(message.source, message.envelope, seq, job)
+                    if (extracted) {
+                      anyExtracted = true
+                    }
+                  } catch (error) {
+                    logger.error(
+                      `❌ Error processing email ${seq} for job ${job.job_posting_id} (${job.job_title} at ${job.company_name}):`,
+                      error
+                    )
+                  }
+                }
+                
+                if (anyExtracted) {
+                  await this.client!.messageFlagsAdd(seq, ['\\Seen'])
+                  await this.moveToFolder(seq, 'Processed')
+                  logger.info(
+                    `✅ Successfully processed email (CV extracted) for ${match.length} job(s): ${subject}`
+                  )
+                } else {
+                  logger.warn(
+                    `⚠️ Email processed for multiple jobs but CV not extracted for any - keeping unread: ${subject}`
+                  )
+                  await this.moveToFolder(seq, 'Failed')
+                }
+              } else if (match) {
+                const matchingJob = match
+                logger.info(
+                  `✅ MATCH FOUND: Email subject matches job posting: "${subject}" -> Job: "${matchingJob.job_title}" (ID: ${matchingJob.job_posting_id})`
+                )
                 try {
                   // Process email and check if CV was extracted
                   const cvExtracted = await this.processEmailForJob(message.source, message.envelope, seq, matchingJob)
@@ -432,7 +468,14 @@ export class EmailReader {
 
   /**
    * Find job posting by subject match (case-insensitive)
-   * Email subject must START WITH the job_title (allows extra text after job title like "- hello")
+   *
+   * HARDENED RULE:
+   * - Subject MUST contain both the job title AND the company name to be considered a match.
+   * - Recommended pattern for HRs and applicants:
+   *     "Job Title at Company Name"
+   *   e.g. "Software Engineer at Britam"
+   *
+   * This prevents ambiguity when multiple companies hire for the same role.
    */
   private async findJobByExactSubject(emailSubject: string): Promise<any | null> {
     try {
@@ -441,12 +484,25 @@ export class EmailReader {
       
       logger.info(`🔍 Matching email subject: "${emailSubject}" (normalized: "${normalizedSubject}")`)
       
-      // Query all active jobs first
+      // Query all active jobs first, including company name for disambiguation
       let { rows: allActiveJobs } = await query(
-        `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, 
-                jp.skills_required as required_skills, jp.application_deadline, 
-                jp.interview_start_time, jp.meeting_link, jp.created_at, jp.updated_at, jp.status
+        `SELECT jp.job_posting_id,
+                jp.company_id,
+                jp.job_title,
+                jp.job_description,
+                jp.skills_required as required_skills,
+                jp.application_deadline,
+                jp.interview_start_time,
+                jp.meeting_link,
+                jp.created_at,
+                jp.updated_at,
+                jp.status,
+                c.company_name,
+                c.company_domain,
+                c.company_email,
+                c.hr_email
          FROM job_postings jp
+         JOIN companies c ON c.company_id = jp.company_id
          WHERE (jp.status IS NULL 
                 OR UPPER(TRIM(jp.status)) = 'ACTIVE' 
                 OR jp.status = '')
@@ -458,19 +514,33 @@ export class EmailReader {
         logger.warn(`⚠️ No active jobs found with status filter. Checking all jobs in database...`)
         try {
           const { rows: allJobs } = await query(
-            `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.status, jp.created_at
+            `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.status, jp.created_at, c.company_name
              FROM job_postings jp
+             JOIN companies c ON c.company_id = jp.company_id
              ORDER BY jp.created_at DESC
              LIMIT 10`
           )
           if (allJobs.length > 0) {
-            logger.warn(`Found ${allJobs.length} jobs in database (ignoring status): ${allJobs.map(j => `"${j.job_title}" (status: ${j.status || 'NULL'})`).join(', ')}`)
-            // Get full job details for matching
+            logger.warn(`Found ${allJobs.length} jobs in database (ignoring status): ${allJobs.map(j => `"${j.job_title}" at "${j.company_name}" (status: ${j.status || 'NULL'})`).join(', ')}`)
+            // Get full job details for matching, with company info
             const { rows: allJobsFull } = await query(
-              `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, 
-                      jp.skills_required as required_skills, jp.application_deadline, 
-                      jp.interview_start_time, jp.meeting_link, jp.created_at, jp.updated_at, jp.status
+              `SELECT jp.job_posting_id,
+                      jp.company_id,
+                      jp.job_title,
+                      jp.job_description,
+                      jp.skills_required as required_skills,
+                      jp.application_deadline,
+                      jp.interview_start_time,
+                      jp.meeting_link,
+                      jp.created_at,
+                      jp.updated_at,
+                      jp.status,
+                      c.company_name,
+                      c.company_domain,
+                      c.company_email,
+                      c.hr_email
                FROM job_postings jp
+               JOIN companies c ON c.company_id = jp.company_id
                ORDER BY jp.created_at DESC`
             )
             allActiveJobs = allJobsFull // Use all jobs for matching
@@ -484,50 +554,90 @@ export class EmailReader {
         }
       }
       
-      logger.info(`📋 Checking ${allActiveJobs.length} job(s) against email subject. Jobs: ${allActiveJobs.map(j => `"${j.job_title}"`).join(', ')}`)
+      logger.info(`📋 Checking ${allActiveJobs.length} job(s) against email subject. Jobs: ${allActiveJobs.map(j => `"${j.job_title}" at "${j.company_name}"`).join(', ')}`)
       
       // Find the best match
-      // Priority: 1) Exact match, 2) Subject starts with job title, 3) Job title in subject, 4) Fuzzy match
+      // Priority (only when BOTH title and company name appear in subject):
+      // 1) Exact match to "Job Title at Company Name"
+      // 2) Subject starts with "Job Title at Company Name"
+      // 3) Subject contains "Job Title at Company Name"
+      // 4) Fallback: subject contains both title and company name (any order)
+      //
+      // Additionally, track ambiguous cases where the subject only contains the title
+      // (and not the company name). In that case, when multiple companies are hiring
+      // for the same role, we will create applications for ALL matching jobs so no
+      // company misses the candidate.
       let bestMatch: any = null
       let longestMatchLength = 0
       let bestMatchScore = 0
+      const ambiguousByTitle: Record<string, any[]> = {}
       
       for (const job of allActiveJobs) {
-        // Normalize job title: trim, lowercase, and collapse multiple spaces
+        // Normalize job title and company name: trim, lowercase, and collapse multiple spaces
         const normalizedJobTitle = job.job_title.toLowerCase().trim().replace(/\s+/g, ' ')
-        
-        // 1. Try exact match first (highest priority)
-        if (normalizedSubject === normalizedJobTitle) {
-          logger.info(`✅ EXACT MATCH: "${emailSubject}" exactly matches "${job.job_title}"`)
+        const normalizedCompanyName = (job.company_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+
+        if (!normalizedJobTitle || !normalizedCompanyName) {
+          continue
+        }
+
+        // HARD RULE for single-company match: require both title AND company name in subject
+        const subjectContainsTitle = normalizedSubject.includes(normalizedJobTitle)
+        const subjectContainsCompany = normalizedSubject.includes(normalizedCompanyName)
+        if (!subjectContainsTitle && !subjectContainsCompany) {
+          continue
+        }
+
+        // If we have the title but NOT the company name, track as ambiguous-by-title.
+        // Later, if no precise match is found, we will create applications for all
+        // jobs that share this title across companies.
+        if (subjectContainsTitle && !subjectContainsCompany) {
+          if (!ambiguousByTitle[normalizedJobTitle]) {
+            ambiguousByTitle[normalizedJobTitle] = []
+          }
+          ambiguousByTitle[normalizedJobTitle].push(job)
+          continue
+        }
+
+        // Expected canonical subject: "Job Title at Company Name"
+        const expectedSubject = `${normalizedJobTitle} at ${normalizedCompanyName}`
+
+        // 1. Exact match against canonical subject
+        if (normalizedSubject === expectedSubject) {
+          logger.info(`✅ EXACT MATCH: "${emailSubject}" exactly matches "${job.job_title} at ${job.company_name}"`)
           return job
         }
-        
-        // 2. Try prefix match: subject starts with job title (handles "Job Title - extra text")
-        if (normalizedSubject.startsWith(normalizedJobTitle)) {
-          logger.info(`✅ PREFIX MATCH: "${emailSubject}" starts with "${job.job_title}"`)
-          // Prefer longer, more specific matches
-          if (normalizedJobTitle.length > longestMatchLength) {
-            longestMatchLength = normalizedJobTitle.length
+
+        // 2. Prefix match: subject starts with canonical subject
+        if (normalizedSubject.startsWith(expectedSubject)) {
+          logger.info(`✅ PREFIX MATCH: "${emailSubject}" starts with "${job.job_title} at ${job.company_name}"`)
+          if (expectedSubject.length > longestMatchLength || bestMatchScore < 4) {
+            longestMatchLength = expectedSubject.length
             bestMatch = job
-            bestMatchScore = 3 // High score for prefix match
+            bestMatchScore = 4
           }
+          continue
         }
-        // 3. Try substring match: job title contained in subject (fallback)
-        else if (normalizedSubject.includes(normalizedJobTitle)) {
-          logger.info(`✅ SUBSTRING MATCH: "${normalizedJobTitle}" found in "${emailSubject}"`)
-          if (normalizedJobTitle.length > longestMatchLength || bestMatchScore < 2) {
-            longestMatchLength = normalizedJobTitle.length
+
+        // 3. Subject contains canonical subject
+        if (normalizedSubject.includes(expectedSubject)) {
+          logger.info(`✅ CONTAINS MATCH: canonical "${job.job_title} at ${job.company_name}" found in "${emailSubject}"`)
+          if (expectedSubject.length > longestMatchLength || bestMatchScore < 3) {
+            longestMatchLength = expectedSubject.length
             bestMatch = job
-            bestMatchScore = 2 // Medium score for substring match
+            bestMatchScore = 3
           }
+          continue
         }
-        // 4. Try reverse match: subject contained in job title (for partial matches)
-        else if (normalizedJobTitle.includes(normalizedSubject) && normalizedSubject.length >= 5) {
-          logger.info(`✅ REVERSE MATCH: Subject "${emailSubject}" found in job title "${job.job_title}"`)
-          if (normalizedSubject.length > longestMatchLength || bestMatchScore < 1) {
-            longestMatchLength = normalizedSubject.length
+
+        // 4. Fallback: subject contains both title and company name in any order
+        if (subjectContainsTitle && subjectContainsCompany) {
+          const combinedLength = normalizedJobTitle.length + normalizedCompanyName.length
+          if (combinedLength > longestMatchLength || bestMatchScore < 2) {
+            logger.info(`✅ TITLE+COMPANY MATCH: "${emailSubject}" contains "${job.job_title}" and "${job.company_name}"`)
+            longestMatchLength = combinedLength
             bestMatch = job
-            bestMatchScore = 1 // Lower score for reverse match
+            bestMatchScore = 2
           }
         }
       }
@@ -535,10 +645,34 @@ export class EmailReader {
       if (bestMatch) {
         logger.info(`✅ MATCH SELECTED: "${bestMatch.job_title}" (ID: ${bestMatch.job_posting_id})`)
         return bestMatch
-      } else {
-        logger.warn(`❌ NO MATCH: Subject "${emailSubject}" doesn't match any job. Available jobs: ${allActiveJobs.map(j => `"${j.job_title}"`).join(', ')}`)
-      return null
       }
+
+      // No precise (title+company) match.
+      // If we have ambiguous title-only matches, return all jobs for that role
+      // so the caller can create applications for each company hiring that title.
+      const ambiguousTitles = Object.keys(ambiguousByTitle)
+      if (ambiguousTitles.length > 0) {
+        const allAmbiguousJobs = ambiguousTitles.flatMap((key) => ambiguousByTitle[key])
+        if (allAmbiguousJobs.length === 1) {
+          logger.info(
+            `✅ TITLE-ONLY MATCH: "${emailSubject}" matched uniquely to "${allAmbiguousJobs[0].job_title}" at "${allAmbiguousJobs[0].company_name}"`
+          )
+          return allAmbiguousJobs[0]
+        }
+        logger.info(
+          `✅ TITLE-ONLY MULTI MATCH: "${emailSubject}" matched role "${ambiguousTitles.join(
+            ', '
+          )}" across ${allAmbiguousJobs.length} job(s); will create applications for all companies hiring this role.`
+        )
+        return allAmbiguousJobs
+      }
+
+      logger.warn(
+        `❌ NO MATCH: Subject "${emailSubject}" doesn't match any job. Available jobs: ${allActiveJobs
+          .map((j) => `"${j.job_title}"`)
+          .join(', ')}`
+      )
+      return null
     } catch (error) {
       logger.error('❌ Error finding job by subject:', error)
       return null
@@ -623,16 +757,35 @@ export class EmailReader {
 
       // Send HR notification
       try {
-      await this.emailService.sendHRNotification({
-        hrEmail: company.hr_email,
-        candidateName: senderName,
-        candidateEmail: senderEmail,
-        jobTitle: job.job_title,
-        companyName: company.company_name
-      })
+        await this.emailService.sendHRNotification({
+          hrEmail: company.hr_email,
+          candidateName: senderName,
+          candidateEmail: senderEmail,
+          jobTitle: job.job_title,
+          companyName: company.company_name
+        })
+
+        // Applicant count milestone notifications (10, 50, 100, 200, 500, 1000, 1500, 2000)
+        const thresholds = [10, 50, 100, 200, 500, 1000, 1500, 2000]
+        const { rows: countRows } = await query<{ total: string }>(
+          `SELECT COUNT(*) AS total FROM applications WHERE job_posting_id = $1`,
+          [job.job_posting_id]
+        )
+        const total = parseInt(countRows[0]?.total || '0', 10)
+        if (thresholds.includes(total)) {
+          await this.emailService.sendApplicantMilestoneNotification({
+            recipients: [company.hr_email, company.company_email, company.hiring_manager_email],
+            jobTitle: job.job_title,
+            companyName: company.company_name,
+            totalApplications: total
+          })
+        }
       } catch (emailError) {
         // SMTP/network issues should NOT block applicant ingestion + analysis
-        logger.warn(`Failed to send HR notification for application ${application.application_id} (continuing):`, emailError)
+        logger.warn(
+          `Failed to send HR or milestone notification for application ${application.application_id} (continuing):`,
+          emailError
+        )
       }
 
       logger.info(`Successfully processed application from ${senderEmail} for job ${job.job_posting_id} - CV extracted and analyzed`)

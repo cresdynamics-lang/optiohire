@@ -31,6 +31,12 @@ export default function DashboardPage() {
       router.push('/admin')
       return
     }
+
+    // Require company setup before dashboard (e.g. Google sign-in)
+    if (user && user.role !== 'admin' && user.hasCompany === false && !user.companyId) {
+      router.replace('/company-setup')
+      return
+    }
     
     // Only redirect to sign-in if there's no user AND no token
     // This prevents redirecting when API call is still in progress or failed

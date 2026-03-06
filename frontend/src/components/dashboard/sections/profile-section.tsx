@@ -191,11 +191,33 @@ export function ProfileSection() {
     }
   }, [user, loadCompanyData])
 
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 5) return 'Good evening'
+    if (hour < 12) return 'Good morning'
+    if (hour < 17) return 'Good afternoon'
+    return 'Good evening'
+  }
+
   const handleSaveCompany = async () => {
     if (!user || !company) return
 
     setIsSaving(true)
     setSaveMessage(null)
+
+    // Basic validation – required fields must not be blank
+    if (
+      !formData.company_name.trim() ||
+      !formData.company_email.trim() ||
+      !formData.hr_email.trim()
+    ) {
+      setSaveMessage({
+        type: 'error',
+        text: 'Company name, company email, and HR email are required and cannot be blank.'
+      })
+      setIsSaving(false)
+      return
+    }
 
     try {
       const token = localStorage.getItem('token')
@@ -370,9 +392,13 @@ export function ProfileSection() {
                     <User className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">
+                      {getGreeting()},{' '}
                       {user?.name || user?.email?.split('@')[0] || 'User'}
                     </h1>
+                    <p className="text-white/80 text-sm mb-2">
+                      Welcome back to your OptioHire dashboard.
+                    </p>
                     {(user as any)?.username && (
                       <p className="text-white/80 text-sm font-mono mb-2">@{(user as any).username}</p>
                     )}

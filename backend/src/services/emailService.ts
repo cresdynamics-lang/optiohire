@@ -413,6 +413,10 @@ Company Email: ${hrEmail}`
     score?: number | null
     status?: string | null
   }) {
+    const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
+    const companyName = data.companyName || '[Company Name]'
+    const recommendedSubject = `${cleanedJobTitle} at ${companyName}`
+
     const html = `
 <!DOCTYPE html>
 <html>
@@ -431,12 +435,16 @@ Company Email: ${hrEmail}`
     </div>
     <div class="content">
       <p>Hi,</p>
-      <p>A new application has been received for <strong>${data.jobTitle}</strong>.</p>
+      <p>A new application has been received for <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong>.</p>
       <p><strong>Candidate:</strong> ${data.candidateName}</p>
       <p><strong>Email:</strong> ${data.candidateEmail}</p>
       ${data.score !== null && data.score !== undefined ? `<p><strong>Score:</strong> ${data.score}/100</p>` : ''}
       ${data.status ? `<p><strong>Status:</strong> ${data.status}</p>` : ''}
       <p>${data.score !== null && data.score !== undefined ? 'The candidate has been evaluated.' : 'The candidate is being processed and scored. You\'ll receive updates once the evaluation is complete.'}</p>
+      <hr />
+      <p><strong>Important:</strong> To ensure email applications are correctly matched to this job (even when multiple companies hire for similar roles), please instruct candidates to use the following exact subject line when emailing their CVs:</p>
+      <p style="margin-top: 8px; padding: 10px; background: #fff; border-radius: 6px; border: 1px dashed #ccc;"><code>${recommendedSubject}</code></p>
+      <p>This subject pattern includes both the role and your company name, so the system can unambiguously route applications to the correct job posting.</p>
       <p>Best regards,<br>HireBit System</p>
     </div>
   </div>
@@ -447,7 +455,7 @@ Company Email: ${hrEmail}`
     const text = `
 New Applicant Received
 
-A new application has been received for ${data.jobTitle}.
+A new application has been received for ${cleanedJobTitle} at ${companyName}.
 
 Candidate: ${data.candidateName}
 Email: ${data.candidateEmail}
@@ -455,6 +463,13 @@ ${data.score !== null && data.score !== undefined ? `Score: ${data.score}/100` :
 ${data.status ? `Status: ${data.status}` : ''}
 
 ${data.score !== null && data.score !== undefined ? 'The candidate has been evaluated.' : 'The candidate is being processed and scored. You\'ll receive updates once the evaluation is complete.'}
+
+Important:
+To ensure email applications are correctly matched to this job (even when multiple companies hire for similar roles), please instruct candidates to use the following exact subject line when emailing their CVs:
+
+  ${recommendedSubject}
+
+This subject pattern includes both the role and your company name, so the system can unambiguously route applications to the correct job posting.
 
 Best regards,
 HireBit System
@@ -467,6 +482,170 @@ HireBit System
       text,
       emailType: 'notification',
       useSecondaryKey: true // Use secondary key for HR notifications
+    })
+  }
+
+  /**
+   * Job posting created notification to HR/company
+   */
+  async sendJobPostingCreatedEmail(data: {
+    recipients: string[]
+    jobTitle: string
+    companyName: string
+    applicationDeadline: string
+  }) {
+    const to = Array.from(new Set(data.recipients.filter(Boolean))).join(',')
+    if (!to) return
+
+    const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
+    const companyName = data.companyName || '[Company Name]'
+    const deadline = new Date(data.applicationDeadline)
+    const deadlineText = isNaN(deadline.getTime()) ? data.applicationDeadline : deadline.toLocaleString()
+    const recommendedSubject = `${cleanedJobTitle} at ${companyName}`
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #2D2DDD; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Job Posting Created</h1>
+    </div>
+    <div class="content">
+      <p>Hi,</p>
+      <p>Your job posting has been created successfully:</p>
+      <ul>
+        <li><strong>Company:</strong> ${companyName}</li>
+        <li><strong>Role:</strong> ${cleanedJobTitle}</li>
+        <li><strong>Application deadline:</strong> ${deadlineText}</li>
+      </ul>
+      <p><strong>Step 1 – Subject line for email applications</strong></p>
+      <p style="margin-top: 8px; padding: 10px; background: #fff; border-radius: 6px; border: 1px dashed #ccc;"><code>${recommendedSubject}</code></p>
+      <p>Use this exact subject in your job advert and tell candidates to use it when emailing their CVs. This lets OptioHire route applications to the correct job and company, even if other companies hire for the same role.</p>
+      <p><strong>Step 2 – Set up email forwarding (Gmail example)</strong></p>
+      <ol>
+        <li>Open Gmail logged in as <strong>applicationsoptiohire@gmail.com</strong> (or the inbox receiving applications).</li>
+        <li>Click the gear icon → <strong>See all settings</strong> → <strong>Forwarding and POP/IMAP</strong>.</li>
+        <li>Under “Forwarding”, click <strong>Add a forwarding address</strong> and enter your HR email (e.g. ${companyName && companyName !== '[Company Name]' ? `${companyName} HR` : 'your HR email'}).</li>
+        <li>Confirm the forwarding email using the verification link Google sends.</li>
+        <li>Add a filter (Settings → <strong>Filters and blocked addresses</strong>) with <strong>Subject</strong> contains <code>${recommendedSubject}</code> and choose “Forward” to your HR email. This ensures only this job’s emails are forwarded if needed.</li>
+      </ol>
+      <p><strong>Step 3 – Other email providers (Outlook, work email, etc.)</strong></p>
+      <p>Create a rule/filter in your provider that forwards emails where the <strong>Subject</strong> contains <code>${recommendedSubject}</code> to your HR email or shared recruitment inbox. The exact steps differ per provider, but the rule should key off this subject line.</p>
+      <p><strong>Step 4 – Need help?</strong></p>
+      <p>If you are not comfortable configuring forwarding or rules in your email, please contact <a href="mailto:developer@optiohire.com">developer@optiohire.com</a> and our team will help you set this up.</p>
+      <p>Best regards,<br>OptioHire</p>
+    </div>
+  </div>
+</body>
+</html>
+    `
+
+    const text = `Job Posting Created
+
+Company: ${companyName}
+Role: ${cleanedJobTitle}
+Application deadline: ${deadlineText}
+
+Step 1 – Subject line for email applications:
+
+  ${recommendedSubject}
+
+Use this exact subject in your job advert and tell candidates to use it when emailing their CVs. This lets OptioHire route applications to the correct job and company, even if other companies hire for the same role.
+
+Step 2 – Set up email forwarding (Gmail example):
+  1) Open Gmail logged in as the inbox receiving applications.
+  2) Go to Settings → See all settings → Forwarding and POP/IMAP.
+  3) Under “Forwarding”, click “Add a forwarding address” and enter your HR email.
+  4) Confirm the forwarding email using the verification link Google sends.
+  5) Add a filter where Subject contains "${recommendedSubject}" and choose to forward those emails to your HR email.
+
+Step 3 – Other email providers:
+Create a rule/filter that forwards emails where the Subject contains "${recommendedSubject}" to your HR email or shared recruitment inbox.
+
+Step 4 – Need help?
+If you are not comfortable configuring forwarding or rules in your email, please contact developer@optiohire.com and our team will help you set this up.
+
+Best regards,
+OptioHire`
+
+    await this.sendEmail({
+      to,
+      subject: `Job posted – ${cleanedJobTitle} at ${companyName}`,
+      html,
+      text,
+      emailType: 'notification',
+      useSecondaryKey: true
+    })
+  }
+
+  /**
+   * Applicant milestone notification (e.g. 10, 50, 100 applications)
+   */
+  async sendApplicantMilestoneNotification(data: {
+    recipients: string[]
+    jobTitle: string
+    companyName: string
+    totalApplications: number
+  }) {
+    const to = Array.from(new Set(data.recipients.filter(Boolean))).join(',')
+    if (!to) return
+
+    const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
+    const companyName = data.companyName || '[Company Name]'
+    const total = data.totalApplications
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #2D2DDD; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Application Milestone Reached</h1>
+    </div>
+    <div class="content">
+      <p>Hi,</p>
+      <p>Your job posting <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong> has reached <strong>${total}</strong> applications.</p>
+      <p>This is a good time to review and shortlist candidates so far, or to adjust the job ad if needed.</p>
+      <p>Best regards,<br>OptioHire</p>
+    </div>
+  </div>
+</body>
+</html>
+    `
+
+    const text = `Application Milestone Reached
+
+Your job posting "${cleanedJobTitle}" at "${companyName}" has reached ${total} applications.
+
+This is a good time to review and shortlist candidates so far, or to adjust the job ad if needed.
+
+Best regards,
+OptioHire`
+
+    await this.sendEmail({
+      to,
+      subject: `Milestone: ${total} applications for ${cleanedJobTitle}`,
+      html,
+      text,
+      emailType: 'notification',
+      useSecondaryKey: true
     })
   }
 

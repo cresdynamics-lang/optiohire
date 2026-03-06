@@ -411,6 +411,19 @@ export async function createJobPosting(req: Request, res: Response) {
 
     await client.query('COMMIT')
 
+    // Send confirmation email to HR / company contacts
+    try {
+      const emailService = new (await import('../services/emailService.js')).EmailService()
+      await emailService.sendJobPostingCreatedEmail({
+        recipients: [payload.hr_email, payload.company_email],
+        jobTitle: payload.job_title,
+        companyName: payload.company_name,
+        applicationDeadline: applicationDeadline.toISOString()
+      })
+    } catch (emailErr) {
+      console.error('Failed to send job posting created email:', emailErr)
+    }
+
     return res.status(201).json({
       success: true,
       job_posting_id: jobPostingId,

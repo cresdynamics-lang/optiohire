@@ -2,18 +2,46 @@ import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
 import { createCompanyReportPdf } from '../utils/pdf.js'
 import { sendEmail } from '../email/mailer.js'
+import type { AuthRequest } from '../middleware/auth.js'
 
 export async function createCompany(req: Request, res: Response) {
   try {
-    const { company_name, company_domain, hr_email, hiring_manager_email } = req.body || {}
-    if (!company_name || !company_domain || !hr_email || !hiring_manager_email) {
-      return res.status(400).json({ error: 'Missing required fields' })
+    const { company_name, company_domain, company_email, hr_email, hiring_manager_email } = req.body || {}
+    const domain = company_domain || (company_email && company_email.includes('@') ? company_email.split('@')[1] : null)
+    if (!company_name || !hr_email || !hiring_manager_email) {
+      return res.status(400).json({ error: 'Missing required fields: company_name, hr_email, hiring_manager_email' })
+    }
+    if (!domain && !company_domain) {
+      return res.status(400).json({ error: 'Missing company_domain or company_email (for domain)' })
+    }
+    const authReq = req as AuthRequest
+    const userId = authReq.userId ?? null
+    const cols = ['company_name', 'hr_email', 'hiring_manager_email', 'company_domain']
+    const vals = ['$1', '$2', '$3', '$4']
+    const params: unknown[] = [company_name, hr_email, hiring_manager_email, domain || company_domain]
+    let n = 5
+    if (userId) {
+      const { rows: colCheck } = await query(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'user_id'`
+      )
+      if (colCheck.length > 0) {
+        cols.push('user_id')
+        vals.push(`$${n}`)
+        params.push(userId)
+        n++
+      }
+    }
+    const hasCompanyEmail = await query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'company_email'`
+    ).then(r => r.rows.length > 0)
+    if (hasCompanyEmail) {
+      cols.push('company_email')
+      vals.push(`$${n}`)
+      params.push(company_email || hr_email)
     }
     const { rows } = await query<{ company_id: string }>(
-      `insert into companies (company_name, hr_email, hiring_manager_email, company_domain)
-       values ($1,$2,$3,$4)
-       returning company_id`,
-      [company_name, hr_email, hiring_manager_email, company_domain]
+      `insert into companies (${cols.join(', ')}) values (${vals.join(', ')}) returning company_id`,
+      params
     )
     const companyId = rows[0].company_id
     await query(

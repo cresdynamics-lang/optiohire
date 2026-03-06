@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
@@ -57,6 +57,13 @@ export default function CompanySetupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // If user already has a company, redirect to dashboard
+  useEffect(() => {
+    if (user?.hasCompany && user?.companyId) {
+      router.replace('/dashboard')
+    }
+  }, [user?.hasCompany, user?.companyId, router])
+
   const {
     register,
     handleSubmit,
@@ -71,6 +78,10 @@ export default function CompanySetupPage() {
   })
 
   const skills = watch('required_skills') || []
+  const recommendedSubject =
+    (watch('job_title')?.trim() || 'Job Title') +
+    ' at ' +
+    (watch('company_name')?.trim() || 'Company Name')
 
   const addSkill = () => {
     if (skillInput.trim() && !skills.includes(skillInput.trim())) {
@@ -96,13 +107,16 @@ export default function CompanySetupPage() {
     setError(null)
 
     try {
-      // Create company via backend
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
+      // Create company via backend (link to current user when token present)
       const companyResp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/companies`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           company_name: data.company_name,
           company_domain: data.company_email.split('@')[1] || 'example.com',
+          company_email: data.company_email,
           hr_email: data.hr_email,
           hiring_manager_email: data.company_email
         })
@@ -115,7 +129,7 @@ export default function CompanySetupPage() {
       // Create job via backend
       const jobResp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/jobs`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           company_id: companyJson.company_id,
           job_title: data.job_title,
@@ -249,6 +263,15 @@ export default function CompanySetupPage() {
                     {errors.job_title && (
                       <p className="text-sm text-red-500">{errors.job_title.message}</p>
                     )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      When posting this role via email, ask candidates to use this exact subject line so OptioHire can
+                      correctly route applications to this job:
+                      {' '}
+                      <span className="font-mono text-[11px] bg-gray-100 px-1 py-0.5 rounded">
+                        {recommendedSubject}
+                      </span>
+                      .
+                    </p>
                   </div>
 
                   <div className="space-y-2">
