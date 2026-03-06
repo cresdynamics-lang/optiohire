@@ -16,6 +16,7 @@ interface AuthUser {
   companyEmail?: string
   hrEmail?: string
   hiringManagerEmail?: string | null
+  companyLogoUrl?: string | null
 }
 
 interface AuthContextType {
@@ -123,7 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               companyName: userData.companyName || null,
               companyEmail: userData.companyEmail || null,
               hrEmail: userData.hrEmail || null,
-              hiringManagerEmail: userData.hiring_manager_email || userData.hiringManagerEmail || null
+              hiringManagerEmail: userData.hiring_manager_email || userData.hiringManagerEmail || null,
+              companyLogoUrl: userData.companyLogoUrl || null
             })
             
             // User has no company (e.g. signed up with Google): keep token and user, redirect to company-setup in layout
@@ -222,7 +224,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           companyName: data?.company?.company_name || data?.user?.companyName || organization_name,
           companyEmail: data?.company?.company_email || data?.user?.companyEmail || company_email,
           hrEmail: data?.company?.hr_email || data?.user?.hrEmail || company_email,
-          hiringManagerEmail: data?.company?.hiring_manager_email || data?.user?.hiringManagerEmail || hiring_manager_email
+          hiringManagerEmail: data?.company?.hiring_manager_email || data?.user?.hiringManagerEmail || hiring_manager_email,
+          companyLogoUrl: data?.company?.company_logo_url || data?.user?.companyLogoUrl || null
         })
       }
       return {
@@ -270,7 +273,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           companyName: data?.user?.companyName || null,
           companyEmail: data?.user?.companyEmail || null,
           hrEmail: data?.user?.hrEmail || null,
-          hiringManagerEmail: data?.user?.hiringManagerEmail || null
+          hiringManagerEmail: data?.user?.hiringManagerEmail || null,
+          companyLogoUrl: data?.user?.companyLogoUrl || null
         })
         
         // User has no company: keep them logged in; dashboard will redirect to company-setup

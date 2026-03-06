@@ -71,8 +71,20 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
   // Get theme safely
   const themeContext = useTheme()
   const resolvedTheme = themeContext?.resolvedTheme || 'dark'
+ 
+  const logoSrc = (user?.companyLogoUrl && user.companyLogoUrl.trim())
+    ? user.companyLogoUrl.trim()
+    : '/assets/logo/logo.png'
 
-  const logoSrc = '/assets/logo/optiohirelogo.png'
+  const orgName =
+    user?.companyName ||
+    (user?.companyEmail ? user.companyEmail.split('@')[0] : null) ||
+    'Your organisation'
+
+  const profileLine =
+    user?.name ||
+    user?.email ||
+    'HR workspace'
 
   return (
     <motion.div
@@ -91,7 +103,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
               {mounted ? (
                 <Image
                   src={logoSrc}
-                  alt="OptioHire logo"
+                  alt={`${orgName} logo`}
                   fill
                   sizes="40px"
                   className="object-contain"
@@ -104,8 +116,12 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">OptioHire</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">HR Platform</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                  {orgName}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">
+                  {profileLine}
+                </p>
               </div>
             )}
           </div>

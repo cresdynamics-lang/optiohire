@@ -10,6 +10,7 @@ import { Bell, X, CheckCircle2 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { NotificationProvider, useNotifications } from '@/contexts/notification-context'
 import { Sidebar } from './sidebar'
+import { ChatbotWidget } from './chatbot-widget'
 
 // Simple Error Boundary component
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
@@ -542,6 +543,7 @@ function DashboardContent() {
       
       {/* Toast Notification System */}
       <Toaster />
+      <ChatbotWidget />
     </div>
   )
 }

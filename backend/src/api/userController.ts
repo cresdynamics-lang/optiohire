@@ -64,11 +64,12 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
 
     // STRICT: Check if user has a company (except admin)
     let hasCompany = false
-    let companyId = null
-    let companyName = null
-    let companyEmail = null
-    let hrEmail = null
-    let hiringManagerEmail = null
+    let companyId: string | null = null
+    let companyName: string | null = null
+    let companyEmail: string | null = null
+    let hrEmail: string | null = null
+    let hiringManagerEmail: string | null = null
+    let companyLogoUrl: string | null = null
     
     if (user.role !== 'admin') {
       try {
@@ -80,9 +81,25 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
         `)
         
         if (checkColumn.rows.length > 0) {
+          // Determine if company_logo_url column exists
+          let companySelectFields = 'company_id, company_name, company_email, hr_email, hiring_manager_email'
+          try {
+            const { rows: companyCols } = await query(
+              `SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_name = 'companies' AND column_name = 'company_logo_url'`
+            )
+            const hasLogoColumn = companyCols.some((r: any) => r.column_name === 'company_logo_url')
+            if (hasLogoColumn) {
+              companySelectFields += ', company_logo_url'
+            }
+          } catch (e) {
+            // If this check fails, continue without logo field
+          }
+
           // user_id column exists, check by user_id
-          const companyCheck = await query<{ company_id: string; company_name: string; company_email: string; hr_email: string; hiring_manager_email: string }>(
-            `SELECT company_id, company_name, company_email, hr_email, hiring_manager_email FROM companies WHERE user_id = $1 LIMIT 1`,
+          const companyCheck = await query<any>(
+            `SELECT ${companySelectFields} FROM companies WHERE user_id = $1 LIMIT 1`,
             [userId]
           )
           hasCompany = companyCheck.rows.length > 0
@@ -92,11 +109,27 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
             companyEmail = companyCheck.rows[0]?.company_email || null
             hrEmail = companyCheck.rows[0]?.hr_email || null
             hiringManagerEmail = companyCheck.rows[0]?.hiring_manager_email || null
+            companyLogoUrl = (companyCheck.rows[0] as any)?.company_logo_url || null
           }
         } else {
           // Fallback: check by email (hr_email or company_email)
-          const companyCheck = await query<{ company_id: string; company_name: string; company_email: string; hr_email: string; hiring_manager_email: string }>(
-            `SELECT company_id, company_name, company_email, hr_email, hiring_manager_email FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
+          let companySelectFields = 'company_id, company_name, company_email, hr_email, hiring_manager_email'
+          try {
+            const { rows: companyCols } = await query(
+              `SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_name = 'companies' AND column_name = 'company_logo_url'`
+            )
+            const hasLogoColumn = companyCols.some((r: any) => r.column_name === 'company_logo_url')
+            if (hasLogoColumn) {
+              companySelectFields += ', company_logo_url'
+            }
+          } catch (e) {
+            // Ignore logo field if check fails
+          }
+
+          const companyCheck = await query<any>(
+            `SELECT ${companySelectFields} FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
             [user.email]
           )
           hasCompany = companyCheck.rows.length > 0
@@ -106,6 +139,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
             companyEmail = companyCheck.rows[0]?.company_email || null
             hrEmail = companyCheck.rows[0]?.hr_email || null
             hiringManagerEmail = companyCheck.rows[0]?.hiring_manager_email || null
+            companyLogoUrl = (companyCheck.rows[0] as any)?.company_logo_url || null
           }
         }
       } catch (err) {
@@ -133,7 +167,8 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       companyName,
       companyEmail,
       hrEmail,
-      hiring_manager_email: hiringManagerEmail
+      hiring_manager_email: hiringManagerEmail,
+      companyLogoUrl
     }
 
     // Cache user data for 5 minutes
@@ -154,7 +189,7 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    const { company_name, company_email, hr_email } = req.body || {}
+    const { company_name, company_email, hr_email, company_logo_url } = req.body || {}
 
     if (!company_name || !company_email || !hr_email) {
       return res.status(400).json({ error: 'Company name, company email, and HR email are required' })
@@ -213,17 +248,44 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
     // Extract domain from company_email
     const companyDomain = company_email.split('@')[1] || null
 
+    // Determine if company_logo_url column exists
+    let hasLogoColumn = false
+    try {
+      const { rows: logoCols } = await query(
+        `SELECT column_name 
+         FROM information_schema.columns 
+         WHERE table_name = 'companies' AND column_name = 'company_logo_url'`
+      )
+      hasLogoColumn = logoCols.length > 0
+    } catch (e) {
+      hasLogoColumn = false
+    }
+
     // Update company
-    await query(
-      `UPDATE companies 
-       SET company_name = $1, 
-           company_email = $2, 
-           hr_email = $3,
-           company_domain = $4,
-           updated_at = NOW()
-       WHERE company_id = $5`,
-      [company_name, company_email, hr_email, companyDomain, companyId]
-    )
+    if (hasLogoColumn) {
+      await query(
+        `UPDATE companies 
+         SET company_name = $1, 
+             company_email = $2, 
+             hr_email = $3,
+             company_domain = $4,
+             company_logo_url = $5,
+             updated_at = NOW()
+         WHERE company_id = $6`,
+        [company_name, company_email, hr_email, companyDomain, company_logo_url || null, companyId]
+      )
+    } else {
+      await query(
+        `UPDATE companies 
+         SET company_name = $1, 
+             company_email = $2, 
+             hr_email = $3,
+             company_domain = $4,
+             updated_at = NOW()
+         WHERE company_id = $5`,
+        [company_name, company_email, hr_email, companyDomain, companyId]
+      )
+    }
 
     return res.json({
       success: true,
@@ -231,7 +293,8 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
         company_id: companyId,
         company_name,
         company_email,
-        hr_email
+        hr_email,
+        company_logo_url: hasLogoColumn ? (company_logo_url || null) : undefined
       }
     })
   } catch (err) {

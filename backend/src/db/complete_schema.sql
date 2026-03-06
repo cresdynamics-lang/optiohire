@@ -345,6 +345,7 @@ CREATE TABLE IF NOT EXISTS companies (
   hr_email text NOT NULL,
   hiring_manager_email text NOT NULL,
   company_domain text NOT NULL,
+  company_logo_url text,
   settings jsonb DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -359,6 +360,18 @@ BEGIN
   ) THEN
     ALTER TABLE companies ADD COLUMN user_id uuid REFERENCES users(user_id) ON DELETE CASCADE;
     RAISE NOTICE 'Added user_id column to companies table';
+  END IF;
+END $$;
+
+-- Add company_logo_url column to companies if it doesn't exist (for existing databases)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'companies' AND column_name = 'company_logo_url'
+  ) THEN
+    ALTER TABLE companies ADD COLUMN company_logo_url text;
+    RAISE NOTICE 'Added company_logo_url column to companies table';
   END IF;
 END $$;
 

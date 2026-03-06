@@ -39,6 +39,7 @@ interface CompanyData {
   company_email: string
   hr_email: string
   created_at: string
+  company_logo_url?: string | null
 }
 
 export function ProfileSection() {
@@ -61,6 +62,7 @@ export function ProfileSection() {
     company_email: '',
     hr_email: '',
     hiring_manager_email: '',
+    company_logo_url: '',
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -78,12 +80,13 @@ export function ProfileSection() {
     // PRIORITY: Use company data from user object (from signup/API)
     // This ensures signup company details are immediately reflected
     if (user.companyName || user.companyEmail || user.hrEmail) {
-      const companyData = {
+      const companyData: CompanyData = {
         id: user.companyId || '',
         company_name: user.companyName || '',
         company_email: user.companyEmail || '',
         hr_email: user.hrEmail || '',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        company_logo_url: (user as any).companyLogoUrl || null
       }
       
       setCompany(companyData)
@@ -92,6 +95,7 @@ export function ProfileSection() {
         company_email: user.companyEmail || '',
         hr_email: user.hrEmail || '',
         hiring_manager_email: user.hiringManagerEmail || '',
+        company_logo_url: (user as any).companyLogoUrl || '',
       })
       setIsLoading(false)
       
@@ -123,12 +127,13 @@ export function ProfileSection() {
       if (response.ok) {
         const userData = await response.json()
         if (userData.companyName || userData.companyEmail || userData.hrEmail) {
-          const companyData = {
+          const companyData: CompanyData = {
             id: userData.companyId || '',
             company_name: userData.companyName || '',
             company_email: userData.companyEmail || '',
             hr_email: userData.hrEmail || '',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            company_logo_url: userData.companyLogoUrl || null
           }
           
           setCompany(companyData)
@@ -137,6 +142,7 @@ export function ProfileSection() {
             company_email: userData.companyEmail || '',
             hr_email: userData.hrEmail || '',
             hiring_manager_email: userData.hiring_manager_email || userData.hiringManagerEmail || '',
+            company_logo_url: userData.companyLogoUrl || '',
           })
         }
       }
@@ -169,13 +175,15 @@ export function ProfileSection() {
             company_name: userData.companyName || '',
             company_email: userData.companyEmail || '',
             hr_email: userData.hrEmail || '',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            company_logo_url: userData.companyLogoUrl || null
           })
           setFormData({
             company_name: userData.companyName || '',
             company_email: userData.companyEmail || '',
             hr_email: userData.hrEmail || '',
             hiring_manager_email: userData.hiring_manager_email || userData.hiringManagerEmail || '',
+            company_logo_url: userData.companyLogoUrl || '',
           })
         }
       }
@@ -236,6 +244,7 @@ export function ProfileSection() {
           company_name: formData.company_name,
           company_email: formData.company_email,
           hr_email: formData.hr_email,
+          company_logo_url: formData.company_logo_url || null,
         })
       })
 
@@ -397,7 +406,7 @@ export function ProfileSection() {
                       {user?.name || user?.email?.split('@')[0] || 'User'}
                     </h1>
                     <p className="text-white/80 text-sm mb-2">
-                      Welcome back to your OptioHire dashboard.
+                      Welcome back to your recruitment dashboard.
                     </p>
                     {(user as any)?.username && (
                       <p className="text-white/80 text-sm font-mono mb-2">@{(user as any).username}</p>

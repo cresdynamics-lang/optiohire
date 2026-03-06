@@ -94,6 +94,28 @@ export function OverviewSection() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const [selectedJobData, setSelectedJobData] = useState<any>(null)
   const [isTourOpen, setIsTourOpen] = useState(false)
+  const [hasShownNoJobsToast, setHasShownNoJobsToast] = useState(false)
+
+  const getGreeting = () => {
+    const now = new Date()
+    const hour = now.getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 18) return 'Good afternoon'
+    return 'Good evening'
+  }
+
+  const getDisplayName = () => {
+    if (user?.name) return user.name
+    if (user?.companyName) return user.companyName
+    if (user?.email) return user.email.split('@')[0]
+    return 'there'
+  }
+
+  const getCompanyLabel = () => {
+    if (user?.companyName) return user.companyName
+    if (user?.companyEmail) return user.companyEmail.split('@')[0]
+    return 'your organisation'
+  }
 
   // Load job-specific analytics - simplified to skip Supabase stub calls
   const loadJobAnalytics = useCallback(async (jobId: string, options?: { skipLoadingState?: boolean }) => {
@@ -226,6 +248,21 @@ export function OverviewSection() {
         ...jobApplicants,
       })
 
+      // Smart popup when there are no jobs yet
+      if (totalJobs === 0 && !preserveSelection && !hasShownNoJobsToast) {
+        setHasShownNoJobsToast(true)
+        addNotification({
+          title: 'No jobs yet',
+          description: `Create the first role for ${getCompanyLabel()} from the Jobs tab to start receiving applications.`,
+          type: 'info',
+        })
+        toast({
+          title: 'Welcome to your hiring workspace',
+          description: `You have no job posts yet for ${getCompanyLabel()}. Head to the Jobs section to create your first role.`,
+          variant: 'info',
+        })
+      }
+
       // Show success notification if jobs were loaded
       if (normalizedJobs.length > 0 && !preserveSelection) {
         addNotification({
@@ -261,7 +298,7 @@ export function OverviewSection() {
     } finally {
       setIsLoading(false)
     }
-  }, [user, toast]) // Removed selectedJobId from dependencies to prevent re-runs on selection change
+  }, [user, toast, addNotification, hasShownNoJobsToast]) // Removed selectedJobId from dependencies to prevent re-runs on selection change
 
   // Handle job selection change
   const handleJobSelect = useCallback((jobId: string) => {
@@ -496,8 +533,8 @@ export function OverviewSection() {
     {
       id: 'applicant-analytics-title',
       target: '[data-tour="applicant-analytics-title"]',
-      title: 'Applicant Analytics Overview',
-      content: 'This section provides a detailed breakdown of applicant statuses for the selected job posting. Monitor your recruitment pipeline at a glance.',
+      title: 'Applicants for your role',
+      content: 'See how candidates for the selected job move through your pipeline – from total applicants to shortlisted and rejected.',
       position: 'bottom',
     },
     {
@@ -555,12 +592,12 @@ export function OverviewSection() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
           {/* Welcome Section */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-1">
               <h1 
                 data-tour="dashboard-overview-title"
                 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 dark:text-white"
               >
-                Dashboard Overview
+                {getGreeting()}, {getDisplayName()}
               </h1>
               <Button
                 variant="ghost"
@@ -573,8 +610,13 @@ export function OverviewSection() {
                 Take Tour
               </Button>
             </div>
+            <p className="text-xs sm:text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+              {getCompanyLabel()} • dashboard overview
+            </p>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-              Monitor your recruitment pipeline and track key metrics
+              {metrics.totalJobs === 0
+                ? `You have no active job posts yet. Create a role for ${getCompanyLabel()} to start capturing and auto-screening applications.`
+                : `You have ${metrics.activeJobs} active job${metrics.activeJobs === 1 ? '' : 's'} at ${getCompanyLabel()} and ${metrics.totalApplicants} applicant${metrics.totalApplicants === 1 ? '' : 's'} on the selected role.`}
             </p>
           </div>
           
