@@ -7,7 +7,7 @@ import { SendGridService } from './sendGridService.js'
 import { ResendService } from './resendService.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
-const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || 'nelsonochieng516@gmail.com'
+const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
 
 /** Derive display name for salutation: use candidate name or email local part so we never show only "Dear Candidate" when we have an email */
 function getCandidateDisplayName(candidateName: string | null | undefined, candidateEmail: string): string {
@@ -500,7 +500,7 @@ HireBit System
       return `noreply@${sanitized}.com`
     }
     
-    // Final fallback - use configured default (nelsonochieng516@gmail.com)
+    // Final fallback - use configured default (applicationsoptiohire@gmail.com)
     return DEFAULT_FROM_EMAIL
   }
 

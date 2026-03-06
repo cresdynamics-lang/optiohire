@@ -40,7 +40,7 @@ async function testResend() {
           try {
             const testEmail = await resend.emails.send({
               from: 'noreply@optiohire.com',
-              to: 'nelsonochieng516@gmail.com', // Your email for testing
+              to: 'applicationsoptiohire@gmail.com', // Your email for testing
               subject: 'OptioHire Resend Test',
               html: '<h1>✅ Resend Email Test Successful!</h1><p>This confirms your Resend configuration is working properly.</p>'
             });

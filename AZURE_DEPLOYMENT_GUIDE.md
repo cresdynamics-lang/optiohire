@@ -186,7 +186,7 @@ az webapp config appsettings set \
     RESEND_FROM_NAME="OptioHire" \
     SMTP_HOST="smtp.gmail.com" \
     SMTP_PORT="587" \
-    SMTP_USER="nelsonochieng516@gmail.com" \
+    SMTP_USER="applicationsoptiohire@gmail.com" \
     SMTP_PASS="YOUR_SMTP_PASSWORD"
 
 # IMAP Configuration (Email Reader)
@@ -196,7 +196,7 @@ az webapp config appsettings set \
   --settings \
     IMAP_HOST="imap.gmail.com" \
     IMAP_PORT="993" \
-    IMAP_USER="nelsonochieng516@gmail.com" \
+    IMAP_USER="applicationsoptiohire@gmail.com" \
     IMAP_PASS="YOUR_IMAP_PASSWORD" \
     IMAP_SECURE="true" \
     IMAP_POLL_MS="10000" \

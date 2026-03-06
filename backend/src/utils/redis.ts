@@ -4,11 +4,15 @@ import { logger } from './logger.js'
 let redisClient: Redis | null = null
 
 /**
- * Initialize Redis connection
+ * Initialize Redis connection. Opt-in: only connect when REDIS_URL, REDIS_ENABLED, or REDIS_HOST is set.
  */
 export function initRedis(): Redis | null {
   const redisUrl = process.env.REDIS_URL
-  const redisHost = process.env.REDIS_HOST || 'localhost'
+  const redisEnabled = process.env.REDIS_ENABLED === 'true'
+  const redisHost = process.env.REDIS_HOST
+  if (!redisUrl && !redisEnabled && !redisHost) return null
+
+  const host = redisHost || 'localhost'
   const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10)
   const redisPassword = process.env.REDIS_PASSWORD
 
@@ -23,7 +27,7 @@ export function initRedis(): Redis | null {
       })
     } else {
       redisClient = new Redis({
-        host: redisHost,
+        host,
         port: redisPort,
         password: redisPassword,
         retryStrategy: (times) => {

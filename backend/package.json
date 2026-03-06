@@ -7,6 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "migrate:remove-username": "tsx src/db/migrations/run-remove-username.ts",
+    "db:schema": "tsx scripts/run-schema.ts",
+    "check": "tsx scripts/check-env.ts",
     "ensure-admin": "tsx scripts/ensure-admin-user.ts",
     "test:verification-email": "tsx scripts/send-test-verification-code.ts"
   },

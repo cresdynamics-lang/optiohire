@@ -72,8 +72,8 @@ NEXT_PUBLIC_APP_URL=http://143.244.162.13
 # ============================================================================
 # Google SSO / OAuth Configuration
 # ============================================================================
-GOOGLE_CLIENT_ID=22019726883-av15fmt3osj3feqsbm539bdg05728tsj.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_REDIRECT_URI=http://143.244.162.13:3000/auth/google/callback
 
 # ============================================================================
@@ -92,11 +92,11 @@ SENDGRID_FROM_NAME=OptioHire
 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=nelsonochieng516@gmail.com
+SMTP_USER=applicationsoptiohire@gmail.com
 SMTP_PASS=mfbt hngy awnu guou
 
 MAIL_HOST=smtp.gmail.com
-MAIL_USER=nelsonochieng516@gmail.com
+MAIL_USER=applicationsoptiohire@gmail.com
 MAIL_PASS=mfbt hngy awnu guou
 MAIL_PORT=587
 
@@ -105,7 +105,7 @@ MAIL_PORT=587
 # ============================================================================
 IMAP_HOST=imap.gmail.com
 IMAP_PORT=993
-IMAP_USER=nelsonochieng516@gmail.com
+IMAP_USER=applicationsoptiohire@gmail.com
 IMAP_PASS=mfbt hngy awnu guou
 IMAP_SECURE=true
 IMAP_POLL_MS=10000

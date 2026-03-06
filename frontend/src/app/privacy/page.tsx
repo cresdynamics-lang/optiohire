@@ -167,10 +167,10 @@ export default function PrivacyPage() {
                 <div className="flex items-center gap-3 text-gray-300">
                   <Mail className="w-5 h-5 text-[#3ca2fa]" />
                   <a 
-                    href="mailto:nelsonochieng516@gmail.com" 
+                    href="mailto:applicationsoptiohire@gmail.com" 
                     className="text-[#3ca2fa] hover:text-[#3ca2fa]/80 transition-colors"
                   >
-                    nelsonochieng516@gmail.com
+                    applicationsoptiohire@gmail.com
                   </a>
                 </div>
               </div>

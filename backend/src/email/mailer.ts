@@ -8,10 +8,10 @@ declare const process: {
   }
 }
 
-const from = 'nelsonochieng516@gmail.com'
+const from = 'applicationsoptiohire@gmail.com'
 const host = process.env.SMTP_HOST || 'smtp.gmail.com'
 const port = Number(process.env.SMTP_PORT || 587)
-const user = process.env.SMTP_USER || from // Default to nelsonochieng516@gmail.com
+const user = process.env.SMTP_USER || from // Default to applicationsoptiohire@gmail.com
 const pass = process.env.SMTP_PASS || ''
 
 export const transporter = nodemailer.createTransport({

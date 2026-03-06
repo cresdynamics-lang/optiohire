@@ -1,6 +1,6 @@
 /**
  * Send test emails to info@cresdynamics.com using the real EmailService.
- * From address: nelsonochieng516@gmail.com (via MAIL_FROM / RESEND_FROM_EMAIL).
+ * From address: applicationsoptiohire@gmail.com (via MAIL_FROM / RESEND_FROM_EMAIL).
  * Run from backend: npx tsx scripts/send-test-emails.ts
  * Or: NOTIFICATION_TEST_TO=other@email.com npx tsx scripts/send-test-emails.ts
  */
@@ -19,7 +19,7 @@ async function main() {
   const emailService = new EmailService()
 
   console.log('Sending test emails to:', TEST_TO)
-  console.log('From address: nelsonochieng516@gmail.com (MAIL_FROM / RESEND_FROM_EMAIL)\n')
+  console.log('From address: applicationsoptiohire@gmail.com (MAIL_FROM / RESEND_FROM_EMAIL)\n')
 
   const jobTitle = 'Senior Developer'
   const companyName = 'Cresdynamics'
@@ -30,12 +30,12 @@ async function main() {
       candidateName: TEST_NAME,
       jobTitle,
       companyName,
-      companyEmail: 'nelsonochieng516@gmail.com',
+      companyEmail: 'applicationsoptiohire@gmail.com',
       interviewLink: 'https://meet.example.com/test',
       interviewDate: '2025-02-15',
       interviewTime: '10:00 AM'
     })
-    console.log('1. Shortlist email sent (check: Dear Info, from nelsonochieng516@gmail.com)')
+    console.log('1. Shortlist email sent (check: Dear Info, from applicationsoptiohire@gmail.com)')
   } catch (e: any) {
     console.error('1. Shortlist failed:', e?.message || e)
   }
@@ -46,9 +46,9 @@ async function main() {
       candidateName: TEST_NAME,
       jobTitle,
       companyName,
-      companyEmail: 'nelsonochieng516@gmail.com'
+      companyEmail: 'applicationsoptiohire@gmail.com'
     })
-    console.log('2. Rejection email sent (check: Dear Info, from nelsonochieng516@gmail.com)')
+    console.log('2. Rejection email sent (check: Dear Info, from applicationsoptiohire@gmail.com)')
   } catch (e: any) {
     console.error('2. Rejection failed:', e?.message || e)
   }
@@ -78,7 +78,7 @@ async function main() {
     console.error('5. Password reset failed:', e?.message || e)
   }
 
-  console.log('\nDone. Check inbox at', TEST_TO, 'for all 5 emails (from nelsonochieng516@gmail.com).')
+  console.log('\nDone. Check inbox at', TEST_TO, 'for all 5 emails (from applicationsoptiohire@gmail.com).')
 }
 
 main().catch((err) => {

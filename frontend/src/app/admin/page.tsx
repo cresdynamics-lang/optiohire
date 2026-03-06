@@ -98,7 +98,7 @@ function AdminDashboardContent() {
     setAdminName(name)
   }, [])
 
-  const isSeniorAdmin = currentUser?.email === 'nelsonochieng516@gmail.com'
+  const isSeniorAdmin = currentUser?.email === 'applicationsoptiohire@gmail.com'
 
   useEffect(() => {
     // Check for admin session directly

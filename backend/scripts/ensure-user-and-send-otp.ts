@@ -1,7 +1,7 @@
 /**
  * Ensure a user exists (create with placeholder password if not), then send OTP.
  * Usage: npx tsx scripts/ensure-user-and-send-otp.ts <email> [name]
- * Example: npx tsx scripts/ensure-user-and-send-otp.ts nelsonochieng516@gmail.com Nelson
+ * Example: npx tsx scripts/ensure-user-and-send-otp.ts applicationsoptiohire@gmail.com Nelson
  *
  * Requires: DATABASE_URL, RESEND_API_KEY (or SMTP) in backend/.env
  */

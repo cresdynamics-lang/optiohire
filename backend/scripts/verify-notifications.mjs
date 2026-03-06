@@ -31,7 +31,7 @@ const USE_RESEND = process.env.USE_RESEND === 'true' || !!RESEND_PRIMARY
 const MAIL_USER = process.env.MAIL_USER || process.env.SMTP_USER
 const MAIL_PASS = process.env.MAIL_PASS || process.env.SMTP_PASS
 const TEST_TO = process.env.NOTIFICATION_TEST_TO || process.env.MAIL_USER || ''
-const FROM_EMAIL = process.env.MAIL_FROM || process.env.RESEND_FROM_EMAIL || 'nelsonochieng516@gmail.com'
+const FROM_EMAIL = process.env.MAIL_FROM || process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
 const TEST_NAME = (TEST_TO && TEST_TO.includes('@')) ? TEST_TO.split('@')[0].replace(/[._]/g, ' ').replace(/^\w/, (c) => c.toUpperCase()) : 'Candidate'
 
 async function testResend() {
