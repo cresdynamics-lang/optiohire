@@ -347,7 +347,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('load', () => {
     const loadTime = performance.now()
     PerformanceMonitor.updateFrontendMetrics({ pageLoadTime: loadTime })
-    console.log(`🚀 Page loaded in ${loadTime.toFixed(2)}ms`)
+    console.log(`Page loaded in ${loadTime.toFixed(2)}ms`)
   })
   
   // Monitor memory usage

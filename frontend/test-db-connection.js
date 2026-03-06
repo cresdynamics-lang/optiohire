@@ -49,7 +49,7 @@ async function testConnection(name, connectionString) {
 }
 
 async function main() {
-  console.log('🚀 Testing Database Connections...\n');
+console.log('Testing Database Connections...\n');
   
   if (connections.length === 0) {
     console.log('❌ No connection strings provided.\n');

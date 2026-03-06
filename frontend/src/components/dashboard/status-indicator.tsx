@@ -14,17 +14,17 @@ export function StatusIndicator({ status, className }: StatusIndicatorProps) {
     processing: {
       label: 'Processing',
       variant: 'warning' as const,
-      icon: '⏳',
+      icon: '',
     },
     in_progress: {
       label: 'In Progress',
       variant: 'info' as const,
-      icon: '🔄',
+      icon: '',
     },
     finished: {
       label: 'Finished',
       variant: 'success' as const,
-      icon: '✅',
+      icon: '',
     },
   }
 
@@ -43,7 +43,6 @@ export function StatusIndicator({ status, className }: StatusIndicatorProps) {
           className
         )}
       >
-        <span className="text-base">{config.icon}</span>
         {config.label}
       </Badge>
     </motion.div>

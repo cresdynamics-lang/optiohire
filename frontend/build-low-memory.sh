@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 Starting memory-optimized build process..."
+echo "Starting memory-optimized build process..."
 
 # Check if swap is available
 if ! swapon --show | grep -q .; then

@@ -117,6 +117,12 @@ export function OverviewSection() {
     return 'your organisation'
   }
 
+  const getSelectedJobTitle = () => {
+    if (selectedJobData?.job_title) return selectedJobData.job_title
+    if (selectedJobData?.title) return selectedJobData.title
+    return null
+  }
+
   // Load job-specific analytics - simplified to skip Supabase stub calls
   const loadJobAnalytics = useCallback(async (jobId: string, options?: { skipLoadingState?: boolean }) => {
     if (!user || !jobId) return
@@ -169,6 +175,12 @@ export function OverviewSection() {
       } else if (response.status === 404) {
         // No company found or no jobs - this is okay, just show empty state
         jobs = []
+      } else if (response.status === 401 || response.status === 403) {
+        console.warn('Authentication error while fetching jobs, clearing token and redirecting to sign-in')
+        localStorage.removeItem('token')
+        setIsLoading(false)
+        router.push('/auth/signin')
+        return
       } else {
         console.error('Failed to fetch jobs:', response.status, await response.text().catch(() => ''))
         // Continue with empty array rather than showing error
@@ -436,6 +448,11 @@ export function OverviewSection() {
             readyReports: reportsData.readyReports,
           }))
         }
+      } else if (response.status === 401 || response.status === 403) {
+        console.warn('Authentication error while refreshing jobs, clearing token and redirecting to sign-in')
+        localStorage.removeItem('token')
+        router.push('/auth/signin')
+        return
       }
     } catch (err) {
       console.error('Error refreshing job data:', err)
@@ -595,7 +612,7 @@ export function OverviewSection() {
             <div className="flex items-center gap-3 mb-1">
               <h1 
                 data-tour="dashboard-overview-title"
-                className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 dark:text-white"
+                className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white"
               >
                 {getGreeting()}, {getDisplayName()}
               </h1>
@@ -752,10 +769,12 @@ export function OverviewSection() {
                 className="text-xl font-figtree font-extralight flex items-center gap-3 text-gray-900 dark:text-white mb-2"
               >
                 <Users className="w-5 h-5 text-[#2D2DDD] flex-shrink-0" />
-                Applicant Analytics Overview
+                {getSelectedJobTitle()
+                  ? `Applicants for “${getSelectedJobTitle()}”`
+                  : 'Applicants for your roles'}
               </CardTitle>
               <CardDescription className="text-sm font-figtree font-light text-gray-600 dark:text-gray-400">
-                Comprehensive breakdown of your recruitment pipeline
+                Live pipeline view for {getCompanyLabel()} showing how candidates move across this role.
               </CardDescription>
             </div>
           </CardHeader>
@@ -841,6 +860,7 @@ export function OverviewSection() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
+                onMouseEnter={() => router.prefetch('/dashboard/jobs')}
                 onClick={() => router.push('/dashboard/jobs')}
                 className="group"
               >
@@ -857,6 +877,14 @@ export function OverviewSection() {
                 </Card>
               </button>
               <button
+                onMouseEnter={() => {
+                  if (jobPostings.length > 0) {
+                    const target = `/dashboard/job/${jobPostings[0].id}/shortlisted`
+                    router.prefetch(target)
+                  } else {
+                    router.prefetch('/dashboard/jobs')
+                  }
+                }}
                 onClick={() => {
                   if (jobPostings.length > 0) {
                     router.push(`/dashboard/job/${jobPostings[0].id}/shortlisted`)
@@ -879,6 +907,7 @@ export function OverviewSection() {
                 </Card>
               </button>
               <button
+                onMouseEnter={() => router.prefetch('/dashboard/reports')}
                 onClick={() => router.push('/dashboard/reports')}
                 className="group"
               >
@@ -895,6 +924,7 @@ export function OverviewSection() {
                 </Card>
               </button>
               <button
+                onMouseEnter={() => router.prefetch('/dashboard/jobs')}
                 onClick={() => router.push('/dashboard/jobs')}
                 className="group"
               >

@@ -48,6 +48,7 @@ export function ProfileSection() {
   const [company, setCompany] = useState<CompanyData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isEditingCompany, setIsEditingCompany] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
@@ -619,16 +620,38 @@ export function ProfileSection() {
         {/* Company Information Card */}
         <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 shadow-xl">
           <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700">
-            <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <div className="text-lg font-semibold">Company Profile</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 font-normal mt-0.5">
-                  {company ? 'Company details from your account signup' : 'Your organization details'}
+            <CardTitle className="flex items-center justify-between text-gray-900 dark:text-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="text-lg font-semibold">Company Profile</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 font-normal mt-0.5">
+                    {company ? 'Organisation details linked to this workspace' : 'Your organisation details'}
+                  </div>
                 </div>
               </div>
+              {company && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={isEditingCompany ? 'outline' : 'default'}
+                  onClick={() => {
+                    if (isEditingCompany) {
+                      // Cancel editing: reload latest company data into the form
+                      loadCompanyData()
+                    }
+                    setIsEditingCompany(!isEditingCompany)
+                  }}
+                  className={isEditingCompany 
+                    ? 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
+                    : 'bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none'
+                  }
+                >
+                  {isEditingCompany ? 'Close' : 'Edit company profile'}
+                </Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
@@ -638,133 +661,190 @@ export function ProfileSection() {
               </div>
             ) : company ? (
               <>
-                {/* Success indicator showing data is from signup */}
-                <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
-                  <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
-                    Company details are linked to your account from signup
-                  </p>
+                {/* Compact profile summary always visible */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                    {(user as any)?.companyLogoUrl || company.company_logo_url ? (
+                      // Use plain img to avoid extra imports
+                      <img
+                        src={(user as any).companyLogoUrl || (company.company_logo_url as string)}
+                        alt={`${company.company_name} logo`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Building2 className="w-7 h-7 text-gray-500" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                      {company.company_name}
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                      {formData.company_email || company.company_email}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      Primary HR contact: {formData.hr_email || company.hr_email}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Email for applications – read-only summary */}
-                  <div className="flex items-center gap-2 p-3 bg-[#2D2DDD]/10 dark:bg-[#2D2DDD]/20 border border-[#2D2DDD]/30 dark:border-[#2D2DDD]/40 rounded-lg mb-2">
-                    <Mail className="w-5 h-5 text-[#2D2DDD] dark:text-[#2D2DDD] flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                        Email for applications & candidate contact
-                      </p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 break-all">
-                        {formData.hr_email || formData.company_email || '—'}
-                      </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        Applications and candidate replies use this address. It is shown in shortlist and rejection emails as the company contact.
-                      </p>
+                {/* When not editing: show read-only profile fields */}
+                {!isEditingCompany ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 p-3 bg-[#2D2DDD]/10 dark:bg-[#2D2DDD]/20 border border-[#2D2DDD]/30 dark:border-[#2D2DDD]/40 rounded-lg mb-2">
+                      <Mail className="w-5 h-5 text-[#2D2DDD] dark:text-[#2D2DDD] flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          Email for applications & candidate contact
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 break-all">
+                          {formData.hr_email || formData.company_email || '—'}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          Applications and candidate replies use this address. It is shown in shortlist and rejection emails as the company contact.
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="company_name" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
-                      <Building2 className="w-4 h-4" />
-                      Company Name
-                    </Label>
-                    <Input
-                      id="company_name"
-                      type="text"
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                      placeholder="Enter company name"
-                      className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
-                    />
-                    <p className="text-xs text-gray-500 dark:text-gray-500">As entered during account creation</p>
-                    {user?.companyName && formData.company_name === user.companyName && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" />
-                        Matches your signup information
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="company_email" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Company Email
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="company_email"
-                        type="email"
-                        value={formData.company_email}
-                        onChange={(e) => setFormData({ ...formData, company_email: e.target.value })}
-                        placeholder="company@example.com"
-                        className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Company name</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {formData.company_name || company.company_name}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Company email</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                          {formData.company_email || company.company_email}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">HR email</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                          {formData.hr_email || company.hr_email}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Hiring manager email</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                          {user?.hiringManagerEmail || '—'}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500">Used as sender for candidate emails (shortlist, rejection)</p>
-                    {user?.companyEmail && formData.company_email === user.companyEmail && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" />
-                        Matches your signup information
-                      </p>
-                    )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="hr_email" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      HR Email (applications & candidate contact)
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="hr_email"
-                        type="email"
-                        value={formData.hr_email}
-                        onChange={(e) => setFormData({ ...formData, hr_email: e.target.value })}
-                        placeholder="hr@example.com"
-                        className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500">Contact shown to candidates; primary email for applications to flow into</p>
-                    {user?.hrEmail && formData.hr_email === user.hrEmail && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" />
-                        Matches your signup information
-                      </p>
-                    )}
-                  </div>
+                ) : (
+                  <>
+                    {/* Editable form shown only when editing */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="company_name" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
+                          <Building2 className="w-4 h-4" />
+                          Company Name
+                        </Label>
+                        <Input
+                          id="company_name"
+                          type="text"
+                          value={formData.company_name}
+                          onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                          placeholder="Enter company name"
+                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-500">As entered during account creation</p>
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="hiring_manager_email" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Hiring Manager Email
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="hiring_manager_email"
-                        type="email"
-                        value={user?.hiringManagerEmail || ''}
-                        disabled
-                        className="pl-10 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="company_email" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          Company Email
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="company_email"
+                            type="email"
+                            value={formData.company_email}
+                            onChange={(e) => setFormData({ ...formData, company_email: e.target.value })}
+                            placeholder="company@example.com"
+                            className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-500">Used as sender for candidate emails (shortlist, rejection).</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="hr_email" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          HR Email (applications & candidate contact)
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="hr_email"
+                            type="email"
+                            value={formData.hr_email}
+                            onChange={(e) => setFormData({ ...formData, hr_email: e.target.value })}
+                            placeholder="hr@example.com"
+                            className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                          This address receives applications and is shown in candidate emails.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="company_logo_url" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
+                          <Building2 className="w-4 h-4" />
+                          Company logo URL
+                        </Label>
+                        <Input
+                          id="company_logo_url"
+                          type="url"
+                          value={formData.company_logo_url}
+                          onChange={(e) => setFormData({ ...formData, company_logo_url: e.target.value })}
+                          placeholder="https://your-cdn.com/company-logo.png"
+                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                          Paste a public image URL. This logo will appear in the dashboard sidebar for your organisation.
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500">Hiring manager email from your signup</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={handleSaveCompany}
-                  disabled={isSaving}
-                  className="w-full bg-gradient-to-r from-[#2D2DDD] to-[#2D2DDD]/90 hover:from-[#2D2DDD]/90 hover:to-[#2D2DDD] text-white shadow-lg"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving Changes...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Save Company Changes
-                    </>
-                  )}
-                </Button>
+
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        onClick={async () => {
+                          await handleSaveCompany()
+                          setIsEditingCompany(false)
+                        }}
+                        disabled={isSaving}
+                        className="flex-1 bg-gradient-to-r from-[#2D2DDD] to-[#2D2DDD]/90 hover:from-[#2D2DDD]/90 hover:to-[#2D2DDD] text-white shadow-lg"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving Changes...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Save company changes
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditingCompany(false)
+                          loadCompanyData()
+                        }}
+                        className="border-gray-300 dark:border-gray-600"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </>
+                )}
               </>
             ) : (
               <div className="text-center py-12">

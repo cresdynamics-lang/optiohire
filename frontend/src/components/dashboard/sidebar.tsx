@@ -116,10 +116,10 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white truncate">
                   {orgName}
                 </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate">
                   {profileLine}
                 </p>
               </div>

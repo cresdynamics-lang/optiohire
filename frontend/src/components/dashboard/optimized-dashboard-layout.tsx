@@ -310,7 +310,7 @@ function DashboardContent() {
       setPreloadTime(endTime - startTime)
       
       if (endTime - startTime < 200) {
-        console.log(`🚀 Dashboard preloaded in ${(endTime - startTime).toFixed(2)}ms`)
+        console.log(`Dashboard preloaded in ${(endTime - startTime).toFixed(2)}ms`)
       }
     } catch (error) {
       console.error('Dashboard preloading failed:', error)
@@ -364,6 +364,20 @@ function DashboardContent() {
       )
     }
   }, [activeSection, isPreloading, user])
+
+  // Prefetch main dashboard routes once user is ready for snappier navigation
+  useEffect(() => {
+    if (!user) return
+    try {
+      router.prefetch('/dashboard')
+      router.prefetch('/dashboard/jobs')
+      router.prefetch('/dashboard/reports')
+      router.prefetch('/dashboard/interviews')
+      router.prefetch('/dashboard/profile')
+    } catch (e) {
+      console.warn('Dashboard prefetch failed:', e)
+    }
+  }, [router, user])
 
   // Optimized section change handler - now includes URL navigation
   const handleSectionChange = useCallback((section: string) => {

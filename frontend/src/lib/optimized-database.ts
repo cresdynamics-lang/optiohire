@@ -91,7 +91,7 @@ export class OptimizedDatabaseService {
       }
 
       const endTime = performance.now()
-      console.log(`🚀 Job creation optimized: ${(endTime - startTime).toFixed(2)}ms`)
+      console.log(`Job creation optimized: ${(endTime - startTime).toFixed(2)}ms`)
 
       // Clear relevant cache
       this.clearCache(`jobs_${userId}`)
@@ -127,7 +127,7 @@ export class OptimizedDatabaseService {
         }
 
         const endTime = performance.now()
-        console.log(`🚀 Jobs loading optimized: ${(endTime - startTime).toFixed(2)}ms`)
+        console.log(`Jobs loading optimized: ${(endTime - startTime).toFixed(2)}ms`)
 
         return data || []
       } catch (error) {
@@ -157,7 +157,7 @@ export class OptimizedDatabaseService {
         }
 
         const endTime = performance.now()
-        console.log(`🚀 Metrics loading optimized: ${(endTime - startTime).toFixed(2)}ms`)
+        console.log(`Metrics loading optimized: ${(endTime - startTime).toFixed(2)}ms`)
 
         return data || {
           activeJobs: 0,
@@ -195,7 +195,7 @@ export class OptimizedDatabaseService {
         }
 
         const endTime = performance.now()
-        console.log(`🚀 Interviews loading optimized: ${(endTime - startTime).toFixed(2)}ms`)
+        console.log(`Interviews loading optimized: ${(endTime - startTime).toFixed(2)}ms`)
 
         return data || []
       } catch (error) {
@@ -222,7 +222,7 @@ export class OptimizedDatabaseService {
       }
 
       const endTime = performance.now()
-      console.log(`🚀 Batch webhook update optimized: ${(endTime - startTime).toFixed(2)}ms`)
+      console.log(`Batch webhook update optimized: ${(endTime - startTime).toFixed(2)}ms`)
     } catch (error) {
       console.error('Batch webhook update failed:', error)
       throw error
@@ -244,7 +244,7 @@ export class OptimizedDatabaseService {
       ])
 
       const endTime = performance.now()
-      console.log(`🚀 Critical data preloaded: ${(endTime - startTime).toFixed(2)}ms`)
+      console.log(`Critical data preloaded: ${(endTime - startTime).toFixed(2)}ms`)
     } catch (error) {
       console.error('Critical data preloading failed:', error)
       throw error

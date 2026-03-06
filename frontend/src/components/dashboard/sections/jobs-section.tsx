@@ -17,7 +17,6 @@ import {
   Trash2,
   AlertTriangle,
   RefreshCw,
-  Brain
 } from 'lucide-react'
 import { CreateJobModal } from '../create-job-modal'
 import { JobDetailsModal } from '../job-details-modal'
@@ -56,17 +55,17 @@ export function JobsSection() {
 
   // Real-time updates for jobs and applicants
   useJobsRealtime(() => {
-    console.log('🔄 Real-time job update detected, refreshing jobs...')
+    console.log('Real-time job update detected, refreshing jobs...')
     refreshJobs()
   })
-
+ 
   useApplicantsRealtime(() => {
-    console.log('🔄 Real-time applicant update detected, refreshing jobs...')
+    console.log('Real-time applicant update detected, refreshing jobs...')
     refreshJobs()
   })
-
+ 
   useAnalyticsRealtime(() => {
-    console.log('🔄 Real-time analytics update detected, refreshing jobs...')
+    console.log('Real-time analytics update detected, refreshing jobs...')
     refreshJobs()
   })
 
@@ -82,7 +81,7 @@ export function JobsSection() {
         setIsLoading(true)
         setError(null)
         
-        console.log('🔄 Loading jobs for user:', user.id)
+        console.log('Loading jobs for user:', user.id)
         
         // Use frontend API route to fetch jobs
         const token = localStorage.getItem('token')
@@ -127,7 +126,7 @@ export function JobsSection() {
         const data = await response.json()
         const jobPostings = data.jobs || []
         
-        console.log('📋 Found job postings:', jobPostings.length, jobPostings)
+        console.log('Found job postings:', jobPostings.length, jobPostings)
         
         // Backend API already returns jobs with applicant stats
         const jobsWithApplicants: JobWithApplicants[] = jobPostings.map((job: any) => {
@@ -157,10 +156,10 @@ export function JobsSection() {
           }
         })
         
-        console.log('✅ Processed jobs with applicants:', jobsWithApplicants.length)
+        console.log('Processed jobs with applicants:', jobsWithApplicants.length)
         setJobs(jobsWithApplicants)
       } catch (err: any) {
-        console.error('❌ Error loading jobs:', err)
+        console.error('Error loading jobs:', err)
         const errorMessage = err?.message || 'An error occurred while loading jobs'
         setError(errorMessage)
         // Don't show error if it's just no jobs found
@@ -178,7 +177,7 @@ export function JobsSection() {
 
   // Add a refresh function that can be called externally
   const refreshJobs = async () => {
-    console.log('🔄 Manual refresh triggered')
+    console.log('Manual refresh triggered')
     if (!user) return
     
     try {
@@ -228,7 +227,7 @@ export function JobsSection() {
       const data = await response.json()
       const jobPostings = data.jobs || []
       
-      console.log('📋 Refreshed job postings:', jobPostings.length)
+      console.log('Refreshed job postings:', jobPostings.length)
       
       // Backend API already returns jobs with applicant stats
       const jobsWithApplicants: JobWithApplicants[] = jobPostings.map((job: any) => {
@@ -260,7 +259,7 @@ export function JobsSection() {
       
       setJobs(jobsWithApplicants)
     } catch (err: any) {
-      console.error('❌ Error refreshing jobs:', err)
+        console.error('Error refreshing jobs:', err)
       const errorMessage = err?.message || 'An error occurred while refreshing jobs'
       setError(errorMessage)
       // Don't show error if it's just no jobs found
@@ -332,9 +331,9 @@ export function JobsSection() {
       const jobPostingId: string = data.job_posting_id
       const companyId: string = data.company_id
       
-      console.log('✅ New job created via backend:', { jobPostingId, companyId })
-      console.log('🔍 Created job company_id:', companyId)
-      console.log('🔍 Current user:', { id: user.id, email: user.email })
+      console.log('New job created via backend:', { jobPostingId, companyId })
+      console.log('Created job company_id:', companyId)
+      console.log('Current user:', { id: user.id, email: user.email })
       
       // Store company_id in localStorage for future queries
       if (companyId) {
@@ -369,16 +368,16 @@ export function JobsSection() {
         processingStatus: 'processing'
       }
       
-      console.log('✅ New job created via backend:', { jobPostingId, companyId })
-      console.log('🔍 Created job company_id:', companyId)
-      console.log('🔍 Current user:', { id: user.id, email: user.email })
+      console.log('New job created via backend:', { jobPostingId, companyId })
+      console.log('Created job company_id:', companyId)
+      console.log('Current user:', { id: user.id, email: user.email })
       
       // Refresh jobs list to get the actual job from database
       // Await refresh to ensure job appears in list before showing success
-      console.log('🔄 Refreshing jobs list after creation...')
+      console.log('Refreshing jobs list after creation...')
       try {
         await refreshJobs()
-        console.log('✅ Jobs list refreshed - new job should be visible')
+        console.log('Jobs list refreshed - new job should be visible')
         
         // Double-check: Query directly to verify job exists
         const { data: verifyJobs, error: verifyError } = await supabase
@@ -386,12 +385,12 @@ export function JobsSection() {
           .select('*')
           .eq('job_posting_id', jobPostingId)
         
-        console.log('🔍 Verification query result:', { verifyJobs, verifyError })
+        console.log('Verification query result:', { verifyJobs, verifyError })
         if (verifyJobs && verifyJobs.length > 0) {
-          console.log('✅ Job verified in database:', verifyJobs[0])
-          console.log('🔍 Job company_id:', verifyJobs[0].company_id)
+          console.log('Job verified in database:', verifyJobs[0])
+          console.log('Job company_id:', verifyJobs[0].company_id)
         } else {
-          console.warn('⚠️ Job not found in verification query!')
+          console.warn('Job not found in verification query')
         }
       } catch (err) {
         console.error('Error refreshing jobs after creation:', err)

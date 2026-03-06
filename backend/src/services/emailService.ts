@@ -530,16 +530,16 @@ HireBit System
       <p><strong>Step 1 – Subject line for email applications</strong></p>
       <p style="margin-top: 8px; padding: 10px; background: #fff; border-radius: 6px; border: 1px dashed #ccc;"><code>${recommendedSubject}</code></p>
       <p>Use this exact subject in your job advert and tell candidates to use it when emailing their CVs. This lets OptioHire route applications to the correct job and company, even if other companies hire for the same role.</p>
-      <p><strong>Step 2 – Set up email forwarding (Gmail example)</strong></p>
+      <p><strong>Step 2 – Set up email forwarding to the OptioHire inbox (Gmail example)</strong></p>
       <ol>
-        <li>Open Gmail logged in as <strong>applicationsoptiohire@gmail.com</strong> (or the inbox receiving applications).</li>
+        <li>Open Gmail logged in as the inbox where candidates will send applications (for example, your HR email).</li>
         <li>Click the gear icon → <strong>See all settings</strong> → <strong>Forwarding and POP/IMAP</strong>.</li>
-        <li>Under “Forwarding”, click <strong>Add a forwarding address</strong> and enter your HR email (e.g. ${companyName && companyName !== '[Company Name]' ? `${companyName} HR` : 'your HR email'}).</li>
-        <li>Confirm the forwarding email using the verification link Google sends.</li>
-        <li>Add a filter (Settings → <strong>Filters and blocked addresses</strong>) with <strong>Subject</strong> contains <code>${recommendedSubject}</code> and choose “Forward” to your HR email. This ensures only this job’s emails are forwarded if needed.</li>
+        <li>Under “Forwarding”, click <strong>Add a forwarding address</strong> and enter <strong>applicationsoptiohire@gmail.com</strong>.</li>
+        <li>Confirm the forwarding address using the verification link Google sends.</li>
+        <li>Add a filter (Settings → <strong>Filters and blocked addresses</strong>) with <strong>Subject</strong> contains <code>${recommendedSubject}</code> and choose “Forward” to <strong>applicationsoptiohire@gmail.com</strong>. This ensures only this job’s emails are forwarded into the OptioHire processing inbox.</li>
       </ol>
       <p><strong>Step 3 – Other email providers (Outlook, work email, etc.)</strong></p>
-      <p>Create a rule/filter in your provider that forwards emails where the <strong>Subject</strong> contains <code>${recommendedSubject}</code> to your HR email or shared recruitment inbox. The exact steps differ per provider, but the rule should key off this subject line.</p>
+      <p>Create a rule/filter in your provider that forwards emails where the <strong>Subject</strong> contains <code>${recommendedSubject}</code> to <strong>applicationsoptiohire@gmail.com</strong>. The exact steps differ per provider, but the rule should key off this subject line and forward to the OptioHire inbox.</p>
       <p><strong>Step 4 – Need help?</strong></p>
       <p>If you are not comfortable configuring forwarding or rules in your email, please contact <a href="mailto:developer@optiohire.com">developer@optiohire.com</a> and our team will help you set this up.</p>
       <p>Best regards,<br>OptioHire</p>
@@ -561,15 +561,15 @@ Step 1 – Subject line for email applications:
 
 Use this exact subject in your job advert and tell candidates to use it when emailing their CVs. This lets OptioHire route applications to the correct job and company, even if other companies hire for the same role.
 
-Step 2 – Set up email forwarding (Gmail example):
-  1) Open Gmail logged in as the inbox receiving applications.
+Step 2 – Set up email forwarding to the OptioHire inbox (Gmail example):
+  1) Open Gmail logged in as the inbox where candidates will send applications (for example, your HR email).
   2) Go to Settings → See all settings → Forwarding and POP/IMAP.
-  3) Under “Forwarding”, click “Add a forwarding address” and enter your HR email.
-  4) Confirm the forwarding email using the verification link Google sends.
-  5) Add a filter where Subject contains "${recommendedSubject}" and choose to forward those emails to your HR email.
+  3) Under “Forwarding”, click “Add a forwarding address” and enter "applicationsoptiohire@gmail.com".
+  4) Confirm the forwarding address using the verification link Google sends.
+  5) Add a filter where Subject contains "${recommendedSubject}" and choose to forward those emails to "applicationsoptiohire@gmail.com".
 
 Step 3 – Other email providers:
-Create a rule/filter that forwards emails where the Subject contains "${recommendedSubject}" to your HR email or shared recruitment inbox.
+Create a rule/filter that forwards emails where the Subject contains "${recommendedSubject}" to "applicationsoptiohire@gmail.com". The rule should always forward matching emails into the OptioHire processing inbox.
 
 Step 4 – Need help?
 If you are not comfortable configuring forwarding or rules in your email, please contact developer@optiohire.com and our team will help you set this up.
