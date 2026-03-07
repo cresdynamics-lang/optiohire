@@ -11,7 +11,7 @@ export default function PricingPage() {
   const plans = [
     {
       name: 'Starter',
-      price: '$299',
+      price: 'KSH 2,500',
       period: 'month',
       description: 'Perfect for small teams getting started with AI hiring',
       features: [
@@ -26,7 +26,7 @@ export default function PricingPage() {
     },
     {
       name: 'Professional',
-      price: '$599',
+      price: 'KSH 5,000',
       period: 'month',
       description: 'Ideal for growing companies with regular hiring needs',
       features: [
@@ -43,8 +43,8 @@ export default function PricingPage() {
     },
     {
       name: 'Enterprise',
-      price: 'Custom',
-      period: 'pricing',
+      price: 'KSH 10,000',
+      period: 'month',
       description: 'Tailored solutions for large organizations with complex needs',
       features: [
         'Unlimited applications',

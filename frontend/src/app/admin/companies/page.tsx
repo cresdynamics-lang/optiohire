@@ -16,6 +16,8 @@ interface Company {
   hiring_manager_email: string
   company_domain: string
   created_at: string
+  jobs_count?: number
+  applications_count?: number
 }
 
 export default function AdminCompaniesPage() {
@@ -163,6 +165,16 @@ export default function AdminCompaniesPage() {
                           <div>
                             <span className="text-gray-500">Created:</span> {new Date(company.created_at).toLocaleDateString()}
                           </div>
+                          {typeof company.jobs_count === 'number' && (
+                            <div>
+                              <span className="text-gray-500">Jobs:</span> {company.jobs_count}
+                            </div>
+                          )}
+                          {typeof company.applications_count === 'number' && (
+                            <div>
+                              <span className="text-gray-500">Applications:</span> {company.applications_count}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">

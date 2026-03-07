@@ -22,7 +22,8 @@ import {
   ArrowRight,
   ArrowLeft,
   RefreshCw,
-  Loader2
+  Loader2,
+  DollarSign
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -246,6 +247,51 @@ export default function AdminDashboardOverview() {
             )
           })}
         </div>
+
+        {/* Revenue & Pricing */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="border-2 border-emerald-500/20 dark:border-emerald-500/30 bg-gradient-to-br from-emerald-50/50 to-transparent dark:from-emerald-900/10 dark:to-transparent">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                Revenue & Pricing
+              </CardTitle>
+              <CardDescription>Current plan pricing (KSH) and organisation count</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Starter</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">KSH 2,500</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">/month</p>
+                </div>
+                <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Professional</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">KSH 5,000</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">/month</p>
+                </div>
+                <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Enterprise</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">KSH 10,000</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">/month</p>
+                </div>
+              </div>
+              <Link href="/admin/companies" className="block">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
+                  <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Organisations (billing base)</span>
+                  <span className="flex items-center text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                    {stats?.companies ?? 0}
+                    <ArrowRight className="w-4 h-4 ml-1 text-emerald-600 dark:text-emerald-400" />
+                  </span>
+                </div>
+              </Link>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Quick Actions */}
         <motion.div

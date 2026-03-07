@@ -1,7 +1,10 @@
 import type { Request, Response } from 'express'
+import bcrypt from 'bcrypt'
 import { query } from '../db/index.js'
 import type { AuthRequest } from '../middleware/auth.js'
 import { logAdminAction } from '../utils/adminLogger.js'
+
+const SALT_ROUNDS = 12
 
 // ============================================================================
 // USERS MANAGEMENT
@@ -415,6 +418,44 @@ export async function updateUser(req: Request, res: Response) {
   }
 }
 
+/**
+ * Admin reset user password. Sets password_hash for the given user.
+ * Body: { newPassword: string } (min 8 chars recommended).
+ */
+export async function resetUserPassword(req: AuthRequest, res: Response) {
+  try {
+    const { userId } = req.params
+    const { newPassword } = req.body as { newPassword?: string }
+
+    if (!newPassword || typeof newPassword !== 'string') {
+      return res.status(400).json({ error: 'newPassword is required' })
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' })
+    }
+
+    const { rows } = await query<{ user_id: string }>(
+      `SELECT user_id FROM users WHERE user_id = $1`,
+      [userId]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const password_hash = await bcrypt.hash(newPassword, SALT_ROUNDS)
+    await query(
+      `UPDATE users SET password_hash = $1, updated_at = now() WHERE user_id = $2`,
+      [password_hash, userId]
+    )
+
+    await logAdminAction(req, 'reset_password', 'user', userId, {})
+    return res.json({ success: true, message: 'Password reset successfully' })
+  } catch (err) {
+    console.error('Reset password error:', err)
+    return res.status(500).json({ error: 'Failed to reset password' })
+  }
+}
+
 export async function getUserActivity(req: Request, res: Response) {
   try {
     const { userId } = req.params
@@ -498,18 +539,21 @@ export async function getAllCompanies(req: Request, res: Response) {
     }
 
     const { rows: companies } = await query(
-      `SELECT company_id, company_name, company_email, hr_email, 
-              hiring_manager_email, company_domain, settings, 
-              created_at, updated_at
-       FROM companies 
-       ${whereClause}
-       ORDER BY created_at DESC 
+      `SELECT c.company_id, c.company_name, c.company_email, c.hr_email, 
+              c.hiring_manager_email, c.company_domain, c.settings, 
+              c.created_at, c.updated_at,
+              (SELECT COUNT(*)::int FROM job_postings jp WHERE jp.company_id = c.company_id) AS jobs_count,
+              (SELECT COUNT(*)::int FROM applications a WHERE a.company_id = c.company_id) AS applications_count
+       FROM companies c
+       ${whereClause.replace(/company_name|company_domain|hr_email/g, 'c.$&')}
+       ORDER BY c.created_at DESC 
        LIMIT $1 OFFSET $2`,
       params
     )
 
+    const countWhere = search ? whereClause.replace(/\$3/g, '$1') : whereClause
     const { rows: countRows } = await query<{ count: string }>(
-      `SELECT COUNT(*) as count FROM companies ${whereClause}`,
+      `SELECT COUNT(*) as count FROM companies ${countWhere}`,
       search ? [params[2]] : []
     )
 

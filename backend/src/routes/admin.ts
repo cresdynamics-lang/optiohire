@@ -7,6 +7,7 @@ import {
   getUserStats,
   updateUser,
   deleteUser,
+  resetUserPassword,
   getAllCompanies,
   getCompanyDetails,
   updateCompany,
@@ -53,6 +54,7 @@ router.get('/users/:userId', getUserById)
 router.get('/users/:userId/stats', getUserStats)
 router.get('/users/:userId/activity', getUserActivity)
 router.patch('/users/:userId', updateUser)
+router.post('/users/:userId/reset-password', resetUserPassword)
 router.delete('/users/:userId', deleteUser)
 
 // Companies Management

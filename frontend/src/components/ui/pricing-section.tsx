@@ -89,8 +89,8 @@ export default function PricingSection({ plans: customPlans }: PricingSectionPro
     {
       name: "Starter",
       description: "Perfect for small teams getting started with AI recruitment",
-      price: 29,
-      yearlyPrice: 249,
+      price: 2500,
+      yearlyPrice: 24000,
       buttonText: "Get Started",
       buttonVariant: "outline",
       features: [
@@ -109,8 +109,8 @@ export default function PricingSection({ plans: customPlans }: PricingSectionPro
     {
       name: "Professional",
       description: "Advanced features for growing companies and HR teams",
-      price: 79,
-      yearlyPrice: 679,
+      price: 5000,
+      yearlyPrice: 48000,
       buttonText: "Get Started",
       buttonVariant: "default",
       popular: true,
@@ -133,8 +133,8 @@ export default function PricingSection({ plans: customPlans }: PricingSectionPro
     {
       name: "Enterprise",
       description: "Complete solution for large organizations with custom needs",
-      price: 199,
-      yearlyPrice: 1599,
+      price: 10000,
+      yearlyPrice: 96000,
       buttonText: "Contact Sales",
       buttonVariant: "outline",
       features: [
@@ -261,7 +261,7 @@ export default function PricingSection({ plans: customPlans }: PricingSectionPro
                 <p className="text-xs sm:text-base text-gray-300 mb-4 font-figtree">{plan.description}</p>
                 <div className="flex items-baseline">
                   <span className="text-2xl sm:text-4xl font-semibold text-white font-figtree">
-                    $
+                    KSH{" "}
                     <NumberFlow
                       value={isYearly ? plan.yearlyPrice : plan.price}
                       className="text-2xl sm:text-4xl font-semibold font-figtree"

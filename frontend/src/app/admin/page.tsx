@@ -7,6 +7,15 @@ import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
 import Link from 'next/link'
 import { 
   Users, 
@@ -21,6 +30,9 @@ import {
   Key,
   Loader2,
   AlertTriangle,
+  UserX,
+  UserCheck,
+  KeyRound,
   CheckCircle,
   X,
   RefreshCw,
@@ -28,7 +40,6 @@ import {
   Crown,
   Briefcase,
   FileText,
-  UserCheck,
   LayoutDashboard,
   BarChart3,
   Settings
@@ -61,6 +72,11 @@ function AdminDashboardContent() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
+  const [disablingUserId, setDisablingUserId] = useState<string | null>(null)
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null)
+  const [resetPasswordValue, setResetPasswordValue] = useState('')
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false)
+  const [resetPasswordError, setResetPasswordError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const sectionFromUrl = searchParams.get('section') as 'users' | 'admins' | null
@@ -192,6 +208,59 @@ function AdminDashboardContent() {
       alert(err.message || 'Failed to delete user')
     } finally {
       setDeletingUserId(null)
+    }
+  }
+
+  const handleDisableEnableUser = async (userId: string, currentActive: boolean) => {
+    try {
+      setDisablingUserId(userId)
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('Not authenticated')
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const response = await fetch(`${backendUrl}/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !currentActive })
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to update user')
+      }
+      setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, is_active: !currentActive } : u))
+    } catch (err: any) {
+      alert(err.message || 'Failed to update user')
+    } finally {
+      setDisablingUserId(null)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordUserId || !resetPasswordValue.trim()) return
+    if (resetPasswordValue.length < 8) {
+      setResetPasswordError('Password must be at least 8 characters')
+      return
+    }
+    try {
+      setResetPasswordLoading(true)
+      setResetPasswordError(null)
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('Not authenticated')
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const response = await fetch(`${backendUrl}/api/admin/users/${resetPasswordUserId}/reset-password`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword: resetPasswordValue })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Failed to reset password')
+      setResetPasswordUserId(null)
+      setResetPasswordValue('')
+      setResetPasswordError(null)
+      alert('Password reset successfully')
+    } catch (err: any) {
+      setResetPasswordError(err.message || 'Failed to reset password')
+    } finally {
+      setResetPasswordLoading(false)
     }
   }
 
@@ -582,6 +651,69 @@ function AdminDashboardContent() {
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
+                    {user.email !== currentUser?.email && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDisableEnableUser(user.user_id, user.is_active)}
+                        disabled={disablingUserId === user.user_id}
+                      >
+                        {disablingUserId === user.user_id ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : user.is_active ? (
+                          <UserX className="w-4 h-4 mr-2" />
+                        ) : (
+                          <UserCheck className="w-4 h-4 mr-2" />
+                        )}
+                        {user.is_active ? 'Disable' : 'Enable'}
+                      </Button>
+                    )}
+                    <Dialog open={resetPasswordUserId === user.user_id} onOpenChange={(open) => {
+                      if (!open) {
+                        setResetPasswordUserId(null)
+                        setResetPasswordValue('')
+                        setResetPasswordError(null)
+                      } else {
+                        setResetPasswordUserId(user.user_id)
+                        setResetPasswordValue('')
+                        setResetPasswordError(null)
+                      }
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <KeyRound className="w-4 h-4" />
+                          Reset password
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Reset password</DialogTitle>
+                          <DialogDescription>
+                            Set a new password for {user.email}. Minimum 8 characters.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <Input
+                            type="password"
+                            placeholder="New password"
+                            value={resetPasswordUserId === user.user_id ? resetPasswordValue : ''}
+                            onChange={(e) => setResetPasswordValue(e.target.value)}
+                            minLength={8}
+                            autoComplete="new-password"
+                          />
+                          {resetPasswordError && (
+                            <p className="text-sm text-destructive">{resetPasswordError}</p>
+                          )}
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setResetPasswordUserId(null)}>Cancel</Button>
+                          <Button onClick={handleResetPassword} disabled={resetPasswordLoading}>
+                            {resetPasswordLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            Reset password
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                     {(isSeniorAdmin || user.role !== 'admin') && (
                       <Button
                         variant="destructive"
