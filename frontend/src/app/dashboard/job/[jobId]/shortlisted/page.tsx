@@ -102,6 +102,13 @@ export default function ShortlistedPage() {
     fetchCandidates()
   }, [jobId, user, fetchCandidates])
 
+  // Realtime: poll for candidate updates every 30s
+  useEffect(() => {
+    if (!jobId || !user || user.role === 'admin') return
+    const interval = setInterval(fetchCandidates, 30000)
+    return () => clearInterval(interval)
+  }, [jobId, user, fetchCandidates])
+
   const handleScheduleClick = useCallback((candidate: Candidate) => {
     setSelectedCandidate(candidate)
     setIsModalOpen(true)
@@ -232,11 +239,14 @@ export default function ShortlistedPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
-              Candidates List
+              Candidates (shortlist → flagged → rejected)
               {isLoadingData && (
                 <Loader2 className="h-4 w-4 animate-spin ml-2 text-[#2D2DDD]" />
               )}
             </CardTitle>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Ranked from top shortlisted to last rejected. Updates every 30s.
+            </p>
           </CardHeader>
         <CardContent>
           {isLoadingData ? (
@@ -309,7 +319,7 @@ export default function ShortlistedPage() {
                         </p>
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        {candidate.status === 'SHORTLIST' && (
+                        {(candidate.status === 'SHORTLIST' || candidate.status === 'SHORTLISTED') && (
                           candidate.interview_status === 'SCHEDULED' || candidate.interview_time ? (
                             <Button
                               size="sm"

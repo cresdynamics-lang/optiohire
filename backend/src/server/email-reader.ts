@@ -765,8 +765,8 @@ export class EmailReader {
           companyName: company.company_name
         })
 
-        // Applicant count milestone notifications (10, 50, 100, 200, 500, 1000, 1500, 2000)
-        const thresholds = [10, 50, 100, 200, 500, 1000, 1500, 2000]
+        // Applicant count milestone notifications (5, 10, 50, 100, 200, 500, 1000, 2000)
+        const thresholds = [5, 10, 50, 100, 200, 500, 1000, 2000]
         const { rows: countRows } = await query<{ total: string }>(
           `SELECT COUNT(*) AS total FROM applications WHERE job_posting_id = $1`,
           [job.job_posting_id]
@@ -1057,13 +1057,10 @@ export class EmailReader {
         parsed_resume_json: parsedResumeJson
       })
 
-      // Send appropriate email to candidate
+      // Send shortlist or rejection email to candidate immediately after ranking (same flow, no delay)
       const application = await this.applicationRepo.findById(applicationId)
       if (application) {
-        // Fetch fresh company data to ensure we have company_domain
         const companyData = await this.companyRepo.findById(company.company_id)
-        
-        // Check status (use original status, not mapped)
         try {
           if (scoringResult.status === 'SHORTLIST') {
             logger.info(`📧 Sending shortlist email to ${application.email} for application ${applicationId}`)

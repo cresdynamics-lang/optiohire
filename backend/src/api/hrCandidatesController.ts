@@ -21,7 +21,7 @@ export async function getCandidatesByJob(req: Request, res: Response) {
       return res.status(404).json({ error: 'Job not found' })
     }
 
-    // Fetch candidates ordered by score DESC
+    // Fetch candidates ordered: shortlist first, then flagged, then rejected; within each by score DESC
     const { rows } = await query<{
       application_id: string
       candidate_name: string | null
@@ -43,7 +43,15 @@ export async function getCandidatesByJob(req: Request, res: Response) {
         reasoning
       FROM applications 
       WHERE job_posting_id = $1 
-      ORDER BY ai_score DESC NULLS LAST, created_at ASC`,
+      ORDER BY 
+        CASE COALESCE(UPPER(TRIM(ai_status)), '')
+          WHEN 'SHORTLIST' THEN 1
+          WHEN 'FLAG' THEN 2
+          WHEN 'REJECT' THEN 3
+          ELSE 4
+        END,
+        ai_score DESC NULLS LAST,
+        created_at ASC`,
       [jobId]
     )
 

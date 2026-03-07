@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       : ''
     const queryParams = statusFilter ? [jobId, statusFilter] : [jobId]
 
-    // Fetch candidates ordered by score DESC
+    // Fetch candidates ordered: shortlist first, then flagged, then rejected; within each by score DESC (top ranked first)
     const result = await query<CandidateRow>(
       `SELECT 
         application_id as id,
@@ -58,7 +58,15 @@ export async function GET(request: NextRequest) {
         reasoning
       FROM applications 
       WHERE job_posting_id = $1 ${statusCondition}
-      ORDER BY ai_score DESC NULLS LAST, created_at ASC`,
+      ORDER BY 
+        CASE COALESCE(UPPER(TRIM(ai_status)), '')
+          WHEN 'SHORTLIST' THEN 1
+          WHEN 'FLAG' THEN 2
+          WHEN 'REJECT' THEN 3
+          ELSE 4
+        END,
+        ai_score DESC NULLS LAST,
+        created_at ASC`,
       queryParams
     )
 
