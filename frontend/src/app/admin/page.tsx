@@ -81,9 +81,16 @@ function AdminDashboardContent() {
   const searchParams = useSearchParams()
   const sectionFromUrl = searchParams.get('section') as 'users' | 'admins' | null
   const [activeSection, setActiveSection] = useState<'users' | 'jobs' | 'applicants' | 'admins'>(sectionFromUrl === 'admins' ? 'admins' : 'users')
-  const [adminSession, setAdminSession] = useState<string | null>(null)
-  const [adminEmail, setAdminEmail] = useState<string | null>(null)
-  const [adminName, setAdminName] = useState<string | null>(null)
+  // Initialize admin session from localStorage synchronously (if on client) to avoid race condition
+  const [adminSession, setAdminSession] = useState<string | null>(
+    typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+  )
+  const [adminEmail, setAdminEmail] = useState<string | null>(
+    typeof window !== 'undefined' ? localStorage.getItem('admin_email') : null
+  )
+  const [adminName, setAdminName] = useState<string | null>(
+    typeof window !== 'undefined' ? localStorage.getItem('admin_name') : null
+  )
   const [isSecure, setIsSecure] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -103,8 +110,9 @@ function AdminDashboardContent() {
     id: adminEmail || ''
   } : user
 
-  // Load admin session from localStorage on client side
+  // Sync admin session from localStorage (in case it changes)
   useEffect(() => {
+    if (typeof window === 'undefined') return
     const session = localStorage.getItem('admin_session')
     const email = localStorage.getItem('admin_email')
     const name = localStorage.getItem('admin_name')
@@ -117,13 +125,14 @@ function AdminDashboardContent() {
   const isSeniorAdmin = currentUser?.email === 'applicationsoptiohire@gmail.com'
 
   useEffect(() => {
-    // Check for admin session directly
-    if (adminSession) {
+    // Check for admin session (state or localStorage directly to avoid race condition)
+    const hasAdminSession = adminSession || (typeof window !== 'undefined' && localStorage.getItem('admin_session'))
+    if (hasAdminSession) {
       // Admin session exists, allow access
       return
     }
     
-    // Fallback to regular auth check
+    // Fallback to regular auth check (only redirect if auth has finished loading)
     if (!authLoading && (!user || user.role !== 'admin')) {
       router.push('/admin/login')
     }
@@ -299,7 +308,11 @@ function AdminDashboardContent() {
   }
 
   // currentUser is already defined above, check access
-  if (!adminSession && (!user || user.role !== 'admin')) {
+  // Check both state and localStorage directly to avoid race conditions
+  const hasAdminAccess = adminSession || 
+    (typeof window !== 'undefined' && localStorage.getItem('admin_session')) ||
+    (user && user.role === 'admin')
+  if (!hasAdminAccess) {
     return null
   }
 

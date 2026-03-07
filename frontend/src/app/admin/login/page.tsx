@@ -79,8 +79,8 @@ export default function AdminLoginPage() {
       localStorage.setItem('admin_email', user.email)
       localStorage.setItem('admin_name', user.name || ADMIN_NAME)
 
-      router.push('/admin')
-      router.refresh()
+      // Use window.location for full page reload to ensure state is reset
+      window.location.href = '/admin'
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Network error. Please try again.'
       setError(errorMessage)
