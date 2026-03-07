@@ -132,16 +132,16 @@ const nextConfig = {
   },
 
   // Webpack configuration for ESM dependencies
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Suppress warnings for troika-three-text ESM imports (handled client-side)
-      config.ignoreWarnings = [
-        ...(config.ignoreWarnings || []),
-        { module: /troika-three-text/ },
-        { module: /bidi-js/ },
-        { module: /webgl-sdf-generator/ }
-      ]
-    }
+  webpack: (config) => {
+    // Suppress known harmless warnings
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /troika-three-text/ },
+      { module: /bidi-js/ },
+      { module: /webgl-sdf-generator/ },
+      { message: /Gradient has outdated direction syntax/ },
+      { message: /No serializer registered for Warning/ },
+    ]
     return config
   },
 
