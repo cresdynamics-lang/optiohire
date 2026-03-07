@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import pg from 'pg'
 
+// Must match backend JWT_SECRET (tokens are issued by backend for Google sign-in)
 const JWT_SECRET = process.env.JWT_SECRET || 'a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568'
 
 // Helper to extract domain from email
@@ -37,7 +38,10 @@ export async function GET(request: NextRequest) {
       userId = decoded.sub
     } catch (err) {
       return NextResponse.json(
-        { error: 'Invalid token' },
+        {
+          error: 'Invalid token',
+          hint: 'Ensure JWT_SECRET in this app matches the backend (required for Google sign-in).',
+        },
         { status: 401 }
       )
     }
@@ -284,7 +288,10 @@ export async function POST(request: NextRequest) {
       userId = decoded.sub
     } catch (err) {
       return NextResponse.json(
-        { error: 'Invalid token' },
+        {
+          error: 'Invalid token',
+          hint: 'Ensure JWT_SECRET in this app matches the backend (required for Google sign-in).',
+        },
         { status: 401 }
       )
     }
