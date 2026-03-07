@@ -37,8 +37,8 @@ export default function AdminLoginPage() {
     setError(null)
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const res = await fetch(`${backendUrl}/auth/signin`, {
+      // Use same-origin API route so we avoid "Failed to fetch" from backend URL/CORS
+      const res = await fetch('/api/auth/admin-signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.toLowerCase(), password }),
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
       router.push('/admin')
       router.refresh()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Network error. Check backend URL.'
+      const errorMessage = err instanceof Error ? err.message : 'Network error. Please try again.'
       setError(errorMessage)
       setIsLoading(false)
     }
