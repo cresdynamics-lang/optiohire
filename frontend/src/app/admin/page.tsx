@@ -154,11 +154,10 @@ function AdminDashboardContent() {
         throw new Error('Not authenticated')
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
       // Use admin token if available, otherwise use regular token
       const adminToken = localStorage.getItem('admin_token')
       const authToken = adminToken || token
-      const response = await fetch(`${backendUrl}/api/admin/users?limit=100`, {
+      const response = await fetch('/api/admin/users?limit=100', {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
@@ -197,8 +196,7 @@ function AdminDashboardContent() {
         throw new Error('Not authenticated')
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/users/${userId}`, {
+      const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -225,8 +223,7 @@ function AdminDashboardContent() {
       setDisablingUserId(userId)
       const token = localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/users/${userId}`, {
+      const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: !currentActive })
@@ -254,8 +251,7 @@ function AdminDashboardContent() {
       setResetPasswordError(null)
       const token = localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/users/${resetPasswordUserId}/reset-password`, {
+      const response = await fetch(`/api/admin/users/${resetPasswordUserId}/reset-password`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ newPassword: resetPasswordValue })

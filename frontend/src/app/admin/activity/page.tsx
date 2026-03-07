@@ -88,7 +88,7 @@ export default function ActivityTrackingPage() {
       if (actionFilter !== 'all') params.append('actionType', actionFilter)
       if (userIdFilter) params.append('userId', userIdFilter)
 
-      const response = await fetch(`${backendUrl}/api/admin/activity?${params}`, {
+      const response = await fetch(`/api/admin/activity?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -111,8 +111,7 @@ export default function ActivityTrackingPage() {
       const token = localStorage.getItem('token')
       if (!token) return
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/performance`, {
+      const response = await fetch('/api/admin/performance', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

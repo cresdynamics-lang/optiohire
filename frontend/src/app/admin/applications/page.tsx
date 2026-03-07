@@ -54,7 +54,7 @@ export default function AdminApplicationsPage() {
         ...(statusFilter && { ai_status: statusFilter })
       })
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications?${params}`, {
+      const response = await fetch(`/api/admin/applications?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -80,7 +80,7 @@ export default function AdminApplicationsPage() {
 
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${applicationId}`, {
+      const response = await fetch(`/api/admin/applications/${applicationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

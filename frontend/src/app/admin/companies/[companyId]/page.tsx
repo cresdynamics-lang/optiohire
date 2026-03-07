@@ -51,7 +51,7 @@ export default function CompanyDetailsPage() {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/companies/${companyId}`, {
+      const response = await fetch(`/api/admin/companies/${companyId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

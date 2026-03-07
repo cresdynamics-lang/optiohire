@@ -80,7 +80,7 @@ export default function UserDetailsPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
       
       // Fetch user details
-      const userResponse = await fetch(`${backendUrl}/api/admin/users/${userId}`, {
+      const userResponse = await fetch(`/api/admin/users/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -94,7 +94,7 @@ export default function UserDetailsPage() {
       const userData = await userResponse.json()
       
       // Fetch user statistics
-      const statsResponse = await fetch(`${backendUrl}/api/admin/users/${userId}/stats`, {
+      const statsResponse = await fetch(`/api/admin/users/${userId}/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

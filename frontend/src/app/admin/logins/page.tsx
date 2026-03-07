@@ -64,7 +64,7 @@ export default function AdminLoginsPage() {
       })
 
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/activity?${params}`, {
+      const response = await fetch(`/api/admin/activity?${params}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'X-Admin-Email': user?.email || ''

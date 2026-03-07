@@ -53,7 +53,7 @@ export default function AdminJobsPage() {
         ...(statusFilter && { status: statusFilter })
       })
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/job-postings?${params}`, {
+      const response = await fetch(`/api/admin/job-postings?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -79,7 +79,7 @@ export default function AdminJobsPage() {
 
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/job-postings/${jobId}`, {
+      const response = await fetch(`/api/admin/job-postings/${jobId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
