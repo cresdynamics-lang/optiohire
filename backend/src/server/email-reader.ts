@@ -774,7 +774,7 @@ export class EmailReader {
         const total = parseInt(countRows[0]?.total || '0', 10)
         if (thresholds.includes(total)) {
           await this.emailService.sendApplicantMilestoneNotification({
-            recipients: [company.hr_email, company.company_email, company.hiring_manager_email],
+            recipients: [company.hr_email, company.company_email, company.hiring_manager_email].filter(Boolean) as string[],
             jobTitle: job.job_title,
             companyName: company.company_name,
             totalApplications: total

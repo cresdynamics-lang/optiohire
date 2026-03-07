@@ -1,0 +1,52 @@
+# =============================================================================
+# ENV REFERENCE – Copy/paste into nano, then fix values marked with [CHECK]
+# =============================================================================
+# Your droplet IP: 165.227.56.148
+# If using domain (e.g. optiohire.com), replace URLs with https://optiohire.com etc.
+# =============================================================================
+
+# --- BACKEND: nano /var/www/optiohire/backend/.env ---
+# Paste the block below, save (Ctrl+O, Enter), exit (Ctrl+X).
+# --- BEGIN BACKEND .env ---
+NODE_ENV=production
+PORT=3001
+JWT_SECRET=a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568
+DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire
+DB_SSL=false
+NEXT_PUBLIC_BACKEND_URL=http://165.227.56.148:3001
+NEXTAUTH_URL=http://165.227.56.148:3000
+NEXTAUTH_SECRET=Qp1zBfvTdo7wjiK5BxRhj8VzqLKHZuj6y349jdARSJE=
+NEXT_PUBLIC_APP_URL=http://165.227.56.148
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=http://165.227.56.148:3000/auth/google/callback
+USE_RESEND=true
+RESEND_API_KEY=your_resend_api_key
+RESEND_DOMAIN=optiohire.com
+RESEND_FROM_EMAIL=noreply@optiohire.com
+RESEND_FROM_NAME=OptioHire
+GROQ_API_KEY=your_groq_api_key
+AI_PROVIDER=groq
+CRON_SECRET=your_cron_secret_key_here
+# --- END BACKEND .env ---
+
+# --- FRONTEND: nano /var/www/optiohire/frontend/.env.local ---
+# JWT_SECRET must be the SAME as in backend (for Google sign-in).
+# Paste the block below, save, exit.
+# --- BEGIN FRONTEND .env.local ---
+JWT_SECRET=a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568
+NODE_ENV=production
+DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire
+DB_SSL=false
+NEXT_PUBLIC_BACKEND_URL=http://165.227.56.148:3001
+NEXTAUTH_URL=http://165.227.56.148:3000
+NEXT_PUBLIC_APP_URL=http://165.227.56.148
+# --- END FRONTEND .env.local ---
+
+# [CHECK] Update these on the server:
+# - DATABASE_URL: user, password, host, db name must match your Postgres
+# - JWT_SECRET: same in backend and frontend; use a strong secret in production
+# - GOOGLE_*: from Google Cloud Console OAuth credentials
+# - RESEND_API_KEY: from Resend dashboard
+# - GROQ_API_KEY: from Groq console
+# - If using domain: use https://optiohire.com and https://api.optiohire.com instead of http://165.227.56.148

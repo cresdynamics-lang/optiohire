@@ -6,6 +6,8 @@ export interface Company {
   company_email: string | null
   company_domain: string | null
   hr_email: string
+  hiring_manager_email?: string | null
+  settings?: unknown
   created_at: string
 }
 
@@ -74,7 +76,7 @@ export class CompanyRepository {
 
   async findById(id: string): Promise<Company | null> {
     const { rows } = await query<Company>(
-      `SELECT company_id, company_name, company_email, company_domain, hr_email, created_at
+      `SELECT company_id, company_name, company_email, company_domain, hr_email, hiring_manager_email, settings, created_at
        FROM companies
        WHERE company_id = $1
        LIMIT 1`,
