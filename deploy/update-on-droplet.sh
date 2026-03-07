@@ -106,6 +106,8 @@ npm run build
 echo "========== Frontend install + build =========="
 cd "$APP_DIR/frontend"
 npm install --production=false
+# Clear Next.js cache so new/updated UI components (e.g. dialog) resolve correctly
+rm -rf .next
 NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=2048}" npm run build 2>/dev/null || npm run build
 
 echo "========== PM2 restart =========="
