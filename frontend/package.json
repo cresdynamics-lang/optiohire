@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "engines": { "node": ">=20.9.0" },
+  "browserslist": ["> 1%", "last 2 versions"],
   "scripts": {
     "dev": "next dev --webpack",
     "dev:clean": "rm -rf .next && next dev --webpack",

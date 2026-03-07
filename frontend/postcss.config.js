@@ -1,8 +1,25 @@
 const autoprefixer = require('autoprefixer')
 
-// Suppress autoprefixer gradient direction warning (Tailwind/internals use older syntax)
+// Suppress these warnings for the whole PostCSS run (from Autoprefixer/Browserslist/Tailwind)
+const SUPPRESS = [
+  'Gradient has outdated direction syntax',
+  'Replace Autoprefixer browsers option',
+  'browserslist',
+]
+// Run first; suppresses console.warn for Browserslist/Autoprefixer messages during the whole run
+const suppressPlugin = () => ({
+  postcssPlugin: 'suppress-browserslist-warnings',
+  Once() {
+    const orig = console.warn
+    console.warn = function (msg) {
+      if (typeof msg === 'string' && SUPPRESS.some((s) => msg.includes(s))) return
+      orig.apply(console, arguments)
+    }
+  },
+})
+suppressPlugin.postcss = true
+
 const autoprefixerOptions = {
-  overrideBrowserslist: ['> 1%', 'last 2 versions'],
   grid: false,
   ignoreUnknownVersions: true,
 }
@@ -12,7 +29,7 @@ if (origPostcss) {
   autoprefixerPlugin.postcss = function (root, result) {
     const origWarn = console.warn
     console.warn = function (msg) {
-      if (typeof msg === 'string' && msg.includes('Gradient has outdated direction syntax')) return
+      if (typeof msg === 'string' && SUPPRESS.some((s) => msg.includes(s))) return
       origWarn.apply(console, arguments)
     }
     try {
@@ -25,6 +42,7 @@ if (origPostcss) {
 
 module.exports = {
   plugins: {
+    suppressPlugin,
     tailwindcss: {},
     './postcss-normalize-radial-gradient.js': {},
     autoprefixer: autoprefixerPlugin,

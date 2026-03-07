@@ -1,0 +1,4 @@
+# Shared by Babel, Autoprefixer, postcss-normalize and other tools
+# https://github.com/browserslist/browserslist#readme
+> 1%
+last 2 versions
