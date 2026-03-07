@@ -2,6 +2,7 @@
 # ENV REFERENCE – Copy/paste into nano, then fix values marked with [CHECK]
 # =============================================================================
 # Your droplet IP: 165.227.56.148
+# Email: use applicationsoptiohire@gmail.com (NOT nelsonochieng - deleted).
 # If using domain (e.g. optiohire.com), replace URLs with https://optiohire.com etc.
 # =============================================================================
 
@@ -23,8 +24,24 @@ GOOGLE_REDIRECT_URI=http://165.227.56.148:3000/auth/google/callback
 USE_RESEND=true
 RESEND_API_KEY=your_resend_api_key
 RESEND_DOMAIN=optiohire.com
-RESEND_FROM_EMAIL=noreply@optiohire.com
+RESEND_FROM_EMAIL=applicationsoptiohire@gmail.com
 RESEND_FROM_NAME=OptioHire
+MAIL_FROM=applicationsoptiohire@gmail.com
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=applicationsoptiohire@gmail.com
+SMTP_PASS=your_gmail_app_password
+MAIL_HOST=smtp.gmail.com
+MAIL_USER=applicationsoptiohire@gmail.com
+MAIL_PASS=your_gmail_app_password
+MAIL_PORT=587
+IMAP_HOST=imap.gmail.com
+IMAP_PORT=993
+IMAP_USER=applicationsoptiohire@gmail.com
+IMAP_PASS=your_gmail_app_password
+IMAP_SECURE=true
+IMAP_POLL_MS=10000
+ENABLE_EMAIL_READER=true
 GROQ_API_KEY=your_groq_api_key
 AI_PROVIDER=groq
 CRON_SECRET=your_cron_secret_key_here
@@ -44,6 +61,8 @@ NEXT_PUBLIC_APP_URL=http://165.227.56.148
 # --- END FRONTEND .env.local ---
 
 # [CHECK] Update these on the server:
+# - All email: applicationsoptiohire@gmail.com (nelsonochieng was deleted).
+# - SMTP_PASS, MAIL_PASS, IMAP_PASS: Gmail App Password for applicationsoptiohire@gmail.com (same for all three).
 # - DATABASE_URL: user, password, host, db name must match your Postgres
 # - JWT_SECRET: same in backend and frontend; use a strong secret in production
 # - GOOGLE_*: from Google Cloud Console OAuth credentials

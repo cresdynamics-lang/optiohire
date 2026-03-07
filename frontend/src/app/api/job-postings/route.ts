@@ -467,6 +467,32 @@ export async function POST(request: NextRequest) {
 
       await client.query('COMMIT')
 
+      // Send "job created" email notification via backend (Resend/SMTP)
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+      if (backendUrl && authHeader) {
+        try {
+          const notifRes = await fetch(`${backendUrl}/api/job-postings/send-created-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': authHeader
+            },
+            body: JSON.stringify({
+              hr_email,
+              company_email,
+              job_title,
+              company_name,
+              application_deadline: deadlineDate.toISOString()
+            })
+          })
+          if (!notifRes.ok) {
+            console.warn('Job created but notification failed:', notifRes.status, await notifRes.text().catch(() => ''))
+          }
+        } catch (notifErr) {
+          console.warn('Job created but could not send notification:', notifErr)
+        }
+      }
+
       return NextResponse.json({
         success: true,
         job_posting_id: jobPostingId,

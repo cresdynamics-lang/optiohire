@@ -446,4 +446,38 @@ export async function createJobPosting(req: Request, res: Response) {
   }
 }
 
+const sendCreatedNotificationSchema = z.object({
+  hr_email: z.string().email(),
+  company_email: z.string().email().optional(),
+  job_title: z.string().min(1),
+  company_name: z.string().min(1),
+  application_deadline: z.string()
+})
+
+/**
+ * Send "job posting created" email to HR/company. Used when job is created via
+ * frontend API route (which does not send email). Call this after creating a job.
+ */
+export async function sendJobPostingCreatedNotification(req: Request, res: Response) {
+  try {
+    const parse = sendCreatedNotificationSchema.safeParse(req.body)
+    if (!parse.success) {
+      return res.status(400).json({ error: { message: 'Invalid payload', fieldErrors: parse.error.flatten().fieldErrors } })
+    }
+    const { hr_email, company_email, job_title, company_name, application_deadline } = parse.data
+    const emailService = new (await import('../services/emailService.js')).EmailService()
+    const recipients = [hr_email, company_email].filter(Boolean) as string[]
+    await emailService.sendJobPostingCreatedEmail({
+      recipients,
+      jobTitle: job_title,
+      companyName: company_name,
+      applicationDeadline: application_deadline
+    })
+    return res.status(200).json({ success: true, message: 'Notification sent' })
+  } catch (err) {
+    console.error('Failed to send job posting created notification:', err)
+    return res.status(500).json({ error: { message: 'Failed to send notification' } })
+  }
+}
+
 

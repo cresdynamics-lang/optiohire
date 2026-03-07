@@ -35,6 +35,12 @@ add_if_missing "$BACKEND_ENV" "DB_SSL" "false"
 add_if_missing "$BACKEND_ENV" "NEXT_PUBLIC_BACKEND_URL" "$BACKEND_URL"
 add_if_missing "$BACKEND_ENV" "NEXTAUTH_URL" "$FRONTEND_URL"
 add_if_missing "$BACKEND_ENV" "NEXT_PUBLIC_APP_URL" "$SERVER_URL"
+# Email: applications inbox (nelsonochieng was deleted)
+add_if_missing "$BACKEND_ENV" "MAIL_FROM" "applicationsoptiohire@gmail.com"
+add_if_missing "$BACKEND_ENV" "RESEND_FROM_EMAIL" "applicationsoptiohire@gmail.com"
+add_if_missing "$BACKEND_ENV" "SMTP_USER" "applicationsoptiohire@gmail.com"
+add_if_missing "$BACKEND_ENV" "MAIL_USER" "applicationsoptiohire@gmail.com"
+add_if_missing "$BACKEND_ENV" "IMAP_USER" "applicationsoptiohire@gmail.com"
 echo "  Backend: $BACKEND_ENV"
 
 echo "========== Ensuring frontend .env.local (missing keys only) =========="
