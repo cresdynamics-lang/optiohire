@@ -30,13 +30,20 @@ export default function AdminCompaniesPage() {
   const [total, setTotal] = useState(0)
 
   useEffect(() => {
+    // Check for admin session first (from admin login)
+    const adminSession = typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+    if (adminSession) {
+      // Admin session exists, allow access
+      loadCompanies()
+      return
+    }
     // STRICT: Only admin can access
     if (user && user.role !== 'admin') {
-      router.push('/admin') // Redirect to admin dashboard, not HR dashboard
+      router.push('/admin/login')
       return
     }
     if (!user) {
-      router.push('/auth/signin')
+      router.push('/admin/login')
       return
     }
     loadCompanies()
@@ -59,7 +66,7 @@ export default function AdminCompaniesPage() {
       })
 
       if (response.status === 401 || response.status === 403) {
-        router.push('/auth/signin')
+        router.push('/admin/login')
         return
       }
 

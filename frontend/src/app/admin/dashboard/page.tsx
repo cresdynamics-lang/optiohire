@@ -53,8 +53,15 @@ export default function AdminDashboardOverview() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Check for admin session first (from admin login)
+    const adminSession = typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+    if (adminSession) {
+      // Admin session exists, allow access
+      return
+    }
+    // Fallback: check regular auth
     if (!authLoading && (!user || user.role !== 'admin')) {
-      router.push('/auth/signin')
+      router.push('/admin/login')
     }
   }, [user, authLoading, router])
 

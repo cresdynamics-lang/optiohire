@@ -45,13 +45,19 @@ export default function AdminUsersPage() {
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
+    // Check for admin session first
+    const adminSession = typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+    if (adminSession) {
+      loadUsers()
+      return
+    }
     // STRICT: Only admin can access
     if (!currentUser) {
-      router.push('/auth/signin')
+      router.push('/admin/login')
       return
     }
     if (currentUser.role !== 'admin') {
-      router.push('/admin') // Redirect to admin dashboard, not HR dashboard
+      router.push('/admin/login')
       return
     }
     loadUsers()
@@ -74,7 +80,7 @@ export default function AdminUsersPage() {
       })
 
       if (response.status === 401 || response.status === 403) {
-        router.push('/auth/signin')
+        router.push('/admin/login')
         return
       }
 

@@ -76,11 +76,67 @@ export default function ShortlistedPage() {
 
       // Process candidates response
       if (candidatesResponse.ok) {
-        const candidatesData = await candidatesResponse.json()
+        let candidatesData
+        try {
+          const text = await candidatesResponse.text()
+          if (!text) {
+            console.warn('Empty response from candidates API')
+            candidatesData = []
+          } else {
+            candidatesData = JSON.parse(text)
+          }
+        } catch (parseError) {
+          console.error('Failed to parse candidates response:', parseError)
+          candidatesData = []
+        }
         setCandidates(Array.isArray(candidatesData) ? candidatesData : [])
       } else {
-        const errorData = await candidatesResponse.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Failed to fetch candidates')
+        // Handle error response
+        const status = candidatesResponse.status
+        const statusText = candidatesResponse.statusText || 'Unknown error'
+        let errorMessage = `Failed to fetch candidates (${status})`
+        let errorDetails: any = null
+        
+        try {
+          // Try to get response as text first
+          const textResponse = await candidatesResponse.text()
+          
+          if (textResponse) {
+            try {
+              errorDetails = JSON.parse(textResponse)
+              errorMessage = errorDetails.error || errorDetails.message || errorMessage
+              if (errorDetails.details) {
+                errorMessage += `: ${errorDetails.details}`
+              }
+            } catch (jsonError) {
+              // Response is not JSON, use text as error message
+              errorMessage = textResponse || errorMessage
+            }
+          } else {
+            // Empty response, use status text
+            errorMessage = statusText || errorMessage
+          }
+        } catch (readError) {
+          // Failed to read response at all
+          console.error('Failed to read error response:', readError)
+          errorMessage = statusText || 'Failed to fetch candidates'
+        }
+        
+        // Log full error details for debugging (safely)
+        const errorLog: Record<string, any> = {
+          status,
+          statusText,
+          errorMessage,
+          jobId
+        }
+        
+        if (errorDetails) {
+          errorLog.errorDetails = errorDetails
+        }
+        
+        console.error('Candidates API error:', errorLog)
+        
+        throw new Error(errorMessage)
       }
 
       // Process meeting link response (non-blocking - don't fail if this fails)

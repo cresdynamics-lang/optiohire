@@ -44,13 +44,24 @@ export function ChatbotWidget() {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
 
+      // Include conversation history for context (last 10 messages)
+      const conversationHistory = messages
+        .slice(-10)
+        .map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }))
+
       const resp = await fetch(`${backendUrl}/api/hr/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ 
+          question,
+          conversationHistory 
+        }),
       })
 
       const data = await resp.json().catch(() => ({}))

@@ -29,6 +29,7 @@ import {
   Award,
   Clock
 } from 'lucide-react'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -791,23 +792,13 @@ export function ProfileSection() {
                         </p>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="company_logo_url" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
-                          <Building2 className="w-4 h-4" />
-                          Company logo URL
-                        </Label>
-                        <Input
-                          id="company_logo_url"
-                          type="url"
-                          value={formData.company_logo_url}
-                          onChange={(e) => setFormData({ ...formData, company_logo_url: e.target.value })}
-                          placeholder="https://your-cdn.com/company-logo.png"
-                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                          Paste a public image URL. This logo will appear in the dashboard sidebar for your organisation.
-                        </p>
-                      </div>
+                      <ImageUpload
+                        value={formData.company_logo_url}
+                        onChange={(url) => setFormData({ ...formData, company_logo_url: url || '' })}
+                        label="Company Logo"
+                        accept="image/*"
+                        maxSizeMB={5}
+                      />
                     </div>
 
                     <div className="flex gap-3 pt-4">

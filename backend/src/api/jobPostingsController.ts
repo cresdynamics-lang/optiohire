@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { pool, query } from '../db/index.js'
+import { logger } from '../utils/logger.js'
 
 const createJobSchema = z.object({
   company_name: z.string().min(2).max(255),
@@ -412,23 +413,64 @@ export async function createJobPosting(req: Request, res: Response) {
     await client.query('COMMIT')
 
     // Send confirmation email to HR / company contacts
-    try {
-      const emailService = new (await import('../services/emailService.js')).EmailService()
-      await emailService.sendJobPostingCreatedEmail({
-        recipients: [payload.hr_email, payload.company_email],
-        jobTitle: payload.job_title,
-        companyName: payload.company_name,
-        applicationDeadline: applicationDeadline.toISOString()
-      })
-    } catch (emailErr) {
-      console.error('Failed to send job posting created email:', emailErr)
+    let emailError: string | null = null
+    let emailSent = false
+    
+    // Prepare recipients list (remove duplicates and empty values)
+    const recipients = [payload.hr_email, payload.company_email]
+      .filter((email): email is string => Boolean(email && typeof email === 'string' && email.includes('@')))
+    
+    if (recipients.length === 0) {
+      emailError = 'No valid email addresses provided (hr_email and company_email are required)'
+      logger.warn('Cannot send job created email: no valid recipients', { hr_email: payload.hr_email, company_email: payload.company_email })
+    } else {
+      try {
+        const emailService = new (await import('../services/emailService.js')).EmailService()
+        await emailService.sendJobPostingCreatedEmail({
+          recipients,
+          jobTitle: payload.job_title,
+          companyName: payload.company_name,
+          applicationDeadline: applicationDeadline.toISOString()
+        })
+        emailSent = true
+        logger.info(`✅ Job created email sent successfully to: ${recipients.join(', ')}`)
+      } catch (emailErr: any) {
+        emailError = emailErr?.message || String(emailErr)
+        logger.error('❌ Failed to send job posting created email:', {
+          error: emailError,
+          recipients,
+          jobTitle: payload.job_title,
+          companyName: payload.company_name
+        })
+        
+        // Log to email_logs for each recipient
+        try {
+          const { query } = await import('../db/index.js')
+          const subject = `Job posted – ${payload.job_title} at ${payload.company_name}`
+          for (const recipient of recipients) {
+            await query(
+              `INSERT INTO email_logs (recipient_email, subject, email_type, status, error_message, created_at)
+               VALUES ($1, $2, 'notification', 'failed', $3, now())
+               ON CONFLICT DO NOTHING`,
+              [recipient, subject, emailError]
+            ).catch((logErr) => {
+              logger.error(`Failed to log email error for ${recipient}:`, logErr)
+            })
+          }
+        } catch (logErr) {
+          logger.error('Failed to log email errors:', logErr)
+        }
+      }
     }
 
     return res.status(201).json({
       success: true,
       job_posting_id: jobPostingId,
       company_id: companyId,
-      message: 'Job posted and workflows scheduled'
+      message: 'Job posted and workflows scheduled',
+      emailSent,
+      emailError: emailError || undefined,
+      recipients: recipients.length > 0 ? recipients : undefined
     })
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {}) // Ignore rollback errors

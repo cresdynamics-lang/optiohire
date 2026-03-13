@@ -22,8 +22,11 @@ import { router as userPreferencesRouter } from './routes/user-preferences.js'
 import { router as userRouter } from './routes/user.js'
 import { router as analyticsRouter } from './routes/analytics.js'
 import { router as resendRouter } from './routes/resend.js'
+import { router as uploadRouter } from './routes/upload.js'
 import { ensureStorageDir } from './utils/storage.js'
 import { logger } from './utils/logger.js'
+import path from 'path'
+import express from 'express'
 import { startReportScheduler } from './cron/reportScheduler.js'
 import { startDeadlineStatusScheduler } from './cron/scheduler.js'
 // Email reader enabled - monitors inbox for job applications
@@ -167,7 +170,15 @@ app.use('/contact', contactRouter)
 app.use('/auth', authRouter)
 app.use('/api/admin', adminRouter) // Admin endpoints
 app.use('/api/user', userRouter) // User profile endpoints
-app.use('/api/user/preferences', userPreferencesRouter) // User preferences endpoints
+app.use('/api/user/preferences', userPreferencesRouter)
+app.use('/api/upload', uploadRouter) // File upload endpoints
+
+// Serve uploaded files statically
+const storageDir = process.env.FILE_STORAGE_DIR || './storage'
+app.use('/storage', express.static(path.resolve(storageDir), {
+  maxAge: '1y', // Cache for 1 year
+  etag: true,
+})) // User preferences endpoints
 app.use('/api/analytics', analyticsRouter) // Analytics tracking endpoints
 app.use('/api/resend', resendRouter) // Resend email API endpoints
 

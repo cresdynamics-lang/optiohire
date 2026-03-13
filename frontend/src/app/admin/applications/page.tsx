@@ -36,8 +36,10 @@ export default function AdminApplicationsPage() {
       router.push('/admin') // Redirect to admin dashboard, not HR dashboard
       return
     }
-    if (!user) {
-      router.push('/auth/signin')
+    // Check for admin session first
+    const adminSession = typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+    if (!adminSession && !user) {
+      router.push('/admin/login')
       return
     }
     loadApplications()
@@ -61,7 +63,7 @@ export default function AdminApplicationsPage() {
       })
 
       if (response.status === 401 || response.status === 403) {
-        router.push('/auth/signin')
+        router.push('/admin/login')
         return
       }
 

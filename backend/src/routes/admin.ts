@@ -19,6 +19,11 @@ import {
   getSystemStats
 } from '../api/adminController.js'
 import {
+  checkEmailService,
+  testEmailSend,
+  getEmailReaderStatus
+} from '../api/emailDiagnosticsController.js'
+import {
   getPendingSignups,
   approveSignup,
   rejectSignup,
@@ -82,6 +87,11 @@ router.post('/users/bulk-reject', bulkRejectSignups)
 router.get('/emails', getEmailLogs)
 router.get('/emails/stats', getEmailStats)
 router.post('/emails/:emailId/resend', resendEmail)
+
+// Email Diagnostics
+router.get('/email-service/check', checkEmailService)
+router.post('/email-service/test', testEmailSend)
+router.get('/email-reader/status', getEmailReaderStatus)
 
 // System Settings
 router.get('/settings', getSystemSettings)
