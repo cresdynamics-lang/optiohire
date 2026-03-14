@@ -507,18 +507,54 @@ export async function sendJobPostingCreatedNotification(req: Request, res: Respo
       return res.status(400).json({ error: { message: 'Invalid payload', fieldErrors: parse.error.flatten().fieldErrors } })
     }
     const { hr_email, company_email, job_title, company_name, application_deadline } = parse.data
+    
+    // Prepare recipients
+    const recipients = [hr_email, company_email].filter((email): email is string => 
+      Boolean(email && typeof email === 'string' && email.includes('@'))
+    )
+
+    if (recipients.length === 0) {
+      return res.status(400).json({ 
+        error: { 
+          message: 'No valid email addresses provided',
+          details: 'hr_email and company_email are required'
+        } 
+      })
+    }
+
     const emailService = new (await import('../services/emailService.js')).EmailService()
-    const recipients = [hr_email, company_email].filter(Boolean) as string[]
+    
+    logger.info(`[Job Notification] Sending job created email to: ${recipients.join(', ')}`, {
+      jobTitle: job_title,
+      companyName: company_name
+    })
+
     await emailService.sendJobPostingCreatedEmail({
       recipients,
       jobTitle: job_title,
       companyName: company_name,
       applicationDeadline: application_deadline
     })
-    return res.status(200).json({ success: true, message: 'Notification sent' })
-  } catch (err) {
-    console.error('Failed to send job posting created notification:', err)
-    return res.status(500).json({ error: { message: 'Failed to send notification' } })
+
+    logger.info(`[Job Notification] ✅ Email sent successfully to: ${recipients.join(', ')}`)
+
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Notification sent',
+      recipients 
+    })
+  } catch (err: any) {
+    const errorMessage = err?.message || String(err)
+    logger.error('[Job Notification] ❌ Failed to send job posting created notification:', {
+      error: errorMessage,
+      stack: err?.stack
+    })
+    return res.status(500).json({ 
+      error: { 
+        message: 'Failed to send notification',
+        details: errorMessage
+      } 
+    })
   }
 }
 

@@ -28,8 +28,10 @@ export async function GET(
     }
     return NextResponse.json(data)
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    const isNetwork = /fetch|network|ECONNREFUSED|ETIMEDOUT|ENOTFOUND/i.test(message)
     return NextResponse.json(
-      { error: 'Failed to fetch user' },
+      { error: isNetwork ? 'Cannot reach server. Check backend URL and try again.' : 'Failed to fetch user', details: message },
       { status: 502 }
     )
   }

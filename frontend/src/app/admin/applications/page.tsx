@@ -68,7 +68,14 @@ export default function AdminApplicationsPage() {
       }
 
       const data = await response.json()
-      setApplications(data.applications || [])
+      // Ensure ai_score is converted to number if it's a string
+      const normalizedApplications = (data.applications || []).map((app: any) => ({
+        ...app,
+        ai_score: app.ai_score !== null && app.ai_score !== undefined 
+          ? (typeof app.ai_score === 'number' ? app.ai_score : Number(app.ai_score))
+          : null
+      }))
+      setApplications(normalizedApplications)
       setTotal(data.total || 0)
     } catch (error) {
       console.error('Error loading applications:', error)
@@ -184,9 +191,9 @@ export default function AdminApplicationsPage() {
                           <Badge className={getStatusColor(app.ai_status || '')}>
                             {app.ai_status || 'PENDING'}
                           </Badge>
-                          {app.ai_score !== null && (
+                          {app.ai_score !== null && app.ai_score !== undefined && typeof app.ai_score === 'number' && !isNaN(app.ai_score) && (
                             <span className="text-sm text-gray-400">
-                              Score: {app.ai_score.toFixed(1)}
+                              Score: {Number(app.ai_score).toFixed(1)}
                             </span>
                           )}
                         </div>

@@ -158,10 +158,10 @@ export default function ShortlistedPage() {
     fetchCandidates()
   }, [jobId, user, fetchCandidates])
 
-  // Realtime: poll for candidate updates every 30s
+  // Realtime: poll for candidate updates every 10s for instant updates
   useEffect(() => {
     if (!jobId || !user || user.role === 'admin') return
-    const interval = setInterval(fetchCandidates, 30000)
+    const interval = setInterval(fetchCandidates, 10000) // 10 seconds for faster updates
     return () => clearInterval(interval)
   }, [jobId, user, fetchCandidates])
 

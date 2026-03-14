@@ -301,13 +301,13 @@ export class EmailReader {
         }
 
         if (messages.length > 0) {
-          logger.info(`✅ Found ${messages.length} unread email(s) in inbox - processing...`)
+          logger.info(`📧 [EMAIL WATCHER] Found ${messages.length} unread email(s) in inbox - processing...`)
         } else {
-          // Log periodically that we're checking (every 10 checks = ~10 seconds)
+          // Log periodically that we're checking (every 6 checks = ~30 seconds with 5s polling)
           const checkCount = (this as any).checkCount || 0
           ;(this as any).checkCount = checkCount + 1
-          if (checkCount % 10 === 0) {
-            logger.debug(`📧 Checking inbox... (no unread emails found)`)
+          if (checkCount % 6 === 0) {
+            logger.info(`📧 [EMAIL WATCHER] Monitoring inbox... (no unread emails found, check #${checkCount})`)
           }
         }
 
@@ -322,7 +322,7 @@ export class EmailReader {
               const subject = message.envelope.subject || ''
               const sender = message.envelope.from?.[0]?.address || 'unknown'
               
-              logger.info(`Processing email #${seq}: Subject="${subject}", From="${sender}"`)
+              logger.info(`📧 [EMAIL WATCHER] Processing email #${seq}: Subject="${subject}", From="${sender}"`)
               
               // Check if email subject matches any job posting
               const match = await this.findJobByExactSubject(subject)
@@ -363,7 +363,7 @@ export class EmailReader {
               } else if (match) {
                 const matchingJob = match
                 logger.info(
-                  `✅ MATCH FOUND: Email subject matches job posting: "${subject}" -> Job: "${matchingJob.job_title}" (ID: ${matchingJob.job_posting_id})`
+                  `✅ [EMAIL WATCHER] MATCH FOUND: Email subject matches job posting: "${subject}" -> Job: "${matchingJob.job_title}" at "${matchingJob.company_name}" (ID: ${matchingJob.job_posting_id})`
                 )
                 try {
                   // Process email and check if CV was extracted
@@ -805,17 +805,13 @@ export class EmailReader {
         return false
       }
 
-      // Send HR notification
-      try {
-        await this.emailService.sendHRNotification({
-          hrEmail: company.hr_email,
-          candidateName: senderName,
-          candidateEmail: senderEmail,
-          jobTitle: job.job_title,
-          companyName: company.company_name
-        })
+      // HR notifications disabled - applications will appear on HR dashboard instead
+      // No email notifications sent for individual applications
+      logger.info(`📊 [EMAIL WATCHER] Application ${application.application_id} created - will appear on HR dashboard (no email notification sent)`)
 
-        // Applicant count milestone notifications (5, 10, 50, 100, 200, 500, 1000, 2000)
+      // Applicant count milestone notifications (5, 10, 50, 100, 200, 500, 1000, 2000)
+      // These are still sent as they're summary notifications, not per-application
+      try {
         const thresholds = [5, 10, 50, 100, 200, 500, 1000, 2000]
         const { rows: countRows } = await query<{ total: string }>(
           `SELECT COUNT(*) AS total FROM applications WHERE job_posting_id = $1`,
@@ -823,6 +819,7 @@ export class EmailReader {
         )
         const total = parseInt(countRows[0]?.total || '0', 10)
         if (thresholds.includes(total)) {
+          logger.info(`📊 [EMAIL WATCHER] Milestone reached: ${total} applications for job ${job.job_posting_id} - sending milestone notification`)
           await this.emailService.sendApplicantMilestoneNotification({
             recipients: [company.hr_email, company.company_email, company.hiring_manager_email].filter(Boolean) as string[],
             jobTitle: job.job_title,
@@ -833,7 +830,7 @@ export class EmailReader {
       } catch (emailError) {
         // SMTP/network issues should NOT block applicant ingestion + analysis
         logger.warn(
-          `Failed to send HR or milestone notification for application ${application.application_id} (continuing):`,
+          `Failed to send milestone notification for application ${application.application_id} (continuing):`,
           emailError
         )
       }
@@ -965,14 +962,9 @@ export class EmailReader {
             continue
           }
 
-          // Send HR notification
-          await this.emailService.sendHRNotification({
-            hrEmail: company.hr_email,
-            candidateName: senderName,
-            candidateEmail: senderEmail,
-            jobTitle: matchingJob.job_title,
-            companyName: company.company_name
-          })
+          // HR notifications disabled - applications will appear on HR dashboard instead
+          // No email notifications sent for individual applications
+          logger.info(`📊 [EMAIL WATCHER] Application ${application.application_id} created - will appear on HR dashboard (no email notification sent)`)
 
           logger.info(`   ✅ Successfully processed application from ${senderEmail} for job ${matchingJob.job_posting_id}`)
         } catch (jobError) {
@@ -1098,45 +1090,82 @@ export class EmailReader {
         parsed_resume_json: parsedResumeJson
       })
 
-      // Send shortlist or rejection email to candidate immediately after ranking (same flow, no delay)
+      // Send shortlist or rejection email to candidate after 5 second delay
       const application = await this.applicationRepo.findById(applicationId)
       if (application) {
         const companyData = await this.companyRepo.findById(company.company_id)
-        try {
-          if (scoringResult.status === 'SHORTLIST') {
-            logger.info(`📧 Sending shortlist email to ${application.email} for application ${applicationId}`)
-            await this.emailService.sendShortlistEmail({
-              candidateEmail: application.email,
-              candidateName: application.candidate_name || 'Candidate',
-              jobTitle: job.job_title,
-              companyName: companyData?.company_name || company.company_name,
-              companyEmail: companyData?.company_email || company.company_email,
-              companyDomain: companyData?.company_domain || company.company_domain
-              // No interview link/date/time: HR sends those when they use the Schedule button
-            })
-            logger.info(`✅ Shortlist email sent successfully to ${application.email}`)
-          } else if (scoringResult.status === 'REJECTED') {
-            logger.info(`📧 Sending rejection email to ${application.email} for application ${applicationId}`)
-            await this.emailService.sendRejectionEmail({
-              candidateEmail: application.email,
-              candidateName: application.candidate_name || 'Candidate',
-              jobTitle: job.job_title,
-              companyName: companyData?.company_name || company.company_name,
-              companyEmail: companyData?.company_email || company.company_email,
-              companyDomain: companyData?.company_domain || company.company_domain
-            })
-            logger.info(`✅ Rejection email sent successfully to ${application.email}`)
-          }
-        } catch (emailError: any) {
-          // SMTP/network issues should NOT block analysis
-          const errorMsg = emailError?.message || String(emailError)
-          logger.error(`❌ Failed to send candidate decision email for application ${applicationId}:`, errorMsg)
-          logger.error(`   Email error details:`, emailError)
-          // Continue - don't fail the analysis if email fails
+        
+        // Determine email type based on scoring result status (before DB mapping)
+        const shouldSendShortlist = scoringResult.status === 'SHORTLIST'
+        const shouldSendReject = scoringResult.status === 'REJECTED' || scoringResult.status === 'REJECT'
+        
+        logger.info(`📊 Email sending decision for application ${applicationId}: status="${scoringResult.status}", score=${scoringResult.score}, shouldSendShortlist=${shouldSendShortlist}, shouldSendReject=${shouldSendReject}`)
+        
+        // Send email immediately (no delay) for instant feedback
+        if (shouldSendShortlist || shouldSendReject) {
+          logger.info(`📧 [EMAIL WATCHER] Sending feedback email immediately for application ${applicationId} (${application.email})`)
+          
+          // Use setImmediate to send asynchronously without blocking, but immediately
+          setImmediate(async () => {
+            try {
+              if (shouldSendShortlist) {
+                logger.info(`📧 [EMAIL WATCHER] Sending shortlist email to ${application.email} for application ${applicationId} (Job: ${job.job_title} at ${company.company_name})`)
+                await this.emailService.sendShortlistEmail({
+                  candidateEmail: application.email,
+                  candidateName: application.candidate_name || 'Candidate',
+                  jobTitle: job.job_title,
+                  companyName: companyData?.company_name || company.company_name,
+                  companyEmail: companyData?.company_email || company.company_email,
+                  companyDomain: companyData?.company_domain || company.company_domain
+                  // No interview link/date/time: HR sends those when they use the Schedule button
+                })
+                logger.info(`✅ [EMAIL WATCHER] Shortlist email sent successfully to ${application.email} for application ${applicationId}`)
+              } else if (shouldSendReject) {
+                logger.info(`📧 [EMAIL WATCHER] Sending rejection email to ${application.email} for application ${applicationId} (Job: ${job.job_title} at ${company.company_name})`)
+                await this.emailService.sendRejectionEmail({
+                  candidateEmail: application.email,
+                  candidateName: application.candidate_name || 'Candidate',
+                  jobTitle: job.job_title,
+                  companyName: companyData?.company_name || company.company_name,
+                  companyEmail: companyData?.company_email || company.company_email,
+                  companyDomain: companyData?.company_domain || company.company_domain
+                })
+                logger.info(`✅ [EMAIL WATCHER] Rejection email sent successfully to ${application.email} for application ${applicationId}`)
+              }
+            } catch (emailError: any) {
+              // SMTP/network issues should NOT block analysis, but log extensively
+              const errorMsg = emailError?.message || String(emailError)
+              const errorStack = emailError?.stack || 'No stack trace'
+              logger.error(`❌ [EMAIL WATCHER] Failed to send candidate decision email for application ${applicationId}:`, {
+                error: errorMsg,
+                stack: errorStack,
+                candidateEmail: application.email,
+                jobTitle: job.job_title,
+                companyName: company.company_name,
+                status: scoringResult.status,
+                score: scoringResult.score,
+                shouldSendShortlist,
+                shouldSendReject
+              })
+              logger.error(`   Full error object:`, emailError)
+              
+              // Log to console for immediate visibility
+              console.error(`\n❌ [EMAIL WATCHER] EMAIL SENDING FAILED:`)
+              console.error(`   Application ID: ${applicationId}`)
+              console.error(`   Candidate: ${application.email}`)
+              console.error(`   Status: ${scoringResult.status}`)
+              console.error(`   Error: ${errorMsg}`)
+              console.error(`   Stack: ${errorStack}\n`)
+            }
+          })
+        } else {
+          logger.info(`ℹ️ [EMAIL WATCHER] No email sent for application ${applicationId} - status is "${scoringResult.status}" (FLAG status requires manual review)`)
         }
+      } else {
+        logger.warn(`⚠️ [EMAIL WATCHER] Application ${applicationId} not found after scoring - cannot send email`)
       }
 
-      logger.info(`Processed CV for application ${applicationId}, score: ${scoringResult.score}, status: ${scoringResult.status}`)
+      logger.info(`✅ [EMAIL WATCHER] Processed CV for application ${applicationId}, score: ${scoringResult.score}, status: ${scoringResult.status} (DB status: ${dbStatus}), candidate: ${application?.email || 'unknown'}`)
   }
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { motion } from 'framer-motion'
@@ -50,9 +50,22 @@ export default function SignupQueuePage() {
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [processing, setProcessing] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending')
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    // Mark component as mounted
+    isMountedRef.current = true
+    
+    return () => {
+      // Mark component as unmounted on cleanup
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     // Check for admin session first
+    if (typeof window === 'undefined') return
+    
     const adminSession = localStorage.getItem('admin_session')
     if (adminSession) {
       return // Admin session exists, allow access
@@ -65,45 +78,69 @@ export default function SignupQueuePage() {
   }, [user, authLoading, router])
 
   useEffect(() => {
-    if (user && user.role === 'admin') {
+    // Only run after component mounts and auth is ready
+    if (authLoading) return
+    
+    const adminSession = typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+    if (adminSession || (user && user.role === 'admin')) {
       loadSignups()
     }
-  }, [user, statusFilter])
+  }, [user, statusFilter, authLoading])
 
   const loadSignups = async () => {
     try {
+      if (!isMountedRef.current) return
+      
       setIsLoading(true)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
       const status = statusFilter === 'all' ? '' : statusFilter
-      const response = await fetch(`${backendUrl}/api/admin/users/pending?status=${status}&limit=100`, {
+      const params = new URLSearchParams({
+        limit: '100'
+      })
+      if (status) params.append('status', status)
+
+      const response = await fetch(`/api/admin/users/pending?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
 
-      if (!response.ok) throw new Error('Failed to load signups')
-
-      const data = await response.json()
-      setSignups(data.signups || [])
+      const data = await response.json().catch(() => ({
+        signups: [],
+        total: 0,
+        error: 'Failed to parse response'
+      }))
+      
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setSignups(data.signups || [])
+        
+        if (data.error) {
+          console.error('Error loading signups:', data.error)
+        }
+      }
     } catch (err: any) {
       console.error('Error loading signups:', err)
+      if (isMountedRef.current) {
+        setSignups([])
+      }
     } finally {
-      setIsLoading(false)
+      if (isMountedRef.current) {
+        setIsLoading(false)
+      }
     }
   }
 
   const handleApprove = async (userId: string) => {
     try {
       setProcessing(userId)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/users/${userId}/approve`, {
+      const response = await fetch(`/api/admin/users/${userId}/approve`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -111,7 +148,10 @@ export default function SignupQueuePage() {
         }
       })
 
-      if (!response.ok) throw new Error('Failed to approve signup')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to approve signup')
+      }
 
       await loadSignups()
       setSelectedSignups(new Set())
@@ -130,11 +170,10 @@ export default function SignupQueuePage() {
 
     try {
       setProcessing(userId)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/users/${userId}/reject`, {
+      const response = await fetch(`/api/admin/users/${userId}/reject`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -143,7 +182,10 @@ export default function SignupQueuePage() {
         body: JSON.stringify({ reason })
       })
 
-      if (!response.ok) throw new Error('Failed to reject signup')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to reject signup')
+      }
 
       await loadSignups()
       setSelectedSignups(new Set())
@@ -164,11 +206,10 @@ export default function SignupQueuePage() {
 
     try {
       setProcessing('bulk')
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/users/bulk-approve`, {
+      const response = await fetch(`/api/admin/users/bulk-approve`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -177,7 +218,10 @@ export default function SignupQueuePage() {
         body: JSON.stringify({ userIds: Array.from(selectedSignups) })
       })
 
-      if (!response.ok) throw new Error('Failed to bulk approve')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to bulk approve')
+      }
 
       await loadSignups()
       setSelectedSignups(new Set())
@@ -201,11 +245,10 @@ export default function SignupQueuePage() {
 
     try {
       setProcessing('bulk')
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/users/bulk-reject`, {
+      const response = await fetch(`/api/admin/users/bulk-reject`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -214,7 +257,10 @@ export default function SignupQueuePage() {
         body: JSON.stringify({ userIds: Array.from(selectedSignups), reason: rejectReason })
       })
 
-      if (!response.ok) throw new Error('Failed to bulk reject')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to bulk reject')
+      }
 
       await loadSignups()
       setSelectedSignups(new Set())
@@ -254,7 +300,8 @@ export default function SignupQueuePage() {
     )
   }
 
-  if (!user || user.role !== 'admin') {
+  const adminSession = typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+  if (!adminSession && (!user || user.role !== 'admin')) {
     return null
   }
 

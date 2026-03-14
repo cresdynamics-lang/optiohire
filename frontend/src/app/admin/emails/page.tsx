@@ -58,6 +58,7 @@ export default function EmailManagementPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Check for admin session first
@@ -73,7 +74,8 @@ export default function EmailManagementPage() {
   }, [user, authLoading, router])
 
   useEffect(() => {
-    if (user && user.role === 'admin') {
+    const adminSession = localStorage.getItem('admin_session')
+    if (adminSession || (user && user.role === 'admin')) {
       loadEmails()
       loadStats()
     }
@@ -82,10 +84,9 @@ export default function EmailManagementPage() {
   const loadEmails = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '50'
@@ -94,20 +95,24 @@ export default function EmailManagementPage() {
       if (typeFilter !== 'all') params.append('emailType', typeFilter)
       if (searchTerm) params.append('recipient', searchTerm)
 
-      const response = await fetch(`${backendUrl}/api/admin/emails?${params}`, {
+      const response = await fetch(`/api/admin/emails?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
 
-      if (!response.ok) throw new Error('Failed to load emails')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to load emails')
+      }
 
       const data = await response.json()
       setEmails(data.emails || [])
       setTotal(data.total || 0)
     } catch (err: any) {
       console.error('Error loading emails:', err)
+      setError(err.message || 'Failed to load emails')
     } finally {
       setIsLoading(false)
     }
@@ -115,11 +120,10 @@ export default function EmailManagementPage() {
 
   const loadStats = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) return
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/emails/stats`, {
+      const response = await fetch('/api/admin/emails/stats', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -129,7 +133,7 @@ export default function EmailManagementPage() {
       if (!response.ok) return
 
       const data = await response.json()
-      setStats(data.stats)
+      setStats(data.stats || data)
     } catch (err) {
       console.error('Error loading stats:', err)
     }
@@ -137,11 +141,10 @@ export default function EmailManagementPage() {
 
   const handleResend = async (emailId: string) => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/emails/${emailId}/resend`, {
+      const response = await fetch(`/api/admin/emails/${emailId}/resend`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -149,7 +152,10 @@ export default function EmailManagementPage() {
         }
       })
 
-      if (!response.ok) throw new Error('Failed to resend email')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to resend email')
+      }
 
       await loadEmails()
       alert('Email resent successfully')
@@ -184,13 +190,26 @@ export default function EmailManagementPage() {
     )
   }
 
-  if (!user || user.role !== 'admin') {
+  const adminSession = typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+  if (!adminSession && (!user || user.role !== 'admin')) {
     return null
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Error Display */}
+        {error && (
+          <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                <AlertTriangle className="w-5 h-5" />
+                <span>{error}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

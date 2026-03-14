@@ -467,10 +467,19 @@ export async function POST(request: NextRequest) {
 
       await client.query('COMMIT')
 
-      // Send "job created" email notification via backend (Resend/SMTP)
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
-      if (backendUrl && authHeader) {
+      // Send "job created" email notification via backend (Resend/SMTP) - SYNCHRONOUSLY
+      let emailSent = false
+      let emailError: string | null = null
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001'
+      
+      // Prepare recipients
+      const recipients = [hr_email, company_email].filter((email): email is string => 
+        Boolean(email && typeof email === 'string' && email.includes('@'))
+      )
+
+      if (recipients.length > 0 && authHeader) {
         try {
+          console.log(`[Job Creation] Sending email notification to: ${recipients.join(', ')}`)
           const notifRes = await fetch(`${backendUrl}/api/job-postings/send-created-notification`, {
             method: 'POST',
             headers: {
@@ -483,20 +492,40 @@ export async function POST(request: NextRequest) {
               job_title,
               company_name,
               application_deadline: deadlineDate.toISOString()
-            })
+            }),
+            signal: AbortSignal.timeout(30000) // 30 second timeout
           })
+
+          const notifData = await notifRes.json().catch(() => ({}))
+
           if (!notifRes.ok) {
-            console.warn('Job created but notification failed:', notifRes.status, await notifRes.text().catch(() => ''))
+            emailError = notifData?.error?.message || notifData?.error || `Failed to send email (${notifRes.status})`
+            console.error('[Job Creation] Email notification failed:', emailError)
+          } else {
+            emailSent = true
+            console.log(`[Job Creation] ✅ Email notification sent successfully to: ${recipients.join(', ')}`)
           }
-        } catch (notifErr) {
-          console.warn('Job created but could not send notification:', notifErr)
+        } catch (notifErr: any) {
+          emailError = notifErr?.message || 'Failed to send email notification'
+          console.error('[Job Creation] Error sending email notification:', notifErr)
+        }
+      } else {
+        if (recipients.length === 0) {
+          emailError = 'No valid email addresses provided (hr_email and company_email are required)'
+          console.warn('[Job Creation] Cannot send email: no valid recipients')
+        } else if (!authHeader) {
+          emailError = 'Not authenticated - cannot send email'
+          console.warn('[Job Creation] Cannot send email: no auth header')
         }
       }
 
       return NextResponse.json({
         success: true,
         job_posting_id: jobPostingId,
-        company_id: companyId
+        company_id: companyId,
+        emailSent,
+        emailError: emailError || undefined,
+        recipients: recipients.length > 0 ? recipients : undefined
       })
     } catch (err) {
       await client.query('ROLLBACK')

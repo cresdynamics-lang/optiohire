@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001'
-    const url = `${backendUrl.replace(/\/$/, '')}/auth/signin`
+    const url = `${backendUrl.replace(/\/$/, '')}/auth/admin-signin`
 
     const res = await fetch(url, {
       method: 'POST',

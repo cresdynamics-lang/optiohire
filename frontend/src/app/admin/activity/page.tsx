@@ -18,9 +18,26 @@ import {
   CheckCircle,
   User,
   Filter,
-  ArrowLeft
+  ArrowLeft,
+  BarChart3,
+  PieChart
 } from 'lucide-react'
 import Link from 'next/link'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts'
 
 interface ActivityLog {
   track_id: string
@@ -44,15 +61,60 @@ interface PerformanceMetrics {
   error_count: string
 }
 
+interface TelemetryData {
+  timeSeries: Array<{
+    date: string
+    count: number
+    successCount: number
+    errorCount: number
+    avgResponseTime: number | null
+  }>
+  actionTypes: Array<{
+    actionType: string
+    count: number
+    successCount: number
+    errorCount: number
+  }>
+  statusCodes: Array<{
+    category: string
+    count: number
+  }>
+  topUsers: Array<{
+    userEmail: string
+    userName: string | null
+    activityCount: number
+    successCount: number
+    errorCount: number
+  }>
+  responseTimeDistribution: Array<{
+    timeRange: string
+    count: number
+  }>
+  topEndpoints: Array<{
+    endpoint: string
+    method: string
+    count: number
+    avgResponseTime: number | null
+    successCount: number
+    errorCount: number
+  }>
+}
+
+const COLORS = ['#2D2DDD', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#EC4899']
+
 export default function ActivityTrackingPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [activities, setActivities] = useState<ActivityLog[]>([])
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null)
+  const [telemetry, setTelemetry] = useState<TelemetryData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [telemetryLoading, setTelemetryLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [actionFilter, setActionFilter] = useState<string>('all')
   const [userIdFilter, setUserIdFilter] = useState<string>('')
   const [page, setPage] = useState(1)
+  const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | 'all'>('7d')
 
   useEffect(() => {
     // Check for admin session first
@@ -68,19 +130,21 @@ export default function ActivityTrackingPage() {
   }, [user, authLoading, router])
 
   useEffect(() => {
-    if (user && user.role === 'admin') {
+    const adminSession = localStorage.getItem('admin_session')
+    if (adminSession || (user && user.role === 'admin')) {
       loadActivities()
       loadMetrics()
+      loadTelemetry()
     }
-  }, [user, page, actionFilter, userIdFilter])
+  }, [user, page, actionFilter, userIdFilter, dateRange])
 
   const loadActivities = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem('token')
+      setError(null)
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '50'
@@ -95,12 +159,28 @@ export default function ActivityTrackingPage() {
         }
       })
 
-      if (!response.ok) throw new Error('Failed to load activities')
-
-      const data = await response.json()
+      const data = await response.json().catch(() => ({
+        activities: [],
+        total: 0,
+        error: 'Failed to parse response'
+      }))
+      
+      // Always set activities, even if empty
       setActivities(data.activities || [])
+      
+      // Show error message if present but don't break UI
+      if (data.error) {
+        setError(data.error)
+      } else if (!response.ok) {
+        setError('Failed to load activities')
+      } else {
+        setError(null)
+      }
     } catch (err: any) {
       console.error('Error loading activities:', err)
+      setError(err.message || 'Failed to load activities')
+      // Set empty array to prevent UI breakage
+      setActivities([])
     } finally {
       setIsLoading(false)
     }
@@ -108,7 +188,7 @@ export default function ActivityTrackingPage() {
 
   const loadMetrics = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) return
 
       const response = await fetch('/api/admin/performance', {
@@ -124,6 +204,53 @@ export default function ActivityTrackingPage() {
       setMetrics(data.metrics)
     } catch (err) {
       console.error('Error loading metrics:', err)
+    }
+  }
+
+  const loadTelemetry = async () => {
+    try {
+      setTelemetryLoading(true)
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      if (!token) return
+
+      const now = new Date()
+      const startDate = new Date()
+      
+      switch (dateRange) {
+        case '7d':
+          startDate.setDate(now.getDate() - 7)
+          break
+        case '30d':
+          startDate.setDate(now.getDate() - 30)
+          break
+        case '90d':
+          startDate.setDate(now.getDate() - 90)
+          break
+        default:
+          startDate.setFullYear(2020) // All time
+      }
+
+      const params = new URLSearchParams({
+        startDate: startDate.toISOString(),
+        endDate: now.toISOString(),
+        groupBy: dateRange === '7d' ? 'hour' : 'day'
+      })
+
+      const response = await fetch(`/api/admin/telemetry/activity?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) return
+
+      const data = await response.json()
+      setTelemetry(data)
+    } catch (err) {
+      console.error('Error loading telemetry:', err)
+    } finally {
+      setTelemetryLoading(false)
     }
   }
 
@@ -145,13 +272,26 @@ export default function ActivityTrackingPage() {
     )
   }
 
-  if (!user || user.role !== 'admin') {
+  const adminSession = typeof window !== 'undefined' ? localStorage.getItem('admin_session') : null
+  if (!adminSession && (!user || user.role !== 'admin')) {
     return null
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Error Display */}
+        {error && (
+          <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                <AlertCircle className="w-5 h-5" />
+                <span>{error}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -163,7 +303,7 @@ export default function ActivityTrackingPage() {
               Activity Tracking & Performance
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Monitor user activity and system performance metrics
+              Monitor user activity and system performance metrics with telemetry
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -176,12 +316,211 @@ export default function ActivityTrackingPage() {
             <Link href="/admin/dashboard">
               <Button variant="outline">Dashboard</Button>
             </Link>
-            <Button variant="outline" onClick={() => { loadActivities(); loadMetrics() }} disabled={isLoading}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value as '7d' | '30d' | '90d' | 'all')}
+              className="px-3 py-2 border rounded text-sm"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+            <Button variant="outline" onClick={() => { loadActivities(); loadMetrics(); loadTelemetry() }} disabled={isLoading || telemetryLoading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading || telemetryLoading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
         </motion.div>
+
+        {/* Telemetry Charts */}
+        {telemetry && !telemetryLoading && (
+          <div className="space-y-6">
+            {/* Activity Over Time - Line Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Activity Over Time
+                </CardTitle>
+                <CardDescription>Activity trends showing requests, successes, and errors</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={telemetry.timeSeries}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(value) => new Date(value).toLocaleDateString()}
+                    />
+                    <YAxis />
+                    <Tooltip 
+                      labelFormatter={(value) => new Date(value).toLocaleString()}
+                    />
+                    <Legend />
+                    <Line type="monotone" dataKey="count" stroke="#2D2DDD" name="Total Requests" />
+                    <Line type="monotone" dataKey="successCount" stroke="#10B981" name="Success" />
+                    <Line type="monotone" dataKey="errorCount" stroke="#EF4444" name="Errors" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Action Types Distribution - Pie Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="w-5 h-5" />
+                    Action Types Distribution
+                  </CardTitle>
+                  <CardDescription>Breakdown of activity by action type</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPieChart>
+                      <Tooltip />
+                      <Legend />
+                      <Pie
+                        data={telemetry.actionTypes}
+                        dataKey="count"
+                        nameKey="actionType"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label
+                      >
+                        {telemetry.actionTypes.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Status Code Distribution - Pie Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="w-5 h-5" />
+                    Status Code Distribution
+                  </CardTitle>
+                  <CardDescription>HTTP status code breakdown</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPieChart>
+                      <Tooltip />
+                      <Legend />
+                      <Pie
+                        data={telemetry.statusCodes}
+                        dataKey="count"
+                        nameKey="category"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label
+                      >
+                        {telemetry.statusCodes.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Top Users - Bar Chart */}
+            {telemetry.topUsers.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Top Users by Activity
+                  </CardTitle>
+                  <CardDescription>Most active users in the selected time period</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={telemetry.topUsers}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="userEmail" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                      />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="activityCount" fill="#2D2DDD" name="Total Activity" />
+                      <Bar dataKey="successCount" fill="#10B981" name="Success" />
+                      <Bar dataKey="errorCount" fill="#EF4444" name="Errors" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Response Time Distribution - Bar Chart */}
+            {telemetry.responseTimeDistribution.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    Response Time Distribution
+                  </CardTitle>
+                  <CardDescription>Distribution of API response times</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={telemetry.responseTimeDistribution}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="timeRange" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#8B5CF6" name="Request Count" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Top Endpoints - Bar Chart */}
+            {telemetry.topEndpoints.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Top Endpoints
+                  </CardTitle>
+                  <CardDescription>Most frequently accessed endpoints</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={telemetry.topEndpoints}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="endpoint" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={120}
+                      />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="count" fill="#2D2DDD" name="Request Count" />
+                      <Bar dataKey="successCount" fill="#10B981" name="Success" />
+                      <Bar dataKey="errorCount" fill="#EF4444" name="Errors" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
 
         {/* Performance Metrics */}
         {metrics && (

@@ -28,6 +28,7 @@ export default function AdminCompaniesPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Check for admin session first (from admin login)
@@ -84,7 +85,16 @@ export default function AdminCompaniesPage() {
     if (!confirm('Are you sure you want to delete this company? This will delete all associated jobs and applications.')) return
 
     try {
-      const token = localStorage.getItem('token')
+      setError(null)
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      if (!token) {
+        setError('Not authenticated. Please log in again.')
+        router.push('/admin/login')
+        return
+      }
+
+      console.log('Deleting company with ID:', companyId)
+
       const response = await fetch(`/api/admin/companies/${companyId}`, {
         method: 'DELETE',
         headers: {
@@ -92,11 +102,43 @@ export default function AdminCompaniesPage() {
         }
       })
 
-      if (response.ok) {
-        loadCompanies()
+      const responseData = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        const errorMessage = responseData?.error || `Failed to delete company (${response.status})`
+        console.error('Delete failed:', response.status, errorMessage, responseData)
+        
+        if (response.status === 401 || response.status === 403) {
+          setError('Admin access required. Please log in again.')
+          router.push('/admin/login')
+          return
+        }
+        
+        // If company not found, still remove from UI (might have been deleted already)
+        if (response.status === 404) {
+          console.log('Company not found, removing from UI anyway')
+          setCompanies(prev => prev.filter(company => company.company_id !== companyId))
+          setTotal(prev => Math.max(0, prev - 1))
+          setError(null) // Don't show error if it's just not found
+          return
+        }
+        
+        setError(errorMessage)
+        return
       }
+
+      // Success - remove from UI immediately
+      console.log('Delete successful, removing from UI')
+      setCompanies(prev => prev.filter(company => company.company_id !== companyId))
+      setTotal(prev => Math.max(0, prev - 1))
+      
+      // Reload to ensure consistency (use setTimeout to ensure state update happens first)
+      setTimeout(() => {
+        loadCompanies()
+      }, 100)
     } catch (error) {
       console.error('Error deleting company:', error)
+      setError(error instanceof Error ? error.message : 'Failed to delete company. Please try again.')
     }
   }
 
@@ -136,6 +178,24 @@ export default function AdminCompaniesPage() {
             </div>
           </CardContent>
         </Card>
+
+        {error && (
+          <Card className="bg-red-900/20 border-red-500 mb-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-red-400">{error}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setError(null)}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  ×
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-12">

@@ -21,15 +21,30 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const data = await res.json().catch(() => ({}))
+    const data = await res.json().catch(() => ({ error: 'Failed to parse response' }))
+    
+    // Even if backend returns error, return the data structure expected by frontend
     if (!res.ok) {
-      return NextResponse.json(data, { status: res.status })
+      // Return empty activities array instead of error to prevent UI breakage
+      return NextResponse.json({
+        activities: [],
+        total: 0,
+        page: Number(searchParams.get('page') || '1'),
+        limit: Number(searchParams.get('limit') || '50'),
+        error: data.error || 'Failed to fetch activity logs'
+      })
     }
+    
     return NextResponse.json(data)
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Failed to fetch activity' },
-      { status: 502 }
-    )
+  } catch (err: any) {
+    console.error('Error fetching activity logs:', err)
+    // Return empty result instead of error to prevent UI breakage
+    return NextResponse.json({
+      activities: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+      error: err.message || 'Failed to fetch activity logs'
+    })
   }
 }

@@ -166,40 +166,38 @@ export async function optionalAuthenticate(req: AuthRequest, res: Response, next
   }
 }
 
-export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+export async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   if (req.userRole !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' })
   }
   
-  // Check if admin is approved (if approval_status column exists)
-  // Use async IIFE to handle async operations
-  ;(async () => {
-    try {
-      const { rows: colCheck } = await query(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'users' AND column_name = 'admin_approval_status'
-      `)
+  try {
+    // Check if admin is approved (if approval_status column exists)
+    const { rows: colCheck } = await query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'admin_approval_status'
+    `)
+    
+    if (colCheck.length > 0 && req.userId) {
+      const { rows: userRows } = await query<{ admin_approval_status: string | null }>(
+        `SELECT admin_approval_status FROM users WHERE user_id = $1`,
+        [req.userId]
+      )
       
-      if (colCheck.length > 0 && req.userId) {
-        const { rows: userRows } = await query<{ admin_approval_status: string | null }>(
-          `SELECT admin_approval_status FROM users WHERE user_id = $1`,
-          [req.userId]
-        )
-        
-        if (userRows.length > 0 && userRows[0].admin_approval_status !== 'approved' && userRows[0].admin_approval_status !== null) {
-          return res.status(403).json({ 
-            error: 'Admin access pending approval',
-            details: 'Your admin account requires approval before accessing admin features.'
-          })
-        }
+      if (userRows.length > 0 && userRows[0].admin_approval_status !== 'approved' && userRows[0].admin_approval_status !== null) {
+        return res.status(403).json({ 
+          error: 'Admin access pending approval',
+          details: 'Your admin account requires approval before accessing admin features.'
+        })
       }
-      
-      next()
-    } catch (err) {
-      return res.status(500).json({ error: 'Failed to verify admin status' })
     }
-  })()
+    
+    next()
+  } catch (err) {
+    console.error('RequireAdmin middleware error:', err)
+    return res.status(500).json({ error: 'Failed to verify admin status' })
+  }
 }
 
 // Check admin permissions for specific actions

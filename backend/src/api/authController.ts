@@ -349,6 +349,70 @@ export async function signin(req: Request, res: Response) {
   }
 }
 
+export async function adminSignin(req: Request, res: Response) {
+  try {
+    const { email, password } = req.body || {}
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' })
+    }
+    const { rows } = await query<{ user_id: string; password_hash: string; role: string; is_active: boolean; created_at: string }>(
+      `select user_id, password_hash, role, is_active, created_at from users where email = $1`,
+      [email.toLowerCase()]
+    )
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+    if (!rows[0].is_active) {
+      return res.status(401).json({ error: 'Account is inactive' })
+    }
+    
+    // STRICT: Admin-only login - must be admin role
+    if (rows[0].role !== 'admin') {
+      return res.status(403).json({ error: 'This account does not have admin access' })
+    }
+    
+    const ok = await bcrypt.compare(password, rows[0].password_hash)
+    if (!ok) {
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
+    // Admin always has access - skip company checking
+    const hasCompany = true
+    const companyId = null
+    const companyName = null
+    const companyEmail = null
+    const hrEmail = null
+
+    const token = jwt.sign({ sub: rows[0].user_id, email: email.toLowerCase(), role: rows[0].role }, JWT_SECRET, { expiresIn: '7d' })
+    return res.status(200).json({ 
+      token, 
+      user: { 
+        user_id: rows[0].user_id,
+        id: rows[0].user_id, // Also include as 'id' for frontend compatibility
+        email: email.toLowerCase(),
+        role: rows[0].role,
+        created_at: rows[0].created_at,
+        hasCompany,
+        companyId,
+        companyName,
+        companyEmail,
+        hrEmail
+      } 
+    })
+  } catch (err) {
+    console.error('Admin signin error:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    // Check if it's a database connection error
+    if (errorMessage.includes('password') || errorMessage.includes('authentication') || errorMessage.includes('ECONNREFUSED')) {
+      return res.status(500).json({ 
+        error: 'Database connection failed. Please check DATABASE_URL in backend/.env',
+        details: 'Make sure DATABASE_URL is correctly configured in backend/.env'
+      })
+    }
+    return res.status(500).json({ error: 'Failed to sign in', details: errorMessage })
+  }
+}
+
 export async function forgotPassword(req: Request, res: Response) {
   try {
     const { email } = req.body || {}

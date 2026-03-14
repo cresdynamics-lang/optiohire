@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import { query } from '../db/index.js'
 import type { AuthRequest } from '../middleware/auth.js'
 import { logAdminAction } from '../utils/adminLogger.js'
+import { logger } from '../utils/logger.js'
 
 const SALT_ROUNDS = 12
 
@@ -660,10 +661,57 @@ export async function updateCompany(req: Request, res: Response) {
 export async function deleteCompany(req: Request, res: Response) {
   try {
     const { companyId } = req.params
-    await query(`DELETE FROM companies WHERE company_id = $1`, [companyId])
-    return res.json({ success: true })
+    if (!companyId) {
+      return res.status(400).json({ error: 'Company ID is required' })
+    }
+
+    console.log(`[Delete Company] Attempting to delete company with ID: ${companyId}`)
+
+    // Check if company exists first
+    // Cast parameter to UUID (PostgreSQL will handle invalid UUID format gracefully)
+    const { rows: existingCompanies } = await query<{ company_id: string; company_name: string }>(
+      `SELECT company_id, company_name FROM companies WHERE company_id = $1::uuid`,
+      [companyId]
+    )
+
+    console.log(`[Delete Company] Found ${existingCompanies.length} matching company(ies) for ID: ${companyId}`)
+
+    if (existingCompanies.length === 0) {
+      console.log(`[Delete Company] Company not found: ${companyId}`)
+      return res.status(404).json({ error: 'Company not found', companyId })
+    }
+
+    const companyName = existingCompanies[0].company_name
+
+    // Delete the company (cascade will handle related records like jobs and applications)
+    const { rowCount } = await query(
+      `DELETE FROM companies WHERE company_id = $1::uuid`,
+      [companyId]
+    )
+
+    console.log(`[Delete Company] Deleted ${rowCount} row(s) for company ID: ${companyId} (${companyName})`)
+
+    if (rowCount === 0) {
+      console.log(`[Delete Company] No rows deleted (company may have been already deleted): ${companyId}`)
+      return res.status(404).json({ error: 'Company not found or already deleted', companyId })
+    }
+
+    // Log admin action
+    const authReq = req as AuthRequest
+    if (authReq.userId) {
+      try {
+        await logAdminAction(authReq, 'delete_company', 'company', companyId, { companyName })
+      } catch (logErr) {
+        console.error('[Delete Company] Failed to log admin action:', logErr)
+        // Don't fail the delete if logging fails
+      }
+    }
+
+    return res.json({ success: true, message: 'Company deleted successfully', companyId, companyName })
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to delete company' })
+    console.error('[Delete Company] Error:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return res.status(500).json({ error: 'Failed to delete company', details: errorMessage })
   }
 }
 
@@ -722,13 +770,210 @@ export async function getAllJobPostings(req: Request, res: Response) {
   }
 }
 
+export async function resendJobCreationEmail(req: Request, res: Response) {
+  try {
+    const { jobId } = req.params
+    if (!jobId) {
+      return res.status(400).json({ error: 'Job ID is required' })
+    }
+
+    console.log(`[Resend Email] Resending job creation email for job ID: ${jobId}`)
+
+    // Get job posting details with company info
+    const { rows: jobRows } = await query<{
+      job_posting_id: string
+      job_title: string
+      application_deadline: string | null
+      company_id: string
+      company_name: string
+      company_email: string
+      hr_email: string
+      hiring_manager_email: string | null
+    }>(
+      `SELECT 
+        jp.job_posting_id,
+        jp.job_title,
+        jp.application_deadline,
+        c.company_id,
+        c.company_name,
+        c.company_email,
+        c.hr_email,
+        c.hiring_manager_email
+      FROM job_postings jp
+      JOIN companies c ON jp.company_id = c.company_id
+      WHERE jp.job_posting_id = $1::uuid`,
+      [jobId]
+    )
+
+    if (jobRows.length === 0) {
+      return res.status(404).json({ error: 'Job posting not found', jobId })
+    }
+
+    const job = jobRows[0]
+
+    // Collect all recipients: company emails + users associated with the company
+    const recipients = new Set<string>()
+    
+    // Add company emails
+    if (job.hr_email && job.hr_email.includes('@')) {
+      recipients.add(job.hr_email)
+    }
+    if (job.company_email && job.company_email.includes('@')) {
+      recipients.add(job.company_email)
+    }
+    if (job.hiring_manager_email && job.hiring_manager_email.includes('@')) {
+      recipients.add(job.hiring_manager_email)
+    }
+
+    // Get users associated with this company
+    try {
+      // Check if user_id column exists
+      const { rows: colCheck } = await query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'companies' AND column_name = 'user_id'
+      `)
+
+      if (colCheck.length > 0) {
+        // Get users by user_id
+        const { rows: userRows } = await query<{ email: string }>(
+          `SELECT DISTINCT u.email
+           FROM users u
+           JOIN companies c ON c.user_id = u.user_id
+           WHERE c.company_id = $1::uuid AND u.is_active = true`,
+          [job.company_id]
+        )
+        userRows.forEach(user => {
+          if (user.email && user.email.includes('@')) {
+            recipients.add(user.email)
+          }
+        })
+      }
+
+      // Also get users by email match (hr_email or company_email)
+      const { rows: emailMatchUsers } = await query<{ email: string }>(
+        `SELECT DISTINCT u.email
+         FROM users u
+         JOIN companies c ON (c.hr_email = u.email OR c.company_email = u.email)
+         WHERE c.company_id = $1::uuid AND u.is_active = true`,
+        [job.company_id]
+      )
+      emailMatchUsers.forEach(user => {
+        if (user.email && user.email.includes('@')) {
+          recipients.add(user.email)
+        }
+      })
+    } catch (userErr) {
+      console.error('[Resend Email] Error fetching users:', userErr)
+      // Continue even if user fetch fails
+    }
+
+    const recipientList = Array.from(recipients)
+
+    if (recipientList.length === 0) {
+      return res.status(400).json({ 
+        error: 'No valid email recipients found',
+        details: 'No active users or company emails found for this job'
+      })
+    }
+
+    console.log(`[Resend Email] Sending to ${recipientList.length} recipient(s): ${recipientList.join(', ')}`)
+
+    // Send email using the email service
+    const emailService = new (await import('../services/emailService.js')).EmailService()
+    
+    await emailService.sendJobPostingCreatedEmail({
+      recipients: recipientList,
+      jobTitle: job.job_title,
+      companyName: job.company_name,
+      applicationDeadline: job.application_deadline || new Date().toISOString()
+    })
+
+    // Log admin action
+    const authReq = req as AuthRequest
+    if (authReq.userId) {
+      try {
+        await logAdminAction(authReq, 'resend_job_creation_email', 'job_posting', jobId, {
+          jobTitle: job.job_title,
+          companyName: job.company_name,
+          recipients: recipientList
+        })
+      } catch (logErr) {
+        console.error('[Resend Email] Failed to log admin action:', logErr)
+      }
+    }
+
+    console.log(`[Resend Email] ✅ Email sent successfully to: ${recipientList.join(', ')}`)
+
+    return res.json({ 
+      success: true, 
+      message: 'Job creation email sent successfully',
+      recipients: recipientList,
+      jobTitle: job.job_title,
+      companyName: job.company_name
+    })
+  } catch (err) {
+    console.error('[Resend Email] Error:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return res.status(500).json({ 
+      error: 'Failed to resend job creation email', 
+      details: errorMessage 
+    })
+  }
+}
+
 export async function deleteJobPosting(req: Request, res: Response) {
   try {
     const { jobId } = req.params
-    await query(`DELETE FROM job_postings WHERE job_posting_id = $1`, [jobId])
-    return res.json({ success: true })
+    if (!jobId) {
+      return res.status(400).json({ error: 'Job ID is required' })
+    }
+
+    console.log(`[Delete Job] Attempting to delete job with ID: ${jobId}`)
+
+    // Check if job exists first
+    // Cast parameter to UUID (PostgreSQL will handle invalid UUID format gracefully)
+    const { rows: existingJobs } = await query<{ job_posting_id: string }>(
+      `SELECT job_posting_id FROM job_postings WHERE job_posting_id = $1::uuid`,
+      [jobId]
+    )
+
+    console.log(`[Delete Job] Found ${existingJobs.length} matching job(s) for ID: ${jobId}`)
+
+    if (existingJobs.length === 0) {
+      console.log(`[Delete Job] Job not found: ${jobId}`)
+      return res.status(404).json({ error: 'Job posting not found', jobId })
+    }
+
+    // Delete the job (cascade will handle related records)
+    const { rowCount } = await query(
+      `DELETE FROM job_postings WHERE job_posting_id = $1::uuid`,
+      [jobId]
+    )
+
+    console.log(`[Delete Job] Deleted ${rowCount} row(s) for job ID: ${jobId}`)
+
+    if (rowCount === 0) {
+      console.log(`[Delete Job] No rows deleted (job may have been already deleted): ${jobId}`)
+      return res.status(404).json({ error: 'Job posting not found or already deleted', jobId })
+    }
+
+    // Log admin action
+    const authReq = req as AuthRequest
+    if (authReq.userId) {
+      try {
+        await logAdminAction(authReq, 'delete_job_posting', 'job_posting', jobId, {})
+      } catch (logErr) {
+        console.error('[Delete Job] Failed to log admin action:', logErr)
+        // Don't fail the delete if logging fails
+      }
+    }
+
+    return res.json({ success: true, message: 'Job posting deleted successfully', jobId })
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to delete job posting' })
+    console.error('[Delete Job] Error:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return res.status(500).json({ error: 'Failed to delete job posting', details: errorMessage })
   }
 }
 
@@ -781,8 +1026,16 @@ export async function getAllApplications(req: Request, res: Response) {
       params.slice(2)
     )
 
+    // Normalize ai_score to number (PostgreSQL numeric can be returned as string)
+    const normalizedApplications = applications.map((app: any) => ({
+      ...app,
+      ai_score: app.ai_score !== null && app.ai_score !== undefined 
+        ? (typeof app.ai_score === 'number' ? app.ai_score : Number(app.ai_score))
+        : null
+    }))
+
     return res.json({
-      applications,
+      applications: normalizedApplications,
       total: Number(countRows[0].count),
       page: Number(page),
       limit: Number(limit)

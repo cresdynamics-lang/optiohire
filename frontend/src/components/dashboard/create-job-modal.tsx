@@ -441,12 +441,12 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
               </DialogTitle>
             </div>
             <DialogDescription className="text-base text-gray-700 dark:text-gray-200 pt-2">
-              <p className="mb-2 text-gray-900 dark:text-gray-100">
+              <div className="mb-2 text-gray-900 dark:text-gray-100">
                 The job posting <strong className="font-semibold text-gray-900 dark:text-white">"{createdJobInfo?.jobTitle}"</strong> has been successfully created for <strong className="font-semibold text-gray-900 dark:text-white">{createdJobInfo?.companyName}</strong>.
-              </p>
-              <p className="text-sm mt-3 text-gray-600 dark:text-gray-300">
+              </div>
+              <div className="text-sm mt-3 text-gray-600 dark:text-gray-300">
                 The job is now listed in your dashboard for progress tracking. You can monitor applications, review candidates, and track recruitment analytics.
-              </p>
+              </div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Briefcase, Search, ArrowLeft, Trash2 } from 'lucide-react'
+import { Briefcase, Search, ArrowLeft, Trash2, Mail } from 'lucide-react'
 
 interface JobPosting {
   job_posting_id: string
@@ -28,6 +28,9 @@ export default function AdminJobsPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
     // STRICT: Only admin can access
@@ -80,7 +83,16 @@ export default function AdminJobsPage() {
     if (!confirm('Are you sure you want to delete this job posting? This will delete all associated applications.')) return
 
     try {
-      const token = localStorage.getItem('token')
+      setError(null)
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      if (!token) {
+        setError('Not authenticated. Please log in again.')
+        router.push('/admin/login')
+        return
+      }
+
+      console.log('Deleting job with ID:', jobId)
+
       const response = await fetch(`/api/admin/job-postings/${jobId}`, {
         method: 'DELETE',
         headers: {
@@ -88,11 +100,97 @@ export default function AdminJobsPage() {
         }
       })
 
-      if (response.ok) {
-        loadJobs()
+      const responseData = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        const errorMessage = responseData?.error || `Failed to delete job (${response.status})`
+        console.error('Delete failed:', response.status, errorMessage, responseData)
+        
+        if (response.status === 401 || response.status === 403) {
+          setError('Admin access required. Please log in again.')
+          router.push('/admin/login')
+          return
+        }
+        
+        // If job not found, still remove from UI (might have been deleted already)
+        if (response.status === 404) {
+          console.log('Job not found, removing from UI anyway')
+          setJobs(prev => prev.filter(job => job.job_posting_id !== jobId))
+          setError(null) // Don't show error if it's just not found
+          return
+        }
+        
+        setError(errorMessage)
+        return
       }
+
+      // Success - remove from UI immediately
+      console.log('Delete successful, removing from UI')
+      setJobs(prev => prev.filter(job => job.job_posting_id !== jobId))
+      setTotal(prev => Math.max(0, prev - 1))
+      
+      // Reload to ensure consistency (use setTimeout to ensure state update happens first)
+      setTimeout(() => {
+        loadJobs()
+      }, 100)
     } catch (error) {
       console.error('Error deleting job:', error)
+      setError(error instanceof Error ? error.message : 'Failed to delete job. Please try again.')
+    }
+  }
+
+  const resendJobEmail = async (jobId: string) => {
+    try {
+      setError(null)
+      setSuccessMessage(null)
+      setSendingEmail(jobId)
+      
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      if (!token) {
+        setError('Not authenticated. Please log in again.')
+        router.push('/admin/login')
+        return
+      }
+
+      console.log('Resending job creation email for job ID:', jobId)
+
+      const response = await fetch(`/api/admin/job-postings/${jobId}/resend-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const responseData = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        const errorMessage = responseData?.error || `Failed to resend email (${response.status})`
+        console.error('Resend email failed:', response.status, errorMessage, responseData)
+        
+        if (response.status === 401 || response.status === 403) {
+          setError('Admin access required. Please log in again.')
+          router.push('/admin/login')
+          return
+        }
+        
+        setError(errorMessage)
+        return
+      }
+
+      // Success
+      const recipients = responseData?.recipients || []
+      setSuccessMessage(`Email sent successfully to ${recipients.length} recipient(s): ${recipients.join(', ')}`)
+      console.log('✅ Email sent successfully:', responseData)
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 5000)
+    } catch (error) {
+      console.error('Error resending email:', error)
+      setError(error instanceof Error ? error.message : 'Failed to resend email. Please try again.')
+    } finally {
+      setSendingEmail(null)
     }
   }
 
@@ -113,6 +211,42 @@ export default function AdminJobsPage() {
             <p className="text-gray-400">View and manage all job postings</p>
           </div>
         </div>
+
+        {error && (
+          <Card className="bg-red-900/20 border-red-500 mb-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-red-400">{error}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setError(null)}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  ×
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {successMessage && (
+          <Card className="bg-green-900/20 border-green-500 mb-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-green-400">{successMessage}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSuccessMessage(null)}
+                  className="text-green-400 hover:text-green-300"
+                >
+                  ×
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="bg-neutral-900 border-neutral-800 mb-6">
           <CardContent className="p-4">
@@ -194,6 +328,25 @@ export default function AdminJobsPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => resendJobEmail(job.job_posting_id)}
+                          disabled={sendingEmail === job.job_posting_id}
+                          className="text-blue-400 border-blue-400 hover:bg-blue-900/20"
+                        >
+                          {sendingEmail === job.job_posting_id ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-1" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="h-4 w-4 mr-1" />
+                              Resend Email
+                            </>
+                          )}
+                        </Button>
                         <Button
                           size="sm"
                           variant="destructive"

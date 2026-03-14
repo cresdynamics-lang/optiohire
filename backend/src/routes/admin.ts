@@ -13,6 +13,7 @@ import {
   updateCompany,
   deleteCompany,
   getAllJobPostings,
+  resendJobCreationEmail,
   deleteJobPosting,
   getAllApplications,
   deleteApplication,
@@ -23,6 +24,13 @@ import {
   testEmailSend,
   getEmailReaderStatus
 } from '../api/emailDiagnosticsController.js'
+import {
+  checkAndSendMissingEmails,
+  getEmailCheckStats
+} from '../api/adminEmailCheckerController.js'
+import {
+  getActivityTelemetry
+} from '../api/adminTelemetryController.js'
 import {
   getPendingSignups,
   approveSignup,
@@ -70,6 +78,7 @@ router.delete('/companies/:companyId', deleteCompany)
 
 // Job Postings Management
 router.get('/job-postings', getAllJobPostings)
+router.post('/job-postings/:jobId/resend-email', resendJobCreationEmail)
 router.delete('/job-postings/:jobId', deleteJobPosting)
 
 // Applications Management
@@ -93,6 +102,10 @@ router.get('/email-service/check', checkEmailService)
 router.post('/email-service/test', testEmailSend)
 router.get('/email-reader/status', getEmailReaderStatus)
 
+// Email Checker & Sender
+router.get('/email-check/stats', getEmailCheckStats)
+router.post('/email-check/send-missing', checkAndSendMissingEmails)
+
 // System Settings
 router.get('/settings', getSystemSettings)
 router.patch('/settings/:settingKey', updateSystemSetting)
@@ -103,6 +116,7 @@ router.patch('/settings/feature-flags/:flagKey', updateFeatureFlag)
 router.get('/activity', getActivityLogs)
 router.get('/activity/:userId', getUserActivity)
 router.get('/performance', getPerformanceMetrics)
+router.get('/telemetry/activity', getActivityTelemetry)
 
 // Workflow Management
 router.get('/workflows', getWorkflows)

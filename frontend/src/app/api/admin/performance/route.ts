@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-/**
- * Proxy admin performance endpoint
- */
 export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
@@ -11,22 +8,27 @@ export async function GET(request: NextRequest) {
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001'
-    const res = await fetch(`${backendUrl}/api/admin/performance`, {
+    const searchParams = request.nextUrl.searchParams
+    
+    const response = await fetch(`${backendUrl}/api/admin/performance?${searchParams.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+        'Content-Type': 'application/json'
+      }
     })
 
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      return NextResponse.json(data, { status: res.status })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Failed to fetch performance metrics' }))
+      return NextResponse.json(error, { status: response.status })
     }
+
+    const data = await response.json()
     return NextResponse.json(data)
-  } catch (err) {
+  } catch (error: any) {
+    console.error('Error fetching performance metrics:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch performance metrics' },
-      { status: 502 }
+      { error: error.message || 'Failed to fetch performance metrics' },
+      { status: 500 }
     )
   }
 }

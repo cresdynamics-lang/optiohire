@@ -31,6 +31,7 @@ import { startReportScheduler } from './cron/reportScheduler.js'
 import { startDeadlineStatusScheduler } from './cron/scheduler.js'
 // Email reader enabled - monitors inbox for job applications
 import { emailReaderStatus } from './server/email-reader.js'
+import { emailRetryChecker } from './server/email-retry-checker.js'
 import { apiLimiter, authLimiter, passwordResetLimiter, aiOperationLimiter } from './middleware/rateLimiter.js'
 import { initRedis } from './utils/redis.js'
 import { errorHandler } from './utils/errorHandler.js'
@@ -208,6 +209,12 @@ async function start() {
     })
   } else {
     logger.info('Report scheduler disabled (NODE_ENV=test or DISABLE_REPORT_SCHEDULER is set)')
+  }
+  
+  // Start email retry checker (sends missing feedback emails immediately)
+  if (process.env.NODE_ENV !== 'test' && process.env.ENABLE_EMAIL_READER !== 'false') {
+    emailRetryChecker.start()
+    logger.info('Email retry checker started - checking for unsent emails every 10 seconds')
   }
   
   app.listen(port, () => {

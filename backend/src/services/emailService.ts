@@ -7,7 +7,7 @@ import { SendGridService } from './sendGridService.js'
 import { ResendService } from './resendService.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
-const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
+const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
 
 /** Derive display name for salutation: use candidate name or email local part so we never show only "Dear Candidate" when we have an email */
 function getCandidateDisplayName(candidateName: string | null | undefined, candidateEmail: string): string {
@@ -38,11 +38,15 @@ export class EmailService {
     if (this.useResend) {
       this.resendService = new ResendService()
       logger.info('Email service: Using Resend API (recommended - domain verification support)')
+      // Also initialize SMTP as fallback in case Resend fails
+      this.initSMTP()
     } else if (this.useSendGrid) {
       this.sendGridService = new SendGridService()
       logger.info('Email service: Using SendGrid API (HTTPS - no firewall issues)')
+      // Also initialize SMTP as fallback in case SendGrid fails
+      this.initSMTP()
     } else {
-      // Fallback to SMTP
+      // Use SMTP as primary
       this.initSMTP()
     }
   }
@@ -313,8 +317,8 @@ Kind regards,
 ${companyName}
 Company Email: ${hrEmail}`
 
-    // Generate from email: use company_email, companyDomain, or fallback
-    const fromEmail = this.getCompanyEmail(data.companyEmail, data.companyDomain, data.companyName)
+    // Use noreply@optiohire.com for all candidate emails
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
     
     await this.sendEmail({
       to: data.candidateEmail,
@@ -388,8 +392,8 @@ Kind regards,
 Company Name: ${companyName}
 Company Email: ${hrEmail}`
 
-    // Generate from email: use company_email, companyDomain, or fallback
-    const fromEmail = this.getCompanyEmail(data.companyEmail, data.companyDomain, data.companyName)
+    // Use noreply@optiohire.com for all candidate emails
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
     
     await this.sendEmail({
       to: data.candidateEmail,
@@ -530,12 +534,17 @@ HireBit System
         <li><strong>Application deadline:</strong> ${deadlineText}</li>
       </ul>
       <div class="highlight">
-        <p><strong>What to do next:</strong> Forward application emails to OptioHire so we can receive, rank, and reply to candidates. Use the subject line below and set up forwarding as described.</p>
+        <p><strong>What to do next:</strong> You have two options to send candidate applications to OptioHire for AI screening and ranking:</p>
+        <ol style="margin-top: 12px; padding-left: 20px;">
+          <li><strong>Option 1:</strong> Set up email forwarding rules (recommended for high volume)</li>
+          <li><strong>Option 2:</strong> Have candidates email directly to <strong>applicationsoptiohire@gmail.com</strong></li>
+        </ol>
       </div>
       <p><strong>Step 1 – Subject line for email applications</strong></p>
       <p style="margin-top: 8px; padding: 10px; background: #fff; border-radius: 6px; border: 1px dashed #ccc;"><code>${recommendedSubject}</code></p>
       <p>Use this exact subject in your job advert and tell candidates to use it when emailing their CVs. This lets OptioHire route applications to the correct job and company.</p>
-      <p><strong>Step 2 – Set up email forwarding (Gmail example)</strong></p>
+      <p><strong>Option 1: Set up email forwarding (Gmail example)</strong></p>
+      <p>Forward application emails from your inbox to OptioHire:</p>
       <ol>
         <li>Open Gmail logged in as the inbox where candidates will send applications (e.g. your HR email).</li>
         <li>Click the gear icon → <strong>See all settings</strong> → <strong>Forwarding and POP/IMAP</strong>.</li>
@@ -543,10 +552,18 @@ HireBit System
         <li>Confirm the forwarding address using the verification link Google sends.</li>
         <li>Add a filter (Settings → <strong>Filters and blocked addresses</strong>) with <strong>Subject</strong> contains <code>${recommendedSubject}</code> and choose “Forward” to <strong>applicationsoptiohire@gmail.com</strong>.</li>
       </ol>
-      <p><strong>Step 3 – Other email providers (Outlook, work email, etc.)</strong></p>
+      <p><strong>Other email providers (Outlook, work email, etc.)</strong></p>
       <p>Create a rule/filter that forwards emails where the <strong>Subject</strong> contains <code>${recommendedSubject}</code> to <strong>applicationsoptiohire@gmail.com</strong>.</p>
+      
+      <p><strong>Option 2: Direct email to OptioHire</strong></p>
+      <p>Alternatively, you can have candidates email their applications directly to:</p>
+      <p style="margin-top: 8px; padding: 10px; background: #fff; border-radius: 6px; border: 1px dashed #ccc; font-weight: bold;">
+        <strong>applicationsoptiohire@gmail.com</strong>
+      </p>
+      <p>Make sure candidates use the subject line <code>${recommendedSubject}</code> so we can route their application to the correct job.</p>
+      
       <div class="help-box">
-        <p><strong>Problems forwarding?</strong> If you need help setting up forwarding or rules in your email, contact <a href="mailto:developer@optiohire.com">developer@optiohire.com</a> and we’ll guide you through it.</p>
+        <p><strong>Need help?</strong> If you need assistance setting up forwarding rules or have questions about either option, contact <a href="mailto:developer@optiohire.com">developer@optiohire.com</a> and we’ll guide you through it.</p>
       </div>
       <p>Best regards,<br>OptioHire</p>
     </div>
@@ -563,7 +580,10 @@ Company: ${companyName}
 Role: ${cleanedJobTitle}
 Application deadline: ${deadlineText}
 
-WHAT TO DO NEXT: Forward application emails to OptioHire so we can receive, rank, and reply to candidates. Use the subject line below and set up forwarding as described.
+WHAT TO DO NEXT: You have two options to send candidate applications to OptioHire for AI screening and ranking:
+
+  Option 1: Set up email forwarding rules (recommended for high volume)
+  Option 2: Have candidates email directly to applicationsoptiohire@gmail.com
 
 Step 1 – Subject line for email applications:
 
@@ -571,17 +591,22 @@ Step 1 – Subject line for email applications:
 
 Use this exact subject in your job advert and tell candidates to use it when emailing their CVs.
 
-Step 2 – Set up email forwarding (Gmail example):
+OPTION 1: Set up email forwarding (Gmail example):
+Forward application emails from your inbox to OptioHire:
   1) Open Gmail logged in as the inbox where candidates will send applications (e.g. your HR email).
   2) Go to Settings → See all settings → Forwarding and POP/IMAP.
   3) Under “Forwarding”, click “Add a forwarding address” and enter "applicationsoptiohire@gmail.com".
   4) Confirm the forwarding address using the verification link Google sends.
   5) Add a filter where Subject contains "${recommendedSubject}" and choose to forward those emails to "applicationsoptiohire@gmail.com".
 
-Step 3 – Other email providers:
+Other email providers (Outlook, work email, etc.):
 Create a rule/filter that forwards emails where the Subject contains "${recommendedSubject}" to "applicationsoptiohire@gmail.com".
 
-Problems forwarding? If you need help setting up forwarding or rules, contact developer@optiohire.com and we'll guide you through it.
+OPTION 2: Direct email to OptioHire:
+Alternatively, you can have candidates email their applications directly to: applicationsoptiohire@gmail.com
+Make sure candidates use the subject line "${recommendedSubject}" so we can route their application to the correct job.
+
+Need help? If you need assistance setting up forwarding rules or have questions about either option, contact developer@optiohire.com and we'll guide you through it.
 
 Best regards,
 OptioHire`
@@ -1123,10 +1148,18 @@ The OptioHire Team
         }
         return
       } catch (error: any) {
-        logger.warn(`Resend failed (e.g. domain not verified), falling back to SendGrid or SMTP: ${error.message}`)
+        const errorMsg = error?.message || String(error)
+        logger.warn(`Resend failed (e.g. domain not verified), falling back to SendGrid or SMTP: ${errorMsg}`)
         // So we can fall back to SMTP when Resend fails (e.g. sending from @gmail.com)
         if (!this.transporter) {
+          logger.info('Initializing SMTP transporter for fallback...')
           this.initSMTP()
+          // Verify SMTP was initialized
+          if (!this.transporter) {
+            logger.error('SMTP transporter initialization failed - email sending will fail')
+          } else {
+            logger.info('SMTP transporter initialized successfully for fallback')
+          }
         }
         // Fallback to SendGrid or SMTP below
       }
@@ -1157,9 +1190,13 @@ The OptioHire Team
     try {
       const from = data.from || DEFAULT_FROM_EMAIL
       
-      // Verify transporter is configured
+      // Verify transporter is configured - initialize if not already done
       if (!this.transporter) {
-        throw new Error('Email transporter not initialized')
+        logger.info('SMTP transporter not initialized, initializing now...')
+        this.initSMTP()
+        if (!this.transporter) {
+          throw new Error('Email transporter not initialized - SMTP configuration may be missing')
+        }
       }
 
       // Verify authentication is configured

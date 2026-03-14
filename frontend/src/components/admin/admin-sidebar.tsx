@@ -18,6 +18,7 @@ import {
   Activity,
   UserCheck,
   HelpCircle,
+  Send,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -38,6 +39,7 @@ const navigation: Array<{
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Signups', href: '/admin/signups', icon: UserCheck },
   { name: 'Emails', href: '/admin/emails', icon: Mail },
+  { name: 'Check & Send Emails', href: '/admin/check-emails', icon: Send },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
   { name: 'Login Activity', href: '/admin/logins', icon: Key },
   { name: 'Activity', href: '/admin/activity', icon: Activity },

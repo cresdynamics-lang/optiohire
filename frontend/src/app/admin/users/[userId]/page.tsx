@@ -72,13 +72,13 @@ export default function UserDetailsPage() {
       setLoading(true)
       setError(null)
       
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) {
-        throw new Error('Not authenticated')
+        setError('Not authenticated. Please log in again.')
+        router.push('/admin/login')
+        return
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      
       // Fetch user details
       const userResponse = await fetch(`/api/admin/users/${userId}`, {
         headers: {
@@ -88,7 +88,16 @@ export default function UserDetailsPage() {
       })
 
       if (!userResponse.ok) {
-        throw new Error('Failed to fetch user details')
+        const errorData = await userResponse.json().catch(() => ({}))
+        const errorMessage = errorData?.error || `Failed to fetch user details (${userResponse.status})`
+        
+        if (userResponse.status === 401 || userResponse.status === 403) {
+          setError('Admin access required. Please log in again.')
+          router.push('/admin/login')
+          return
+        }
+        
+        throw new Error(errorMessage)
       }
 
       const userData = await userResponse.json()
