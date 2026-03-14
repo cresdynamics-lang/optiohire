@@ -1097,7 +1097,7 @@ export class EmailReader {
         
         // Determine email type based on scoring result status (before DB mapping)
         const shouldSendShortlist = scoringResult.status === 'SHORTLIST'
-        const shouldSendReject = scoringResult.status === 'REJECTED' || scoringResult.status === 'REJECT'
+        const shouldSendReject = scoringResult.status === 'REJECTED'
         
         logger.info(`📊 Email sending decision for application ${applicationId}: status="${scoringResult.status}", score=${scoringResult.score}, shouldSendShortlist=${shouldSendShortlist}, shouldSendReject=${shouldSendReject}`)
         

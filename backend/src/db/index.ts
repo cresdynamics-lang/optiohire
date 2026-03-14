@@ -55,11 +55,11 @@ pool.connect()
     console.error('[DB] Connection string (masked):', maskedUrl)
   })
 
-export async function query<T = any>(text: string, params?: any[]): Promise<{ rows: T[] }> {
+export async function query<T = any>(text: string, params?: any[]): Promise<{ rows: T[]; rowCount: number }> {
   const client = await pool.connect()
   try {
     const res = await client.query(text, params)
-    return { rows: res.rows as T[] }
+    return { rows: res.rows as T[], rowCount: res.rowCount || 0 }
   } catch (error: any) {
     console.error('[DB] Query error:', error.message)
     console.error('[DB] Query:', text.substring(0, 100))

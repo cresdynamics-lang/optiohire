@@ -26,7 +26,6 @@ import { router as uploadRouter } from './routes/upload.js'
 import { ensureStorageDir } from './utils/storage.js'
 import { logger } from './utils/logger.js'
 import path from 'path'
-import express from 'express'
 import { startReportScheduler } from './cron/reportScheduler.js'
 import { startDeadlineStatusScheduler } from './cron/scheduler.js'
 // Email reader enabled - monitors inbox for job applications
