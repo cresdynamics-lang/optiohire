@@ -38,10 +38,20 @@ interface SystemStats {
   reports: number
 }
 
+interface AIAuditSummary {
+  total: number
+  returned: number
+  borderline: number
+  sensitiveReasoningFlags: number
+  missingReasoning: number
+}
+
 export default function AdminAnalyticsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const [hasAdminSession, setHasAdminSession] = useState(false)
   const [stats, setStats] = useState<SystemStats | null>(null)
+  const [aiAudit, setAiAudit] = useState<AIAuditSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -49,6 +59,8 @@ export default function AdminAnalyticsPage() {
     // Check for admin session first
     const adminSession = localStorage.getItem('admin_session')
     if (adminSession) {
+      setHasAdminSession(true)
+      loadStats()
       return // Admin session exists, allow access
     }
     
@@ -73,19 +85,42 @@ export default function AdminAnalyticsPage() {
         throw new Error('Not authenticated')
       }
 
-      const response = await fetch('/api/admin/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      const [statsRes, auditRes] = await Promise.all([
+        fetch('/api/admin/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch('/api/admin/ai-audit?limit=100', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ])
 
-      if (!response.ok) {
+      if (!statsRes.ok) {
         throw new Error('Failed to load statistics')
       }
 
-      const data = await response.json()
+      const data = await statsRes.json()
       setStats(data)
+
+      if (auditRes.ok) {
+        const auditData = await auditRes.json()
+        const audits = Array.isArray(auditData?.audits) ? auditData.audits : []
+        const summary: AIAuditSummary = {
+          total: Number(auditData?.total || 0),
+          returned: audits.length,
+          borderline: audits.filter((a: any) => a?.fairnessFlags?.borderline_decision === true).length,
+          sensitiveReasoningFlags: audits.filter((a: any) => a?.fairnessFlags?.reasoning_mentions_sensitive_attribute === true).length,
+          missingReasoning: audits.filter((a: any) => a?.fairnessFlags?.missing_reasoning === true).length,
+        }
+        setAiAudit(summary)
+      } else {
+        setAiAudit(null)
+      }
     } catch (err: any) {
       console.error('Error loading stats:', err)
       setError(err.message || 'Failed to load statistics')
@@ -96,13 +131,13 @@ export default function AdminAnalyticsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-950">
         <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
       </div>
     )
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!hasAdminSession && (!user || user.role !== 'admin')) {
     return null
   }
 
@@ -111,7 +146,7 @@ export default function AdminAnalyticsPage() {
   const jobActiveRate = stats?.job_postings.total ? ((stats.job_postings.active / stats.job_postings.total) * 100).toFixed(1) : '0'
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-neutral-950 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -127,10 +162,10 @@ export default function AdminAnalyticsPage() {
               Back
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 System Analytics
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-neutral-400">
                 Comprehensive system statistics and insights
               </p>
             </div>
@@ -150,9 +185,9 @@ export default function AdminAnalyticsPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4"
+            className="bg-red-900/20 border border-red-700/50 rounded-lg p-4"
           >
-            <p className="text-red-700 dark:text-red-300">{error}</p>
+            <p className="text-red-300">{error}</p>
           </motion.div>
         )}
 
@@ -162,7 +197,7 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -181,7 +216,7 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Companies</CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -200,7 +235,7 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Job Postings</CardTitle>
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -219,7 +254,7 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Applications</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
@@ -239,7 +274,7 @@ export default function AdminAnalyticsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card>
+          <Card className="bg-neutral-900 border-neutral-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
@@ -291,6 +326,57 @@ export default function AdminAnalyticsPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="bg-neutral-900 border-neutral-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                AI Fairness Audit Snapshot
+              </CardTitle>
+              <CardDescription>
+                Recent AI scoring quality and fairness indicators (latest 100 records)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!aiAudit ? (
+                <p className="text-sm text-muted-foreground">
+                  AI audit data unavailable or no records yet.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-4">
+                      <p className="text-xs text-muted-foreground">Total Scored</p>
+                      <p className="text-xl font-semibold">{aiAudit.total}</p>
+                    </div>
+                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-4">
+                      <p className="text-xs text-muted-foreground">Borderline Decisions</p>
+                      <p className="text-xl font-semibold text-amber-400">{aiAudit.borderline}</p>
+                    </div>
+                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-4">
+                      <p className="text-xs text-muted-foreground">Sensitive Reasoning Flags</p>
+                      <p className="text-xl font-semibold text-red-400">{aiAudit.sensitiveReasoningFlags}</p>
+                    </div>
+                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-4">
+                      <p className="text-xs text-muted-foreground">Missing Reasoning</p>
+                      <p className="text-xl font-semibold text-orange-300">{aiAudit.missingReasoning}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Link href="/admin/reports">
+                      <Button variant="outline">Open Full AI Audit Report</Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
