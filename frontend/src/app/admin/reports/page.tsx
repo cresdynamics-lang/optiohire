@@ -289,7 +289,7 @@ export default function AdminReportsPage() {
       toast({
         title: 'Copy failed',
         description: 'Could not access clipboard. Copy URL from your address bar.',
-        variant: 'destructive',
+        variant: 'error',
       })
     }
   }
@@ -354,7 +354,13 @@ export default function AdminReportsPage() {
                   <Link2 className="w-4 h-4" />
                   Copy link
                 </Button>
-                <Button variant="outline" onClick={loadAudit} className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void loadAudit()
+                  }}
+                  className="gap-2"
+                >
                   <RefreshCw className="w-4 h-4" />
                   Refresh
                 </Button>
