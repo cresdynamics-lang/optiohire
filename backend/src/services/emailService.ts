@@ -325,7 +325,8 @@ Company Email: ${hrEmail}`
       from: fromEmail,
       subject,
       text,
-      html: html // Send the HTML email
+      html: html, // Send the HTML email
+      emailType: 'shortlist'
     })
   }
 
@@ -400,7 +401,53 @@ Company Email: ${hrEmail}`
       from: fromEmail,
       subject,
       text,
-      html: html // Send the HTML email
+      html: html, // Send the HTML email
+      emailType: 'rejection'
+    })
+  }
+
+  async sendInboundForwardEmail(data: {
+    recipients: string[]
+    candidateName: string
+    candidateEmail: string
+    jobTitle: string
+    companyName: string
+    originalSubject: string
+    resumeUrl?: string | null
+  }) {
+    const to = Array.from(new Set(data.recipients.filter(Boolean))).join(',')
+    if (!to) return
+
+    const html = `
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.5;">
+  <h3>New Candidate Email Received</h3>
+  <p>A candidate email was ingested and routed to your job posting.</p>
+  <p><strong>Company:</strong> ${data.companyName}</p>
+  <p><strong>Job:</strong> ${data.jobTitle}</p>
+  <p><strong>Candidate:</strong> ${data.candidateName} (${data.candidateEmail})</p>
+  <p><strong>Original Subject:</strong> ${data.originalSubject}</p>
+  ${data.resumeUrl ? `<p><strong>Resume:</strong> <a href="${data.resumeUrl}">${data.resumeUrl}</a></p>` : '<p><strong>Resume:</strong> No attachment found</p>'}
+</body>
+</html>
+    `
+
+    const text = `New Candidate Email Received
+
+Company: ${data.companyName}
+Job: ${data.jobTitle}
+Candidate: ${data.candidateName} (${data.candidateEmail})
+Original Subject: ${data.originalSubject}
+Resume: ${data.resumeUrl || 'No attachment found'}
+`
+
+    await this.sendEmail({
+      to,
+      subject: `New application received - ${data.jobTitle}`,
+      html,
+      text,
+      emailType: 'notification',
+      useSecondaryKey: true
     })
   }
 
@@ -985,6 +1032,8 @@ The OptioHire Team
    * Welcome email from OptioHire – sent after email is confirmed
    */
   async sendWelcomeEmail(email: string, name: string) {
+    const appUrl = (process.env.FRONTEND_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
+    const dashboardUrl = `${appUrl}/dashboard`
     const html = `
 <!DOCTYPE html>
 <html>
@@ -1001,6 +1050,11 @@ The OptioHire Team
     <p style="font-size: 16px; margin-bottom: 20px;">Hello ${name || 'User'},</p>
     <p style="font-size: 16px; margin-bottom: 20px;">Your email is confirmed. You're all set to use OptioHire to post jobs, screen candidates, and hire with confidence.</p>
     <p style="font-size: 16px; margin-bottom: 20px;">Get started by creating your first job posting from your dashboard.</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${dashboardUrl}" style="background: #2563eb; color: white; padding: 14px 26px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 15px;">Open Dashboard</a>
+    </div>
+    <p style="font-size: 13px; color: #666; margin: 0 0 20px 0;">If the button does not work, copy and paste this link in your browser:</p>
+    <p style="font-size: 12px; color: #777; word-break: break-all; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #e0e0e0; margin: 0 0 20px 0;">${dashboardUrl}</p>
     <p style="font-size: 14px; color: #666;">If you have any questions, reply to this email or visit our help center.</p>
     <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
     <p style="font-size: 12px; color: #999; margin: 0;">Best regards,<br>The OptioHire Team</p>
@@ -1008,7 +1062,7 @@ The OptioHire Team
 </body>
 </html>
     `
-    const text = `Welcome to OptioHire\n\nHello ${name || 'User'},\n\nYour email is confirmed. You're all set to use OptioHire to post jobs, screen candidates, and hire with confidence.\n\nGet started by creating your first job posting from your dashboard.\n\nBest regards,\nThe OptioHire Team`
+    const text = `Welcome to OptioHire\n\nHello ${name || 'User'},\n\nYour email is confirmed. You're all set to use OptioHire to post jobs, screen candidates, and hire with confidence.\n\nOpen your dashboard here:\n${dashboardUrl}\n\nBest regards,\nThe OptioHire Team`
     await this.sendEmail({
       to: email,
       subject: 'Welcome to OptioHire – your account is ready',

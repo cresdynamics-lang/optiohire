@@ -71,6 +71,9 @@ export async function getEmailReaderStatus(req: Request, res: Response) {
     const imapUser = process.env.IMAP_USER
     const imapPass = process.env.IMAP_PASS ? '***configured***' : null
     
+    const isImapLimit = (emailReaderStatus.lastError || '').toLowerCase().includes('too many simultaneous connections')
+    const isAuthError = (emailReaderStatus.lastError || '').toLowerCase().includes('authentication')
+
     return res.json({
       ...emailReaderStatus,
       config: {
@@ -85,6 +88,22 @@ export async function getEmailReaderStatus(req: Request, res: Response) {
         ...(emailReaderStatus.disabledReason ? { 
           action: 'Configure missing IMAP credentials in backend/.env',
           required: ['IMAP_HOST', 'IMAP_USER', 'IMAP_PASS']
+        } : {}),
+        ...(isImapLimit ? {
+          action: 'Mailbox provider is rate-limiting IMAP sessions',
+          remediation: [
+            'Ensure only one backend instance runs email reader',
+            'Increase IMAP_POLL_MS (e.g. 30000 or more)',
+            'Review mailbox security settings and active IMAP sessions'
+          ]
+        } : {}),
+        ...(isAuthError ? {
+          action: 'IMAP authentication failed',
+          remediation: [
+            'Regenerate Gmail app password',
+            'Update IMAP_USER and IMAP_PASS in backend/.env',
+            'Restart backend after env update'
+          ]
         } : {}),
         ...(emailReaderStatus.lastError ? {
           action: 'Check IMAP credentials and network connectivity',

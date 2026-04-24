@@ -8,7 +8,7 @@
  *
  *   # Or manually (with psql):
  *   psql -U postgres -c "CREATE DATABASE optiohire;"
- *   psql -U postgres -c "CREATE USER optiohire_user WITH PASSWORD 'optiohire_pass_2024';"
+ *   psql -U postgres -c "CREATE USER optiohire_user WITH PASSWORD 'your_db_password_here';"
  *   psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE optiohire TO optiohire_user;"
  *   psql -U postgres -d optiohire -c "GRANT ALL ON SCHEMA public TO optiohire_user;"
  *

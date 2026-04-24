@@ -95,6 +95,13 @@ export async function scoreApplication(req: Request, res: Response) {
       score = scoringResult.score
       reasoning = scoringResult.reasoning
       dbStatus = scoringResult.status === 'FLAGGED' ? 'FLAG' : scoringResult.status === 'REJECTED' ? 'REJECT' : 'SHORTLIST'
+      if (scoringResult.audit) {
+        logger.info('AI fairness audit (manual scoreApplication)', {
+          applicationId: application_id,
+          jobPostingId: job_posting_id,
+          ...scoringResult.audit,
+        })
+      }
     } else {
       const result = await scoreCandidateScreening(parsed, {
         jobTitle: job.job_title,

@@ -162,6 +162,14 @@ export class ResendService {
    * Verify Resend API key and domain
    */
   async verifyConnection(): Promise<boolean> {
+    const diagnostics = await this.getDiagnostics()
+    return diagnostics.atLeastOneWorking
+  }
+
+  /**
+   * Collect diagnostics about API key validity and verified domains.
+   */
+  async getDiagnostics(): Promise<{ atLeastOneWorking: boolean; hasVerifiedDomain: boolean; workingKeys: string[]; verifiedDomainCount: number }> {
     const clients = [
       { name: 'primary', client: this.resendPrimary },
       { name: 'secondary', client: this.resendSecondary },
@@ -170,10 +178,18 @@ export class ResendService {
 
     if (clients.length === 0) {
       logger.error('No Resend API keys configured')
-      return false
+      return {
+        atLeastOneWorking: false,
+        hasVerifiedDomain: false,
+        workingKeys: [],
+        verifiedDomainCount: 0
+      }
     }
 
     let atLeastOneWorking = false
+    let hasVerifiedDomain = false
+    let verifiedDomainCount = 0
+    const workingKeys: string[] = []
 
     for (const { name, client } of clients) {
       try {
@@ -184,18 +200,28 @@ export class ResendService {
         if (domainsList.length > 0) {
           domainsList.forEach((domain: any) => {
             logger.info(`  - Domain: ${domain.name} (Status: ${domain.status})`)
+            if (domain.status === 'verified') {
+              hasVerifiedDomain = true
+              verifiedDomainCount += 1
+            }
           })
         } else {
           logger.warn(`Resend ${name}: No domains found. Please verify your domain in Resend dashboard: https://resend.com/domains`)
         }
         
         atLeastOneWorking = true
+        workingKeys.push(name)
       } catch (error: any) {
         logger.error(`Resend ${name} API connection test failed: ${error.message}`)
       }
     }
-    
-    return atLeastOneWorking
+
+    return {
+      atLeastOneWorking,
+      hasVerifiedDomain,
+      workingKeys,
+      verifiedDomainCount
+    }
   }
 
   /**

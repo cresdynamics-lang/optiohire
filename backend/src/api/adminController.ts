@@ -1113,3 +1113,113 @@ export async function getSystemStats(req: Request, res: Response) {
   }
 }
 
+export async function getAIAuditTrail(req: Request, res: Response) {
+  try {
+    const { page = '1', limit = '50', job_id = '', company_id = '' } = req.query
+    const pageNum = Math.max(1, Number(page) || 1)
+    const limitNum = Math.min(200, Math.max(1, Number(limit) || 50))
+    const offset = (pageNum - 1) * limitNum
+
+    const conditions: string[] = []
+    const params: any[] = []
+    let i = 1
+
+    if (job_id) {
+      conditions.push(`a.job_posting_id = $${i++}`)
+      params.push(job_id)
+    }
+    if (company_id) {
+      conditions.push(`a.company_id = $${i++}`)
+      params.push(company_id)
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+
+    const { rows } = await query<{
+      application_id: string
+      created_at: string
+      ai_score: number | null
+      ai_status: string | null
+      reasoning: string | null
+      candidate_name: string | null
+      email: string
+      job_posting_id: string
+      job_title: string | null
+      company_id: string
+      company_name: string | null
+    }>(
+      `SELECT
+         a.application_id,
+         a.created_at,
+         a.ai_score,
+         a.ai_status,
+         a.reasoning,
+         a.candidate_name,
+         a.email,
+         a.job_posting_id,
+         jp.job_title,
+         a.company_id,
+         c.company_name
+       FROM applications a
+       LEFT JOIN job_postings jp ON jp.job_posting_id = a.job_posting_id
+       LEFT JOIN companies c ON c.company_id = a.company_id
+       ${whereClause}
+       ORDER BY a.created_at DESC
+       LIMIT $${i++} OFFSET $${i}`,
+      [...params, limitNum, offset]
+    )
+
+    const { rows: countRows } = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM applications a ${whereClause}`,
+      params
+    )
+
+    const sensitiveReasoningPattern =
+      /\b(age|date of birth|dob|gender|male|female|nationality|ethnicity|race|religion|marital status|disability|photo|address)\b/i
+
+    const audits = rows.map((row) => {
+      const reasoning = row.reasoning || ''
+      const mentionsSensitiveAttribute = sensitiveReasoningPattern.test(reasoning)
+      const score = row.ai_score !== null && row.ai_score !== undefined ? Number(row.ai_score) : null
+      const status = (row.ai_status || 'PENDING').toUpperCase()
+
+      return {
+        application_id: row.application_id,
+        created_at: row.created_at,
+        candidate: {
+          name: row.candidate_name || null,
+          email: row.email,
+        },
+        job: {
+          job_posting_id: row.job_posting_id,
+          title: row.job_title || null,
+          company_id: row.company_id,
+          company_name: row.company_name || null,
+        },
+        decision: {
+          score,
+          status,
+          reasoning,
+        },
+        fairnessFlags: {
+          reasoning_mentions_sensitive_attribute: mentionsSensitiveAttribute,
+          borderline_decision:
+            score !== null &&
+            ((score >= 45 && score <= 55) || (score >= 75 && score <= 85)),
+          missing_reasoning: reasoning.trim().length === 0,
+        },
+      }
+    })
+
+    return res.json({
+      page: pageNum,
+      limit: limitNum,
+      total: Number(countRows[0]?.count || 0),
+      audits,
+    })
+  } catch (err) {
+    logger.error('Failed to fetch AI audit trail', err)
+    return res.status(500).json({ error: 'Failed to fetch AI audit trail' })
+  }
+}
+

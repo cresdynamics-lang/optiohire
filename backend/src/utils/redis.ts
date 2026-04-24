@@ -7,6 +7,9 @@ let redisClient: Redis | null = null
  * Initialize Redis connection. Opt-in: only connect when REDIS_URL, REDIS_ENABLED, or REDIS_HOST is set.
  */
 export function initRedis(): Redis | null {
+  // Explicit kill-switch for local/dev environments.
+  if (process.env.REDIS_ENABLED === 'false') return null
+
   const redisUrl = process.env.REDIS_URL
   const redisEnabled = process.env.REDIS_ENABLED === 'true'
   const redisHost = process.env.REDIS_HOST

@@ -83,7 +83,8 @@ export async function saveFile(filename: string, data: Buffer): Promise<string> 
   await fs.mkdir(dirPath, { recursive: true })
   
   await fs.writeFile(filePath, data)
-  return filePath
+  const relativePath = path.relative(baseDir, filePath).replace(/\\/g, '/')
+  return `/storage/${relativePath}`
 }
 
 

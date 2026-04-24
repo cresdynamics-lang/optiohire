@@ -6,6 +6,18 @@ export interface ScoringResult {
   score: number // 0-100
   status: 'SHORTLIST' | 'FLAGGED' | 'REJECTED'
   reasoning: string // transparent explanation
+  audit?: {
+    modelProvider: 'groq' | 'gemini' | 'fallback'
+    blindReviewApplied: boolean
+    redactionSummary: {
+      emailRedactions: number
+      phoneRedactions: number
+      sensitiveLinesRemoved: number
+    }
+    aiScoreRaw: number
+    skillAnchorScore: number
+    calibratedScore: number
+  }
 }
 
 export interface ScoringInput {
@@ -48,6 +60,86 @@ export class AIScoringEngine {
       this.useGemini = false
       logger.warn('No AI API key found (Groq or Gemini), will use fallback rule-based scoring')
     }
+  }
+
+  private redactSensitiveIdentifiers(rawCvText: string): { text: string; emailRedactions: number; phoneRedactions: number } {
+    const emailMatches = rawCvText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []
+    const phoneMatches = rawCvText.match(/(\+?\d[\d\s().-]{7,}\d)/g) || []
+    const text = rawCvText
+      // email
+      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[REDACTED_EMAIL]')
+      // phone-like patterns
+      .replace(/(\+?\d[\d\s().-]{7,}\d)/g, '[REDACTED_PHONE]')
+    return {
+      text,
+      emailRedactions: emailMatches.length,
+      phoneRedactions: phoneMatches.length,
+    }
+  }
+
+  private removeSensitiveAttributes(rawCvText: string): { text: string; sensitiveLinesRemoved: number } {
+    const lines = rawCvText.split('\n')
+    const sensitivePatterns = [
+      /\b(age|date of birth|dob|birth date)\b/i,
+      /\b(gender|male|female|non-binary|nonbinary)\b/i,
+      /\b(marital status|single|married|divorced)\b/i,
+      /\b(nationality|citizenship|ethnicity|race|religion)\b/i,
+      /\b(pregnant|pregnancy)\b/i,
+      /\b(disability|disabled)\b/i,
+      /\b(photo|photograph)\b/i,
+      /\b(home address|address)\b/i,
+    ]
+
+    const filtered = lines.filter((line) => !sensitivePatterns.some((pattern) => pattern.test(line)))
+    return {
+      text: filtered.join('\n'),
+      sensitiveLinesRemoved: Math.max(0, lines.length - filtered.length),
+    }
+  }
+
+  private buildBlindCvText(cvText: string): { text: string; redactionSummary: { emailRedactions: number; phoneRedactions: number; sensitiveLinesRemoved: number } } {
+    const redacted = this.redactSensitiveIdentifiers(cvText)
+    const filtered = this.removeSensitiveAttributes(redacted.text)
+    return {
+      text: filtered.text,
+      redactionSummary: {
+        emailRedactions: redacted.emailRedactions,
+        phoneRedactions: redacted.phoneRedactions,
+        sensitiveLinesRemoved: filtered.sensitiveLinesRemoved,
+      },
+    }
+  }
+
+  private getRuleBasedSkillScore(input: ScoringInput): number {
+    const cvText = input.cvText.toLowerCase()
+    const requiredSkills = input.job.required_skills.map((s) => s.toLowerCase())
+    if (requiredSkills.length === 0) return 0
+    const matched = requiredSkills.filter((skill) => cvText.includes(skill)).length
+    return Math.round((matched / requiredSkills.length) * 100)
+  }
+
+  private calibrateScore(aiScore: number, input: ScoringInput): number {
+    const skillScore = this.getRuleBasedSkillScore(input)
+    // Blend AI judgement with objective skill-match anchor.
+    const calibrated = Math.round(aiScore * 0.75 + skillScore * 0.25)
+    return Math.max(0, Math.min(100, calibrated))
+  }
+
+  private sanitizeReasoning(reasoning: string): string {
+    const blocked = [
+      /\b(age|date of birth|dob|birth date)\b/gi,
+      /\b(gender|male|female|non-binary|nonbinary)\b/gi,
+      /\b(nationality|ethnicity|race|religion|citizenship)\b/gi,
+      /\bmarital status\b/gi,
+      /\bdisability\b/gi,
+      /\bphoto(graph)?\b/gi,
+      /\baddress\b/gi,
+    ]
+    let sanitized = reasoning || 'No reasoning provided'
+    for (const pattern of blocked) {
+      sanitized = sanitized.replace(pattern, '[non-job-relevant attribute removed]')
+    }
+    return sanitized
   }
 
   /**
@@ -147,20 +239,27 @@ Remember: You are evaluating candidates for ${company.company_name || 'this comp
    * Output: { score: 0-100, status: "SHORTLIST" | "FLAGGED" | "REJECTED", reasoning: string }
    */
   async scoreCandidate(input: ScoringInput): Promise<ScoringResult> {
+    const blindCv = this.buildBlindCvText(input.cvText)
+    const blindInput: ScoringInput = {
+      ...input,
+      cvText: blindCv.text,
+    }
     const modelName = process.env.SCORING_MODEL || process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
 
     // Use Groq for scoring when AI_PROVIDER=groq
     if (this.useGroq) {
       try {
         logger.info(`Using Groq model ${modelName} for scoring`)
-        const prompt = this.buildScoringPrompt(input)
-        const systemInstruction = this.buildSystemInstruction(input)
+        const prompt = this.buildScoringPrompt(blindInput)
+        const systemInstruction = this.buildSystemInstruction(blindInput)
         const parsed = await groqService.generateJSON<{ score: number; status: string; reasoning: string }>(
           prompt,
           modelName,
           { systemPrompt: systemInstruction, apiKey: 'primary' }
         )
-        const score = Math.max(0, Math.min(100, Math.round(parsed.score)))
+        const rawScore = Math.max(0, Math.min(100, Math.round(parsed.score)))
+        const skillAnchorScore = this.getRuleBasedSkillScore(blindInput)
+        const score = this.calibrateScore(rawScore, blindInput)
         let status: 'SHORTLIST' | 'FLAGGED' | 'REJECTED' = 'REJECTED'
         if (score >= 80) status = 'SHORTLIST'
         else if (score >= 50) status = 'FLAGGED'
@@ -169,7 +268,15 @@ Remember: You are evaluating candidates for ${company.company_name || 'this comp
         return {
           score,
           status,
-          reasoning: parsed.reasoning || 'No reasoning provided'
+          reasoning: this.sanitizeReasoning(parsed.reasoning),
+          audit: {
+            modelProvider: 'groq',
+            blindReviewApplied: true,
+            redactionSummary: blindCv.redactionSummary,
+            aiScoreRaw: rawScore,
+            skillAnchorScore,
+            calibratedScore: score,
+          }
         }
       } catch (error: any) {
         logger.error(`Groq scoring failed: ${error?.message || String(error)}, falling back to rule-based scoring`)
@@ -181,8 +288,8 @@ Remember: You are evaluating candidates for ${company.company_name || 'this comp
     if (this.useGemini && this.geminiClient) {
       try {
         logger.info(`Using Gemini model ${modelName} for scoring`)
-        const prompt = this.buildScoringPrompt(input)
-        const systemInstruction = this.buildSystemInstruction(input)
+        const prompt = this.buildScoringPrompt(blindInput)
+        const systemInstruction = this.buildSystemInstruction(blindInput)
         
         const model = this.geminiClient.getGenerativeModel({ 
           model: modelName,
@@ -204,7 +311,9 @@ Remember: You are evaluating candidates for ${company.company_name || 'this comp
         const parsed = JSON.parse(jsonContent) as { score: number; status: string; reasoning: string }
 
         // Validate and normalize
-        const score = Math.max(0, Math.min(100, Math.round(parsed.score)))
+        const rawScore = Math.max(0, Math.min(100, Math.round(parsed.score)))
+        const skillAnchorScore = this.getRuleBasedSkillScore(blindInput)
+        const score = this.calibrateScore(rawScore, blindInput)
         let status: 'SHORTLIST' | 'FLAGGED' | 'REJECTED' = 'REJECTED'
         
         // Mandatory scoring rules
@@ -216,7 +325,15 @@ Remember: You are evaluating candidates for ${company.company_name || 'this comp
         return {
           score,
           status,
-          reasoning: parsed.reasoning || 'No reasoning provided'
+          reasoning: this.sanitizeReasoning(parsed.reasoning),
+          audit: {
+            modelProvider: 'gemini',
+            blindReviewApplied: true,
+            redactionSummary: blindCv.redactionSummary,
+            aiScoreRaw: rawScore,
+            skillAnchorScore,
+            calibratedScore: score,
+          }
         }
       } catch (error: any) {
         logger.error(`Gemini scoring failed: ${error?.message || String(error)}, falling back to rule-based scoring`)
@@ -225,7 +342,19 @@ Remember: You are evaluating candidates for ${company.company_name || 'this comp
 
     // Fallback to rule-based scoring
     logger.warn('Gemini API not available, using rule-based fallback scoring')
-    return this.fallbackScoring(input)
+    const fallbackResult = this.fallbackScoring(blindInput)
+    const skillAnchorScore = this.getRuleBasedSkillScore(blindInput)
+    return {
+      ...fallbackResult,
+      audit: {
+        modelProvider: 'fallback',
+        blindReviewApplied: true,
+        redactionSummary: blindCv.redactionSummary,
+        aiScoreRaw: fallbackResult.score,
+        skillAnchorScore,
+        calibratedScore: fallbackResult.score,
+      }
+    }
   }
 
   private buildScoringPrompt(input: ScoringInput): string {

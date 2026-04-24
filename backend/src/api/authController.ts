@@ -5,7 +5,10 @@ import crypto from 'crypto'
 import { query, pool } from '../db/index.js'
 import { EmailService } from '../services/emailService.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568'
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required but not configured')
+}
 const SALT_ROUNDS = 10
 const RESET_TOKEN_EXPIRY_HOURS = 1 // Token expires in 1 hour
 
@@ -13,23 +16,30 @@ export async function signup(req: Request, res: Response) {
   const client = await pool.connect()
   try {
     const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email } = req.body || {}
+    const isCandidateSignup = company_role === 'candidate'
     
     // STRICT: Validate all required fields - ALL MANDATORY
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required' })
     }
-    if (!company_role || !company_name || !company_email || !hr_email || !hiring_manager_email) {
+    if (!company_role) {
+      return res.status(400).json({ error: 'Company role is required' })
+    }
+    if (!isCandidateSignup && (!company_name || !company_email || !hr_email || !hiring_manager_email)) {
       return res.status(400).json({ error: 'Company role, organization name, company email, HR email, and hiring manager email are all required' })
     }
     
     // Validate company_role
-    if (company_role !== 'hr' && company_role !== 'hiring_manager') {
-      return res.status(400).json({ error: 'Company role must be either "hr" or "hiring_manager"' })
+    if (company_role !== 'hr' && company_role !== 'hiring_manager' && company_role !== 'candidate') {
+      return res.status(400).json({ error: 'Company role must be either "hr", "hiring_manager", or "candidate"' })
     }
 
     // Validate email formats
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email) || !emailRegex.test(company_email) || !emailRegex.test(hr_email) || !emailRegex.test(hiring_manager_email)) {
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'All email addresses must be valid' })
+    }
+    if (!isCandidateSignup && (!emailRegex.test(company_email) || !emailRegex.test(hr_email) || !emailRegex.test(hiring_manager_email))) {
       return res.status(400).json({ error: 'All email addresses must be valid' })
     }
 
@@ -82,7 +92,7 @@ export async function signup(req: Request, res: Response) {
       if (hasCompanyRoleColumn) {
         columns.push('company_role')
         values.push(`$${paramIndex++}`)
-        params.push(company_role)
+        params.push(isCandidateSignup ? null : company_role)
       }
       columns.push('is_active')
       values.push('true')
@@ -95,16 +105,21 @@ export async function signup(req: Request, res: Response) {
       )
       const userId = rows[0].user_id
 
-      // Check if signup approval is required
+      // Check if signup approval is required.
+      // Important: avoid querying a missing table inside a transaction, because that aborts the transaction.
       let requireApproval = false
-      try {
+      const { rows: hasSystemSettingsRows } = await client.query<{ exists: boolean }>(
+        `SELECT EXISTS (
+           SELECT 1
+           FROM information_schema.tables
+           WHERE table_schema = 'public' AND table_name = 'system_settings'
+         ) AS exists`
+      )
+      if (hasSystemSettingsRows[0]?.exists) {
         const { rows: settingRows } = await client.query<{ setting_value: string }>(
           `SELECT setting_value FROM system_settings WHERE setting_key = 'require_signup_approval'`
         )
         requireApproval = settingRows.length > 0 && JSON.parse(settingRows[0].setting_value) === true
-      } catch (err) {
-        // If system_settings table doesn't exist or setting not found, default to false
-        console.log('Could not check signup approval setting, defaulting to false')
       }
 
       // If approval is required, add to signup queue and set user as inactive
@@ -115,10 +130,12 @@ export async function signup(req: Request, res: Response) {
         )
         
         try {
+          const queueCompanyName = isCandidateSignup ? 'Individual' : company_name
+          const queueCompanyEmail = isCandidateSignup ? email.toLowerCase() : company_email
           await client.query(
             `INSERT INTO signup_queue (user_id, email, name, company_name, company_email, status)
              VALUES ($1, $2, $3, $4, $5, 'pending')`,
-            [userId, email.toLowerCase(), name, company_name, company_email]
+            [userId, email.toLowerCase(), name, queueCompanyName, queueCompanyEmail]
           )
         } catch (queueError) {
           console.error('Failed to add to signup queue:', queueError)
@@ -126,58 +143,63 @@ export async function signup(req: Request, res: Response) {
         }
       }
 
-      // Extract domain from company_email or hr_email
-      const companyDomain = company_email.split('@')[1] || hr_email.split('@')[1] || null
+      let companyId: string | null = null
+      if (!isCandidateSignup) {
+        // Extract domain from company_email or hr_email
+        const companyDomain = company_email.split('@')[1] || hr_email.split('@')[1] || null
 
-      // Check if user_id column exists
-      let hasUserIdColumn = false
-      try {
-        const checkResult = await client.query(`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_name = 'companies' AND column_name = 'user_id'
-        `)
-        hasUserIdColumn = checkResult.rows.length > 0
-      } catch (err) {
-        console.log('⚠️ Could not check for user_id column, assuming it does not exist')
-        hasUserIdColumn = false
-      }
+        // Check if user_id column exists
+        let hasUserIdColumn = false
+        try {
+          const checkResult = await client.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'companies' AND column_name = 'user_id'
+          `)
+          hasUserIdColumn = checkResult.rows.length > 0
+        } catch (err) {
+          console.log('⚠️ Could not check for user_id column, assuming it does not exist')
+          hasUserIdColumn = false
+        }
 
-      // Create company with user_id if column exists - STRICT: hiring_manager_email is required
-      let companyResult
-      if (hasUserIdColumn) {
-        companyResult = await client.query<{ company_id: string }>(
-          `insert into companies (user_id, company_name, hr_email, hiring_manager_email, company_domain, company_email)
-           values ($1, $2, $3, $4, $5, $6)
-           returning company_id`,
-          [
-            userId,
-            company_name,
-            hr_email,
-            hiring_manager_email, // Use provided hiring_manager_email
-            companyDomain,
-            company_email
-          ]
-        )
-      } else {
-        companyResult = await client.query<{ company_id: string }>(
-          `insert into companies (company_name, hr_email, hiring_manager_email, company_domain, company_email)
-           values ($1, $2, $3, $4, $5)
-           returning company_id`,
-          [
-            company_name,
-            hr_email,
-            hiring_manager_email, // Use provided hiring_manager_email
-            companyDomain,
-            company_email
-          ]
-        )
+        // Create company for employer signup.
+        if (hasUserIdColumn) {
+          const companyResult = await client.query<{ company_id: string }>(
+            `insert into companies (user_id, company_name, hr_email, hiring_manager_email, company_domain, company_email)
+             values ($1, $2, $3, $4, $5, $6)
+             returning company_id`,
+            [
+              userId,
+              company_name,
+              hr_email,
+              hiring_manager_email,
+              companyDomain,
+              company_email
+            ]
+          )
+          companyId = companyResult.rows[0].company_id
+        } else {
+          const companyResult = await client.query<{ company_id: string }>(
+            `insert into companies (company_name, hr_email, hiring_manager_email, company_domain, company_email)
+             values ($1, $2, $3, $4, $5)
+             returning company_id`,
+            [
+              company_name,
+              hr_email,
+              hiring_manager_email,
+              companyDomain,
+              company_email
+            ]
+          )
+          companyId = companyResult.rows[0].company_id
+        }
       }
 
       // Commit transaction
       await client.query('COMMIT')
 
-      // Send OTP (6-digit verification code) to user's email
+      // Save OTP (6-digit verification code) to DB for verify-email flow.
+      // Email delivery is triggered in the background so signup response is fast.
       const VERIFICATION_CODE_EXPIRY_HOURS = 24
       const code = Math.floor(100000 + Math.random() * 900000).toString()
       const expiresAt = new Date()
@@ -187,11 +209,19 @@ export async function signup(req: Request, res: Response) {
           `INSERT INTO email_verification_codes (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)`,
           [userId, email.toLowerCase(), code, expiresAt]
         )
+        const recipientEmail = email.toLowerCase()
+        const recipientName = name?.trim() || 'User'
         const emailService = new EmailService()
-        await emailService.sendEmailVerificationCode(email.toLowerCase(), name?.trim() || 'User', code)
-        console.log('[Auth] Signup OTP sent to', email.toLowerCase())
+        void emailService
+          .sendEmailVerificationCode(recipientEmail, recipientName, code)
+          .then(() => {
+            console.log('[Auth] Signup OTP sent to', recipientEmail)
+          })
+          .catch((otpErr) => {
+            console.error('[Auth] Signup OTP send failed (code already saved):', otpErr)
+          })
       } catch (otpErr) {
-        console.error('[Auth] Signup OTP save or send failed (user created):', otpErr)
+        console.error('[Auth] Signup OTP save failed (user created):', otpErr)
         // User is already created; they can request "Resend code" on verify-email page
       }
 
@@ -207,22 +237,24 @@ export async function signup(req: Request, res: Response) {
           role: 'user',
           company_role: company_role,
           created_at: rows[0].created_at,
-          hasCompany: true, // Always true on signup as company is created
-          companyId: companyResult.rows[0].company_id,
-          companyName: company_name,
-          companyEmail: company_email,
-          hrEmail: hr_email,
-          hiringManagerEmail: hiring_manager_email,
+          hasCompany: !isCandidateSignup,
+          companyId,
+          companyName: isCandidateSignup ? null : company_name,
+          companyEmail: isCandidateSignup ? null : company_email,
+          hrEmail: isCandidateSignup ? null : hr_email,
+          hiringManagerEmail: isCandidateSignup ? null : hiring_manager_email,
           is_active: !requireApproval, // Set based on approval requirement
           requires_approval: requireApproval
         },
-        company: {
-          company_id: companyResult.rows[0].company_id,
-          company_name,
-          company_email,
-          hr_email,
-          hiring_manager_email
-        }
+        company: isCandidateSignup
+          ? null
+          : {
+              company_id: companyId,
+              company_name,
+              company_email,
+              hr_email,
+              hiring_manager_email
+            }
       })
     } catch (err) {
       // Rollback transaction on error

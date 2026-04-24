@@ -17,7 +17,8 @@ import {
   deleteJobPosting,
   getAllApplications,
   deleteApplication,
-  getSystemStats
+  getSystemStats,
+  getAIAuditTrail
 } from '../api/adminController.js'
 import {
   checkEmailService,
@@ -60,6 +61,7 @@ router.use(trackApiActivity) // Track all admin API calls
 
 // System Statistics
 router.get('/stats', getSystemStats)
+router.get('/ai-audit', getAIAuditTrail)
 
 // Users Management
 router.get('/users', getAllUsers)

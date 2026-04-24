@@ -2,8 +2,47 @@ import type { Request, Response } from 'express'
 import { generatePostDeadlineReport } from '../services/reports/reportService.js'
 import { query } from '../db/index.js'
 import { logger } from '../utils/logger.js'
+import type { AuthRequest } from '../middleware/auth.js'
 
-export async function generateReport(req: Request, res: Response) {
+async function canAccessJob(userId: string | undefined, userRole: string | undefined, jobPostingId: string): Promise<boolean> {
+  if (!userId) return false
+  if (userRole === 'admin') return true
+
+  const { rows } = await query<{ company_id: string }>(
+    `SELECT company_id
+     FROM job_postings
+     WHERE job_posting_id = $1
+     LIMIT 1`,
+    [jobPostingId]
+  )
+  if (rows.length === 0) return false
+  const jobCompanyId = rows[0].company_id
+
+  const { rows: userRows } = await query<{ email: string }>(
+    `SELECT email FROM users WHERE user_id = $1 LIMIT 1`,
+    [userId]
+  )
+  const userEmail = userRows[0]?.email?.toLowerCase()
+  if (!userEmail) return false
+
+  const { rows: companyRows } = await query<{ company_id: string }>(
+    `SELECT company_id
+     FROM companies
+     WHERE company_id = $1
+       AND (
+         user_id = $2
+         OR LOWER(company_email) = $3
+         OR LOWER(hr_email) = $3
+         OR LOWER(hiring_manager_email) = $3
+       )
+     LIMIT 1`,
+    [jobCompanyId, userId, userEmail]
+  )
+
+  return companyRows.length > 0
+}
+
+export async function generateReport(req: AuthRequest, res: Response) {
   try {
     const { jobPostingId } = req.body || {}
     
@@ -11,8 +50,10 @@ export async function generateReport(req: Request, res: Response) {
       return res.status(400).json({ error: 'jobPostingId is required' })
     }
 
-    // TODO: Add auth check - ensure user is HR/admin for this job's company
-    // For now, allow any authenticated user
+    const allowed = await canAccessJob(req.userId, req.userRole, jobPostingId)
+    if (!allowed) {
+      return res.status(403).json({ error: 'Access denied' })
+    }
 
     logger.info(`Manual report generation requested for job ${jobPostingId}`)
     const result = await generatePostDeadlineReport(jobPostingId)
@@ -31,7 +72,7 @@ export async function generateReport(req: Request, res: Response) {
   }
 }
 
-export async function getReport(req: Request, res: Response) {
+export async function getReport(req: AuthRequest, res: Response) {
   try {
     const { jobId } = req.params
 
@@ -39,7 +80,10 @@ export async function getReport(req: Request, res: Response) {
       return res.status(400).json({ error: 'jobId is required' })
     }
 
-    // TODO: Add auth check - ensure user has access to this job's company
+    const allowed = await canAccessJob(req.userId, req.userRole, jobId)
+    if (!allowed) {
+      return res.status(403).json({ error: 'Access denied' })
+    }
 
     const { rows } = await query<{
       id: string

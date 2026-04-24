@@ -6,6 +6,11 @@ interface BatchScoringRequest {
   input: ScoringInput
 }
 
+interface PendingResolvers {
+  resolve: (value: ScoringResult | PromiseLike<ScoringResult>) => void
+  reject: (reason?: any) => void
+}
+
 interface BatchScoringResponse {
   id: string
   result: ScoringResult
@@ -21,6 +26,7 @@ export class BatchScoringService {
   private batchSize: number
   private batchDelay: number
   private pendingBatch: BatchScoringRequest[] = []
+  private pendingResolvers = new Map<string, PendingResolvers>()
   private batchTimeout: NodeJS.Timeout | null = null
 
   constructor(batchSize: number = 5, batchDelay: number = 1000) {
@@ -40,6 +46,7 @@ export class BatchScoringService {
         id,
         input
       })
+      this.pendingResolvers.set(id, { resolve, reject })
 
       // Set timeout to process batch if it reaches batchSize or after delay
       if (this.batchTimeout) {
@@ -61,16 +68,6 @@ export class BatchScoringService {
         this.processBatch().catch(err => {
           logger.error('Batch processing error:', err)
         })
-      }
-
-      // Store promise resolvers (simplified - in production use a proper queue)
-      // For now, process immediately if batch is small
-      if (this.pendingBatch.length === 1) {
-        setTimeout(async () => {
-          if (this.pendingBatch.length > 0) {
-            await this.processBatch()
-          }
-        }, this.batchDelay)
       }
     })
   }
@@ -116,9 +113,9 @@ export class BatchScoringService {
         })
       )
 
-      results.push(...chunkResults.map(r =>
+      results.push(...chunkResults.map((r, chunkIndex) =>
         r.status === 'fulfilled' ? r.value : ({
-          id: batch[i].id,
+          id: chunk[chunkIndex].id,
           result: {
             score: 0,
             status: 'REJECTED' as const,
@@ -132,6 +129,18 @@ export class BatchScoringService {
       if (i + concurrency < batch.length) {
         await new Promise(resolve => setTimeout(resolve, 200))
       }
+    }
+
+    for (const response of results) {
+      const pending = this.pendingResolvers.get(response.id)
+      if (!pending) continue
+
+      if (response.error) {
+        pending.reject(new Error(response.error))
+      } else {
+        pending.resolve(response.result)
+      }
+      this.pendingResolvers.delete(response.id)
     }
 
     logger.info(`Batch processing complete: ${results.length} results`)

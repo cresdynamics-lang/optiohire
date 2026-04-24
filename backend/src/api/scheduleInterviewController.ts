@@ -3,6 +3,7 @@ import { ApplicationRepository } from '../repositories/applicationRepository.js'
 import { JobPostingRepository } from '../repositories/jobPostingRepository.js'
 import { CompanyRepository } from '../repositories/companyRepository.js'
 import { EmailService } from '../services/emailService.js'
+import { GoogleCalendarService } from '../services/googleCalendarService.js'
 import { logger } from '../utils/logger.js'
 import { cleanJobTitle } from '../utils/jobTitle.js'
 import { z } from 'zod'
@@ -56,10 +57,6 @@ export async function scheduleInterview(req: Request, res: Response) {
       return res.status(404).json({ error: 'Job posting not found' })
     }
 
-    if (!job.meeting_link) {
-      return res.status(400).json({ error: 'Meeting link not set for this job posting' })
-    }
-
     // Get company
     const companyId = application.company_id
     if (!companyId) {
@@ -70,11 +67,44 @@ export async function scheduleInterview(req: Request, res: Response) {
       return res.status(404).json({ error: 'Company not found' })
     }
 
+    let meetingLink = job.meeting_link
+    if (!meetingLink) {
+      const calendarService = new GoogleCalendarService()
+      if (calendarService.isEnabled()) {
+        const interviewStart = new Date(interviewTime)
+        const interviewEnd = new Date(interviewStart.getTime() + 60 * 60 * 1000)
+        try {
+          const attendees = [
+            application.email,
+            company.hr_email,
+            company.hiring_manager_email
+          ].filter(Boolean) as string[]
+
+          const created = await calendarService.createMeetEvent({
+            summary: `${company.company_name || 'Interview'} interview with ${application.candidate_name || application.email}`,
+            description: `Interview for ${job.job_title} at ${company.company_name || 'your company'}`,
+            start: interviewStart.toISOString(),
+            end: interviewEnd.toISOString(),
+            attendees
+          })
+
+          meetingLink = created.meetingLink
+          logger.info('Created Google Meet event for interview', { applicantId, meetingLink })
+        } catch (googleErr: any) {
+          logger.error('Google Meet event creation failed:', googleErr)
+        }
+      }
+    }
+
+    if (!meetingLink) {
+      return res.status(400).json({ error: 'Meeting link not set for this job posting and automated Google Meet scheduling is unavailable' })
+    }
+
     // Schedule interview
     const updated = await applicationRepo.scheduleInterview({
       application_id: applicantId,
       interview_time: interviewTime,
-      interview_link: job.meeting_link
+      interview_link: meetingLink
     })
 
     // Return response immediately for fast UX
@@ -91,6 +121,7 @@ export async function scheduleInterview(req: Request, res: Response) {
     // This prevents email delays from blocking the API response
     setImmediate(async () => {
       try {
+        const resolvedMeetingLink = meetingLink as string
         // Clean job title for email
         const cleanedJobTitle = cleanJobTitle(job.job_title)
 
@@ -145,7 +176,7 @@ export async function scheduleInterview(req: Request, res: Response) {
     <p><strong>Company:</strong> ${companyName}</p>
     <p><strong>Date:</strong> ${interviewDate}</p>
     <p><strong>Time:</strong> ${interviewTimeFormatted}</p>
-    <p><strong>Meeting Link:</strong> <a href="${job.meeting_link}">${job.meeting_link}</a></p>
+    <p><strong>Meeting Link:</strong> <a href="${resolvedMeetingLink}">${resolvedMeetingLink}</a></p>
     
     <p>During this session, we will discuss your experience, your fit for the role, and the value you can bring to our team.</p>
     
@@ -176,7 +207,7 @@ Date: ${interviewDate}
 
 Time: ${interviewTimeFormatted}
 
-Meeting Link: ${job.meeting_link}
+Meeting Link: ${resolvedMeetingLink}
 
 During this session, we will discuss your experience, your fit for the role, and the value you can bring to our team.
 
@@ -204,7 +235,7 @@ Company Email: ${hrEmail}`
             <p><strong>Candidate:</strong> ${application.candidate_name} (${application.email})</p>
             <p><strong>Job:</strong> ${job.job_title}</p>
             <p><strong>Date & Time:</strong> ${interviewDate}</p>
-            <p><strong>Meeting Link:</strong> <a href="${job.meeting_link}">${job.meeting_link}</a></p>
+            <p><strong>Meeting Link:</strong> <a href="${resolvedMeetingLink}">${resolvedMeetingLink}</a></p>
           `,
           text: `
 Interview Scheduled
@@ -212,7 +243,7 @@ Interview Scheduled
 Candidate: ${application.candidate_name} (${application.email})
 Job: ${job.job_title}
 Date & Time: ${interviewDate}
-Meeting Link: ${job.meeting_link}
+Meeting Link: ${resolvedMeetingLink}
           `
         }).catch((err) => {
           logger.error(`Failed to send interview email to HR ${company.hr_email}:`, err)

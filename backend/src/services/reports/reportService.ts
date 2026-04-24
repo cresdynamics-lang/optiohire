@@ -134,8 +134,6 @@ export async function generatePostDeadlineReport(jobPostingId: string): Promise<
     const { rows: reportRows } = await query<{ id: string }>(
       `INSERT INTO reports (job_posting_id, company_id, report_url)
        VALUES ($1, $2, $3)
-       ON CONFLICT (job_posting_id) DO UPDATE SET
-         report_url = EXCLUDED.report_url
        RETURNING id`,
       [
         jobPostingId,

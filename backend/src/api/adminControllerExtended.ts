@@ -131,13 +131,21 @@ export async function approveSignup(req: AuthRequest, res: Response) {
       [userId]
     )
 
-    // Update signup queue
-    await query(
-      `UPDATE signup_queue 
-       SET status = 'approved', reviewed_by = $1, reviewed_at = now()
-       WHERE user_id = $2`,
-      [req.userId, userId]
+    const { rows: signupQueueTable } = await query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM information_schema.tables
+         WHERE table_schema = 'public' AND table_name = 'signup_queue'
+       ) AS exists`
     )
+    if (signupQueueTable[0]?.exists) {
+      await query(
+        `UPDATE signup_queue 
+         SET status = 'approved', reviewed_by = $1, reviewed_at = now()
+         WHERE user_id = $2`,
+        [req.userId, userId]
+      )
+    }
 
     await logAdminAction(req, 'approve_signup', 'user', userId, { reason })
 
@@ -163,13 +171,21 @@ export async function rejectSignup(req: AuthRequest, res: Response) {
       [userId]
     )
 
-    // Update signup queue
-    await query(
-      `UPDATE signup_queue 
-       SET status = 'rejected', rejection_reason = $1, reviewed_by = $2, reviewed_at = now()
-       WHERE user_id = $3`,
-      [reason, req.userId, userId]
+    const { rows: signupQueueTable } = await query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM information_schema.tables
+         WHERE table_schema = 'public' AND table_name = 'signup_queue'
+       ) AS exists`
     )
+    if (signupQueueTable[0]?.exists) {
+      await query(
+        `UPDATE signup_queue 
+         SET status = 'rejected', rejection_reason = $1, reviewed_by = $2, reviewed_at = now()
+         WHERE user_id = $3`,
+        [reason, req.userId, userId]
+      )
+    }
 
     await logAdminAction(req, 'reject_signup', 'user', userId, { reason })
 
@@ -192,12 +208,21 @@ export async function bulkApproveSignups(req: AuthRequest, res: Response) {
       [userIds]
     )
 
-    await query(
-      `UPDATE signup_queue 
-       SET status = 'approved', reviewed_by = $1, reviewed_at = now()
-       WHERE user_id = ANY($2)`,
-      [req.userId, userIds]
+    const { rows: signupQueueTable } = await query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM information_schema.tables
+         WHERE table_schema = 'public' AND table_name = 'signup_queue'
+       ) AS exists`
     )
+    if (signupQueueTable[0]?.exists) {
+      await query(
+        `UPDATE signup_queue 
+         SET status = 'approved', reviewed_by = $1, reviewed_at = now()
+         WHERE user_id = ANY($2)`,
+        [req.userId, userIds]
+      )
+    }
 
     await logAdminAction(req, 'bulk_approve_signups', 'user', undefined, { count: userIds.length })
 
@@ -223,12 +248,21 @@ export async function bulkRejectSignups(req: AuthRequest, res: Response) {
       [userIds]
     )
 
-    await query(
-      `UPDATE signup_queue 
-       SET status = 'rejected', rejection_reason = $1, reviewed_by = $2, reviewed_at = now()
-       WHERE user_id = ANY($3)`,
-      [reason, req.userId, userIds]
+    const { rows: signupQueueTable } = await query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM information_schema.tables
+         WHERE table_schema = 'public' AND table_name = 'signup_queue'
+       ) AS exists`
     )
+    if (signupQueueTable[0]?.exists) {
+      await query(
+        `UPDATE signup_queue 
+         SET status = 'rejected', rejection_reason = $1, reviewed_by = $2, reviewed_at = now()
+         WHERE user_id = ANY($3)`,
+        [reason, req.userId, userIds]
+      )
+    }
 
     await logAdminAction(req, 'bulk_reject_signups', 'user', undefined, { count: userIds.length, reason })
 

@@ -5,7 +5,7 @@ set -e
 
 DB_NAME="optiohire"
 DB_USER="optiohire_user"
-DB_PASSWORD="optiohire_pass_2024"
+DB_PASSWORD="your_db_password_here"
 
 echo "Setting up PostgreSQL database..."
 

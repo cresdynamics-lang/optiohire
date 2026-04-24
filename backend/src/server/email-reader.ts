@@ -19,6 +19,9 @@ type EmailReaderStatus = {
   disabledReason: string | null
   lastProcessedAt: string | null
   lastError: string | null
+  consecutiveFailures: number
+  reconnectDelayMs: number
+  lastFailureCategory: 'imap_limit' | 'auth' | 'network' | 'unknown' | null
 }
 
 export const emailReaderStatus: EmailReaderStatus = {
@@ -26,12 +29,22 @@ export const emailReaderStatus: EmailReaderStatus = {
   running: false,
   disabledReason: null,
   lastProcessedAt: null,
-  lastError: null
+  lastError: null,
+  consecutiveFailures: 0,
+  reconnectDelayMs: 30000,
+  lastFailureCategory: null
 }
 
 export class EmailReader {
   private client: ImapFlow | null = null
   private isRunning = false
+  private isStarting = false
+  private reconnectTimer: NodeJS.Timeout | null = null
+  private reconnectDelayMs = 30000
+  private readonly maxReconnectDelayMs = 300000
+  private consecutiveImapFailures = 0
+  private readonly circuitBreakerThreshold = 5
+  private readonly circuitBreakerCooldownMs = 600000
   private jobPostingRepo: JobPostingRepository
   private companyRepo: CompanyRepository
   private applicationRepo: ApplicationRepository
@@ -50,11 +63,101 @@ export class EmailReader {
     this.emailService = new EmailService()
   }
 
+  private scheduleReconnect(delayMs: number = 30000) {
+    if (this.reconnectTimer) return
+    const nextDelay = Math.min(
+      Math.max(delayMs, this.reconnectDelayMs),
+      this.maxReconnectDelayMs
+    )
+    this.reconnectDelayMs = Math.min(nextDelay * 2, this.maxReconnectDelayMs)
+    logger.info(`⏳ Attempting to reconnect email reader in ${Math.floor(nextDelay / 1000)} seconds...`)
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null
+      if (emailReaderStatus.enabled && process.env.ENABLE_EMAIL_READER !== 'false') {
+        logger.info('🔄 Reconnecting email reader...')
+        this.start().catch(err => {
+          logger.error('❌ Failed to reconnect email reader:', err)
+        })
+      }
+    }, nextDelay)
+  }
+
+  private isImapAlertOrAuthFailure(error: any): boolean {
+    const message = (error?.message || String(error || '')).toLowerCase()
+    const responseText = (error?.responseText || '').toLowerCase()
+    const response = (error?.response || '').toLowerCase()
+    const status = (error?.responseStatus || '').toLowerCase()
+    return (
+      message.includes('authentication') ||
+      message.includes('too many simultaneous connections') ||
+      responseText.includes('too many simultaneous connections') ||
+      response.includes('alert') ||
+      status === 'no'
+    )
+  }
+
+  private categorizeFailure(error: any): 'imap_limit' | 'auth' | 'network' | 'unknown' {
+    const message = (error?.message || String(error || '')).toLowerCase()
+    const responseText = (error?.responseText || '').toLowerCase()
+    if (message.includes('too many simultaneous connections') || responseText.includes('too many simultaneous connections')) {
+      return 'imap_limit'
+    }
+    if (message.includes('authentication') || message.includes('invalid credentials')) {
+      return 'auth'
+    }
+    if (message.includes('econnreset') || message.includes('timeout') || message.includes('enotfound')) {
+      return 'network'
+    }
+    return 'unknown'
+  }
+
+  private scheduleReconnectWithCircuitBreaker(error: any) {
+    const isImapLimitError = this.isImapAlertOrAuthFailure(error)
+    this.consecutiveImapFailures = isImapLimitError ? this.consecutiveImapFailures + 1 : 0
+    emailReaderStatus.consecutiveFailures = this.consecutiveImapFailures
+    emailReaderStatus.lastFailureCategory = this.categorizeFailure(error)
+
+    if (this.consecutiveImapFailures >= this.circuitBreakerThreshold) {
+      logger.warn(
+        `🚧 Email watcher circuit breaker open after ${this.consecutiveImapFailures} IMAP failures. Cooling down for ${Math.floor(this.circuitBreakerCooldownMs / 60000)} minutes.`
+      )
+      this.consecutiveImapFailures = 0
+      this.reconnectDelayMs = this.circuitBreakerCooldownMs
+      emailReaderStatus.reconnectDelayMs = this.reconnectDelayMs
+      this.scheduleReconnect(this.circuitBreakerCooldownMs)
+      return
+    }
+
+    emailReaderStatus.reconnectDelayMs = this.reconnectDelayMs
+    this.scheduleReconnect(30000)
+  }
+
+  private attachImapEventHandlers(client: ImapFlow) {
+    client.on('error', async (error: any) => {
+      const errorMsg = error?.message || String(error)
+      logger.error('❌ IMAP client error:', errorMsg)
+      emailReaderStatus.lastError = errorMsg
+      emailReaderStatus.running = false
+      this.isRunning = false
+
+      try {
+        await client.logout()
+      } catch {
+        // no-op
+      }
+      if (this.client === client) {
+        this.client = null
+      }
+      this.scheduleReconnect(10000)
+    })
+  }
+
   async start() {
-    if (this.isRunning) {
+    if (this.isRunning || this.isStarting) {
       logger.warn('Email reader is already running')
       return
     }
+    this.isStarting = true
 
     emailReaderStatus.enabled = process.env.ENABLE_EMAIL_READER !== 'false'
     emailReaderStatus.disabledReason = null
@@ -92,9 +195,15 @@ export class EmailReader {
         // Add connection timeout and retry options
         logger: false // Disable imapflow's internal logging to avoid spam
       })
+      this.attachImapEventHandlers(this.client)
 
       await this.client.connect()
       logger.info(`✅ IMAP email reader connected to ${imapHost}:${imapPort}`)
+      this.reconnectDelayMs = 30000
+      this.consecutiveImapFailures = 0
+      emailReaderStatus.consecutiveFailures = 0
+      emailReaderStatus.reconnectDelayMs = this.reconnectDelayMs
+      emailReaderStatus.lastFailureCategory = null
 
       // Ensure folders exist
       await this.ensureFolders()
@@ -109,34 +218,17 @@ export class EmailReader {
         emailReaderStatus.lastError = (error as any)?.message || String(error)
         emailReaderStatus.running = false
         this.isRunning = false
-        
-        // Attempt to reconnect after 30 seconds
-        logger.info('⏳ Attempting to reconnect email reader in 30 seconds...')
-        await new Promise(resolve => setTimeout(resolve, 30000))
-        
-        if (emailReaderStatus.enabled && process.env.ENABLE_EMAIL_READER !== 'false') {
-          logger.info('🔄 Reconnecting email reader...')
-          this.start().catch(err => {
-            logger.error('❌ Failed to reconnect email reader:', err)
-          })
-        }
+
+        this.scheduleReconnectWithCircuitBreaker(error)
       })
     } catch (error) {
       logger.error('❌ Failed to start email reader:', error)
       this.isRunning = false
       emailReaderStatus.running = false
       emailReaderStatus.lastError = (error as any)?.message || String(error)
-      
-      // Attempt to reconnect after 30 seconds
-      logger.info('⏳ Attempting to reconnect email reader in 30 seconds...')
-      setTimeout(() => {
-        if (emailReaderStatus.enabled && process.env.ENABLE_EMAIL_READER !== 'false') {
-          logger.info('🔄 Reconnecting email reader...')
-          this.start().catch(err => {
-            logger.error('❌ Failed to reconnect email reader:', err)
-          })
-        }
-      }, 30000)
+      this.scheduleReconnectWithCircuitBreaker(error)
+    } finally {
+      this.isStarting = false
     }
   }
 
@@ -165,6 +257,15 @@ export class EmailReader {
   async stop() {
     this.isRunning = false
     emailReaderStatus.running = false
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    this.reconnectDelayMs = 30000
+    this.consecutiveImapFailures = 0
+    emailReaderStatus.consecutiveFailures = 0
+    emailReaderStatus.reconnectDelayMs = this.reconnectDelayMs
+    emailReaderStatus.lastFailureCategory = null
     if (this.client) {
       await this.client.logout()
       this.client = null
@@ -244,6 +345,7 @@ export class EmailReader {
         },
         logger: false // Disable IMAP library logging
       })
+      this.attachImapEventHandlers(this.client)
       
       // Connect
       await this.client.connect()
@@ -795,6 +897,20 @@ export class EmailReader {
         resume_url: cvUrl
       })
 
+      try {
+        await this.emailService.sendInboundForwardEmail({
+          recipients: [company.hr_email, company.company_email, company.hiring_manager_email].filter(Boolean) as string[],
+          candidateName: senderName,
+          candidateEmail: senderEmail,
+          jobTitle: job.job_title,
+          companyName: company.company_name,
+          originalSubject: subject,
+          resumeUrl: cvUrl
+        })
+      } catch (forwardErr) {
+        logger.warn(`Failed to send inbound-forward notification for application ${application.application_id}:`, forwardErr)
+      }
+
       // Process CV - this is where CV extraction is confirmed
       try {
         await this.processCandidateCV(application.application_id, cvBuffer, cvMimeType, job, company)
@@ -951,6 +1067,20 @@ export class EmailReader {
             resume_url: cvUrl
           })
 
+          try {
+            await this.emailService.sendInboundForwardEmail({
+              recipients: [company.hr_email, company.company_email, company.hiring_manager_email].filter(Boolean) as string[],
+              candidateName: senderName,
+              candidateEmail: senderEmail,
+              jobTitle: matchingJob.job_title,
+              companyName: company.company_name,
+              originalSubject: subject,
+              resumeUrl: cvUrl
+            })
+          } catch (forwardErr) {
+            logger.warn(`Failed to send inbound-forward notification for application ${application.application_id}:`, forwardErr)
+          }
+
           // Process CV - this is where CV extraction is confirmed
           try {
             await this.processCandidateCV(application.application_id, cvBuffer, cvMimeType, matchingJob, company)
@@ -1080,6 +1210,13 @@ export class EmailReader {
       const dbStatus = scoringResult.status === 'FLAGGED' ? 'FLAG' : 
                        scoringResult.status === 'REJECTED' ? 'REJECT' : 
                        scoringResult.status
+      if (scoringResult.audit) {
+        logger.info('AI fairness audit (email reader scoring)', {
+          applicationId,
+          jobPostingId: job.job_posting_id,
+          ...scoringResult.audit,
+        })
+      }
       
       // Update application with score
       await this.applicationRepo.updateScoring({

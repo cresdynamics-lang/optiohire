@@ -3,7 +3,10 @@ import jwt from 'jsonwebtoken'
 import { query } from '../db/index.js'
 import { logger } from '../utils/logger.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568'
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required but not configured')
+}
 
 export interface AuthRequest extends Request {
   userId?: string
