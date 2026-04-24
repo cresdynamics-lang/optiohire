@@ -196,13 +196,13 @@ export default function EmailManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-neutral-950 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Error Display */}
         {error && (
-          <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
+          <Card className="border-red-700/50 bg-red-900/20">
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+              <div className="flex items-center gap-2 text-red-300">
                 <AlertTriangle className="w-5 h-5" />
                 <span>{error}</span>
               </div>
@@ -217,10 +217,10 @@ export default function EmailManagementPage() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               Email Management
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-neutral-400">
               View email logs and manage email delivery
             </p>
           </div>
@@ -244,7 +244,7 @@ export default function EmailManagementPage() {
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
@@ -252,7 +252,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Sent</p>
@@ -260,7 +260,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Delivered</p>
@@ -268,7 +268,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Failed</p>
@@ -276,7 +276,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Bounced</p>
@@ -284,7 +284,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
@@ -296,7 +296,7 @@ export default function EmailManagementPage() {
         )}
 
         {/* Filters */}
-        <Card>
+        <Card className="bg-neutral-900 border-neutral-800">
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div className="relative">
@@ -314,7 +314,7 @@ export default function EmailManagementPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border rounded"
+                  className="px-3 py-2 border border-neutral-700 bg-neutral-900 text-neutral-200 rounded"
                 >
                   <option value="all">All Status</option>
                   <option value="sent">Sent</option>
@@ -326,7 +326,7 @@ export default function EmailManagementPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-3 py-2 border rounded"
+                  className="px-3 py-2 border border-neutral-700 bg-neutral-900 text-neutral-200 rounded"
                 >
                   <option value="all">All Types</option>
                   <option value="password_reset">Password Reset</option>
@@ -343,12 +343,12 @@ export default function EmailManagementPage() {
         {/* Emails List */}
         <div className="space-y-4">
           {emails.map((email) => (
-            <Card key={email.email_id}>
+            <Card key={email.email_id} className="bg-neutral-900 border-neutral-800">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                      <h3 className="font-semibold text-white">
                         {email.subject}
                       </h3>
                       {getStatusBadge(email.status)}
@@ -382,7 +382,7 @@ export default function EmailManagementPage() {
                         </div>
                       )}
                       {email.error_message && (
-                        <div className="col-span-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-red-700 dark:text-red-300 text-xs">
+                        <div className="col-span-2 p-2 bg-red-900/20 border border-red-700/50 rounded text-red-300 text-xs">
                           Error: {email.error_message}
                         </div>
                       )}
@@ -405,7 +405,7 @@ export default function EmailManagementPage() {
         </div>
 
         {emails.length === 0 && (
-          <Card>
+          <Card className="bg-neutral-900 border-neutral-800">
             <CardContent className="pt-6">
               <div className="text-center py-12">
                 <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />

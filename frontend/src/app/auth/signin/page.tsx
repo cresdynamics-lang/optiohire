@@ -55,13 +55,13 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl flex items-start gap-4">
         {/* Left Aligned Button */}
         <div className="flex-shrink-0 pt-0">
           <button
             onClick={() => router.push('/')}
-            className="px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-gray-100 transition-all text-gray-900 font-figtree text-sm shadow-lg border border-gray-200"
+            className="px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-slate-50 transition-all text-slate-900 font-figtree text-sm shadow-sm border border-slate-200"
           >
             <ArrowLeft className="w-4 h-4" />
             Return Back
@@ -72,15 +72,15 @@ export default function SignInPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-1 max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 relative z-10"
+          className="flex-1 max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 relative z-10"
         >
           {/* Sign In Form Card */}
           <div className="p-8 flex flex-col justify-center">
           <div className="mb-6">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extralight font-figtree leading-[1.05] tracking-tight text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600 font-figtree">
+            <h1 className="text-4xl sm:text-5xl font-semibold font-figtree leading-[1.05] tracking-tight text-slate-900 mb-2">Welcome Back</h1>
+            <p className="text-slate-600 font-figtree">
               Don't have an account?{' '}
-              <Link href="/auth/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link href="/auth/signup" className="text-primary hover:text-blue-700 font-medium">
                 Create one
               </Link>
             </p>
@@ -89,7 +89,7 @@ export default function SignInPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2 font-figtree">
                 Email Address
               </label>
               <input
@@ -97,7 +97,7 @@ export default function SignInPage() {
                 id="email"
                 placeholder="Email Address"
                 {...register('email')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all font-figtree bg-white text-slate-900 placeholder-slate-400 text-sm"
                 required
               />
               {errors.email && (
@@ -108,10 +108,10 @@ export default function SignInPage() {
             {/* Password Field */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 font-figtree">
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 font-figtree">
                 Password
               </label>
-                <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 font-medium font-figtree">
+                <Link href="/auth/forgot-password" className="text-sm text-primary hover:text-blue-700 font-medium font-figtree">
                   Forgot password?
                 </Link>
               </div>
@@ -121,7 +121,7 @@ export default function SignInPage() {
                   id="password"
                   placeholder="Password"
                   {...register('password')}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
+                  className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all font-figtree bg-white text-slate-900 placeholder-slate-400 text-sm"
                   required
                 />
                 <button
@@ -130,9 +130,9 @@ export default function SignInPage() {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
                 >
                   {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-gray-500" />
+                    <EyeOff className="w-5 h-5 text-slate-500" />
                   ) : (
-                    <Eye className="w-5 h-5 text-gray-500" />
+                    <Eye className="w-5 h-5 text-slate-500" />
                   )}
                 </button>
               </div>
@@ -152,7 +152,7 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
+              className="w-full bg-primary text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
@@ -161,10 +161,10 @@ export default function SignInPage() {
               <>
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-300" />
+                    <span className="w-full border-t border-slate-300" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500 font-figtree">or</span>
+                    <span className="px-2 bg-white text-slate-500 font-figtree">or</span>
                   </div>
                 </div>
                 <button
@@ -182,7 +182,7 @@ export default function SignInPage() {
                     })
                     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 transition-colors font-figtree"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors font-figtree"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -192,7 +192,7 @@ export default function SignInPage() {
                   </svg>
                   Sign in with Google
                 </button>
-                <p className="text-xs text-gray-500 font-figtree text-center mt-2">
+                <p className="text-xs text-slate-500 font-figtree text-center mt-2">
                   You will be asked to add company details and complete your profile before accessing the dashboard.
                 </p>
               </>

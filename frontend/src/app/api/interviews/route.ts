@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568'
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+const JWT_SECRET = process.env.JWT_SECRET
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001'
+
+function getJwtSecret(): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is required but not configured')
+  }
+  return JWT_SECRET
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +26,7 @@ export async function GET(request: NextRequest) {
     
     // Verify token
     try {
-      jwt.verify(token, JWT_SECRET)
+      jwt.verify(token, getJwtSecret())
     } catch (err) {
       return NextResponse.json(
         { error: 'Invalid token', details: 'Token verification failed' },

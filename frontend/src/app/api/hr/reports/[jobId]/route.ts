@@ -7,6 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
     const user = requireAuth(request)
     // In Next.js 16, params is always a Promise
     const resolvedParams = await params
@@ -17,7 +18,7 @@ export async function GET(
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/hr/reports/${jobId}`, {
+    const response = await fetch(`${backendUrl}/api/hr/reports/${jobId}`, {
       headers: {
         Authorization: authHeader,
       },

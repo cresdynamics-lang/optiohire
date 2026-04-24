@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 /**
  * Proxies admin login to the backend so the browser only calls same-origin.
- * Avoids "Failed to fetch" from wrong NEXT_PUBLIC_BACKEND_URL, CORS, or mixed content.
+ * Avoids client-side CORS/mixed-content issues by proxying server-side.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
     const url = `${backendUrl.replace(/\/$/, '')}/auth/admin-signin`
 
     const res = await fetch(url, {

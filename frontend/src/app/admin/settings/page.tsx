@@ -213,7 +213,7 @@ export default function SystemSettingsPage() {
   const generalSettings = settings.filter(s => s.category !== 'features')
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-neutral-950 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -222,10 +222,10 @@ export default function SystemSettingsPage() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               System Settings & Flow Control
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-neutral-400">
               Configure system settings, feature flags, and workflows
             </p>
           </div>
@@ -247,7 +247,7 @@ export default function SystemSettingsPage() {
         </motion.div>
 
         {/* Tabs */}
-        <Card>
+        <Card className="bg-neutral-900 border-neutral-800">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Button
@@ -279,7 +279,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'settings' && (
           <div className="space-y-4">
             {generalSettings.map((setting) => (
-              <Card key={setting.setting_id}>
+              <Card key={setting.setting_id} className="bg-neutral-900 border-neutral-800">
                 <CardHeader>
                   <CardTitle className="text-lg">{setting.setting_key}</CardTitle>
                   {setting.description && (
@@ -358,7 +358,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'features' && (
           <div className="space-y-4">
             {featureFlags.map((flag) => (
-              <Card key={flag.setting_id}>
+              <Card key={flag.setting_id} className="bg-neutral-900 border-neutral-800">
                 <CardHeader>
                   <CardTitle className="text-lg">{flag.setting_key}</CardTitle>
                   {flag.description && (
@@ -407,7 +407,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'workflows' && (
           <div className="space-y-4">
             {workflows.map((workflow) => (
-              <Card key={workflow.workflow_id}>
+              <Card key={workflow.workflow_id} className="bg-neutral-900 border-neutral-800">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -446,7 +446,7 @@ export default function SystemSettingsPage() {
                       </Button>
                     </div>
                     {workflow.config && (
-                      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded text-xs font-mono">
+                      <div className="p-3 bg-neutral-950 border border-neutral-800 rounded text-xs font-mono">
                         {JSON.stringify(workflow.config, null, 2)}
                       </div>
                     )}

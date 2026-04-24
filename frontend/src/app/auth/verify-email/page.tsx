@@ -117,7 +117,10 @@ function VerifyEmailContent() {
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Email confirmed</h2>
           <p className="text-gray-600 mb-4">
-            You will receive a welcome email from OptioHire shortly. Redirecting to your dashboard…
+            Verification successful. You are being redirected to your dashboard now.
+          </p>
+          <p className="text-sm text-gray-500">
+            A welcome email has also been sent for your records.
           </p>
         </motion.div>
       </div>

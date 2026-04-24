@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 
 const navigation = [
@@ -14,7 +15,9 @@ const navigation = [
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
+  const pathname = usePathname()
 
   // Close mobile menu when clicking outside, on resize, or route change
   useEffect(() => {
@@ -44,13 +47,32 @@ export function Navbar() {
     }
   }, [mobileMenuOpen])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 14)
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-[100] px-4 md:px-6 pt-6">
-      <nav ref={navRef} className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8 rounded-2xl border border-white/40 bg-black/40 backdrop-blur-xl shadow-2xl shadow-black/50">
+    <header
+      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+        isScrolled
+          ? 'border-b border-slate-200/70 bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 shadow-sm shadow-slate-900/5'
+          : 'border-b border-transparent bg-white/45 backdrop-blur-md supports-[backdrop-filter]:bg-white/35'
+      }`}
+    >
+      <nav ref={navRef} className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex items-center flex-shrink-0 z-10">
           <Link href="/" className="-m-1.5 p-1.5 flex items-center">
-            <span className="text-white text-xl md:text-2xl font-figtree font-light tracking-tight">
+            <span className="text-[rgb(var(--ink-navy))] text-xl md:text-2xl font-semibold tracking-tight">
               OptioHire
             </span>
           </Link>
@@ -62,7 +84,9 @@ export function Navbar() {
             <Link
               key={item.name}
               href={item.href}
-              className="text-white hover:text-white font-medium text-sm transition-colors duration-200 whitespace-nowrap"
+              className={`text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
+                pathname === item.href ? 'text-primary' : 'text-slate-600 hover:text-[rgb(var(--ink-navy))]'
+              }`}
             >
               {item.name}
             </Link>
@@ -73,7 +97,7 @@ export function Navbar() {
         <div className="hidden lg:flex lg:items-center lg:flex-shrink-0">
           <Link
             href="/auth/signup"
-            className="px-6 py-2 bg-white text-teal-600 font-medium text-sm rounded-lg hover:bg-gray-50 transition-colors duration-200 whitespace-nowrap"
+            className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-blue-700 transition-all duration-200 whitespace-nowrap shadow-sm shadow-blue-500/25 hover:shadow-md hover:shadow-blue-500/35"
           >
             Get Started
           </Link>
@@ -82,27 +106,31 @@ export function Navbar() {
         {/* Mobile menu button - visible on small screens */}
         <button
           type="button"
-          className="lg:hidden p-2 text-white hover:text-white/80 transition-colors flex-shrink-0 z-10 relative flex items-center justify-center min-w-[40px] min-h-[40px]"
+          className="lg:hidden p-2 text-slate-700 hover:text-[rgb(var(--ink-navy))] transition-colors flex-shrink-0 z-10 relative flex items-center justify-center min-w-[40px] min-h-[40px]"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
           aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? (
-            <X className="h-6 w-6 text-white" aria-hidden="true" />
+            <X className="h-6 w-6 text-[rgb(var(--ink-navy))]" aria-hidden="true" />
           ) : (
-            <Menu className="h-6 w-6 text-white" aria-hidden="true" />
+            <Menu className="h-6 w-6 text-[rgb(var(--ink-navy))]" aria-hidden="true" />
           )}
         </button>
 
         {/* Mobile menu dropdown - visible on small screens when open */}
         {mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 lg:hidden bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[200] opacity-100 transform translate-y-0 transition-all duration-200">
+          <div className="absolute top-full left-0 right-0 mt-2 lg:hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-xl shadow-slate-900/10 backdrop-blur-md overflow-hidden z-[200] opacity-100 transform translate-y-0 transition-all duration-200">
             <div className="px-4 py-4 space-y-2">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="block px-4 py-3 text-gray-900 hover:text-teal-600 font-medium text-sm rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  className={`block px-4 py-3 font-medium text-sm rounded-lg transition-colors duration-200 ${
+                    pathname === item.href
+                      ? 'text-primary bg-blue-50/80'
+                      : 'text-slate-700 hover:text-[rgb(var(--ink-navy))] hover:bg-slate-50/80'
+                  }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}
@@ -111,7 +139,7 @@ export function Navbar() {
               {/* Mobile Get Started button */}
               <Link
                 href="/auth/signup"
-                className="block px-4 py-3 mt-2 bg-teal-600 text-white font-medium text-sm rounded-lg hover:bg-teal-700 transition-colors duration-200 text-center"
+                className="block px-4 py-3 mt-2 bg-primary text-white font-medium text-sm rounded-xl hover:bg-blue-700 transition-colors duration-200 text-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Get Started

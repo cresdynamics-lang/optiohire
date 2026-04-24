@@ -29,7 +29,7 @@ const stats = [
   },
   {
     label: 'Global support teams',
-    value: '1 regions',
+    value: '1 region',
   },
   {
     label: 'Enterprise SLA uptime',
@@ -42,7 +42,7 @@ const contactMethods = [
     title: 'Talk to sales',
     description: 'Design a tailored AI hiring rollout for your team and accelerate ROI in under 30 days.',
     cta: 'Book a strategy session',
-    href: 'mailto:support@optiohire.com',
+    href: 'mailto:sales@optiohire.com',
     icon: Briefcase,
   },
   {
@@ -56,7 +56,7 @@ const contactMethods = [
     title: 'Partner with us',
     description: 'Co-build integrations, reseller programs, and innovation pilots with our platform team.',
     cta: 'Connect with partnerships',
-    href: 'mailto:support@optiohire.com',
+    href: 'mailto:partnerships@optiohire.com',
     icon: Building2,
   },
 ]
@@ -74,7 +74,7 @@ const infoHighlights = [
   },
   {
     title: 'Security posture',
-    copy: 'GDPR-ready and Continuous penetration testing',
+    copy: 'Privacy-focused controls with continuous penetration testing',
     icon: ShieldCheck,
   },
 ]
@@ -155,7 +155,7 @@ export default function ContactPage() {
             {...fadeUp(2, disableMotion)}
             className="mx-auto max-w-3xl text-base sm:text-xl font-figtree font-light text-gray-300"
           >
-            Whether you’re exploring automation, scaling globally, or need tactical support, our experts respond quickly with answers tailored to your hiring goals.
+            Built by Cres Dynamics in Nairobi, OptioHire helps teams hire faster and more fairly; our specialists respond quickly with guidance tailored to your goals.
           </motion.p>
           <motion.div
             {...fadeUp(3, disableMotion)}
@@ -312,7 +312,7 @@ export default function ContactPage() {
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-xs font-figtree text-gray-400" aria-live="polite">
-                {status === 'success' && 'Message sent. We will connect within two hours.'}
+                {status === 'success' && 'Message sent. Your request has been routed to the relevant team.'}
                 {status === 'error' && 'Something went wrong. Please try again.'}
               </div>
               <button
@@ -358,11 +358,25 @@ export default function ContactPage() {
               <p className="text-sm font-figtree font-medium text-white/80">Prefer a direct line?</p>
               <div className="flex flex-col gap-3">
                 <a
+                  href="mailto:sales@optiohire.com"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-sm font-figtree font-medium text-white hover:bg-white/20"
+                >
+                  <Mail className="h-4 w-4" />
+                  sales@optiohire.com
+                </a>
+                <a
                   href="mailto:support@optiohire.com"
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-sm font-figtree font-medium text-white hover:bg-white/20"
                 >
                   <Mail className="h-4 w-4" />
                   support@optiohire.com
+                </a>
+                <a
+                  href="mailto:partnerships@optiohire.com"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-sm font-figtree font-medium text-white hover:bg-white/20"
+                >
+                  <Mail className="h-4 w-4" />
+                  partnerships@optiohire.com
                 </a>
                 <a
                   href="tel:+254701601126"
@@ -398,7 +412,7 @@ export default function ContactPage() {
                 Experience the autonomous sourcing engine, adaptive interviews, and analytics cockpit in a 30-minute session tailored to your roles.
               </p>
               <a
-                href="mailto:demo@hraigagent.com"
+                href="mailto:demo@optiohire.com"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2D2DDD] px-8 py-3 text-sm font-figtree font-medium text-white transition hover:bg-[#2424c0]"
               >
                 Request my demo

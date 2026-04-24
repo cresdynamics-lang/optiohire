@@ -119,8 +119,8 @@ export default function AdminDashboardOverview() {
       value: stats?.users.total || 0,
       subtitle: `${stats?.users.active || 0} active`,
       icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      color: 'text-blue-300',
+      bgColor: 'bg-blue-500/15',
       link: '/admin/users'
     },
     {
@@ -128,8 +128,8 @@ export default function AdminDashboardOverview() {
       value: stats?.companies || 0,
       subtitle: 'Registered organizations',
       icon: Building2,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      color: 'text-emerald-300',
+      bgColor: 'bg-emerald-500/15',
       link: '/admin/companies'
     },
     {
@@ -137,8 +137,8 @@ export default function AdminDashboardOverview() {
       value: stats?.job_postings.total || 0,
       subtitle: `${stats?.job_postings.active || 0} active`,
       icon: Briefcase,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+      color: 'text-violet-300',
+      bgColor: 'bg-violet-500/15',
       link: '/admin/jobs'
     },
     {
@@ -146,8 +146,8 @@ export default function AdminDashboardOverview() {
       value: stats?.applications.total || 0,
       subtitle: `${stats?.applications.shortlisted || 0} shortlisted`,
       icon: FileText,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+      color: 'text-amber-300',
+      bgColor: 'bg-amber-500/15',
       link: '/admin/applications'
     },
     {
@@ -155,8 +155,8 @@ export default function AdminDashboardOverview() {
       value: stats?.users.admins || 0,
       subtitle: 'System administrators',
       icon: Shield,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      color: 'text-rose-300',
+      bgColor: 'bg-rose-500/15',
       link: '/admin?section=admins'
     },
     {
@@ -164,14 +164,14 @@ export default function AdminDashboardOverview() {
       value: stats?.reports || 0,
       subtitle: 'Total reports',
       icon: BarChart3,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
-      link: '/admin/reports'
+      color: 'text-indigo-300',
+      bgColor: 'bg-indigo-500/15',
+      link: '/admin/analytics'
     }
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-neutral-950 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -187,11 +187,11 @@ export default function AdminDashboardOverview() {
                   Back to Admin
                 </Button>
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-white">
                 Admin Dashboard
               </h1>
             </div>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-neutral-400">
               System overview and management
             </p>
           </div>
@@ -211,10 +211,10 @@ export default function AdminDashboardOverview() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-2"
+            className="bg-red-900/20 border border-red-700/50 rounded-lg p-4 flex items-center gap-2"
           >
             <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-            <p className="text-red-700 dark:text-red-300">{error}</p>
+            <p className="text-red-300">{error}</p>
           </motion.div>
         )}
 
@@ -230,9 +230,9 @@ export default function AdminDashboardOverview() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Link href={stat.link}>
-                  <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-[#2D2DDD]/50">
+                  <Card className="hover:shadow-md transition-all cursor-pointer border border-neutral-800 hover:border-primary/40 bg-neutral-900">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <CardTitle className="text-sm font-medium text-neutral-400">
                         {stat.title}
                       </CardTitle>
                       <div className={`p-2 rounded-lg ${stat.bgColor}`}>
@@ -240,10 +240,10 @@ export default function AdminDashboardOverview() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      <div className="text-3xl font-bold text-white mb-1">
                         {stat.value.toLocaleString()}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-neutral-500">
                         {stat.subtitle}
                       </p>
                     </CardContent>
@@ -260,7 +260,7 @@ export default function AdminDashboardOverview() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="border-2 border-emerald-500/20 dark:border-emerald-500/30 bg-gradient-to-br from-emerald-50/50 to-transparent dark:from-emerald-900/10 dark:to-transparent">
+          <Card className="border border-emerald-500/30 bg-gradient-to-br from-emerald-900/20 to-neutral-900">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -270,26 +270,26 @@ export default function AdminDashboardOverview() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Starter</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">KSH 2,500</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">/month</p>
+                <div className="p-4 rounded-lg bg-neutral-900 border border-neutral-800">
+                  <p className="text-sm font-medium text-neutral-400">Starter</p>
+                  <p className="text-2xl font-bold text-white">KSH 2,500</p>
+                  <p className="text-xs text-neutral-500">/month</p>
                 </div>
-                <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Professional</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">KSH 5,000</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">/month</p>
+                <div className="p-4 rounded-lg bg-neutral-900 border border-neutral-800">
+                  <p className="text-sm font-medium text-neutral-400">Professional</p>
+                  <p className="text-2xl font-bold text-white">KSH 5,000</p>
+                  <p className="text-xs text-neutral-500">/month</p>
                 </div>
-                <div className="p-4 rounded-lg bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Enterprise</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">KSH 10,000</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">/month</p>
+                <div className="p-4 rounded-lg bg-neutral-900 border border-neutral-800">
+                  <p className="text-sm font-medium text-neutral-400">Enterprise</p>
+                  <p className="text-2xl font-bold text-white">KSH 10,000</p>
+                  <p className="text-xs text-neutral-500">/month</p>
                 </div>
               </div>
               <Link href="/admin/companies" className="block">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
-                  <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Organisations (billing base)</span>
-                  <span className="flex items-center text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-900/20 border border-emerald-700/40 hover:bg-emerald-900/30 transition-colors">
+                  <span className="text-sm font-medium text-emerald-200">Organisations (billing base)</span>
+                  <span className="flex items-center text-lg font-bold text-emerald-300">
                     {stats?.companies ?? 0}
                     <ArrowRight className="w-4 h-4 ml-1 text-emerald-600 dark:text-emerald-400" />
                   </span>
@@ -305,7 +305,7 @@ export default function AdminDashboardOverview() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <Card>
+          <Card className="bg-neutral-900 border-neutral-800">
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>Common administrative tasks</CardDescription>
@@ -347,7 +347,7 @@ export default function AdminDashboardOverview() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
-          <Card>
+          <Card className="bg-neutral-900 border-neutral-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
@@ -356,24 +356,24 @@ export default function AdminDashboardOverview() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-emerald-900/20 rounded-lg border border-emerald-800/40">
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">Database</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Connected and operational</p>
+                      <p className="font-medium text-white">Database</p>
+                      <p className="text-sm text-neutral-400">Connected and operational</p>
                     </div>
                   </div>
                   <Badge variant="outline" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                     Healthy
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-emerald-900/20 rounded-lg border border-emerald-800/40">
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">API Services</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">All endpoints responding</p>
+                      <p className="font-medium text-white">API Services</p>
+                      <p className="text-sm text-neutral-400">All endpoints responding</p>
                     </div>
                   </div>
                   <Badge variant="outline" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -391,7 +391,7 @@ export default function AdminDashboardOverview() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <Card>
+          <Card className="bg-neutral-900 border-neutral-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -400,10 +400,10 @@ export default function AdminDashboardOverview() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-neutral-900 rounded-lg border border-neutral-800">
                   <div className="flex items-center gap-3">
-                    <Users className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <Users className="w-4 h-4 text-neutral-500" />
+                    <span className="text-sm text-neutral-300">
                       {stats?.users.total || 0} total users registered
                     </span>
                   </div>
@@ -413,10 +413,10 @@ export default function AdminDashboardOverview() {
                     </Button>
                   </Link>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-neutral-900 rounded-lg border border-neutral-800">
                   <div className="flex items-center gap-3">
-                    <Briefcase className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <Briefcase className="w-4 h-4 text-neutral-500" />
+                    <span className="text-sm text-neutral-300">
                       {stats?.job_postings.active || 0} active job postings
                     </span>
                   </div>
@@ -426,10 +426,10 @@ export default function AdminDashboardOverview() {
                     </Button>
                   </Link>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-neutral-900 rounded-lg border border-neutral-800">
                   <div className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <FileText className="w-4 h-4 text-neutral-500" />
+                    <span className="text-sm text-neutral-300">
                       {stats?.applications.total || 0} total applications received
                     </span>
                   </div>

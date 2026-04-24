@@ -190,9 +190,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (name: string, email: string, password: string, company_role: string, organization_name: string, company_email: string, hiring_manager_email: string) => {
     try {
       // Don't set global loading here - it can cause AuthProvider to re-render and remount the signup form
-      // Use Next.js API route instead of external backend
+      // Call backend directly to avoid dev-time Next API compilation lag on signup.
       // hr_email is set to company_email since the form doesn't have a separate hr_email field
-      const resp = await fetch('/api/auth/signup', {
+      const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '')
+      const resp = await fetch(`${backendUrl}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -204,7 +205,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           company_email, 
           hr_email: company_email, // Use company_email as hr_email
           hiring_manager_email 
-        })
+        }),
+        signal: AbortSignal.timeout(20000)
       })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) {
@@ -248,11 +250,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true)
-      // Use Next.js API route instead of external backend
-      const resp = await fetch('/api/auth/signin', {
+      // Call backend directly to avoid dev-time Next API route compile lag.
+      const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '')
+      const resp = await fetch(`${backendUrl}/auth/signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        signal: AbortSignal.timeout(15000),
       })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) {

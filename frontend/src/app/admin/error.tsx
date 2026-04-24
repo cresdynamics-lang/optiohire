@@ -18,8 +18,8 @@ export default function AdminError({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-neutral-900 border-neutral-800">
         <CardHeader>
           <div className="flex items-center gap-3">
             <AlertCircle className="w-8 h-8 text-red-500" />
@@ -30,15 +30,15 @@ export default function AdminError({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-800 dark:text-red-200 font-medium mb-1">
+          <div className="p-4 bg-red-900/20 border border-red-700/50 rounded-lg">
+            <p className="text-sm text-red-300 font-medium mb-1">
               Error Details:
             </p>
-            <p className="text-xs text-red-600 dark:text-red-300 font-mono">
+            <p className="text-xs text-red-400 font-mono">
               {error.message || 'Unknown error occurred'}
             </p>
             {error.digest && (
-              <p className="text-xs text-red-500 dark:text-red-400 mt-2">
+              <p className="text-xs text-red-500 mt-2">
                 Error ID: {error.digest}
               </p>
             )}
@@ -65,7 +65,7 @@ export default function AdminError({
           </div>
 
           <div className="pt-4 border-t">
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+            <p className="text-xs text-neutral-400 text-center">
               If this error persists, please contact support or check the browser console for more details.
             </p>
           </div>

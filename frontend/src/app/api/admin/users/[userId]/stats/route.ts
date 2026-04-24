@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const resolvedParams = await params
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
     const res = await fetch(`${backendUrl}/api/admin/users/${resolvedParams.userId}/stats`, {
       headers: {
         'Authorization': `Bearer ${token}`,

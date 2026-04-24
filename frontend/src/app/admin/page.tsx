@@ -313,7 +313,7 @@ function AdminDashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-neutral-950 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -322,10 +322,10 @@ function AdminDashboardContent() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               Admin Management
               {isSeniorAdmin && (
-                <span className="ml-3 px-3 py-1 rounded-full text-sm font-medium bg-[#2D2DDD] text-white">
+                <span className="ml-3 px-3 py-1 rounded-full text-sm font-medium bg-primary text-white">
                   Senior Admin
                 </span>
               )}
@@ -359,20 +359,20 @@ function AdminDashboardContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="border-2 border-[#2D2DDD]/20 dark:border-[#2D2DDD]/30 bg-gradient-to-br from-[#2D2DDD]/5 to-[#2D2DDD]/10 dark:from-[#2D2DDD]/10 dark:to-[#2D2DDD]/20">
+            <Card className="border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-slate-900">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-800 flex items-center justify-center">
                     <Crown className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-[#2D2DDD] dark:text-[#2D2DDD]">
+                    <CardTitle className="flex items-center gap-2 text-blue-300">
                       Admin Profile
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-[#2D2DDD]/20 dark:bg-[#2D2DDD]/30 text-[#2D2DDD] dark:text-[#2D2DDD]">
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200">
                         ADMIN
                       </span>
                     </CardTitle>
-                    <CardDescription className="text-[#2D2DDD]/80 dark:text-[#2D2DDD]">
+                    <CardDescription className="text-blue-200/80">
                       Your administrator account information
                     </CardDescription>
                   </div>
@@ -387,54 +387,54 @@ function AdminDashboardContent() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-purple-900 dark:text-purple-200">
+                    <div className="flex items-center gap-2 text-sm font-medium text-neutral-300">
                       <User className="w-4 h-4" />
                       Name
                     </div>
-                    <p className="text-purple-800 dark:text-purple-300">
+                    <p className="text-neutral-200">
                       {currentUser.name || 'Not set'}
                     </p>
                   </div>
                   
                   {(currentUser as any).username && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-[#2D2DDD] dark:text-[#2D2DDD]">
+                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
                         <User className="w-4 h-4" />
                         Username
                       </div>
-                      <p className="text-purple-800 dark:text-purple-300 font-mono">
+                      <p className="text-neutral-200 font-mono">
                         @{(currentUser as any).username}
                       </p>
                     </div>
                   )}
                   
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-purple-900 dark:text-purple-200">
+                    <div className="flex items-center gap-2 text-sm font-medium text-neutral-300">
                       <Mail className="w-4 h-4" />
                       Email
                     </div>
-                    <p className="text-purple-800 dark:text-purple-300">
+                    <p className="text-neutral-200">
                       {currentUser.email}
                     </p>
                   </div>
                   
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-purple-900 dark:text-purple-200">
+                    <div className="flex items-center gap-2 text-sm font-medium text-neutral-300">
                       <Shield className="w-4 h-4" />
                       Role
                     </div>
-                    <p className="text-purple-800 dark:text-purple-300 capitalize">
+                    <p className="text-neutral-200 capitalize">
                       {currentUser.role}
                     </p>
                   </div>
                   
                   {(currentUser as any).companyRole && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-[#2D2DDD] dark:text-[#2D2DDD]">
+                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
                         <Key className="w-4 h-4" />
                         Company Role
                       </div>
-                      <p className="text-purple-800 dark:text-purple-300 capitalize">
+                      <p className="text-neutral-200 capitalize">
                         {(currentUser as any).companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                       </p>
                     </div>
@@ -442,11 +442,11 @@ function AdminDashboardContent() {
                   
                   {(currentUser as any).created_at && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-[#2D2DDD] dark:text-[#2D2DDD]">
+                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
                         <Calendar className="w-4 h-4" />
                         Member Since
                       </div>
-                      <p className="text-[#2D2DDD]/90 dark:text-[#2D2DDD]">
+                      <p className="text-blue-200">
                         {new Date((currentUser as any).created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -454,11 +454,11 @@ function AdminDashboardContent() {
                   
                   {(currentUser as any).companyName && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-[#2D2DDD] dark:text-[#2D2DDD]">
+                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
                         <Building2 className="w-4 h-4" />
                         Organization
                       </div>
-                      <p className="text-[#2D2DDD]/90 dark:text-[#2D2DDD]">
+                      <p className="text-blue-200">
                         {(currentUser as any).companyName}
                       </p>
                     </div>
@@ -466,11 +466,11 @@ function AdminDashboardContent() {
                   
                   {(currentUser as any).companyEmail && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-[#2D2DDD] dark:text-[#2D2DDD]">
+                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
                         <Mail className="w-4 h-4" />
                         Company Email
                       </div>
-                      <p className="text-[#2D2DDD]/90 dark:text-[#2D2DDD]">
+                      <p className="text-blue-200">
                         {(currentUser as any).companyEmail}
                       </p>
                     </div>
@@ -478,11 +478,11 @@ function AdminDashboardContent() {
                   
                   {(currentUser as any).hrEmail && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-[#2D2DDD] dark:text-[#2D2DDD]">
+                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
                         <Mail className="w-4 h-4" />
                         HR Email
                       </div>
-                      <p className="text-[#2D2DDD]/90 dark:text-[#2D2DDD]">
+                      <p className="text-blue-200">
                         {(currentUser as any).hrEmail}
                       </p>
                     </div>
@@ -546,7 +546,7 @@ function AdminDashboardContent() {
                   <div className="flex-1 space-y-4">
                     {/* User Info */}
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-800 flex items-center justify-center">
                         <Users className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
@@ -655,7 +655,7 @@ function AdminDashboardContent() {
                       variant="default"
                       size="sm"
                       onClick={() => router.push(`/admin/users/${user.user_id}`)}
-                      className="bg-[#2D2DDD] hover:bg-[#2D2DDD]/90"
+                      className="bg-primary hover:bg-blue-700"
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
@@ -776,7 +776,7 @@ function AdminDashboardContent() {
 export default function AdminDashboard() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-950">
         <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
       </div>
     }>

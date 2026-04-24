@@ -3,8 +3,8 @@ import { ArrowRight, Rocket, Building2, Users, Briefcase, Zap, Target } from 'lu
 
 export const metadata: Metadata = {
   title: 'Use Cases | OptioHire for Every Hiring Scenario',
-  description: 'Discover how OptioHire serves startups, growing companies, HR teams, and various hiring scenarios with tailored recruitment solutions.',
-  keywords: 'hiring use cases, recruitment scenarios, startup hiring, enterprise HR, volume hiring, specialized recruitment'
+  description: 'Discover how OptioHire, built by Cres Dynamics in Nairobi, supports startups, SMEs, and HR teams with faster, fairer, skills-first hiring workflows.',
+  keywords: 'skills-first hiring use cases, startup hiring, SME recruitment, volume hiring, technical hiring, role readiness hiring'
 }
 
 export default function UseCasesPage() {
@@ -14,7 +14,7 @@ export default function UseCasesPage() {
       title: 'Startups Hiring Fast',
       description: 'Growing startups need to hire quickly without compromising on quality. OptioHire helps identify candidates who can contribute immediately.',
       pain: 'Need great hires yesterday but can\'t afford months of recruitment',
-      solution: 'Rapid screening with focus on growth potential and role fit',
+      solution: 'Rapid screening with a skills-first focus on growth potential and role readiness',
       outcomes: ['50% faster hiring cycles', 'Higher retention rates', 'Cost-effective scaling'],
       color: 'from-blue-500 to-cyan-600'
     },
@@ -42,7 +42,7 @@ export default function UseCasesPage() {
       description: 'Finding qualified developers, engineers, and technical specialists requires deep understanding of technical skills.',
       pain: 'Hard to assess real technical capabilities from resumes',
       solution: 'Skills-focused evaluation with technical competency validation',
-      outcomes: ['95% technical match accuracy', 'Reduced technical interviews', 'Better team fit'],
+      outcomes: ['Higher technical-role alignment', 'Reduced technical interviews', 'Better team fit'],
       color: 'from-orange-500 to-red-600'
     },
     {
@@ -74,9 +74,8 @@ export default function UseCasesPage() {
             Use Cases
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            From startups hiring their first key roles to enterprises managing complex
-            recruitment at scale, OptioHire adapts to your hiring scenario and delivers
-            consistent, high-quality results.
+            From startups to high-volume HR teams, OptioHire adapts to your hiring scenario
+            with skills-first assessments, fair evaluations, and faster confident decisions.
           </p>
         </div>
       </section>

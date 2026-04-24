@@ -168,7 +168,8 @@ export function ReportsSection() {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          signal: AbortSignal.timeout(10000),
         })
 
         if (!response.ok) {

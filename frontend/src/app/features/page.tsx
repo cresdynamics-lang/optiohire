@@ -32,8 +32,8 @@ export default function FeaturesPage() {
       title: 'AI-Powered Candidate Screening',
       description: 'Advanced machine learning algorithms analyze resumes, cover letters, and portfolios to identify the best candidates in seconds. Our AI understands context, skills, and experience to match candidates with job requirements accurately.',
       benefits: [
-        '95% accuracy rate in candidate matching',
-        '10x faster resume screening',
+        '3x faster hiring outcomes',
+        '75% less manual screening time',
         'Bias-free evaluation process',
         'Multi-language support',
         'Context-aware skill extraction',
@@ -297,7 +297,7 @@ export default function FeaturesPage() {
               Key Benefits
             </h2>
             <p className="text-base sm:text-xl font-figtree font-light text-gray-300 max-w-3xl mx-auto">
-              See why leading companies trust our platform for their recruitment needs.
+              See how OptioHire supports faster, fairer, and more consistent hiring outcomes.
             </p>
           </motion.div>
 
@@ -305,26 +305,26 @@ export default function FeaturesPage() {
             {[
               {
                 icon: Clock,
-                title: '5x Faster Hiring',
-                description: 'Reduce time-to-hire from weeks to days',
+                title: '3x Faster Hiring',
+                description: 'Reduce time-to-hire by 75%',
                 color: 'from-blue-500 to-cyan-600',
               },
               {
                 icon: DollarSign,
-                title: '70% Cost Savings',
+                title: '60% Cost Savings',
                 description: 'Cut recruitment costs significantly',
                 color: 'from-green-500 to-emerald-600',
               },
               {
                 icon: TrendingUp,
-                title: '95% Accuracy',
-                description: 'AI-powered matching accuracy',
+                title: '40% Better Hires',
+                description: 'Improve quality and retention',
                 color: 'from-[#2D2DDD] to-pink-600',
               },
               {
                 icon: Star,
-                title: '40% Better Retention',
-                description: 'Higher quality hires stay longer',
+                title: 'Data-Driven Decisions',
+                description: 'Clear recommendations with practical insights',
                 color: 'from-orange-500 to-red-600',
               },
             ].map((benefit, index) => (

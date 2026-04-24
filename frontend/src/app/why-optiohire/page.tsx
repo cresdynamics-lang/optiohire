@@ -3,8 +3,8 @@ import { ArrowRight, AlertTriangle, TrendingDown, Target, Shield, Users } from '
 
 export const metadata: Metadata = {
   title: 'Why OptioHire | Smarter Hiring for Modern Teams',
-  description: 'Discover why traditional hiring methods fall short and how OptioHire brings clarity, fairness, and confidence to recruitment in fast-moving markets like Nairobi.',
-  keywords: 'recruitment challenges, hiring problems, fair hiring, unbiased recruitment, modern hiring solutions'
+  description: 'Discover why teams choose OptioHire, a B2B HR tech SaaS by Cres Dynamics in Nairobi, to hire faster with fair evaluations and transparent AI recommendations.',
+  keywords: 'skills-first hiring, fair evaluation, role readiness, cultural fit hiring, transparent AI hiring, better hiring decisions'
 }
 
 export default function WhyOptioHirePage() {
@@ -17,9 +17,8 @@ export default function WhyOptioHirePage() {
             Why OptioHire?
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Traditional hiring is slow, biased, and uncertain. OptioHire exists to bring
-            structure, fairness, and confidence back to recruitment — designed for teams
-            in fast-moving markets like Nairobi.
+            Traditional hiring is slow, biased, and uncertain. OptioHire helps teams hire 3x
+            faster with smart screening, fair evaluation, and confident data-backed decisions.
           </p>
         </div>
       </section>

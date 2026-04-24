@@ -163,7 +163,8 @@ export function OverviewSection() {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        signal: AbortSignal.timeout(10000),
       })
 
       let jobs: any[] = []
@@ -272,21 +273,6 @@ export function OverviewSection() {
           title: 'Welcome to your hiring workspace',
           description: `You have no job posts yet for ${getCompanyLabel()}. Head to the Jobs section to create your first role.`,
           variant: 'info',
-        })
-      }
-
-      // Show success notification if jobs were loaded
-      if (normalizedJobs.length > 0 && !preserveSelection) {
-        addNotification({
-          title: 'Dashboard updated',
-          description: `Loaded ${normalizedJobs.length} job${normalizedJobs.length !== 1 ? 's' : ''} successfully`,
-          type: 'success',
-        })
-        
-        toast({
-          title: 'Dashboard updated',
-          description: `Loaded ${normalizedJobs.length} job${normalizedJobs.length !== 1 ? 's' : ''} successfully`,
-          variant: 'success',
         })
       }
 

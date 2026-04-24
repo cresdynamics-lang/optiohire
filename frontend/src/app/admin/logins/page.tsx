@@ -112,24 +112,24 @@ export default function AdminLoginsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-neutral-950 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-gray-400 hover:text-white"
+            className="text-neutral-400 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Login Activity</h1>
-            <p className="text-gray-400">View all user login history and activity logs</p>
+            <h1 className="text-3xl font-bold text-white">User Login Activity</h1>
+            <p className="text-neutral-400">View all user login history and activity logs</p>
           </div>
         </div>
 
-        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 mb-6">
+        <Card className="bg-neutral-900 border-neutral-800 mb-6">
           <CardContent className="p-4">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 relative min-w-[200px]">
@@ -141,7 +141,7 @@ export default function AdminLoginsPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="pl-10 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                  className="pl-10 bg-neutral-950 border-neutral-700 text-white"
                 />
               </div>
               <select
@@ -150,7 +150,7 @@ export default function AdminLoginsPage() {
                   setActionFilter(e.target.value)
                   setPage(1)
                 }}
-                className="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white"
+                className="px-4 py-2 bg-neutral-950 border border-neutral-700 rounded-md text-white"
               >
                 <option value="login">Logins</option>
                 <option value="logout">Logouts</option>
@@ -177,9 +177,9 @@ export default function AdminLoginsPage() {
           </div>
         ) : (
           <>
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardHeader>
-                <CardTitle className="text-gray-900 dark:text-white">
+                <CardTitle className="text-white">
                   Activity Logs ({total})
                 </CardTitle>
               </CardHeader>
@@ -188,7 +188,7 @@ export default function AdminLoginsPage() {
                   {logins.map((activity) => (
                     <div
                       key={activity.track_id}
-                      className="flex items-start justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      className="flex items-start justify-between p-4 bg-neutral-950 rounded-lg border border-neutral-800 hover:bg-neutral-900 transition-colors"
                     >
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3 flex-wrap">

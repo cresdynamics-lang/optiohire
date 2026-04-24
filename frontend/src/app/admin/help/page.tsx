@@ -139,29 +139,29 @@ export default function AdminHelpPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-neutral-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-gray-400 hover:text-white"
+            className="text-neutral-400 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
               <HelpCircle className="w-8 h-8 text-[#2D2DDD]" />
               Admin Help & Documentation
             </h1>
-            <p className="text-gray-400 mt-1">Complete guide to admin capabilities and quick access</p>
+            <p className="text-neutral-400 mt-1">Complete guide to admin capabilities and quick access</p>
           </div>
         </div>
 
         {/* Quick Links */}
-        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <Card className="bg-neutral-900 border-neutral-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Book className="w-5 h-5" />
@@ -175,15 +175,15 @@ export default function AdminHelpPage() {
                 const Icon = link.icon
                 return (
                   <Link key={link.title} href={link.link}>
-                    <Card className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-[#2D2DDD]/50 bg-gray-50 dark:bg-gray-900">
+                    <Card className="hover:shadow-md transition-all cursor-pointer border border-neutral-800 hover:border-primary/40 bg-neutral-950">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <Icon className={`w-6 h-6 ${link.color} flex-shrink-0 mt-1`} />
                           <div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                            <h3 className="font-semibold text-white mb-1">
                               {link.title}
                             </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-sm text-neutral-400">
                               {link.description}
                             </p>
                           </div>
@@ -198,7 +198,7 @@ export default function AdminHelpPage() {
         </Card>
 
         {/* Admin Capabilities */}
-        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <Card className="bg-neutral-900 border-neutral-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
@@ -210,12 +210,12 @@ export default function AdminHelpPage() {
             <div className="space-y-6">
               {adminCapabilities.map((category) => (
                 <div key={category.category} className="border-l-4 border-[#2D2DDD] pl-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  <h3 className="text-lg font-semibold text-white mb-3">
                     {category.category}
                   </h3>
                   <ul className="space-y-2">
                     {category.items.map((item, index) => (
-                      <li key={index} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                      <li key={index} className="flex items-start gap-2 text-neutral-300">
                         <span className="text-[#2D2DDD] mt-1">•</span>
                         <span>{item}</span>
                       </li>
@@ -228,7 +228,7 @@ export default function AdminHelpPage() {
         </Card>
 
         {/* Important Notes */}
-        <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+        <Card className="bg-blue-900/20 border-blue-800/40">
           <CardHeader>
             <CardTitle className="text-blue-900 dark:text-blue-100 flex items-center gap-2">
               <MessageSquare className="w-5 h-5" />
@@ -256,7 +256,7 @@ export default function AdminHelpPage() {
         </Card>
 
         {/* Support */}
-        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <Card className="bg-neutral-900 border-neutral-800">
           <CardHeader>
             <CardTitle>Need More Help?</CardTitle>
             <CardDescription>Contact support or view documentation</CardDescription>

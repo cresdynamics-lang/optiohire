@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -32,85 +32,89 @@ export function InterviewsSection() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const loadInterviews = async () => {
-      if (!user) {
-        setIsLoading(false)
+  const loadInterviews = useCallback(async (options?: { silent?: boolean }) => {
+    if (!user) {
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const silent = options?.silent === true
+      if (!silent) setIsLoading(true)
+      setError(null)
+
+      const token = localStorage.getItem('token')
+      if (!token) {
+        if (!silent) setIsLoading(false)
         return
       }
-      
-      try {
-        setIsLoading(true)
-        setError(null)
-        
-        const token = localStorage.getItem('token')
-        if (!token) {
-          setIsLoading(false)
-          return
-        }
 
-        // Fetch scheduled interviews from API
-        const response = await fetch('/api/interviews', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
+      // Fetch scheduled interviews from API
+      const response = await fetch('/api/interviews', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        signal: AbortSignal.timeout(10000),
+      })
 
-        if (!response.ok) {
-          // If endpoint doesn't exist yet, return empty array
-          if (response.status === 404) {
-            setInterviews([])
-            setIsLoading(false)
-            return
-          }
+      if (!response.ok) {
+        // If endpoint doesn't exist yet, return empty array
+        if (response.status === 404) {
           setInterviews([])
-          setIsLoading(false)
+          if (!silent) setIsLoading(false)
           return
         }
-
-        const data = await response.json()
-        console.log('📅 Interviews API response:', data)
-        const scheduledInterviews = data.interviews || []
-        console.log('📅 Scheduled interviews count:', scheduledInterviews.length)
-        
-        // Transform scheduled interviews to InterviewData format
-        const interviewsData: InterviewData[] = scheduledInterviews.map((interview: any) => ({
-          id: interview.id,
-          job_title: interview.jobTitle,
-          status: 'active',
-          interview_date: interview.interviewTime,
-          meeting_link: interview.interviewLink,
-          google_calendar_link: interview.interviewLink,
-          applicantCount: 1,
-          upcomingInterviews: 1,
-          candidateName: interview.candidateName,
-          candidateEmail: interview.candidateEmail,
-          applicantStats: {
-            total: 1,
-            shortlisted: 1,
-            flagged: 0,
-            rejected: 0,
-            pending: 0
-          }
-        }))
-        
-        setInterviews(interviewsData)
-      } catch (err) {
-        console.error('Error loading interviews:', err)
-        setError('Failed to load interview data')
         setInterviews([])
-      } finally {
+        if (!silent) setIsLoading(false)
+        return
+      }
+
+      const data = await response.json()
+      const scheduledInterviews = data.interviews || []
+
+      // Transform scheduled interviews to InterviewData format
+      const interviewsData: InterviewData[] = scheduledInterviews.map((interview: any) => ({
+        id: interview.id,
+        job_title: interview.jobTitle,
+        status: 'active',
+        interview_date: interview.interviewTime,
+        meeting_link: interview.interviewLink,
+        google_calendar_link: interview.interviewLink,
+        applicantCount: 1,
+        upcomingInterviews: 1,
+        candidateName: interview.candidateName,
+        candidateEmail: interview.candidateEmail,
+        applicantStats: {
+          total: 1,
+          shortlisted: 1,
+          flagged: 0,
+          rejected: 0,
+          pending: 0
+        }
+      }))
+
+      setInterviews(interviewsData)
+    } catch (err) {
+      console.error('Error loading interviews:', err)
+      setError('Failed to load interview data')
+      setInterviews([])
+    } finally {
+      if (!options?.silent) {
         setIsLoading(false)
       }
     }
-    
-    loadInterviews()
-    
-    // Refresh every 30 seconds
-    const interval = setInterval(loadInterviews, 30000)
-    return () => clearInterval(interval)
   }, [user])
+
+  useEffect(() => {
+    loadInterviews()
+
+    // Refresh every 30 seconds without blocking the UI
+    const interval = setInterval(() => {
+      loadInterviews({ silent: true })
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [loadInterviews])
 
   const formatInterviewDate = (dateString: string) => {
     const date = new Date(dateString)

@@ -7,6 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ job_posting_id: string }> }
 ) {
   try {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
     const user = requireAuth(request)
     // In Next.js 16, params is always a Promise
     const resolvedParams = await params
@@ -18,7 +19,7 @@ export async function GET(
     }
 
     // Fetch report from backend
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/hr/reports/${jobPostingId}`, {
+    const response = await fetch(`${backendUrl}/api/hr/reports/${jobPostingId}`, {
       headers: {
         Authorization: authHeader,
       },
@@ -34,7 +35,7 @@ export async function GET(
     const data = await response.json()
 
     // Fetch job details and candidates for full report view
-    const jobResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/job-postings/${jobPostingId}`, {
+    const jobResponse = await fetch(`${backendUrl}/api/job-postings/${jobPostingId}`, {
       headers: {
         Authorization: authHeader,
       },
@@ -47,7 +48,7 @@ export async function GET(
       jobData = await jobResponse.json()
       
       // Fetch candidates
-      const candidatesResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/hr/candidates?jobId=${jobPostingId}`, {
+      const candidatesResponse = await fetch(`${backendUrl}/api/hr/candidates?jobId=${jobPostingId}`, {
         headers: {
           Authorization: authHeader,
         },
@@ -65,8 +66,8 @@ export async function GET(
       insights: {
         totalApplicants: candidates.length,
         shortlisted: candidates.filter((c: any) => c.status === 'SHORTLIST').length,
-        flagged: candidates.filter((c: any) => c.status === 'FLAGGED').length,
-        rejected: candidates.filter((c: any) => c.status === 'REJECTED').length
+        flagged: candidates.filter((c: any) => c.status === 'FLAG' || c.status === 'FLAGGED').length,
+        rejected: candidates.filter((c: any) => c.status === 'REJECT' || c.status === 'REJECTED').length
       }
     })
   } catch (error: any) {

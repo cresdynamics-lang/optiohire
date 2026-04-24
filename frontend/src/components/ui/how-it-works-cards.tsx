@@ -24,7 +24,7 @@ const steps: StepCard[] = [
     id: '2',
     step: 'Step 2',
     title: 'AI Candidate Screening',
-    description: 'Our advanced AI analyzes and scores candidates based on your specific requirements. Resume analysis, skill matching, and bias-free evaluation.',
+    description: 'Our advanced AI analyzes and scores candidates based on your specific requirements. Resume analysis, skill matching, and bias-aware evaluation safeguards.',
     icon: Brain,
   },
   {

@@ -148,7 +148,7 @@ export default function PricingSection({ plans: customPlans }: PricingSectionPro
         "24/7 phone support",
         "Custom integrations",
         "Advanced security",
-        "SLA guarantee",
+        "SLA commitments",
         "Custom deployment",
       ],
       onButtonClick: () => router.push('/contact'),

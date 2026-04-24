@@ -3,7 +3,14 @@ import jwt from 'jsonwebtoken'
 import pg from 'pg'
 
 // Must match backend JWT_SECRET (tokens are issued by backend for Google sign-in)
-const JWT_SECRET = process.env.JWT_SECRET || 'a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568'
+const JWT_SECRET = process.env.JWT_SECRET
+
+function getJwtSecret(): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is required but not configured')
+  }
+  return JWT_SECRET
+}
 
 // Helper to extract domain from email
 function domainFromEmail(email: string): string | null {
@@ -34,7 +41,7 @@ export async function GET(request: NextRequest) {
     let userId: string
 
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; email: string }
+      const decoded = jwt.verify(token, getJwtSecret()) as { sub: string; email: string }
       userId = decoded.sub
     } catch (err) {
       return NextResponse.json(
@@ -284,7 +291,7 @@ export async function POST(request: NextRequest) {
     let userId: string
 
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; email: string }
+      const decoded = jwt.verify(token, getJwtSecret()) as { sub: string; email: string }
       userId = decoded.sub
     } catch (err) {
       return NextResponse.json(
@@ -470,7 +477,7 @@ export async function POST(request: NextRequest) {
       // Send "job created" email notification via backend (Resend/SMTP) - SYNCHRONOUSLY
       let emailSent = false
       let emailError: string | null = null
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001'
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
       
       // Prepare recipients
       const recipients = [hr_email, company_email].filter((email): email is string => 

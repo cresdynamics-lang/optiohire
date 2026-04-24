@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState, useCallback } from 'react'
 
 const benefits = [
-  '95% AI accuracy rate',
-  '5x faster hiring process',
-  '70% cost reduction',
+  '3x faster hiring process',
+  '40% better quality hires',
+  '60% recruitment cost savings',
   'Zero setup fees',
 ]
 
@@ -52,21 +52,21 @@ export default function FinalCTASection() {
   return (
     <section
       ref={sectionRef}
-      className="relative py-20 sm:py-24 md:py-32 px-4 sm:px-6 overflow-hidden bg-black"
+      className="relative py-20 sm:py-24 md:py-32 px-4 sm:px-6 overflow-hidden bg-[#0A0F1E] cta-glow"
     >
       {/* Background gradient effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div
           className="absolute inset-0 opacity-30"
           style={{
-            background: 'radial-gradient(ellipse at center, rgba(45, 45, 221, 0.15) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse at center, rgba(37, 99, 235, 0.22) 0%, transparent 70%)',
             filter: 'blur(80px)',
           }}
         />
         <div
           className="absolute inset-0 opacity-20"
           style={{
-            background: 'radial-gradient(ellipse at top, rgba(45, 45, 221, 0.1) 0%, transparent 50%)',
+            background: 'radial-gradient(ellipse at top, rgba(45, 212, 191, 0.18) 0%, transparent 50%)',
             filter: 'blur(60px)',
           }}
         />
@@ -85,7 +85,7 @@ export default function FinalCTASection() {
             variants={itemVariants}
             className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 mb-6"
           >
-            <Sparkles className="w-4 h-4 text-[#2D2DDD]" />
+            <Sparkles className="w-4 h-4 text-[#2563EB]" />
             <span className="text-sm font-medium text-white/80 font-figtree">
               Ready to Transform Your Hiring?
             </span>
@@ -104,8 +104,8 @@ export default function FinalCTASection() {
             variants={itemVariants}
             className="text-base sm:text-lg md:text-xl font-figtree font-light text-gray-300 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed"
           >
-            Join thousands of companies already using AI to find the best talent faster. 
-            Get started in minutes with no credit card required.
+            Launch your hiring workflow in minutes with skills-first evaluation,
+            transparent recommendations, and no credit card required.
           </motion.p>
 
           {/* Benefits List */}
@@ -141,10 +141,10 @@ export default function FinalCTASection() {
               onHoverEnd={() => setIsHovered(false)}
               className="group relative px-8 py-4 sm:px-10 sm:py-5 rounded-full font-semibold font-figtree text-white overflow-hidden transition-all duration-300"
               style={{
-                background: 'linear-gradient(135deg, #2D2DDD 0%, rgba(45, 45, 221, 0.9) 100%)',
+                background: 'linear-gradient(135deg, #2563EB 0%, #2DD4BF 100%)',
                 boxShadow: isHovered
-                  ? '0 20px 40px -12px rgba(45, 45, 221, 0.5), 0 0 0 1px rgba(45, 45, 221, 0.3)'
-                  : '0 10px 30px -10px rgba(45, 45, 221, 0.4)',
+                  ? '0 20px 40px -12px rgba(37, 99, 235, 0.5), 0 0 0 1px rgba(45, 212, 191, 0.3)'
+                  : '0 10px 30px -10px rgba(37, 99, 235, 0.35)',
               }}
               whileHover={shouldReduceMotion ? {} : { scale: 1.05, y: -2 }}
               whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
@@ -156,7 +156,7 @@ export default function FinalCTASection() {
               <motion.div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(45, 45, 221, 0.9) 0%, rgba(45, 45, 221, 0.7) 100%)',
+                  background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(45, 212, 191, 0.85) 100%)',
                 }}
               />
             </motion.button>

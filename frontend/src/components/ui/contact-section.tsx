@@ -140,17 +140,17 @@ export default function ContactSection({ overlay = false }: ContactSectionProps)
 const leftCards = [
   {
     title: 'Email',
-    desc: 'support@hraigagent.com',
+    desc: 'support@optiohire.com',
     icon: Mail
   },
   {
     title: 'Phone',
-    desc: '+1 (555) 123-4567',
+    desc: '+254 701 601 126',
     icon: Phone
   },
   {
     title: 'Headquarters',
-    desc: 'New York, USA',
+    desc: 'Nairobi, Kenya',
     icon: MapPin
   },
   {

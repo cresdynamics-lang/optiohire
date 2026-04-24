@@ -3,8 +3,8 @@ import { Shield, Lock, Eye, Users, CheckCircle, FileText, AlertTriangle, Heart }
 
 export const metadata: Metadata = {
   title: 'Trust & Security | Ethical AI Hiring | OptioHire',
-  description: 'Learn about OptioHire\'s commitment to data privacy, responsible AI, bias reduction, and ethical hiring practices that protect both candidates and employers.',
-  keywords: 'data privacy, ethical AI, bias reduction, responsible hiring, GDPR compliance, candidate protection'
+  description: 'Learn how OptioHire protects employers and candidates with privacy-focused controls, end-to-end encryption, bias-mitigation safeguards, and transparent AI recommendations.',
+  keywords: 'privacy-focused hiring, end-to-end encryption, bias mitigation in hiring, transparent AI recommendations, ethical AI hiring, candidate data protection'
 }
 
 export default function TrustSecurityPage() {
@@ -91,9 +91,8 @@ export default function TrustSecurityPage() {
             Trust & Security
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Your trust is our foundation. We build OptioHire with unwavering commitment
-            to data privacy, ethical AI practices, and responsible hiring that protects
-            both candidates and employers.
+            Your trust is our foundation. OptioHire is built with privacy-focused data handling,
+            end-to-end encryption, bias-mitigation safeguards, and transparent AI recommendations.
           </p>
         </div>
       </section>
@@ -147,8 +146,8 @@ export default function TrustSecurityPage() {
               Security & Compliance
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Enterprise-grade security measures protect your data and ensure
-              compliance with the highest standards.
+              Strong security controls protect your data and support
+              ongoing compliance efforts.
             </p>
           </div>
 
@@ -262,16 +261,16 @@ export default function TrustSecurityPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { name: 'GDPR Compliant', status: 'Certified' },
+              { name: 'GDPR-Aligned Controls', status: 'Implemented' },
               { name: 'SOC 2 Type II', status: 'In Progress' },
-              { name: 'ISO 27001', status: 'Certified' },
+              { name: 'ISO 27001 Program', status: 'In Progress' },
               { name: 'Ethical AI', status: 'Framework' },
             ].map((cert) => (
               <div key={cert.name} className="text-center">
                 <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                   <h3 className="font-semibold text-gray-900 mb-2">{cert.name}</h3>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                    cert.status === 'Certified' ? 'bg-green-100 text-green-800' :
+                    cert.status === 'Implemented' ? 'bg-green-100 text-green-800' :
                     cert.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-blue-100 text-blue-800'
                   }`}>

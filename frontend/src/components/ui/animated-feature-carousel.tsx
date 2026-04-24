@@ -79,7 +79,7 @@ const steps: readonly Step[] = [
     id: "2",
     name: "Step 2",
     title: "AI Candidate Screening",
-    description: "Our advanced AI analyzes and scores candidates based on your specific requirements. Resume analysis, skill matching, and bias-free evaluation.",
+    description: "Our advanced AI analyzes and scores candidates based on your specific requirements. Resume analysis, skill matching, and bias-aware evaluation safeguards.",
   },
   {
     id: "3",

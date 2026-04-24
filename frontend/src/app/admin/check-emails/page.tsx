@@ -140,15 +140,15 @@ export default function CheckEmailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-neutral-950 p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               Check & Send Missing Emails
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-neutral-400">
               Check all applications and jobs, then send missing feedback emails
             </p>
           </div>
@@ -166,9 +166,9 @@ export default function CheckEmailsPage() {
 
         {/* Error Display */}
         {error && (
-          <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
+          <Card className="border-red-700/50 bg-red-900/20">
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+              <div className="flex items-center gap-2 text-red-300">
                 <AlertCircle className="w-5 h-5" />
                 <span>{error}</span>
               </div>
@@ -179,14 +179,14 @@ export default function CheckEmailsPage() {
         {/* Statistics Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Applications
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="text-2xl font-bold text-white">
                   {stats.applications.total}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -195,14 +195,14 @@ export default function CheckEmailsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Jobs
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="text-2xl font-bold text-white">
                   {stats.jobs.total}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -211,14 +211,14 @@ export default function CheckEmailsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-neutral-900 border-neutral-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Emails Sent
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="text-2xl font-bold text-white">
                   {stats.emails.sent}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -227,14 +227,14 @@ export default function CheckEmailsPage() {
               </CardContent>
             </Card>
 
-            <Card className={stats.missingEmails > 0 ? 'border-orange-200 bg-orange-50 dark:bg-orange-900/20' : ''}>
+            <Card className={`bg-neutral-900 border-neutral-800 ${stats.missingEmails > 0 ? 'border-orange-700/50 bg-orange-900/20' : ''}`}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Missing Emails
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${stats.missingEmails > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white'}`}>
+                <div className={`text-2xl font-bold ${stats.missingEmails > 0 ? 'text-orange-400' : 'text-white'}`}>
                   {stats.missingEmails}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -246,7 +246,7 @@ export default function CheckEmailsPage() {
         )}
 
         {/* Action Button */}
-        <Card>
+        <Card className="bg-neutral-900 border-neutral-800">
           <CardHeader>
             <CardTitle>Check & Send Missing Emails</CardTitle>
             <CardDescription>
@@ -277,7 +277,7 @@ export default function CheckEmailsPage() {
 
         {/* Results */}
         {results && (
-          <Card>
+          <Card className="bg-neutral-900 border-neutral-800">
             <CardHeader>
               <CardTitle>Operation Results</CardTitle>
               <CardDescription>
@@ -286,7 +286,7 @@ export default function CheckEmailsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="text-center p-4 bg-blue-900/20 rounded-lg border border-blue-800/40">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {results.totalApplications}
                   </div>
@@ -294,7 +294,7 @@ export default function CheckEmailsPage() {
                     Total Applications
                   </div>
                 </div>
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="text-center p-4 bg-green-900/20 rounded-lg border border-green-800/40">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {results.alreadySent}
                   </div>
@@ -302,7 +302,7 @@ export default function CheckEmailsPage() {
                     Already Sent
                   </div>
                 </div>
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <div className="text-center p-4 bg-purple-900/20 rounded-lg border border-purple-800/40">
                   <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {results.sent}
                   </div>
@@ -310,7 +310,7 @@ export default function CheckEmailsPage() {
                     Sent Now
                   </div>
                 </div>
-                <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <div className="text-center p-4 bg-red-900/20 rounded-lg border border-red-800/40">
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {results.failed}
                   </div>
@@ -322,19 +322,19 @@ export default function CheckEmailsPage() {
 
               {results.errors.length > 0 && (
                 <div className="mt-4">
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold mb-2 text-white">
                     Errors ({results.errors.length})
                   </h3>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {results.errors.map((err, idx) => (
                       <div
                         key={idx}
-                        className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+                        className="p-3 bg-red-900/20 border border-red-700/50 rounded-lg"
                       >
-                        <div className="text-sm font-medium text-red-800 dark:text-red-200">
+                        <div className="text-sm font-medium text-red-300">
                           {err.email}
                         </div>
-                        <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                        <div className="text-xs text-red-400 mt-1">
                           {err.error}
                         </div>
                       </div>
@@ -344,8 +344,8 @@ export default function CheckEmailsPage() {
               )}
 
               {results.sent > 0 && (
-                <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <div className="mt-4 p-4 bg-green-900/20 border border-green-700/50 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-300">
                     <CheckCircle2 className="w-5 h-5" />
                     <span className="font-medium">
                       Successfully sent {results.sent} email(s)!

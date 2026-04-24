@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/api-auth'
 // POST /api/hr/reports/generate
 export async function POST(request: NextRequest) {
   try {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
     const user = requireAuth(request)
     const body = await request.json()
     const { jobPostingId } = body
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/hr/reports/generate`, {
+    const response = await fetch(`${backendUrl}/api/hr/reports/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

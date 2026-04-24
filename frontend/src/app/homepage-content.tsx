@@ -12,10 +12,10 @@ export default function HomePageContent() {
       <section className="py-12 px-4 bg-black border-t border-gray-800/50 relative">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-lg sm:text-xl text-gray-300 font-light mb-4">
-            Transform your hiring process with intelligent automation, advanced analytics, and bias-free candidate screening.
+            OptioHire is a B2B HR tech SaaS by Cres Dynamics in Nairobi, Kenya.
           </p>
           <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto mb-8">
-            OptioHire helps teams identify job-ready talent faster by focusing on real skills, readiness, and role fit — not just resumes.
+            We help companies hire faster and more accurately by moving beyond resume-only screening to evaluate skills-first capability, role readiness, and cultural fit.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <button
@@ -163,7 +163,7 @@ export default function HomePageContent() {
               Trust & Security First
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-              Your data and your candidates' privacy are protected with enterprise-grade security
+              Your data and your candidates' privacy are protected with strong security controls
               and responsible AI practices.
             </p>
             <button
@@ -177,7 +177,7 @@ export default function HomePageContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Shield, title: "Data Protection", description: "GDPR compliant with end-to-end encryption for all sensitive information." },
+              { icon: Shield, title: "Data Protection", description: "GDPR-aligned practices with end-to-end encryption for sensitive information." },
               { icon: Users, title: "Bias Reduction", description: "Built-in algorithms that minimize unconscious bias in hiring decisions." },
               { icon: CheckCircle, title: "Transparent AI", description: "Human oversight with clear explanations of how AI recommendations are made." },
             ].map((feature) => (

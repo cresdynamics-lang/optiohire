@@ -3,8 +3,8 @@ import { Check, Star, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Pricing | OptioHire - Transparent AI Hiring Solutions',
-  description: 'Simple, transparent pricing for AI-powered recruitment. Choose the plan that fits your hiring needs with no hidden fees.',
-  keywords: 'pricing, recruitment pricing, AI hiring costs, hiring software pricing'
+  description: 'Simple pricing for OptioHire, the B2B HR tech SaaS by Cres Dynamics in Nairobi that helps teams hire faster with smart screening and fair evaluation.',
+  keywords: 'skills-first hiring pricing, recruitment software pricing, AI hiring platform cost, transparent hiring plans, B2B HR tech pricing'
 }
 
 export default function PricingPage() {
@@ -52,7 +52,7 @@ export default function PricingPage() {
         'Advanced AI customization',
         'Dedicated account manager',
         'Custom integrations',
-        'SLA guarantees',
+        'SLA commitments',
         'On-premise deployment option'
       ],
       popular: false,
@@ -75,7 +75,7 @@ export default function PricingPage() {
     },
     {
       question: 'Do you offer refunds?',
-      answer: 'We offer a 30-day money-back guarantee. If you\'re not satisfied, we\'ll refund your payment.'
+      answer: 'We offer a 30-day refund policy subject to terms. If you are not satisfied, our team will review and process eligible refunds.'
     }
   ]
 
@@ -88,8 +88,8 @@ export default function PricingPage() {
             Simple, Transparent Pricing
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Choose the plan that fits your hiring needs. All plans include our core AI-powered
-            screening technology with no hidden fees or surprise charges.
+            Choose the plan that fits your hiring needs. Every plan includes skills-first
+            screening and fair evaluation workflows with no hidden fees.
           </p>
           <div className="mt-8 inline-flex items-center gap-2 bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
             <Star className="w-4 h-4" />
@@ -186,8 +186,8 @@ export default function PricingPage() {
             Ready to Get Started?
           </h2>
           <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
-            Join hundreds of companies already using OptioHire to transform their hiring process.
-            Start your free trial today.
+            Evaluate OptioHire with a 14-day free trial and see how skills-first
+            screening improves hiring quality and speed.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="inline-flex items-center px-8 py-4 bg-white text-teal-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200">

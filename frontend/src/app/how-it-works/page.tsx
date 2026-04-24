@@ -1,12 +1,12 @@
 import { Metadata } from 'next'
-import { ArrowRight, CheckCircle, Users, Target, Award } from 'lucide-react'
+import { ArrowRight, CheckCircle, Users, Target } from 'lucide-react'
 import VideoSection from '@/components/ui/video-section'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 
 export const metadata: Metadata = {
   title: 'How OptioHire Works | Simple, Fair Hiring Process',
-  description: 'See how OptioHire removes uncertainty from hiring with a simple 3-step process that focuses on real skills and job readiness.',
-  keywords: 'hiring process, recruitment workflow, candidate screening, fair hiring, hiring automation'
+  description: 'See how OptioHire, built by Cres Dynamics in Nairobi, helps companies hire 3x faster through Smart Screening, Fair Evaluation, and Confident Decisions.',
+  keywords: 'skills-first hiring, role readiness, cultural fit, smart screening, fair evaluation, confident hiring decisions'
 }
 
 export default function HowItWorksPage() {
@@ -19,8 +19,7 @@ export default function HowItWorksPage() {
             How OptioHire Works
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            A simple, transparent process that brings clarity and confidence to every hiring decision.
-            No more guesswork, just data-driven insights that help you find the right person for the role.
+            A simple, transparent process that helps teams hire 3x faster with objective candidate evaluation and data-driven final decisions.
           </p>
         </div>
       </section>
@@ -252,13 +251,12 @@ export default function HowItWorksPage() {
           </div>
 
           <div className="bg-white p-8 rounded-lg shadow-sm max-w-2xl mx-auto">
-            <Award className="w-12 h-12 text-teal-600 mx-auto mb-4" />
-            <blockquote className="text-lg text-gray-700 mb-4">
-              "OptioHire transformed our hiring from a stressful guessing game into a
-              confident, data-driven process. We found better candidates faster and
-              made hires we're actually excited about."
-            </blockquote>
-            <cite className="text-gray-500">- Sarah Johnson, Head of Talent, TechCorp Nairobi</cite>
+            <p className="text-lg text-gray-700 mb-2">
+              We publish only validated customer evidence.
+            </p>
+            <p className="text-gray-500">
+              Case studies and verified client testimonials will appear here as soon as they are approved for publication.
+            </p>
           </div>
         </div>
       </section>
@@ -270,8 +268,8 @@ export default function HowItWorksPage() {
             Ready to Experience Better Hiring?
           </h2>
           <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
-            Join hundreds of teams who've discovered how OptioHire makes hiring
-            simpler, fairer, and more successful.
+            See how OptioHire makes hiring simpler, fairer, and more successful
+            with skills-first evaluation and transparent AI recommendations.
           </p>
           <button className="inline-flex items-center px-8 py-3 bg-white text-teal-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200">
             Request a Demo

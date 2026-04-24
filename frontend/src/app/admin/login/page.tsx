@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Shield, ShieldAlert } from 'lucide-react'
 
-const ADMIN_EMAIL = 'admin@optiohire.com'
 const ADMIN_NAME = 'Admin Manager'
 
 export default function AdminLoginPage() {
@@ -25,11 +24,6 @@ export default function AdminLoginPage() {
 
     if (!email || !password) {
       setError('Email and password are required')
-      return
-    }
-
-    if (email.toLowerCase() !== ADMIN_EMAIL) {
-      setError('Invalid admin email')
       return
     }
 

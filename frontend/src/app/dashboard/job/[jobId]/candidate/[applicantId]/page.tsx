@@ -323,9 +323,10 @@ export default function CandidateDetailPage() {
               href={candidate.resume_url}
               target="_blank"
               rel="noopener noreferrer"
+              download
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#2D2DDD] text-white rounded-lg transition-transform hover:scale-105 active:scale-95 no-underline"
             >
-              View CV
+              Download CV
               <ExternalLink className="h-4 w-4" />
             </a>
           </CardContent>

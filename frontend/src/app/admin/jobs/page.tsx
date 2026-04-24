@@ -201,14 +201,14 @@ export default function AdminJobsPage() {
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-gray-400 hover:text-white"
+            className="text-neutral-400 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Manage Job Postings</h1>
-            <p className="text-gray-400">View and manage all job postings</p>
+            <p className="text-neutral-400">View and manage all job postings</p>
           </div>
         </div>
 
@@ -295,7 +295,7 @@ export default function AdminJobsPage() {
                   {jobs.map((job) => (
                     <div
                       key={job.job_posting_id}
-                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg hover:bg-neutral-750"
+                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg hover:bg-neutral-700"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">

@@ -65,7 +65,7 @@ export function ReportViewer({ jobId, jobTitle }: ReportViewerProps) {
       const data = await response.json()
       setReport(data.report)
     } catch (err: any) {
-      if (err.message !== 'Failed to fetch report' || err.message !== 'Not authenticated') {
+      if (err.message !== 'Failed to fetch report' && err.message !== 'Not authenticated') {
         setError(err.message || 'Failed to load report')
       }
     } finally {
