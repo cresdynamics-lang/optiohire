@@ -62,3 +62,16 @@ export function validateUrl(url: string): boolean {
     return false
   }
 }
+
+/**
+ * Fetch/Request signal with a time limit. Use this when `AbortSignal.timeout` is not
+ * available (older runtimes) to avoid "Failed to load dashboard metrics" from a thrown TypeError.
+ */
+export function createTimeoutSignal(ms: number): AbortSignal {
+  if (typeof AbortSignal !== 'undefined' && typeof (AbortSignal as { timeout?: (n: number) => AbortSignal }).timeout === 'function') {
+    return (AbortSignal as { timeout: (n: number) => AbortSignal }).timeout(ms)
+  }
+  const c = new AbortController()
+  setTimeout(() => c.abort(), ms)
+  return c.signal
+}
