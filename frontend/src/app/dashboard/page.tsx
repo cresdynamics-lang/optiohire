@@ -21,6 +21,11 @@ const OptimizedDashboardLayout = dynamic(
 export default function DashboardPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+  const isJobSeeker =
+    normalizedCompanyRole === 'candidate' ||
+    normalizedCompanyRole === 'job_seeker' ||
+    normalizedCompanyRole === 'jobseeker'
 
   useEffect(() => {
     // Don't redirect while loading - give auth time to initialize
@@ -32,8 +37,15 @@ export default function DashboardPage() {
       return
     }
 
-    // Require company setup before dashboard (e.g. Google sign-in)
-    if (user && user.role !== 'admin' && user.hasCompany === false && !user.companyId) {
+    // Require company setup before dashboard (employers only; job seekers skip)
+    if (
+      user &&
+      user.role !== 'admin' &&
+      !isJobSeeker &&
+      user.companyRole &&
+      user.hasCompany === false &&
+      !user.companyId
+    ) {
       router.replace('/company-setup')
       return
     }
@@ -60,7 +72,7 @@ export default function DashboardPage() {
       
       return () => clearTimeout(timeout)
     }
-  }, [user, loading, router])
+  }, [user, loading, router, isJobSeeker])
 
   // Show loading while checking
   if (loading || (user && user.role === 'admin')) {

@@ -58,6 +58,18 @@ const jobSeekerSidebarItems = [
     href: '/dashboard',
   },
   {
+    id: 'jobs',
+    label: 'Jobs',
+    icon: Briefcase,
+    href: '/dashboard/jobs',
+  },
+  {
+    id: 'interviews',
+    label: 'Interviews',
+    icon: Calendar,
+    href: '/dashboard/interviews',
+  },
+  {
     id: 'profile',
     label: 'My Profile',
     icon: Settings,
@@ -94,7 +106,11 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
     user?.name ||
     user?.email ||
     'HR workspace'
-  const isJobSeeker = user?.companyRole === 'candidate'
+  const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+  const isJobSeeker =
+    normalizedCompanyRole === 'candidate' ||
+    normalizedCompanyRole === 'job_seeker' ||
+    normalizedCompanyRole === 'jobseeker'
   const navItems = isJobSeeker ? jobSeekerSidebarItems : sidebarItems
   const displayOrgName = isJobSeeker ? (user?.name || 'Job Seeker Workspace') : orgName
   const displayProfileLine = isJobSeeker ? (user?.email || 'Candidate account') : profileLine

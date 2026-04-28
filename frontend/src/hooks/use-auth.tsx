@@ -29,9 +29,46 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+function normalizeCompanyRole(value?: string | null): string | null {
+  if (!value) return null
+  const role = value.toLowerCase().trim()
+  if (role === 'candidate' || role === 'job_seeker' || role === 'jobseeker') {
+    return 'candidate'
+  }
+  return role
+}
+
+function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length < 2) return null
+    const base64Url = parts[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=')
+    return JSON.parse(atob(padded))
+  } catch {
+    return null
+  }
+}
+
+function shouldRequireCompanySetup(user: Partial<AuthUser> | null | undefined): boolean {
+  if (!user || user.role === 'admin') return false
+  if (normalizeCompanyRole(user.companyRole) === 'candidate') return false
+  return user.hasCompany === false && !user.companyId
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<null | AuthUser>(null)
   const [loading, setLoading] = useState(true) // Start as true to check token on mount
+  const getBackendBaseUrl = () => {
+    const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim()
+    if (envUrl) return envUrl.replace(/\/$/, '')
+    if (typeof window !== 'undefined') {
+      const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      if (isLocalHost) return 'http://localhost:3001'
+    }
+    return ''
+  }
 
   // Check for existing token on mount and fetch full user profile
   useEffect(() => {
@@ -63,7 +100,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         // Try to decode token to get basic user info
-        const payload = JSON.parse(atob(token.split('.')[1]))
+        const payload = decodeJwtPayload(token)
+        if (!payload) {
+          console.log('Invalid token payload')
+          localStorage.removeItem('token')
+          setUser(null)
+          setLoading(false)
+          return
+        }
         
         // Check token expiration
         const now = Math.floor(Date.now() / 1000)
@@ -77,12 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (payload.sub && payload.email) {
+          const normalizedCompanyRole = normalizeCompanyRole(payload.company_role || payload.companyRole)
           // Set basic user info immediately (non-blocking) for fast UI
           // Include role from token if available
           const basicUser = {
             email: payload.email,
             id: payload.sub,
-            role: payload.role || undefined
+            role: payload.role || undefined,
+            companyRole: normalizedCompanyRole,
+            hasCompany: typeof payload.hasCompany === 'boolean' ? payload.hasCompany : undefined,
+            companyId: payload.companyId || null,
           }
           setUser(basicUser)
           
@@ -98,7 +146,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
           
           try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+          const backendUrl = getBackendBaseUrl()
+          if (!backendUrl) {
+            clearTimeout(timeoutId)
+            setUser(fallbackUser)
+            return
+          }
           const resp = await fetch(`${backendUrl}/api/user/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -118,7 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: userData.id || userData.user_id,
               created_at: userData.created_at,
               role: userData.role,
-              companyRole: userData.company_role || userData.companyRole || null,
+              companyRole: normalizeCompanyRole(userData.company_role || userData.companyRole || null),
               hasCompany: userData.hasCompany ?? false,
               companyId: userData.companyId || null,
               companyName: userData.companyName || null,
@@ -129,7 +182,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             })
             
             // User has no company (e.g. signed up with Google): keep token and user, redirect to company-setup in layout
-            if (!userData.hasCompany && !userData.companyId && userData.role !== 'admin') {
+            if (shouldRequireCompanySetup({
+              role: userData.role,
+              companyRole: normalizeCompanyRole(userData.company_role || userData.companyRole || null),
+              hasCompany: userData.hasCompany,
+              companyId: userData.companyId || null,
+            })) {
               setUser({
                 ...userData,
                 hasCompany: false,
@@ -192,7 +250,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Don't set global loading here - it can cause AuthProvider to re-render and remount the signup form
       // Call backend directly to avoid dev-time Next API compilation lag on signup.
       // hr_email is set to company_email since the form doesn't have a separate hr_email field
-      const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '')
+      const backendUrl = getBackendBaseUrl()
+      if (!backendUrl) {
+        return { error: { message: 'Backend URL is not configured. Please set NEXT_PUBLIC_BACKEND_URL.' } }
+      }
       const resp = await fetch(`${backendUrl}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -214,20 +275,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (data?.token) {
         localStorage.setItem('token', data.token)
+        const resolvedRole = data?.user?.company_role || company_role
+        const isCandidate = resolvedRole === 'candidate'
         setUser({
           name: data?.user?.name || name,
           email: email.toLowerCase(),
           id: data?.user?.id || data?.user?.user_id,
           created_at: data?.user?.created_at,
           role: data?.user?.role,
-          companyRole: data?.user?.company_role || company_role,
-          hasCompany: data?.company ? true : (data?.user?.hasCompany ?? true),
-          companyId: data?.company?.company_id || data?.user?.companyId || null,
-          companyName: data?.company?.company_name || data?.user?.companyName || organization_name,
-          companyEmail: data?.company?.company_email || data?.user?.companyEmail || company_email,
-          hrEmail: data?.company?.hr_email || data?.user?.hrEmail || company_email,
-          hiringManagerEmail: data?.company?.hiring_manager_email || data?.user?.hiringManagerEmail || hiring_manager_email,
-          companyLogoUrl: data?.company?.company_logo_url || data?.user?.companyLogoUrl || null
+          companyRole: normalizeCompanyRole(resolvedRole),
+          hasCompany: isCandidate ? false : data?.company ? true : (data?.user?.hasCompany ?? false),
+          companyId: isCandidate ? undefined : data?.company?.company_id || data?.user?.companyId || null,
+          companyName: isCandidate ? undefined : data?.company?.company_name || data?.user?.companyName || organization_name,
+          companyEmail: isCandidate ? undefined : data?.company?.company_email || data?.user?.companyEmail || company_email,
+          hrEmail: isCandidate ? undefined : data?.company?.hr_email || data?.user?.hrEmail || company_email,
+          hiringManagerEmail: isCandidate
+            ? undefined
+            : data?.company?.hiring_manager_email || data?.user?.hiringManagerEmail || hiring_manager_email,
+          companyLogoUrl: isCandidate ? undefined : data?.company?.company_logo_url || data?.user?.companyLogoUrl || null,
         })
       }
       return {
@@ -251,7 +316,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true)
       // Call backend directly to avoid dev-time Next API route compile lag.
-      const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '')
+      const backendUrl = getBackendBaseUrl()
+      if (!backendUrl) {
+        return { error: { message: 'Backend URL is not configured. Please set NEXT_PUBLIC_BACKEND_URL.' } }
+      }
       const resp = await fetch(`${backendUrl}/auth/signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -264,32 +332,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (data?.token) {
         localStorage.setItem('token', data.token)
-        setUser({ 
-          username: data?.user?.username || null,
-          name: data?.user?.name || null,
+        const u = data?.user || {}
+        const normalizedCompanyRole = normalizeCompanyRole(u.company_role)
+        const isCandidate = normalizedCompanyRole === 'candidate'
+        // Job seekers: keep employer/company fields empty so UI routes to the candidate dashboard, not company-setup.
+        setUser({
+          username: u.username || null,
+          name: u.name || null,
           email: email.toLowerCase(),
-          id: data?.user?.id || data?.user?.user_id, // Support both formats
-          created_at: data?.user?.created_at,
-          role: data?.user?.role,
-          companyRole: data?.user?.company_role || null,
-          hasCompany: data?.user?.hasCompany ?? false,
-          companyId: data?.user?.companyId || null,
-          companyName: data?.user?.companyName || null,
-          companyEmail: data?.user?.companyEmail || null,
-          hrEmail: data?.user?.hrEmail || null,
-          hiringManagerEmail: data?.user?.hiringManagerEmail || null,
-          companyLogoUrl: data?.user?.companyLogoUrl || null
+          id: u.id || u.user_id,
+          created_at: u.created_at,
+          role: u.role,
+          companyRole: normalizedCompanyRole,
+          hasCompany: isCandidate ? false : (u.hasCompany ?? false),
+          companyId: isCandidate ? undefined : (u.companyId || null),
+          companyName: isCandidate ? undefined : (u.companyName || null),
+          companyEmail: isCandidate ? undefined : (u.companyEmail || null),
+          hrEmail: isCandidate ? undefined : (u.hrEmail || null),
+          hiringManagerEmail: isCandidate ? undefined : (u.hiringManagerEmail || null),
+          companyLogoUrl: isCandidate ? undefined : (u.companyLogoUrl || null),
         })
-        
-        // User has no company: keep them logged in; dashboard will redirect to company-setup
-        if (!data?.user?.hasCompany && !data?.user?.companyId && data?.user?.role !== 'admin') {
-          setUser({
-            ...data.user,
-            hasCompany: false,
-            companyId: null
-          })
-          return { error: null }
-        }
       }
       return { error: null }
     } catch (err) {

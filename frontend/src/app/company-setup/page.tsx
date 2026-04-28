@@ -59,10 +59,21 @@ export default function CompanySetupPage() {
 
   // If user already has a company, redirect to dashboard
   useEffect(() => {
+    const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+    const isJobSeeker =
+      normalizedCompanyRole === 'candidate' ||
+      normalizedCompanyRole === 'job_seeker' ||
+      normalizedCompanyRole === 'jobseeker'
+
+    if (isJobSeeker) {
+      router.replace('/dashboard')
+      return
+    }
+
     if (user?.hasCompany && user?.companyId) {
       router.replace('/dashboard')
     }
-  }, [user?.hasCompany, user?.companyId, router])
+  }, [user?.companyRole, user?.hasCompany, user?.companyId, router])
 
   const {
     register,

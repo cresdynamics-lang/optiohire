@@ -144,6 +144,62 @@ const LazyJobSeekerOverviewSection = dynamic(
   }
 )
 
+const LazyJobSeekerJobsSection = dynamic(
+  () => {
+    return import('./sections/job-seeker-jobs-section')
+      .then((mod: any) => {
+        if (!mod || typeof mod !== 'object') {
+          throw new Error('JobSeekerJobsSection module not found')
+        }
+        const Export = mod.JobSeekerJobsSection
+        if (!Export || typeof Export !== 'function') {
+          throw new Error('JobSeekerJobsSection export not found')
+        }
+        return { default: Export }
+      })
+      .catch((err: any) => {
+        console.error('Error loading JobSeekerJobsSection:', err)
+        return {
+          default: function JobSeekerJobsErrorFallback() {
+            return <SectionLoader sectionName="jobs" />
+          },
+        }
+      })
+  },
+  {
+    loading: () => <SectionLoader sectionName="jobs" />,
+    ssr: false,
+  }
+)
+
+const LazyJobSeekerInterviewsSection = dynamic(
+  () => {
+    return import('./sections/job-seeker-interviews-section')
+      .then((mod: any) => {
+        if (!mod || typeof mod !== 'object') {
+          throw new Error('JobSeekerInterviewsSection module not found')
+        }
+        const Export = mod.JobSeekerInterviewsSection
+        if (!Export || typeof Export !== 'function') {
+          throw new Error('JobSeekerInterviewsSection export not found')
+        }
+        return { default: Export }
+      })
+      .catch((err: any) => {
+        console.error('Error loading JobSeekerInterviewsSection:', err)
+        return {
+          default: function JobSeekerInterviewsErrorFallback() {
+            return <SectionLoader sectionName="interviews" />
+          },
+        }
+      })
+  },
+  {
+    loading: () => <SectionLoader sectionName="interviews" />,
+    ssr: false,
+  }
+)
+
 const LazyJobsSection = dynamic(
   () => {
     return import('./sections/jobs-section')
@@ -263,9 +319,17 @@ function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
       ? { eyebrow: 'Candidate', title: 'My profile' }
       : { eyebrow: 'Workspace', title: 'Profile & company' }
   }
-  if (p.startsWith('/dashboard/jobs')) return { eyebrow: 'Hiring', title: 'Job postings' }
+  if (p.startsWith('/dashboard/jobs')) {
+    return isJobSeeker
+      ? { eyebrow: 'Candidate workspace', title: 'Jobs' }
+      : { eyebrow: 'Hiring', title: 'Job postings' }
+  }
   if (p.startsWith('/dashboard/reports')) return { eyebrow: 'Hiring', title: 'Reports & analytics' }
-  if (p.startsWith('/dashboard/interviews')) return { eyebrow: 'Hiring', title: 'Interviews' }
+  if (p.startsWith('/dashboard/interviews')) {
+    return isJobSeeker
+      ? { eyebrow: 'Candidate workspace', title: 'Interviews' }
+      : { eyebrow: 'Hiring', title: 'Interviews' }
+  }
   return isJobSeeker
     ? { eyebrow: 'Candidate workspace', title: 'My dashboard' }
     : { eyebrow: 'Employer workspace', title: 'Dashboard' }
@@ -275,7 +339,11 @@ function DashboardContent() {
   const { user, loading } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
-  const isJobSeeker = user?.companyRole === 'candidate'
+  const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+  const isJobSeeker =
+    normalizedCompanyRole === 'candidate' ||
+    normalizedCompanyRole === 'job_seeker' ||
+    normalizedCompanyRole === 'jobseeker'
   const pageMeta = dashboardPageMeta(pathname, isJobSeeker)
   const [activeSection, setActiveSection] = useState('overview')
   const [isPreloading, setIsPreloading] = useState(true)
@@ -308,21 +376,6 @@ function DashboardContent() {
     // This handles cases where hasCompany wasn't set but company was created
   }, [user, loading, router, isJobSeeker])
 
-  // Job seekers should not use employer-only routes; normalize to dashboard home.
-  useEffect(() => {
-    if (loading || !user || !isJobSeeker) return
-    const employerOnly =
-      pathname === '/dashboard/jobs' ||
-      pathname?.startsWith('/dashboard/jobs/') ||
-      pathname === '/dashboard/reports' ||
-      pathname?.startsWith('/dashboard/reports/') ||
-      pathname === '/dashboard/interviews' ||
-      pathname?.startsWith('/dashboard/interviews/')
-    if (employerOnly) {
-      router.replace('/dashboard')
-    }
-  }, [loading, user, isJobSeeker, pathname, router])
-
   // Sync active section with URL pathname
   useEffect(() => {
     if (pathname === '/dashboard' || pathname === '/dashboard/') {
@@ -333,14 +386,16 @@ function DashboardContent() {
       setActiveSection('profile')
       return
     }
-    if (!isJobSeeker) {
-      if (pathname === '/dashboard/jobs' || pathname?.startsWith('/dashboard/jobs/')) {
-        setActiveSection('jobs')
-      } else if (pathname === '/dashboard/reports' || pathname?.startsWith('/dashboard/reports/')) {
-        setActiveSection('reports')
-      } else if (pathname === '/dashboard/interviews' || pathname?.startsWith('/dashboard/interviews/')) {
-        setActiveSection('interviews')
-      }
+    if (pathname === '/dashboard/jobs' || pathname?.startsWith('/dashboard/jobs/')) {
+      setActiveSection('jobs')
+      return
+    }
+    if (pathname === '/dashboard/interviews' || pathname?.startsWith('/dashboard/interviews/')) {
+      setActiveSection('interviews')
+      return
+    }
+    if (!isJobSeeker && (pathname === '/dashboard/reports' || pathname?.startsWith('/dashboard/reports/'))) {
+      setActiveSection('reports')
     }
   }, [pathname, isJobSeeker])
 
@@ -405,11 +460,11 @@ function DashboardContent() {
         case 'overview':
           return isJobSeeker ? <LazyJobSeekerOverviewSection /> : <LazyOverviewSection />
         case 'jobs':
-          return <LazyJobsSection />
+          return isJobSeeker ? <LazyJobSeekerJobsSection /> : <LazyJobsSection />
         case 'reports':
           return <LazyReportsSection />
         case 'interviews':
-          return <LazyInterviewsSection />
+          return isJobSeeker ? <LazyJobSeekerInterviewsSection /> : <LazyInterviewsSection />
         case 'profile':
           return <LazyProfileSection />
         default:
@@ -439,11 +494,9 @@ function DashboardContent() {
     if (!user) return
     try {
       router.prefetch('/dashboard')
-      if (!isJobSeeker) {
-        router.prefetch('/dashboard/jobs')
-        router.prefetch('/dashboard/reports')
-        router.prefetch('/dashboard/interviews')
-      }
+      router.prefetch('/dashboard/jobs')
+      router.prefetch('/dashboard/interviews')
+      if (!isJobSeeker) router.prefetch('/dashboard/reports')
       router.prefetch('/dashboard/profile')
     } catch (e) {
       console.warn('Dashboard prefetch failed:', e)
@@ -457,6 +510,8 @@ function DashboardContent() {
     const sectionMap: Record<string, string> = isJobSeeker
       ? {
           overview: '/dashboard',
+          jobs: '/dashboard/jobs',
+          interviews: '/dashboard/interviews',
           profile: '/dashboard/profile',
         }
       : {
