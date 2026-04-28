@@ -237,25 +237,34 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Get company info
-    const { rows: companyRows } = await client.query(
-      `SELECT company_name, company_email, hr_email FROM companies WHERE company_id = $1`,
-      [companyId]
-    )
+    // Get company info (best effort; should not block job list)
+    let company: { company_name?: string; company_email?: string; hr_email?: string } = {}
+    try {
+      const { rows: companyRows } = await client.query(
+        `SELECT company_name, company_email, hr_email FROM companies WHERE company_id = $1`,
+        [companyId]
+      )
+      company = companyRows[0] || {}
+    } catch (companyErr) {
+      console.warn('Failed to load company metadata for job-postings response:', companyErr)
+    }
 
-    const company = companyRows[0] || {}
+    // Get reports counts for the user's companies (best effort; table may be absent in some environments)
+    let reportsCounts: { total_reports: string; ready_reports: string } = { total_reports: '0', ready_reports: '0' }
+    try {
+      const { rows: reportCountRows } = await client.query<{ total_reports: string; ready_reports: string }>(
+        `SELECT 
+          COUNT(*)::int as total_reports,
+          COUNT(*) FILTER (WHERE status = 'completed')::int as ready_reports
+         FROM reports
+         WHERE company_id = ANY($1::uuid[])`,
+        [companyIds]
+      )
+      reportsCounts = reportCountRows[0] || reportsCounts
+    } catch (reportErr) {
+      console.warn('Failed to load report counts for job-postings response:', reportErr)
+    }
 
-    // Get reports counts for the user's companies
-    const { rows: reportCountRows } = await client.query<{ total_reports: string; ready_reports: string }>(
-      `SELECT 
-        COUNT(*)::int as total_reports,
-        COUNT(*) FILTER (WHERE status = 'completed')::int as ready_reports
-       FROM reports
-       WHERE company_id = ANY($1::uuid[])`,
-      [companyIds]
-    )
-
-    const reportsCounts = reportCountRows[0] || { total_reports: '0', ready_reports: '0' }
     const totalReports = Number(reportsCounts.total_reports || 0)
     const readyReports = Number(reportsCounts.ready_reports || 0)
 
