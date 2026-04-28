@@ -1,43 +1,25 @@
 'use client'
 
-import type { ComponentType } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowRight,
-  Clock,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
-  Users,
-  Briefcase,
-  Building2,
-  User,
-  CheckCircle2,
-} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function HomePageContent() {
   const router = useRouter()
-  const SafeIcon = ({ icon: Icon }: { icon: ComponentType<{ className?: string }> | undefined }) =>
-    Icon ? <Icon className="h-5 w-5 text-blue-700" /> : <Sparkles className="h-5 w-5 text-blue-700" />
   const outcomes = [
     {
       title: 'Faster time-to-hire',
       metric: '3x faster',
       description: 'Automated screening and ranked candidates reduce manual review time across every role.',
-      icon: Clock,
     },
     {
       title: 'Better quality hires',
       metric: '+40%',
       description: 'Structured scorecards and role-fit signals improve hiring confidence and long-term retention.',
-      icon: TrendingUp,
     },
     {
       title: 'Fairer decisions',
       metric: 'Bias-aware',
       description: 'Consistent evaluation rubrics help teams reduce noise and keep candidate review accountable.',
-      icon: ShieldCheck,
     },
   ]
 
@@ -45,22 +27,18 @@ export default function HomePageContent() {
     {
       title: 'High-growth startups',
       description: 'Move quickly without compromising candidate quality while hiring for critical roles.',
-      icon: Briefcase,
     },
     {
       title: 'Scaling SMEs',
       description: 'Standardize hiring workflows across teams and keep recruiters aligned as volume increases.',
-      icon: Building2,
     },
     {
       title: 'Enterprise HR teams',
       description: 'Unify hiring decisions with measurable, auditable reports across departments.',
-      icon: Users,
     },
     {
       title: 'Specialist recruiting',
       description: 'Evaluate deeper role-readiness for technical and hard-to-fill positions.',
-      icon: User,
     },
   ]
 
@@ -104,7 +82,7 @@ export default function HomePageContent() {
                 className="group rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
               >
                 <div className="mb-5 inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                  <SafeIcon icon={outcome.icon} />
+                  <span className="h-5 w-5 rounded-full bg-blue-700/20" />
                 </div>
                 <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{outcome.metric}</p>
                 <h3 className="mt-2 text-xl font-semibold text-slate-900">{outcome.title}</h3>
@@ -120,7 +98,7 @@ export default function HomePageContent() {
           <div className="grid items-start gap-8 lg:grid-cols-[1.2fr_1fr]">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-blue-100">
-                <Sparkles className="h-3.5 w-3.5" />
+                <span className="h-2 w-2 rounded-full bg-blue-200" />
                 How it works
               </p>
               <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -136,7 +114,7 @@ export default function HomePageContent() {
                 onClick={() => router.push('/how-it-works')}
               >
                 Explore Process
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <span className="ml-2 text-xs">-&gt;</span>
               </Button>
             </div>
             <div className="space-y-3">
@@ -146,7 +124,7 @@ export default function HomePageContent() {
                 'Share final recommendations with hiring stakeholders',
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/15 bg-white/10 p-4">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-300" />
+                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-300" />
                   <p className="text-sm text-slate-100">{item}</p>
                 </div>
               ))}
@@ -168,7 +146,7 @@ export default function HomePageContent() {
             </div>
             <Button variant="outline" className="rounded-2xl" onClick={() => router.push('/use-cases')}>
               View Use Cases
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <span className="ml-2 text-xs">-&gt;</span>
             </Button>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -178,7 +156,7 @@ export default function HomePageContent() {
                 className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <div className="mb-4 inline-flex rounded-2xl bg-slate-100 p-3">
-                  <SafeIcon icon={useCase.icon} />
+                  <span className="h-5 w-5 rounded-full bg-blue-700/20" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900">{useCase.title}</h3>
                 <p className="mt-2 text-slate-600">{useCase.description}</p>
@@ -200,7 +178,7 @@ export default function HomePageContent() {
               </p>
               <Button className="mt-6 rounded-2xl" onClick={() => router.push('/trust-security')}>
                 Learn About Security
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <span className="ml-2 text-xs">-&gt;</span>
               </Button>
             </div>
             <div className="space-y-4">
