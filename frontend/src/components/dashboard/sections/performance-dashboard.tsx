@@ -83,27 +83,32 @@ export function PerformanceDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8 px-1 sm:px-0">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-figtree font-extralight mb-2 text-[#2D2DDD] dark:text-white">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="mb-2 text-2xl font-figtree font-extralight text-[#2D2DDD] md:text-3xl dark:text-white">
               Performance Dashboard
             </h1>
-            <p className="text-base md:text-lg font-figtree font-light text-gray-600 dark:text-gray-400">
+            <p className="text-base font-figtree font-light text-gray-600 md:text-lg dark:text-gray-400">
               Real-time system performance metrics
             </p>
             <p className="text-sm text-muted-foreground font-figtree font-light">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </p>
           </div>
-          <Button onClick={loadMetrics} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button
+            type="button"
+            onClick={loadMetrics}
+            variant="outline"
+            className="min-h-[44px] w-full touch-manipulation sm:min-h-10 sm:w-auto"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
         </div>
@@ -123,8 +128,8 @@ export function PerformanceDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className={`flex items-center gap-2 ${getStatusColor(metrics.health.status)}`}>
                   {getStatusIcon(metrics.health.status)}
                   <span className="font-semibold capitalize">{metrics.health.status}</span>
@@ -133,7 +138,7 @@ export function PerformanceDashboard() {
                   {metrics.health.issues.length} issues
                 </Badge>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="text-sm text-muted-foreground">
                   Avg Response Time: {metrics.health.summary.avgResponseTime5min.toFixed(2)}ms
                 </p>
@@ -268,7 +273,7 @@ export function PerformanceDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
               <div className="text-center">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center mx-auto mb-3">
                   <Globe className="w-8 h-8 text-white" />
@@ -333,7 +338,7 @@ export function PerformanceDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 md:gap-6">
               <div className="text-center">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center mx-auto mb-3">
                   <Database className="w-8 h-8 text-white" />
@@ -393,12 +398,15 @@ export function PerformanceDashboard() {
           <CardContent>
             <div className="space-y-3">
               {metrics.recentOperations.map((op: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${op.success ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <span className="font-medium">{op.operation}</span>
+                <div
+                  key={index}
+                  className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`h-2 w-2 shrink-0 rounded-full ${op.success ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="min-w-0 font-medium break-words">{op.operation}</span>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex shrink-0 flex-wrap items-center gap-3 pl-5 text-sm text-muted-foreground sm:gap-4 sm:pl-0">
                     <span>{op.duration.toFixed(2)}ms</span>
                     <span>{new Date(op.timestamp).toLocaleTimeString()}</span>
                   </div>

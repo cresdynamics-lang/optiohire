@@ -156,32 +156,43 @@ export function RealCandidatesSection() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8 px-1 sm:px-0">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-figtree font-extralight mb-2 text-[#2D2DDD] dark:text-white">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="mb-2 text-2xl font-figtree font-extralight text-[#2D2DDD] md:text-3xl dark:text-white">
               Real Candidates from N8N
             </h1>
-            <p className="text-base md:text-lg font-figtree font-light text-gray-600 dark:text-gray-400">
+            <p className="text-base font-figtree font-light text-gray-600 md:text-lg dark:text-gray-400">
               AI-processed candidates from your n8n workflow
             </p>
             <p className="text-sm text-muted-foreground font-figtree font-light">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button onClick={loadRealCandidates} variant="outline" disabled={isLoading}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin-smooth' : ''}`} />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
+            <Button
+              type="button"
+              onClick={loadRealCandidates}
+              variant="outline"
+              disabled={isLoading}
+              className="min-h-[44px] w-full touch-manipulation sm:min-h-10 sm:w-auto"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin-smooth' : ''}`} />
               Refresh
             </Button>
-            <Button onClick={exportCandidates} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
+            <Button
+              type="button"
+              onClick={exportCandidates}
+              variant="outline"
+              className="min-h-[44px] w-full touch-manipulation sm:min-h-10 sm:w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" />
               Export CSV
             </Button>
           </div>
@@ -239,29 +250,29 @@ export function RealCandidatesSection() {
                 transition={{ type: 'tween', duration: 0.3, delay: index * 0.05, ease: 'easeOut' }}
                 className="gpu-accelerated"
               >
-                <Card className="hover:shadow-lg transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                <Card className="group transition-all duration-300 hover:shadow-lg">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex flex-wrap items-center gap-2 gap-y-2">
                           <h3 className="text-lg font-semibold font-figtree">{candidate.candidate_name}</h3>
                           <Badge className={`${getStatusColor(candidate.status)} flex items-center gap-1`}>
                             {getStatusIcon(candidate.status)}
                             {candidate.status}
                           </Badge>
                           <div className={`flex items-center gap-1 ${getScoreColor(candidate.score)}`}>
-                            <Star className="w-4 h-4" />
+                            <Star className="h-4 w-4" />
                             <span className="font-semibold">{candidate.score}/100</span>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground font-figtree font-light mb-3">
-                          <div className="flex items-center gap-1">
-                            <Mail className="w-4 h-4" />
-                            {candidate.email}
+                        <div className="mb-3 flex flex-col gap-2 text-sm text-muted-foreground font-figtree font-light sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2">
+                          <div className="flex min-w-0 items-center gap-1">
+                            <Mail className="h-4 w-4 shrink-0" />
+                            <span className="break-all">{candidate.email}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
+                            <Calendar className="h-4 w-4 shrink-0" />
                             {new Date(candidate.created_at).toLocaleDateString()}
                           </div>
                         </div>
@@ -278,14 +289,16 @@ export function RealCandidatesSection() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2 ml-4">
+                      <div className="flex shrink-0 items-center gap-2 sm:ml-4">
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => setSelectedCandidate(candidate)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="min-h-[44px] min-w-[44px] touch-manipulation sm:min-h-9 sm:min-w-0 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+                          aria-label="View candidate details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -302,21 +315,23 @@ export function RealCandidatesSection() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
           onClick={() => setSelectedCandidate(null)}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+            className="max-h-[min(90dvh,40rem)] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-lg sm:p-6 sm:pb-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Candidate Details</h3>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold sm:text-xl">Candidate Details</h3>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedCandidate(null)}
+                className="min-h-[44px] shrink-0 touch-manipulation sm:min-h-9"
               >
                 Close
               </Button>
@@ -325,7 +340,7 @@ export function RealCandidatesSection() {
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-2">Basic Information</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 gap-3 text-sm min-[400px]:grid-cols-2 min-[400px]:gap-4">
                   <div>
                     <span className="font-medium">Name:</span> {selectedCandidate.candidate_name}
                   </div>

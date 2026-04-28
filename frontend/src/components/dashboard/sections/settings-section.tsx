@@ -236,7 +236,7 @@ export function SettingsSection() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8 px-1 sm:px-0">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -499,7 +499,7 @@ export function SettingsSection() {
                   setPreferences({ ...preferences, notification_frequency: value })
                 }
               >
-                <SelectTrigger className="bg-white dark:bg-gray-800">
+                <SelectTrigger className="h-11 min-h-[44px] w-full bg-white dark:bg-gray-800 sm:h-10 sm:min-h-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

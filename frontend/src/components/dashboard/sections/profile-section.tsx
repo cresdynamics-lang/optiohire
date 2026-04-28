@@ -33,6 +33,7 @@ import { ImageUpload } from '@/components/ui/image-upload'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { JobSeekerProfileSection } from './job-seeker-profile-section'
 
 interface CompanyData {
   id: string
@@ -75,6 +76,12 @@ export function ProfileSection() {
 
   const loadCompanyData = useCallback(async () => {
     if (!user || !user.id) {
+      setIsLoading(false)
+      return
+    }
+
+    if (user.companyRole === 'candidate') {
+      setCompany(null)
       setIsLoading(false)
       return
     }
@@ -377,6 +384,10 @@ export function ProfileSection() {
     ? Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24))
     : 0
 
+  if (user?.companyRole === 'candidate') {
+    return <JobSeekerProfileSection />
+  }
+
   return (
     <div className="space-y-8 pb-8">
       {/* Professional Header with Trust Indicators */}
@@ -386,83 +397,77 @@ export function ProfileSection() {
         transition={{ duration: 0.6 }}
         className="relative"
       >
-        <div className="bg-gradient-to-br from-[#2D2DDD] via-[#2D2DDD]/95 to-[#1a1a8a] rounded-2xl p-8 sm:p-12 shadow-2xl overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-              backgroundSize: '40px 40px'
-            }} />
-          </div>
-          
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.2)] backdrop-blur-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900/90">
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_62%)] sm:block" aria-hidden />
           <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center shadow-lg">
-                    <User className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+            <div className="flex flex-col items-stretch justify-between gap-6 sm:flex-row sm:items-start">
+              <div className="min-w-0 flex-1">
+                <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-200/90 bg-blue-50/90 shadow-sm ring-4 ring-blue-500/5 dark:border-gray-700 dark:bg-gray-800/80 sm:h-20 sm:w-20">
+                    <User className="h-8 w-8 text-[#2D2DDD] sm:h-10 sm:w-10" />
                   </div>
-                  <div>
-                    <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">
+                  <div className="min-w-0">
+                    <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
                       {getGreeting()},{' '}
                       {user?.name || user?.email?.split('@')[0] || 'User'}
                     </h1>
-                    <p className="text-white/80 text-sm mb-2">
+                    <p className="mb-2 text-sm text-slate-600 dark:text-gray-400">
                       Welcome back to your recruitment dashboard.
                     </p>
                     {(user as any)?.username && (
-                      <p className="text-white/80 text-sm font-mono mb-2">@{(user as any).username}</p>
+                      <p className="mb-2 font-mono text-sm text-slate-500 dark:text-gray-500">@{(user as any).username}</p>
                     )}
-                    <div className="flex items-center gap-2 mb-2">
-                      <BadgeCheck className="w-5 h-5 text-white/90" />
-                      <span className="text-white/90 font-medium">Verified Account</span>
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <BadgeCheck className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span className="font-medium text-slate-800 dark:text-gray-200">Verified account</span>
                     </div>
                     {user?.companyRole && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/80 text-sm">
-                          Role: <span className="font-semibold capitalize">{user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}</span>
+                      <p className="text-sm text-slate-600 dark:text-gray-400">
+                        Role:{' '}
+                        <span className="font-semibold capitalize text-slate-900 dark:text-white">
+                          {user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                         </span>
-                      </div>
+                      </p>
                     )}
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Mail className="w-4 h-4 text-white/80" />
-                      <span className="text-xs text-white/70 uppercase tracking-wide">Email</span>
+
+                <div className="mt-6 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-slate-500 dark:text-gray-400" />
+                      <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Email</span>
                     </div>
-                    <p className="text-white font-medium text-sm break-all">{user?.email || 'N/A'}</p>
+                    <p className="break-all text-sm font-medium text-slate-900 dark:text-white">{user?.email || 'N/A'}</p>
                   </div>
                   
                   {(user?.companyName || company?.company_name) && (
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Building2 className="w-4 h-4 text-white/80" />
-                        <span className="text-xs text-white/70 uppercase tracking-wide">Company</span>
+                    <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-slate-500 dark:text-gray-400" />
+                        <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Company</span>
                       </div>
-                      <p className="text-white font-medium text-sm">{user?.companyName || company?.company_name}</p>
-                      <p className="text-xs text-white/70 mt-1">As entered during signup</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">{user?.companyName || company?.company_name}</p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-gray-500">As entered during signup</p>
                     </div>
                   )}
                   
                   {user?.companyRole && (
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Key className="w-4 h-4 text-white/80" />
-                        <span className="text-xs text-white/70 uppercase tracking-wide">Role in company</span>
+                    <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Key className="h-4 w-4 text-slate-500 dark:text-gray-400" />
+                        <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Role in company</span>
                       </div>
-                      <p className="text-white font-medium text-sm capitalize">{user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
+                      <p className="text-sm font-medium capitalize text-slate-900 dark:text-white">{user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
                     </div>
                   )}
                   
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-4 h-4 text-white/80" />
-                      <span className="text-xs text-white/70 uppercase tracking-wide">Member Since</span>
+                  <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-slate-500 dark:text-gray-400" />
+                      <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Member since</span>
                     </div>
-                    <p className="text-white font-medium text-sm">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
                       {user?.created_at 
                         ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
                         : 'N/A'}
@@ -471,17 +476,16 @@ export function ProfileSection() {
                 </div>
               </div>
               
-              {/* Trust Badges */}
-              <div className="flex flex-col gap-3">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 text-center">
-                  <Shield className="w-6 h-6 text-white mx-auto mb-2" />
-                  <p className="text-xs text-white/70 uppercase tracking-wide mb-1">Security</p>
-                  <p className="text-white font-semibold text-sm">Protected</p>
+              <div className="flex shrink-0 flex-col gap-3 sm:w-40">
+                <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 p-4 text-center dark:border-gray-700 dark:bg-gray-800/60">
+                  <Shield className="mx-auto mb-2 h-6 w-6 text-[#2D2DDD] dark:text-blue-400" />
+                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Security</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Protected</p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 text-center">
-                  <Award className="w-6 h-6 text-white mx-auto mb-2" />
-                  <p className="text-xs text-white/70 uppercase tracking-wide mb-1">Status</p>
-                  <p className="text-white font-semibold text-sm">Active</p>
+                <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 p-4 text-center dark:border-gray-700 dark:bg-gray-800/60">
+                  <Award className="mx-auto mb-2 h-6 w-6 text-[#2D2DDD] dark:text-blue-400" />
+                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Status</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Active</p>
                 </div>
               </div>
             </div>

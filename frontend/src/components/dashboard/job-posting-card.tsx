@@ -34,8 +34,8 @@ export function JobPostingCard({ jobPosting, onViewDetails, delay = 0 }: JobPost
       <Card className="group transition-all duration-300 cursor-pointer"
             onClick={() => onViewDetails(jobPosting.id)}>
         <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
               <CardTitle className="text-xl font-figtree font-semibold mb-2 group-hover:text-primary transition-colors">
                 {jobPosting.job_title}
               </CardTitle>
@@ -43,7 +43,7 @@ export function JobPostingCard({ jobPosting, onViewDetails, delay = 0 }: JobPost
                 {jobPosting.job_description}
               </p>
             </div>
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex shrink-0 flex-row flex-wrap items-center gap-2 sm:flex-col sm:items-end">
               <Badge 
                 variant={
                   jobPosting.status?.toUpperCase() === 'ACTIVE' ? 'active' :
@@ -88,12 +88,12 @@ export function JobPostingCard({ jobPosting, onViewDetails, delay = 0 }: JobPost
 
             {/* Analytics */}
             {analytics && (
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+              <div className="grid grid-cols-3 gap-2 border-t pt-4 sm:gap-4">
                 <div className="text-center">
                   <p className="text-xl font-bold text-[#2D2DDD] dark:text-white font-figtree">
                     {analytics.total_applicants}
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Total</p>
+                  <p className="text-[11px] text-gray-600 sm:text-xs dark:text-gray-400">Total</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xl font-bold text-green-600 dark:text-green-400 font-figtree">
@@ -105,7 +105,7 @@ export function JobPostingCard({ jobPosting, onViewDetails, delay = 0 }: JobPost
                   <p className="text-xl font-bold text-red-600 dark:text-red-400 font-figtree">
                     {analytics.total_rejected}
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Rejected</p>
+                  <p className="text-[11px] text-gray-600 sm:text-xs dark:text-gray-400">Rejected</p>
                 </div>
               </div>
             )}
@@ -117,9 +117,10 @@ export function JobPostingCard({ jobPosting, onViewDetails, delay = 0 }: JobPost
                 <span>Created {formatDate(new Date(jobPosting.created_at))}</span>
               </div>
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
-                className="text-primary hover:text-primary/80"
+                className="min-h-[44px] touch-manipulation text-primary hover:text-primary/80 sm:min-h-9"
                 onClick={(e) => {
                   e.stopPropagation()
                   onViewDetails(jobPosting.id)

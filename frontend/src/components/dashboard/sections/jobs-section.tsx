@@ -557,23 +557,27 @@ export function JobsSection() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900/90"
       >
-        <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-2 text-gray-900 dark:text-white">
-            Job Postings
+        <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_65%)]" aria-hidden />
+        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-400">Hiring</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
+            Job postings
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            Create and manage your job postings
+          <p className="mt-2 text-sm text-slate-600 sm:text-base dark:text-gray-400">
+            Create roles, share them with candidates, and track your pipeline in one place.
           </p>
         </div>
-        <div className="flex flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex w-full flex-row gap-2 sm:w-auto sm:gap-3">
           <Button 
             variant="outline" 
             onClick={refreshJobs}
             disabled={isLoading}
             size="sm"
-            className="bg-[#2D2DDD] text-white border-[#2D2DDD] hover:bg-[#2D2DDD] hover:border-[#2D2DDD] dark:bg-[#2D2DDD] dark:text-white dark:border-[#2D2DDD] dark:hover:bg-[#2D2DDD] flex-1 sm:w-auto shadow-none hover:shadow-none"
+            type="button"
+            className="min-h-[44px] flex-1 touch-manipulation rounded-xl border-slate-200 bg-white text-slate-800 shadow-sm hover:bg-slate-50 sm:min-h-9 dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:w-auto"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin-smooth' : ''}`} />
             Refresh
@@ -581,12 +585,14 @@ export function JobsSection() {
           <Button 
             variant="default" 
             size="sm"
-            className="bg-[#2D2DDD] text-white hover:border-white hover:bg-[#2D2DDD] hover:text-white flex-1 sm:w-auto shadow-none hover:shadow-none"
+            type="button"
+            className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/25 hover:bg-blue-700 sm:min-h-9 sm:w-auto"
             onClick={() => setIsCreateModalOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Create New Job
+            Create new job
           </Button>
+        </div>
         </div>
       </motion.div>
 
@@ -633,8 +639,9 @@ export function JobsSection() {
                 Get started by creating your first job posting. You'll be able to manage applicants and track your recruitment pipeline.
               </p>
               <Button 
+                type="button"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
+                className="min-h-[44px] touch-manipulation rounded-xl bg-blue-600 px-6 text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 sm:min-h-10"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Your First Job
@@ -652,7 +659,7 @@ export function JobsSection() {
                           <CardContent className="p-4 sm:p-6">
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="mb-2 flex flex-wrap items-center gap-2 gap-y-2">
                       <h3 className="text-xl font-semibold font-figtree">{job.job_title}</h3>
                       <Badge 
                         variant={
@@ -699,7 +706,7 @@ export function JobsSection() {
                         type="button"
                         variant="default" 
                         size="sm"
-                      className="bg-[#2D2DDD] text-white hover:bg-[#2D2DDD] w-full shadow-none hover:shadow-none"
+                      className="min-h-[44px] w-full touch-manipulation bg-[#2D2DDD] text-white hover:bg-[#2D2DDD] shadow-none hover:shadow-none sm:min-h-9"
                     >
                       <Users className="w-4 h-4 mr-2" />
                       View Candidates
@@ -707,19 +714,21 @@ export function JobsSection() {
                     </Link>
                     <div className="flex flex-row gap-2">
                       <Button 
+                        type="button"
                         variant="outline" 
                         size="sm"
                         onClick={() => handleEditJob(job.id)}
-                        className="flex-1 border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white"
+                        className="min-h-[44px] flex-1 touch-manipulation border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white sm:min-h-9"
                       >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
                       <Button 
+                        type="button"
                         variant="outline" 
                         size="sm"
                         onClick={() => handleViewDetails(job.id)}
-                        className="bg-[#2D2DDD] text-white border-[#2D2DDD] hover:bg-[#2D2DDD] hover:border-[#2D2DDD] dark:bg-[#2D2DDD] dark:text-white dark:border-[#2D2DDD] dark:hover:bg-[#2D2DDD] flex-1 sm:w-auto shadow-none hover:shadow-none"
+                        className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/25 hover:bg-blue-700 sm:min-h-9 sm:w-auto"
                       >
                         <ExternalLink className="w-4 h-4 mr-1" />
                         View Details
@@ -727,10 +736,11 @@ export function JobsSection() {
                     </div>
                     <div className="flex justify-center">
                       <Button 
+                        type="button"
                         variant="outline" 
                         size="sm"
                         onClick={() => setJobToDelete(job)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 dark:text-red-400 dark:hover:text-red-300 dark:border-red-800 dark:hover:bg-red-900/20 w-auto sm:w-auto"
+                        className="min-h-[44px] w-full touch-manipulation text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 sm:min-h-9 sm:w-auto dark:text-red-400 dark:hover:text-red-300 dark:border-red-800 dark:hover:bg-red-900/20"
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
                         Delete

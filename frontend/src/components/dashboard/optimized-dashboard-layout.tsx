@@ -116,6 +116,34 @@ const LazyOverviewSection = dynamic(
   }
 )
 
+const LazyJobSeekerOverviewSection = dynamic(
+  () => {
+    return import('./sections/job-seeker-overview-section')
+      .then((mod: any) => {
+        if (!mod || typeof mod !== 'object') {
+          throw new Error('JobSeekerOverviewSection module not found')
+        }
+        const Export = mod.JobSeekerOverviewSection
+        if (!Export || typeof Export !== 'function') {
+          throw new Error('JobSeekerOverviewSection export not found')
+        }
+        return { default: Export }
+      })
+      .catch((err: any) => {
+        console.error('Error loading JobSeekerOverviewSection:', err)
+        return {
+          default: function JobSeekerOverviewErrorFallback() {
+            return <SectionLoader sectionName="dashboard" />
+          },
+        }
+      })
+  },
+  {
+    loading: () => <SectionLoader sectionName="dashboard" />,
+    ssr: false,
+  }
+)
+
 const LazyJobsSection = dynamic(
   () => {
     return import('./sections/jobs-section')
@@ -228,10 +256,27 @@ const LazyProfileSection = dynamic(
   }
 )
 
+function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
+  const p = pathname || ''
+  if (p.startsWith('/dashboard/profile')) {
+    return isJobSeeker
+      ? { eyebrow: 'Candidate', title: 'My profile' }
+      : { eyebrow: 'Workspace', title: 'Profile & company' }
+  }
+  if (p.startsWith('/dashboard/jobs')) return { eyebrow: 'Hiring', title: 'Job postings' }
+  if (p.startsWith('/dashboard/reports')) return { eyebrow: 'Hiring', title: 'Reports & analytics' }
+  if (p.startsWith('/dashboard/interviews')) return { eyebrow: 'Hiring', title: 'Interviews' }
+  return isJobSeeker
+    ? { eyebrow: 'Candidate workspace', title: 'My dashboard' }
+    : { eyebrow: 'Employer workspace', title: 'Dashboard' }
+}
+
 function DashboardContent() {
   const { user, loading } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
+  const isJobSeeker = user?.companyRole === 'candidate'
+  const pageMeta = dashboardPageMeta(pathname, isJobSeeker)
   const [activeSection, setActiveSection] = useState('overview')
   const [isPreloading, setIsPreloading] = useState(true)
   const [preloadTime, setPreloadTime] = useState<number>(0)
@@ -255,28 +300,49 @@ function DashboardContent() {
     }
 
     // STRICT: Require company setup before dashboard (e.g. Google sign-in). Keep token; redirect to company-setup.
-    if (user.hasCompany === false && !user.companyId) {
+    if (!isJobSeeker && user.hasCompany === false && !user.companyId) {
       router.replace('/company-setup')
       return
     }
     // If hasCompany is undefined but companyId exists, allow access (company exists)
     // This handles cases where hasCompany wasn't set but company was created
-  }, [user, loading, router])
+  }, [user, loading, router, isJobSeeker])
+
+  // Job seekers should not use employer-only routes; normalize to dashboard home.
+  useEffect(() => {
+    if (loading || !user || !isJobSeeker) return
+    const employerOnly =
+      pathname === '/dashboard/jobs' ||
+      pathname?.startsWith('/dashboard/jobs/') ||
+      pathname === '/dashboard/reports' ||
+      pathname?.startsWith('/dashboard/reports/') ||
+      pathname === '/dashboard/interviews' ||
+      pathname?.startsWith('/dashboard/interviews/')
+    if (employerOnly) {
+      router.replace('/dashboard')
+    }
+  }, [loading, user, isJobSeeker, pathname, router])
 
   // Sync active section with URL pathname
   useEffect(() => {
-    if (pathname === '/dashboard') {
+    if (pathname === '/dashboard' || pathname === '/dashboard/') {
       setActiveSection('overview')
-    } else if (pathname === '/dashboard/jobs') {
-      setActiveSection('jobs')
-    } else if (pathname === '/dashboard/reports') {
-      setActiveSection('reports')
-    } else if (pathname === '/dashboard/interviews') {
-      setActiveSection('interviews')
-    } else if (pathname === '/dashboard/profile') {
-      setActiveSection('profile')
+      return
     }
-  }, [pathname])
+    if (pathname === '/dashboard/profile' || pathname?.startsWith('/dashboard/profile/')) {
+      setActiveSection('profile')
+      return
+    }
+    if (!isJobSeeker) {
+      if (pathname === '/dashboard/jobs' || pathname?.startsWith('/dashboard/jobs/')) {
+        setActiveSection('jobs')
+      } else if (pathname === '/dashboard/reports' || pathname?.startsWith('/dashboard/reports/')) {
+        setActiveSection('reports')
+      } else if (pathname === '/dashboard/interviews' || pathname?.startsWith('/dashboard/interviews/')) {
+        setActiveSection('interviews')
+      }
+    }
+  }, [pathname, isJobSeeker])
 
   // Preload critical data for instant rendering
   const preloadCriticalData = useCallback(async () => {
@@ -298,8 +364,11 @@ function DashboardContent() {
             console.warn('Sidebar preload failed:', err)
             return null
           }),
-          import('./sections/overview-section').catch(err => {
-            console.warn('OverviewSection preload failed:', err)
+          (isJobSeeker
+            ? import('./sections/job-seeker-overview-section')
+            : import('./sections/overview-section')
+          ).catch(err => {
+            console.warn('Dashboard overview preload failed:', err)
             return null
           }),
         ]),
@@ -318,7 +387,7 @@ function DashboardContent() {
     } finally {
       setIsPreloading(false)
     }
-  }, [user])
+  }, [user, isJobSeeker])
 
   // Preload data on mount
   useEffect(() => {
@@ -334,7 +403,7 @@ function DashboardContent() {
     try {
       switch (activeSection) {
         case 'overview':
-          return <LazyOverviewSection />
+          return isJobSeeker ? <LazyJobSeekerOverviewSection /> : <LazyOverviewSection />
         case 'jobs':
           return <LazyJobsSection />
         case 'reports':
@@ -344,7 +413,7 @@ function DashboardContent() {
         case 'profile':
           return <LazyProfileSection />
         default:
-          return <LazyOverviewSection />
+          return isJobSeeker ? <LazyJobSeekerOverviewSection /> : <LazyOverviewSection />
       }
     } catch (error) {
       console.error('Error rendering section:', error)
@@ -363,41 +432,48 @@ function DashboardContent() {
         </div>
       )
     }
-  }, [activeSection, isPreloading, user])
+  }, [activeSection, isPreloading, user, isJobSeeker, router])
 
   // Prefetch main dashboard routes once user is ready for snappier navigation
   useEffect(() => {
     if (!user) return
     try {
       router.prefetch('/dashboard')
-      router.prefetch('/dashboard/jobs')
-      router.prefetch('/dashboard/reports')
-      router.prefetch('/dashboard/interviews')
+      if (!isJobSeeker) {
+        router.prefetch('/dashboard/jobs')
+        router.prefetch('/dashboard/reports')
+        router.prefetch('/dashboard/interviews')
+      }
       router.prefetch('/dashboard/profile')
     } catch (e) {
       console.warn('Dashboard prefetch failed:', e)
     }
-  }, [router, user])
+  }, [router, user, isJobSeeker])
 
   // Optimized section change handler - now includes URL navigation
   const handleSectionChange = useCallback((section: string) => {
     setActiveSection(section)
     // Update URL using Next.js router for proper client-side navigation
-    const sectionMap: Record<string, string> = {
-      overview: '/dashboard',
-      jobs: '/dashboard/jobs',
-      reports: '/dashboard/reports',
-      interviews: '/dashboard/interviews',
-      profile: '/dashboard/profile'
-    }
+    const sectionMap: Record<string, string> = isJobSeeker
+      ? {
+          overview: '/dashboard',
+          profile: '/dashboard/profile',
+        }
+      : {
+          overview: '/dashboard',
+          jobs: '/dashboard/jobs',
+          reports: '/dashboard/reports',
+          interviews: '/dashboard/interviews',
+          profile: '/dashboard/profile',
+        }
     const newPath = sectionMap[section] || '/dashboard'
     router.push(newPath)
-  }, [router])
+  }, [router, isJobSeeker])
 
   // Don't render until user is loaded and validated
   // Only block if hasCompany is explicitly false AND no companyId exists
   // If companyId exists, allow access even if hasCompany is undefined/false
-  if (loading || !user || (user.role !== 'admin' && user.hasCompany === false && !user.companyId)) {
+  if (loading || !user || (user.role !== 'admin' && !isJobSeeker && user.hasCompany === false && !user.companyId)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin" />
@@ -406,17 +482,20 @@ function DashboardContent() {
   }
 
   return (
-    <div className="flex min-h-screen bg-white dark:bg-black text-foreground">
+    <div
+      className="flex min-h-screen bg-slate-50 text-foreground [background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]"
+    >
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden
         />
       )}
       
       {/* Sidebar - hidden on mobile, visible on tablet and up; w-64 so column is always reserved */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-64 flex-shrink-0 transform transition-transform duration-300 ${
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto flex h-[100dvh] max-h-[100dvh] w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] flex-shrink-0 transform transition-transform duration-300 supports-[padding:max(0px)]:pl-[env(safe-area-inset-left)] ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         <ErrorBoundary fallback={<div className="w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen p-4 flex items-center justify-center"><p className="text-gray-600 dark:text-gray-400">Sidebar unavailable. Refresh the page.</p></div>}>
@@ -430,31 +509,43 @@ function DashboardContent() {
         </ErrorBoundary>
       </aside>
       
-      <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 w-full lg:w-auto">
-        {/* Top Header with Theme Toggle and Notifications */}
-        <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
-          <div className="flex items-center justify-between p-4 md:p-6">
-            <div className="lg:hidden">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-lg bg-[#2D2DDD] text-white hover:bg-[#2D2DDD] transition-colors shadow-none hover:shadow-none"
-                aria-label="Menu"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
+      <main className="flex-1 overflow-auto w-full lg:w-auto bg-transparent">
+        {/* Top bar: wayfinding + notifications */}
+        <div className="sticky top-0 z-10 border-b border-slate-200/90 bg-white/90 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-900/5 backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-2 p-3 sm:gap-3 sm:p-4 md:px-6 md:py-5">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="flex-shrink-0 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:scale-[0.98]"
+                  aria-label="Menu"
+                  aria-expanded={isMobileMenuOpen}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-[11px]">
+                  {pageMeta.eyebrow}
+                </p>
+                <h1 className="truncate text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
+                  {pageMeta.title}
+                </h1>
+              </div>
             </div>
-            <div className="flex items-center gap-4 ml-auto">
+            <div className="flex flex-shrink-0 items-center gap-3 sm:gap-4">
               {/* Notifications Bell - Moved to far right */}
               <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-10 w-10 p-0 relative border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="relative h-11 min-h-[44px] w-11 min-w-[44px] rounded-xl border border-slate-200 bg-white p-0 shadow-sm hover:bg-slate-50"
                   >
-                    <Bell className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    <Bell className="w-5 h-5 text-slate-700" />
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -462,16 +553,21 @@ function DashboardContent() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-0 z-[100] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl backdrop-blur-none" align="end">
+                <PopoverContent
+                  className="z-[100] w-[min(calc(100vw-2rem),20rem)] max-h-[min(70vh,28rem)] overflow-hidden border border-gray-200 bg-white p-0 shadow-xl backdrop-blur-none dark:border-gray-700 dark:bg-gray-900 sm:w-80"
+                  align="end"
+                  sideOffset={8}
+                >
                   <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
                       {notifications.length > 0 && (
                         <Button
+                          type="button"
                           variant="ghost"
                           size="sm"
                           onClick={markAllAsRead}
-                          className="h-8 text-xs text-[#2D2DDD] hover:text-[#2D2DDD] hover:bg-[#2D2DDD]/10"
+                          className="h-9 min-h-[44px] touch-manipulation text-xs text-[#2D2DDD] hover:text-[#2D2DDD] hover:bg-[#2D2DDD]/10 sm:h-8 sm:min-h-0"
                         >
                           Mark all as read
                         </Button>
@@ -520,19 +616,21 @@ function DashboardContent() {
                                   <div className="flex items-center gap-1">
                                   {!notification.read && (
                                     <button
+                                      type="button"
                                       onClick={() => markAsRead(notification.id)}
-                                      className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                                      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-200 touch-manipulation dark:hover:bg-gray-700 sm:min-h-0 sm:min-w-0 sm:p-1"
                                       title="Mark as read"
                                     >
-                                      <CheckCircle2 className="w-4 h-4 text-gray-400" />
+                                      <CheckCircle2 className="h-4 w-4 text-gray-400" />
                                     </button>
                                   )}
                                   <button
+                                    type="button"
                                     onClick={() => removeNotification(notification.id)}
-                                    className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                                    className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-200 touch-manipulation dark:hover:bg-gray-700 sm:min-h-0 sm:min-w-0 sm:p-1"
                                     title="Dismiss"
                                   >
-                                    <X className="w-4 h-4 text-gray-400" />
+                                    <X className="h-4 w-4 text-gray-400" />
                                   </button>
                                   </div>
                                 </div>
@@ -548,7 +646,7 @@ function DashboardContent() {
             </div>
           </div>
         </div>
-        <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+        <div className="mx-auto w-full max-w-[1440px] px-3 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:p-8 lg:px-10 lg:pb-12">
           <ErrorBoundary fallback={<SectionLoader sectionName={activeSection} />}>
           {renderSection()}
           </ErrorBoundary>

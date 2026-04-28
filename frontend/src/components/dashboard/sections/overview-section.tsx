@@ -22,7 +22,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 // Removed unused imports: supabase, Database, useAnalyticsRealtime, useJobsRealtime
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, createTimeoutSignal } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
 import { useNotifications } from '@/contexts/notification-context'
@@ -164,15 +164,25 @@ export function OverviewSection() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        signal: AbortSignal.timeout(10000),
+        signal: createTimeoutSignal(10000),
       })
 
       let jobs: any[] = []
       let reportsData = { totalReports: 0, readyReports: 0 }
       if (response.ok) {
-        const data = await response.json()
-        jobs = data.jobs || []
-        reportsData = data.reports || { totalReports: 0, readyReports: 0 }
+        const text = await response.text()
+        let data: { jobs?: unknown; reports?: { totalReports?: number; readyReports?: number } } = {}
+        try {
+          data = text ? (JSON.parse(text) as typeof data) : {}
+        } catch {
+          throw new Error('Invalid response from the job listings service. Please try again.')
+        }
+        jobs = (data.jobs as any[]) || []
+        const r = data.reports
+        reportsData = {
+          totalReports: r?.totalReports ?? 0,
+          readyReports: r?.readyReports ?? 0,
+        }
       } else if (response.status === 404) {
         // No company found or no jobs - this is okay, just show empty state
         jobs = []
@@ -592,21 +602,24 @@ export function OverviewSection() {
         transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
         className="gpu-accelerated"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.45)] backdrop-blur-[2px] sm:p-8 dark:border-gray-800 dark:bg-gray-900/90">
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.09),transparent_62%)] sm:block" aria-hidden />
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           {/* Welcome Section */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-1">
+            <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-2">
               <h1 
                 data-tour="dashboard-overview-title"
-                className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white"
+                className="min-w-0 flex-1 text-xl font-semibold text-gray-900 sm:flex-none sm:text-2xl md:text-3xl dark:text-white"
               >
                 {getGreeting()}, {getDisplayName()}
               </h1>
               <Button
                 variant="ghost"
                 size="sm"
+                type="button"
                 onClick={() => setIsTourOpen(true)}
-                className="h-8 px-3 text-xs text-[#2D2DDD] hover:text-[#2424c0] hover:bg-[#2D2DDD]/10 border border-[#2D2DDD]/20 rounded-lg transition-all"
+                className="h-9 min-h-[44px] shrink-0 px-3 text-xs text-[#2D2DDD] hover:text-[#2424c0] hover:bg-[#2D2DDD]/10 border border-[#2D2DDD]/20 rounded-lg transition-all sm:h-8 sm:min-h-0"
                 aria-label="Start product tour"
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
@@ -624,9 +637,9 @@ export function OverviewSection() {
           </div>
           
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+          <div className="flex w-full min-w-0 flex-shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
             {/* Job Selector Button */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex min-w-0 flex-col gap-1.5">
               <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Select Job Post to View Analytics
               </label>
@@ -637,10 +650,10 @@ export function OverviewSection() {
                   type="button"
                   variant="outline"
                   disabled={isLoading || jobPostings.length === 0}
-                  className="h-10 min-w-[200px] max-w-[280px] border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 hover:!text-gray-900 dark:hover:!text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-shadow"
+                  className="h-11 min-h-[44px] w-full min-w-0 max-w-full justify-start border border-gray-300 sm:h-10 sm:min-h-0 sm:min-w-[200px] sm:max-w-[280px] dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 hover:!text-gray-900 dark:hover:!text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-shadow"
                 >
                   <Briefcase className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="max-w-[150px] truncate text-sm font-figtree font-medium">
+                  <span className="min-w-0 flex-1 truncate text-left text-sm font-figtree font-medium sm:max-w-[150px] sm:flex-none">
                     {isLoading ? (
                       'Loading...'
                     ) : jobPostings.length === 0 ? (
@@ -653,7 +666,11 @@ export function OverviewSection() {
                 </Button>
               </PopoverTrigger>
               {jobPostings.length > 0 && (
-                <PopoverContent className="w-72 p-2 z-[100]" align="end">
+                <PopoverContent
+                  className="z-[100] w-[min(calc(100vw-2rem),18rem)] max-h-[min(70vh,320px)] overflow-hidden p-2 sm:w-72"
+                  align="end"
+                  sideOffset={8}
+                >
                   <div className="space-y-1 max-h-[300px] overflow-y-auto">
                     {jobPostings.map((job) => (
                       <button
@@ -664,7 +681,7 @@ export function OverviewSection() {
                           handleJobSelect(String(job.id))
                         }}
                         className={cn(
-                          "w-full text-left px-3 py-2 rounded-md text-sm font-figtree transition-colors",
+                          "min-h-[44px] w-full rounded-md px-3 py-2.5 text-left text-sm font-figtree transition-colors sm:min-h-0 sm:py-2",
                           String(selectedJobId) === String(job.id)
                             ? "bg-[#2D2DDD] text-white"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -685,6 +702,7 @@ export function OverviewSection() {
               )}
               </Popover>
             </div>
+          </div>
           </div>
         </div>
       </motion.div>
@@ -716,7 +734,7 @@ export function OverviewSection() {
 
       {/* Metrics Grid */}
       {!isLoading && (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {metricsData.map((metric, index) => {
             const tourId = metric.title === 'Active Jobs' ? 'active-jobs' :
                           metric.title === 'Total Jobs' ? 'total-jobs' :
@@ -747,7 +765,7 @@ export function OverviewSection() {
       >
         <Card 
           data-tour="applicant-analytics-title"
-          className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
+          className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-[0_24px_70px_-48px_rgba(15,23,42,0.4)] dark:border-gray-800 dark:bg-gray-900"
         >
           <CardHeader className="pb-4">
             <div className="flex-1 min-w-0">
@@ -765,7 +783,7 @@ export function OverviewSection() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
               <div data-tour="total-applicants" className="text-center">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center mx-auto mb-3">
                   <Users className="w-8 h-8 text-white" />

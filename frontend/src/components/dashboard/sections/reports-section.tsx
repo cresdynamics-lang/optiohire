@@ -261,14 +261,23 @@ export function ReportsSection() {
   )
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
+        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900/90"
       >
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-2 text-gray-900 dark:text-white">Reports & Analytics</h1>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Comprehensive reports and insights for your job postings</p>
+        <div className="pointer-events-none absolute right-0 top-0 h-36 w-44 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.11),transparent_68%)]" aria-hidden />
+        <div className="relative">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-400">Insights</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
+            Reports & analytics
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base dark:text-gray-400">
+            Pipeline composition and hiring signals across your roles — refine faster with clearer numbers.
+          </p>
+        </div>
       </motion.div>
 
       {error && (
@@ -309,7 +318,7 @@ export function ReportsSection() {
                     Horizontal stacked comparison of shortlisted, flagged, and rejected applicants per job.
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-slate-900/60 border border-gray-300 dark:border-slate-700/70 p-1 shadow-sm dark:shadow-[0_0_0_1px_rgba(15,23,42,0.9)]">
+                <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full bg-gray-100 dark:bg-slate-900/60 border border-gray-300 dark:border-slate-700/70 p-1 shadow-sm dark:shadow-[0_0_0_1px_rgba(15,23,42,0.9)]">
                   {[
                     { id: '7d', label: 'Last 7 days' },
                     { id: '30d', label: 'Last 30 days' },
@@ -319,7 +328,7 @@ export function ReportsSection() {
                       key={range.id}
                       type="button"
                       onClick={() => setTimeRange(range.id as TimeRange)}
-                      className={`px-3 py-1.5 text-xs sm:text-sm rounded-full transition-all ${
+                      className={`min-h-[40px] touch-manipulation px-3 py-2 text-xs sm:min-h-0 sm:py-1.5 sm:text-sm rounded-full transition-all ${
                         timeRange === range.id
                           ? 'bg-[#2D2DDD] text-white shadow-[0_0_18px_rgba(45,45,221,0.65)]'
                           : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-slate-800/80'
@@ -608,8 +617,8 @@ export function ReportsSection() {
                         <CardContent className="p-4 sm:p-6">
                           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="text-lg font-semibold font-figtree truncate">
+                              <div className="mb-2 flex flex-wrap items-center gap-2 gap-y-2">
+                                  <h3 className="min-w-0 text-lg font-semibold font-figtree sm:truncate">
                                     {item.job.job_title}
                                   </h3>
                                 {item.processingStatus && (
@@ -629,7 +638,7 @@ export function ReportsSection() {
                                 </div>
                               </div>
                               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:grid-cols-4 sm:gap-4">
                                   <div className="text-center">
                                     <div className="flex items-center justify-center gap-1 mb-1">
                                       <UserPlus className="w-4 h-4 text-blue-600" />
@@ -683,11 +692,12 @@ export function ReportsSection() {
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 shrink-0 mt-4 sm:mt-0">
+                            <div className="mt-4 flex shrink-0 items-stretch gap-2 sm:mt-0 sm:items-center">
                               <Button 
+                                type="button"
                                 variant="outline" 
                                 size="sm" 
-                                  className="gap-2 bg-[#2D2DDD] text-white border-[#2D2DDD] hover:bg-[#2D2DDD] hover:border-[#2D2DDD] dark:bg-[#2D2DDD] dark:text-white dark:border-[#2D2DDD] dark:hover:bg-[#2D2DDD] w-full sm:w-auto shadow-none hover:shadow-none"
+                                  className="min-h-[44px] w-full touch-manipulation gap-2 border-[#2D2DDD] bg-[#2D2DDD] text-white shadow-none hover:border-[#2D2DDD] hover:bg-[#2D2DDD] hover:shadow-none sm:min-h-9 sm:w-auto dark:bg-[#2D2DDD] dark:text-white dark:border-[#2D2DDD] dark:hover:bg-[#2D2DDD]"
                                 onClick={() => {
                                   setSelectedJobPosting(item.job)
                                   setIsReportModalOpen(true)

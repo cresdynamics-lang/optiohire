@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { 
   LayoutDashboard, 
   Briefcase, 
-  FileText, 
   BarChart3, 
   Settings, 
   ChevronRight,
@@ -17,7 +16,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, usePathname } from 'next/navigation'
-import { useTheme } from 'next-themes'
 
 const sidebarItems = [
   {
@@ -52,6 +50,21 @@ const sidebarItems = [
   },
 ]
 
+const jobSeekerSidebarItems = [
+  {
+    id: 'overview',
+    label: 'My Dashboard',
+    icon: LayoutDashboard,
+    href: '/dashboard',
+  },
+  {
+    id: 'profile',
+    label: 'My Profile',
+    icon: Settings,
+    href: '/dashboard/profile',
+  },
+]
+
 interface SidebarProps {
   activeSection: string
   onSectionChange: (section: string) => void
@@ -68,10 +81,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
     setMounted(true)
   }, [])
 
-  // Get theme safely
-  const themeContext = useTheme()
-  const resolvedTheme = themeContext?.resolvedTheme || 'dark'
- 
   const logoSrc = (user?.companyLogoUrl && user.companyLogoUrl.trim())
     ? user.companyLogoUrl.trim()
     : '/assets/logo/logo.png'
@@ -85,25 +94,30 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
     user?.name ||
     user?.email ||
     'HR workspace'
+  const isJobSeeker = user?.companyRole === 'candidate'
+  const navItems = isJobSeeker ? jobSeekerSidebarItems : sidebarItems
+  const displayOrgName = isJobSeeker ? (user?.name || 'Job Seeker Workspace') : orgName
+  const displayProfileLine = isJobSeeker ? (user?.email || 'Candidate account') : profileLine
 
   return (
     <motion.div
       initial={{ x: -300 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.3 }}
-      className={`bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen sticky top-0 ${
+      className={`relative h-screen shrink-0 overflow-y-auto border-r border-slate-200/90 bg-white shadow-[4px_0_40px_-28px_rgba(15,23,42,0.18)] dark:bg-gray-950 dark:border-gray-800 sticky top-0 ${
         isCollapsed ? 'w-16' : 'w-64'
-      } transition-all duration-300 overflow-y-auto`}
+      } transition-all duration-300`}
     >
-      <div className="flex flex-col h-full">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.09),transparent_62%)]" aria-hidden />
+      <div className="relative flex flex-col h-full">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-border">
+        <div className="border-b border-slate-200/90 bg-white/95 p-4 backdrop-blur-sm sm:p-6 dark:border-gray-800 dark:bg-gray-950/95">
           <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10">
+            <div className="relative h-11 w-11 shrink-0 rounded-2xl border border-slate-200/90 bg-white p-1 shadow-sm ring-4 ring-blue-500/5 dark:border-gray-700 dark:bg-gray-900">
               {mounted ? (
                 <Image
                   src={logoSrc}
-                  alt={`${orgName} logo`}
+                  alt={`${displayOrgName} logo`}
                   fill
                   sizes="40px"
                   className="object-contain"
@@ -111,16 +125,25 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                   quality={85}
                 />
               ) : (
-                <span className="block h-full w-full rounded-lg bg-muted-foreground/20" />
+                <span className="block h-full w-full rounded-xl bg-muted-foreground/15" />
               )}
             </div>
             {!isCollapsed && (
-              <div className="flex-1 min-w-0">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-white truncate">
-                  {orgName}
+              <div className="flex-1 min-w-0 space-y-1">
+                <span
+                  className={`inline-flex max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                    isJobSeeker
+                      ? 'border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-300'
+                      : 'border border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950/80 dark:text-blue-300'
+                  }`}
+                >
+                  {isJobSeeker ? 'Job seeker' : 'Employer'}
+                </span>
+                <h2 className="truncate text-[15px] font-semibold tracking-tight text-slate-900 dark:text-white">
+                  {displayOrgName}
                 </h2>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate">
-                  {profileLine}
+                <p className="truncate text-[11px] font-medium text-slate-500 dark:text-gray-400">
+                  {displayProfileLine}
                 </p>
               </div>
             )}
@@ -128,8 +151,9 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 p-3 sm:p-4 space-y-2 overflow-y-auto">
-          {sidebarItems.map((item) => {
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3 sm:p-4">
+          <div className="flex flex-col gap-1 rounded-2xl border border-slate-100 bg-slate-50/70 p-1.5 shadow-inner shadow-slate-900/5 dark:border-gray-800 dark:bg-gray-900/40">
+          {navItems.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
             const IconComponent = item.icon
             if (!IconComponent) {
@@ -141,13 +165,13 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                 key={item.id}
                 href={item.href}
                 onClick={() => onSectionChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 group ${
+                className={`min-h-[44px] w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all duration-200 group ${
                   isActive
-                    ? 'bg-[#2D2DDD] text-white shadow-md'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-[#2D2DDD] dark:hover:text-white'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900 dark:hover:bg-gray-800/80'
                 }`}
               >
-                <IconComponent className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-[#2D2DDD] dark:group-hover:text-white'}`} />
+                <IconComponent className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-800'}`} />
                 {!isCollapsed && (
                   <>
                     <span className="font-figtree font-medium">{item.label}</span>
@@ -159,23 +183,24 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
               </Link>
             )
           })}
-          
+          </div>
+
           {/* Admin Dashboard Link (only for admins) */}
           {user?.role === 'admin' && (
             <button
               onClick={() => router.push('/admin')}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
+              className={`mt-1 min-h-[44px] w-full flex items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-all duration-200 group ${
                 pathname?.startsWith('/admin')
-                  ? 'bg-gradient-to-r from-[#2D2DDD]/10 to-[#2D2DDD]/5 dark:from-[#2D2DDD]/20 dark:to-[#2D2DDD]/10 text-[#2D2DDD] dark:text-[#2D2DDD] border border-[#2D2DDD]/30 dark:border-[#2D2DDD]/50'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-[#2D2DDD] dark:hover:text-[#2D2DDD]'
+                  ? 'border-blue-200 bg-blue-50 text-blue-800 shadow-sm dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300'
+                  : 'border-transparent text-slate-600 hover:border-slate-200 hover:bg-white dark:hover:border-gray-800 dark:hover:bg-gray-900/80'
               }`}
             >
-              <Shield className={`w-5 h-5 flex-shrink-0 ${pathname?.startsWith('/admin') ? 'text-[#2D2DDD]' : 'text-gray-500 dark:text-gray-400 group-hover:text-[#2D2DDD]'}`} />
+              <Shield className={`w-5 h-5 flex-shrink-0 ${pathname?.startsWith('/admin') ? 'text-blue-700' : 'text-slate-500 group-hover:text-slate-800'}`} />
               {!isCollapsed && (
                 <>
                   <span className="font-figtree font-medium">Admin Dashboard</span>
                   {pathname?.startsWith('/admin') && (
-                    <ChevronRight className="w-4 h-4 ml-auto text-[#2D2DDD]" />
+                    <ChevronRight className="w-4 h-4 ml-auto text-blue-700" />
                   )}
                 </>
               )}
@@ -189,7 +214,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full"
+            className="min-h-[44px] w-full"
           >
             <ChevronRight className={`w-4 h-4 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
           </Button>
