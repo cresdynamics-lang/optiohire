@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LogOut, Mail, User, ShieldCheck, BriefcaseBusiness, CalendarClock } from 'lucide-react'
+import { LogOut, Mail, User, ShieldCheck, Briefcase, CalendarClock } from 'lucide-react'
 
 export function JobSeekerProfileSection() {
   const { user, signOut } = useAuth()
@@ -51,7 +51,7 @@ export function JobSeekerProfileSection() {
             <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/50">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Workspace</p>
               <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
-                <BriefcaseBusiness className="h-4 w-4 text-blue-600" />
+                <Briefcase className="h-4 w-4 text-blue-600" />
                 Jobs + Interviews
               </p>
             </div>
