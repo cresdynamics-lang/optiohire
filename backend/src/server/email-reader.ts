@@ -11,7 +11,9 @@ import { AIScoringEngine } from '../lib/ai-scoring.js'
 import { EmailClassifier } from '../lib/email-classifier.js'
 import { saveFile } from '../utils/storage.js'
 import { EmailService } from '../services/emailService.js'
+import { GoogleCalendarService } from '../services/googleCalendarService.js'
 import { logger } from '../utils/logger.js'
+import { cleanJobTitle } from '../utils/jobTitle.js'
 
 type EmailReaderStatus = {
   enabled: boolean
@@ -1298,11 +1300,248 @@ export class EmailReader {
         } else {
           logger.info(`ℹ️ [EMAIL WATCHER] No email sent for application ${applicationId} - status is "${scoringResult.status}" (FLAG status requires manual review)`)
         }
+
+        if (shouldSendShortlist) {
+          setImmediate(() => {
+            void this.autoScheduleInterviewForShortlist(job, company, application).catch((err) => {
+              logger.warn(`[EMAIL WATCHER] Auto interview scheduling skipped/failed (non-fatal):`, err)
+            })
+          })
+        }
       } else {
         logger.warn(`⚠️ [EMAIL WATCHER] Application ${applicationId} not found after scoring - cannot send email`)
       }
 
+      setImmediate(() => {
+        void this.sendPipelineDigestEmail(job, company, applicationId, scoringResult, dbStatus).catch((err) => {
+          logger.warn(`[EMAIL WATCHER] Pipeline digest email failed (non-fatal):`, err)
+        })
+      })
+
       logger.info(`✅ [EMAIL WATCHER] Processed CV for application ${applicationId}, score: ${scoringResult.score}, status: ${scoringResult.status} (DB status: ${dbStatus}), candidate: ${application?.email || 'unknown'}`)
+  }
+
+  /**
+   * Optional automation: when a candidate is shortlisted by the watcher, create/sync an interview slot
+   * and notify both candidate + employer contacts with the meeting link.
+   */
+  private async autoScheduleInterviewForShortlist(job: any, company: any, application: any) {
+    if (process.env.ENABLE_AUTO_SCHEDULE_INTERVIEW !== 'true') {
+      return
+    }
+    if (!application?.application_id || !application?.email) {
+      return
+    }
+
+    // Do not overwrite if an interview is already scheduled.
+    if (application.interview_link || application.interview_time) {
+      return
+    }
+
+    const offsetHours = Number(process.env.AUTO_INTERVIEW_OFFSET_HOURS || 48)
+    const interviewStart = new Date(Date.now() + Math.max(1, offsetHours) * 60 * 60 * 1000)
+    const interviewEnd = new Date(interviewStart.getTime() + 60 * 60 * 1000)
+
+    let meetingLink: string | null = job.meeting_link || null
+    if (!meetingLink) {
+      const calendarService = new GoogleCalendarService()
+      if (calendarService.isEnabled()) {
+        try {
+          const attendees = [application.email, company.hr_email, company.hiring_manager_email].filter(Boolean) as string[]
+          const created = await calendarService.createMeetEvent({
+            summary: `${company.company_name || 'Interview'} interview with ${application.candidate_name || application.email}`,
+            description: `Interview for ${job.job_title} at ${company.company_name || 'your company'}`,
+            start: interviewStart.toISOString(),
+            end: interviewEnd.toISOString(),
+            attendees,
+          })
+          meetingLink = created.meetingLink
+        } catch (err) {
+          logger.warn(`[EMAIL WATCHER] Google Meet creation failed during auto schedule:`, err)
+        }
+      }
+    }
+    if (!meetingLink) return
+
+    const updated = await this.applicationRepo.scheduleInterview({
+      application_id: application.application_id,
+      interview_time: interviewStart.toISOString(),
+      interview_link: meetingLink,
+    })
+
+    const cleanedJobTitle = cleanJobTitle(job.job_title || 'the role')
+    const companyName = company.company_name || 'your company'
+    const interviewDate = interviewStart.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    const interviewTime = interviewStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+
+    const companyEmail = this.emailService.getCompanyEmail(
+      company.company_email,
+      company.company_domain,
+      company.company_name
+    )
+    const hrEmail = company.company_email || company.hr_email || 'applicationsoptiohire@gmail.com'
+    const candidateName = application.candidate_name || application.email.split('@')[0] || 'Candidate'
+
+    await this.emailService.sendEmail({
+      to: application.email,
+      from: companyEmail,
+      subject: `Interview Scheduled – ${cleanedJobTitle} at ${companyName}`,
+      html: `<p>Dear ${candidateName},</p>
+<p>You have been shortlisted for <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong>.</p>
+<p><strong>Interview Details</strong><br/>
+Date: ${interviewDate}<br/>
+Time: ${interviewTime}<br/>
+Meeting Link: <a href="${meetingLink}">${meetingLink}</a></p>
+<p>If this time does not work, please reply to <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>`,
+      text: `Dear ${candidateName},
+
+You have been shortlisted for ${cleanedJobTitle} at ${companyName}.
+
+Interview details:
+Date: ${interviewDate}
+Time: ${interviewTime}
+Meeting Link: ${meetingLink}
+
+If this time does not work, please reply to ${hrEmail}.`,
+      emailType: 'auto_interview_candidate',
+    })
+
+    const employerRecipients = [company.hr_email, company.company_email, company.hiring_manager_email].filter(Boolean) as string[]
+    for (const recipient of employerRecipients) {
+      await this.emailService.sendEmail({
+        to: recipient,
+        from: companyEmail,
+        subject: `Auto interview scheduled – ${candidateName} for ${cleanedJobTitle}`,
+        html: `<p>An interview was auto-scheduled by the email watcher.</p>
+<p><strong>Candidate:</strong> ${candidateName} (${application.email})<br/>
+<strong>Role:</strong> ${cleanedJobTitle}<br/>
+<strong>Date:</strong> ${interviewDate}<br/>
+<strong>Time:</strong> ${interviewTime}<br/>
+<strong>Meeting:</strong> <a href="${meetingLink}">${meetingLink}</a></p>`,
+        text: `An interview was auto-scheduled by the email watcher.
+
+Candidate: ${candidateName} (${application.email})
+Role: ${cleanedJobTitle}
+Date: ${interviewDate}
+Time: ${interviewTime}
+Meeting: ${meetingLink}`,
+        emailType: 'auto_interview_employer',
+      })
+    }
+
+    logger.info(`[EMAIL WATCHER] Auto interview scheduled for shortlisted candidate`, {
+      applicationId: updated.application_id,
+      interviewTime: updated.interview_time,
+      interviewLink: updated.interview_link,
+    })
+  }
+
+  /**
+   * Internal watcher (developer@optiohire.com by default) + employer: ranking, best pick, meeting/dashboard links.
+   */
+  private async sendPipelineDigestEmail(
+    job: any,
+    company: any,
+    applicationId: string,
+    scoringResult: { score: number; status: string; reasoning: string },
+    dbStatus: string
+  ) {
+    if (process.env.ENABLE_WATCHER_PIPELINE_DIGEST === 'false') {
+      return
+    }
+
+    const raw = process.env.WATCHER_DIGEST_EMAIL || 'developer@optiohire.com'
+    const watcherList = raw.split(/[,;]+/).map((s) => s.trim()).filter(Boolean)
+
+    const seen = new Set<string>()
+    const recipients: string[] = []
+    for (const e of [
+      ...watcherList,
+      company.hr_email,
+      company.company_email,
+      company.hiring_manager_email,
+    ]) {
+      if (!e || typeof e !== 'string') continue
+      const t = e.trim()
+      const k = t.toLowerCase()
+      if (seen.has(k)) continue
+      seen.add(k)
+      recipients.push(t)
+    }
+    if (recipients.length === 0) return
+
+    const appUrl = (process.env.FRONTEND_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(
+      /\/$/,
+      ''
+    )
+    const dashboardShortlistedUrl = `${appUrl}/dashboard/job/${job.job_posting_id}/shortlisted`
+
+    const { rows } = await query<{
+      candidate_name: string | null
+      email: string
+      ai_score: number | null
+      ai_status: string | null
+    }>(
+      `SELECT candidate_name, email, ai_score, ai_status
+       FROM applications
+       WHERE job_posting_id = $1
+       ORDER BY
+         CASE COALESCE(UPPER(TRIM(ai_status)), '')
+           WHEN 'SHORTLIST' THEN 1
+           WHEN 'FLAG' THEN 2
+           WHEN 'REJECT' THEN 3
+           ELSE 4
+         END,
+         ai_score DESC NULLS LAST,
+         created_at ASC
+       LIMIT 12`,
+      [job.job_posting_id]
+    )
+
+    if (rows.length === 0) return
+
+    const rankedRows = rows.map((r, i) => ({
+      rank: i + 1,
+      name: r.candidate_name || r.email.split('@')[0] || 'Candidate',
+      email: r.email,
+      score: r.ai_score,
+      status: (r.ai_status || '—').toString(),
+    }))
+
+    const norm = (s: string | null) => (s || '').toUpperCase().trim()
+    const firstShortlist = rows.find((r) => norm(r.ai_status) === 'SHORTLIST')
+    const bestRow = firstShortlist || rows[0]
+    const bestPick = {
+      name: bestRow.candidate_name || bestRow.email.split('@')[0] || 'Candidate',
+      email: bestRow.email,
+      score: bestRow.ai_score,
+      status: (bestRow.ai_status || '—').toString(),
+      explanation: firstShortlist
+        ? `Top Shortlist candidate for this role (AI score ${firstShortlist.ai_score ?? '—'}/100). Shortlist means strong fit to the job description and required skills (typically 80–100).`
+        : `Leading candidate by review order: status ${bestRow.ai_status || '—'}, score ${bestRow.ai_score ?? '—'}. No Shortlist yet—review Flagged applicants or keep collecting applications.`,
+    }
+
+    const application = await this.applicationRepo.findById(applicationId)
+    const reasoning = scoringResult.reasoning || ''
+    const latestCandidate = {
+      name: application?.candidate_name || application?.email?.split('@')[0] || 'Candidate',
+      email: application?.email || '',
+      score: scoringResult.score,
+      status: dbStatus,
+      reasoningPreview: reasoning.length > 400 ? `${reasoning.slice(0, 400)}…` : reasoning,
+    }
+
+    await this.emailService.sendWatcherPipelineDigest({
+      recipients,
+      jobPostingId: String(job.job_posting_id),
+      jobTitle: job.job_title,
+      companyName: company.company_name,
+      meetingLink: job.meeting_link || null,
+      dashboardShortlistedUrl,
+      latestCandidate,
+      rankedRows,
+      bestPick,
+    })
   }
 }
 

@@ -1302,5 +1302,139 @@ The OptioHire Team
       throw error
     }
   }
+
+  /**
+   * After the email watcher screens a CV: send a pipeline digest to the internal watcher address
+   * (default developer@optiohire.com) and the employer so both see AI ranking, “best pick” logic, and next steps.
+   */
+  async sendWatcherPipelineDigest(opts: {
+    recipients: string[]
+    jobPostingId: string
+    jobTitle: string
+    companyName: string
+    meetingLink: string | null
+    dashboardShortlistedUrl: string
+    latestCandidate: {
+      name: string
+      email: string
+      score: number
+      status: string
+      reasoningPreview: string
+    }
+    rankedRows: { rank: number; name: string; email: string; score: number | null; status: string }[]
+    bestPick: {
+      name: string
+      email: string
+      score: number | null
+      status: string
+      explanation: string
+    }
+  }): Promise<void> {
+    const safeTitle = cleanJobTitle(opts.jobTitle)
+    const subject = `[OptioHire] AI screening update — ${safeTitle} at ${opts.companyName}`
+
+    const rankTableRows = opts.rankedRows
+      .map(
+        (r) =>
+          `<tr><td style="padding:8px;border-bottom:1px solid #eee">${r.rank}</td>` +
+          `<td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(r.name)}</td>` +
+          `<td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(r.email)}</td>` +
+          `<td style="padding:8px;border-bottom:1px solid #eee">${r.score ?? '—'}</td>` +
+          `<td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(r.status)}</td></tr>`
+      )
+      .join('')
+
+    const meetingSection = opts.meetingLink
+      ? `<p><strong>Video room on the job posting:</strong> <a href="${escapeAttr(opts.meetingLink)}">${escapeHtml(opts.meetingLink)}</a></p>`
+      : `<p><em>No default meeting link on this job.</em> When you schedule from the dashboard, OptioHire can create a Google Meet (if Calendar is connected) and email the candidate.</p>`
+
+    const html = `
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:system-ui,Segoe UI,Arial,sans-serif;line-height:1.5;color:#111;max-width:720px;margin:0 auto;padding:16px">
+  <h1 style="font-size:18px;color:#2563eb">Automated screening digest</h1>
+  <p>This message is sent to the <strong>pipeline watcher</strong> and <strong>hiring contacts</strong> whenever the email inbox processes and scores an application.</p>
+  <p><strong>Role:</strong> ${escapeHtml(safeTitle)} @ ${escapeHtml(opts.companyName)}</p>
+  <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
+  <h2 style="font-size:15px">Just analyzed</h2>
+  <p><strong>${escapeHtml(opts.latestCandidate.name)}</strong> &lt;${escapeHtml(opts.latestCandidate.email)}&gt;<br/>
+  Score: <strong>${opts.latestCandidate.score}</strong>/100 · Status: <strong>${escapeHtml(opts.latestCandidate.status)}</strong></p>
+  <p style="font-size:14px;color:#444">${escapeHtml(opts.latestCandidate.reasoningPreview)}</p>
+  <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
+  <h2 style="font-size:15px">How we pick the “best” candidate (same order as your dashboard)</h2>
+  <ul style="font-size:14px;padding-left:20px">
+    <li><strong>Shortlist</strong> (AI score typically 80–100): strongest fit to the job description and required skills.</li>
+    <li><strong>Flag</strong> (about 50–79): mixed signals — manual review recommended.</li>
+    <li><strong>Reject</strong> (below threshold): weaker fit for this posting.</li>
+    <li>Among equal status, higher <strong>AI score</strong> ranks first; then earlier applications break ties.</li>
+  </ul>
+  <p style="font-size:14px;background:#f0fdf4;border:1px solid #bbf7d0;padding:12px;border-radius:8px">
+    <strong>Recommended lead →</strong> ${escapeHtml(opts.bestPick.name)} (${escapeHtml(opts.bestPick.email)})<br/>
+    <span style="color:#166534">${escapeHtml(opts.bestPick.explanation)}</span>
+  </p>
+  <h2 style="font-size:15px">Current pipeline (top ${opts.rankedRows.length})</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="text-align:left;background:#f8fafc">
+      <th style="padding:8px;border-bottom:1px solid #e5e7eb">#</th>
+      <th style="padding:8px;border-bottom:1px solid #e5e7eb">Name</th>
+      <th style="padding:8px;border-bottom:1px solid #e5e7eb">Email</th>
+      <th style="padding:8px;border-bottom:1px solid #e5e7eb">Score</th>
+      <th style="padding:8px;border-bottom:1px solid #e5e7eb">Status</th>
+    </tr></thead>
+    <tbody>${rankTableRows}</tbody>
+  </table>
+  <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
+  <h2 style="font-size:15px">Next step: interview</h2>
+  ${meetingSection}
+  <p><a href="${escapeAttr(opts.dashboardShortlistedUrl)}" style="display:inline-block;margin-top:8px;padding:10px 16px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;font-size:14px">Open shortlisted candidates (schedule meeting)</a></p>
+  <p style="font-size:12px;color:#64748b">Candidates receive their own outcome email (shortlist / reject) separately. This digest is for internal visibility.</p>
+</body></html>`
+
+    const text = [
+      `OptioHire — AI screening digest`,
+      `Job: ${safeTitle} @ ${opts.companyName}`,
+      ``,
+      `Just analyzed: ${opts.latestCandidate.name} <${opts.latestCandidate.email}> — score ${opts.latestCandidate.score}, status ${opts.latestCandidate.status}`,
+      opts.latestCandidate.reasoningPreview,
+      ``,
+      `Best pick: ${opts.bestPick.name} <${opts.bestPick.email}> — ${opts.bestPick.explanation}`,
+      ``,
+      `Pipeline (top ${opts.rankedRows.length}):`,
+      ...opts.rankedRows.map(
+        (r) => `  ${r.rank}. ${r.name} <${r.email}> — ${r.score ?? '—'} — ${r.status}`
+      ),
+      ``,
+      opts.meetingLink ? `Meeting link: ${opts.meetingLink}` : 'No default meeting link on job.',
+      `Dashboard: ${opts.dashboardShortlistedUrl}`,
+    ].join('\n')
+
+    for (const to of opts.recipients) {
+      if (!to) continue
+      try {
+        await this.sendEmail({
+          to,
+          subject,
+          html,
+          text,
+          emailType: 'watcher_pipeline_digest',
+          useSecondaryKey: true,
+        })
+      } catch (e) {
+        logger.warn(`sendWatcherPipelineDigest failed for ${to}:`, e)
+      }
+    }
+  }
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function escapeAttr(s: string): string {
+  return escapeHtml(s).replace(/'/g, '&#39;')
 }
 
