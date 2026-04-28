@@ -1,6 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import HomePageContent from './homepage-content'
 
 const structuredData = {
@@ -18,32 +20,47 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100">
-        <section className="relative py-20 px-4 flex items-center justify-center min-h-[60vh] overflow-hidden">
-          <div className="absolute inset-0 hero-dot-grid opacity-55" aria-hidden />
-          <div className="absolute -top-20 -left-16 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl animate-float-slow" aria-hidden />
-          <div className="absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-teal-400/20 blur-3xl animate-float-slower" aria-hidden />
-          <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/10 blur-3xl animate-float" aria-hidden />
-          <div className="text-center max-w-2xl relative z-10">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 brand-gradient-text">
-              Hire Smarter. Not Harder.
-            </h1>
-            <p className="text-lg text-slate-600 mb-8">
-              Built by Cres Dynamics in Nairobi, OptioHire helps companies hire 3x faster through skills-first evaluation, role readiness, and cultural fit.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <button
-                onClick={() => router.push('/auth/signup')}
-                className="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/25"
-              >
-                Request a Demo
-              </button>
-              <button
-                onClick={() => router.push('/auth/signin')}
-                className="px-6 py-3 border border-slate-300 bg-white text-slate-700 font-medium rounded-lg hover:border-primary hover:text-primary transition-colors"
-              >
-                Sign In
-              </button>
+      <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_45%,#f1f5f9_100%)]">
+        <section className="relative overflow-hidden px-4 pb-20 pt-28 sm:px-6 sm:pt-32">
+          <div className="absolute inset-0 hero-dot-grid opacity-35" aria-hidden />
+          <div
+            className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-slate-900/10 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative z-10 mx-auto max-w-6xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-sm">
+                Built by Cres Dynamics
+              </p>
+              <h1 className="text-balance text-4xl font-bold leading-tight text-slate-900 sm:text-5xl md:text-6xl">
+                A modern hiring platform for teams that want speed and quality.
+              </h1>
+              <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-slate-600 sm:text-xl">
+                OptioHire helps your team screen fairly, shortlist confidently, and hire top candidates faster
+                with structured, skills-first workflows.
+              </p>
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                <Button size="lg" onClick={() => router.push('/auth/signup')} className="gap-2 rounded-2xl bg-slate-900 px-7 text-white hover:bg-black">
+                  Request Demo
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => router.push('/auth/signin')}
+                  className="rounded-2xl border-slate-300 bg-white/90 px-7 text-slate-700 hover:bg-white"
+                >
+                  Sign In
+                </Button>
+              </div>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-slate-600">
+                {['3x faster hiring cycles', 'Bias-aware evaluations', 'Clear hiring reports'].map((item) => (
+                  <span key={item} className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    {item}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </section>

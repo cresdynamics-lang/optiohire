@@ -15,7 +15,6 @@ const navigation = [
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
 
@@ -47,57 +46,44 @@ export function Navbar() {
     }
   }, [mobileMenuOpen])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 14)
-    }
-
-    handleScroll()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
-
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
-        isScrolled
-          ? 'border-b border-slate-200/70 bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 shadow-sm shadow-slate-900/5'
-          : 'border-b border-transparent bg-white/45 backdrop-blur-md supports-[backdrop-filter]:bg-white/35'
-      }`}
+      className="sticky left-0 right-0 top-0 z-[100] border-b border-slate-200 bg-white"
     >
-      <nav ref={navRef} className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 lg:px-8">
+      <nav ref={navRef} className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex items-center flex-shrink-0 z-10">
           <Link href="/" className="-m-1.5 p-1.5 flex items-center">
-            <span className="text-[rgb(var(--ink-navy))] text-xl md:text-2xl font-semibold tracking-tight">
+            <span className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
               OptioHire
             </span>
           </Link>
         </div>
 
         {/* Desktop navigation - visible on lg screens and above */}
-        <div className="hidden lg:flex lg:items-center lg:gap-x-8 lg:flex-1 lg:justify-center">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
-                pathname === item.href ? 'text-primary' : 'text-slate-600 hover:text-[rgb(var(--ink-navy))]'
-              }`}
-            >
-              {item.name}
-            </Link>
-          ))}
+        <div className="hidden lg:flex lg:flex-1 lg:justify-center">
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  pathname === item.href
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:bg-white/80 hover:text-slate-900'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* Desktop Get Started button - visible on lg screens and above */}
         <div className="hidden lg:flex lg:items-center lg:flex-shrink-0">
           <Link
             href="/auth/signup"
-            className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-blue-700 transition-all duration-200 whitespace-nowrap shadow-sm shadow-blue-500/25 hover:shadow-md hover:shadow-blue-500/35"
+            className="whitespace-nowrap rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-black"
           >
             Get Started
           </Link>
@@ -106,30 +92,30 @@ export function Navbar() {
         {/* Mobile menu button - visible on small screens */}
         <button
           type="button"
-          className="lg:hidden p-2 text-slate-700 hover:text-[rgb(var(--ink-navy))] transition-colors flex-shrink-0 z-10 relative flex items-center justify-center min-w-[40px] min-h-[40px]"
+          className="relative z-10 flex min-h-[40px] min-w-[40px] flex-shrink-0 items-center justify-center p-2 text-slate-700 transition-colors hover:text-slate-900 lg:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
           aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? (
-            <X className="h-6 w-6 text-[rgb(var(--ink-navy))]" aria-hidden="true" />
+            <X className="h-6 w-6 text-slate-900" aria-hidden="true" />
           ) : (
-            <Menu className="h-6 w-6 text-[rgb(var(--ink-navy))]" aria-hidden="true" />
+            <Menu className="h-6 w-6 text-slate-900" aria-hidden="true" />
           )}
         </button>
 
         {/* Mobile menu dropdown - visible on small screens when open */}
         {mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 lg:hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-xl shadow-slate-900/10 backdrop-blur-md overflow-hidden z-[200] opacity-100 transform translate-y-0 transition-all duration-200">
+          <div className="absolute left-0 right-0 top-full z-[200] mt-2 translate-y-0 overflow-hidden rounded-2xl border border-slate-200 bg-white opacity-100 shadow-xl shadow-slate-900/10 transition-all duration-200 lg:hidden">
             <div className="px-4 py-4 space-y-2">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`block px-4 py-3 font-medium text-sm rounded-lg transition-colors duration-200 ${
+                  className={`block rounded-xl px-4 py-3 text-sm font-medium transition-colors duration-200 ${
                     pathname === item.href
-                      ? 'text-primary bg-blue-50/80'
-                      : 'text-slate-700 hover:text-[rgb(var(--ink-navy))] hover:bg-slate-50/80'
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-700 hover:bg-slate-50/80 hover:text-slate-900'
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -139,7 +125,7 @@ export function Navbar() {
               {/* Mobile Get Started button */}
               <Link
                 href="/auth/signup"
-                className="block px-4 py-3 mt-2 bg-primary text-white font-medium text-sm rounded-xl hover:bg-blue-700 transition-colors duration-200 text-center"
+                className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white transition-colors duration-200 hover:bg-black"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Get Started
