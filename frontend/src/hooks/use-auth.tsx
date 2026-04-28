@@ -201,10 +201,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               })
             }
             } else if (resp.status === 401) {
-              // Token invalid - clear it
-              console.log('Token invalid (401), clearing')
-            localStorage.removeItem('token')
-            setUser(null)
+              // Do not clear session aggressively here; network/proxy mismatches can transiently return 401.
+              // Keep the fallback user from token so the app does not hard-log users out unexpectedly.
+              console.warn('Profile endpoint returned 401; keeping fallback session user')
+              setUser(fallbackUser)
             } else if (resp.status === 403) {
               // Access denied but token might be valid - keep basic user info
               console.warn('Access denied (403) but keeping user session with basic info')

@@ -106,10 +106,11 @@ export function JobsSection() {
             setIsLoading(false)
             return
           } else if (response.status === 401 || response.status === 403) {
-            setError('Authentication failed. Please sign in again.')
-            // Clear token and redirect
-            localStorage.removeItem('token')
-            router.push('/auth/signin')
+            setError(
+              response.status === 403
+                ? 'Your account does not yet have employer access to manage job postings.'
+                : 'Unable to verify your session for job postings right now. Please retry.'
+            )
           } else {
             const errorData = await response.json().catch(() => ({}))
             // If it's a permission error, show helpful message
@@ -207,10 +208,11 @@ export function JobsSection() {
           setIsLoading(false)
           return
         } else if (response.status === 401 || response.status === 403) {
-          setError('Authentication failed. Please sign in again.')
-          // Clear token and redirect
-          localStorage.removeItem('token')
-          router.push('/auth/signin')
+          setError(
+            response.status === 403
+              ? 'Your account does not yet have employer access to manage job postings.'
+              : 'Unable to verify your session for job postings right now. Please retry.'
+          )
         } else {
           const errorData = await response.json().catch(() => ({}))
           // If it's a permission error, show helpful message

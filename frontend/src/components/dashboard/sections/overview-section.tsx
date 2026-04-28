@@ -187,10 +187,13 @@ export function OverviewSection() {
         // No company found or no jobs - this is okay, just show empty state
         jobs = []
       } else if (response.status === 401 || response.status === 403) {
-        console.warn('Authentication error while fetching jobs, clearing token and redirecting to sign-in')
-        localStorage.removeItem('token')
+        console.warn('Authentication/permission error while fetching jobs, keeping session')
+        setError(
+          response.status === 403
+            ? 'Your account does not yet have employer access for job analytics.'
+            : 'Unable to verify your session for job analytics right now. Please retry.'
+        )
         setIsLoading(false)
-        router.push('/auth/signin')
         return
       } else {
         console.error('Failed to fetch jobs:', response.status, await response.text().catch(() => ''))
@@ -445,9 +448,12 @@ export function OverviewSection() {
           }))
         }
       } else if (response.status === 401 || response.status === 403) {
-        console.warn('Authentication error while refreshing jobs, clearing token and redirecting to sign-in')
-        localStorage.removeItem('token')
-        router.push('/auth/signin')
+        console.warn('Authentication/permission error while refreshing jobs, keeping session')
+        setError(
+          response.status === 403
+            ? 'Your account does not yet have employer access for job analytics.'
+            : 'Unable to verify your session for job analytics right now. Please retry.'
+        )
         return
       }
     } catch (err) {
