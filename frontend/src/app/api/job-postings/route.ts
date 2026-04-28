@@ -4,12 +4,45 @@ import pg from 'pg'
 
 // Must match backend JWT_SECRET (tokens are issued by backend for Google sign-in)
 const JWT_SECRET = process.env.JWT_SECRET
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001'
 
 function getJwtSecret(): string {
   if (!JWT_SECRET) {
     throw new Error('JWT_SECRET is required but not configured')
   }
   return JWT_SECRET
+}
+
+async function resolveAuthUser(authHeader: string): Promise<{ userId: string; email: string | null } | null> {
+  const token = authHeader.substring(7)
+  try {
+    const decoded = jwt.verify(token, getJwtSecret()) as { sub: string; email?: string }
+    return {
+      userId: decoded.sub,
+      email: decoded.email?.toLowerCase() || null,
+    }
+  } catch {
+    // Fallback: ask backend to validate token and return current user.
+    // This avoids hard failures when frontend JWT_SECRET drifts from backend.
+    try {
+      const meResp = await fetch(`${BACKEND_URL}/api/user/me`, {
+        headers: {
+          Authorization: authHeader,
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(8000),
+      })
+      if (!meResp.ok) return null
+      const me = await meResp.json().catch(() => null)
+      if (!me?.id && !me?.user_id) return null
+      return {
+        userId: String(me.id || me.user_id),
+        email: me?.email ? String(me.email).toLowerCase() : null,
+      }
+    } catch {
+      return null
+    }
+  }
 }
 
 // Helper to extract domain from email
@@ -37,21 +70,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const token = authHeader.substring(7)
-    let userId: string
-
-    try {
-      const decoded = jwt.verify(token, getJwtSecret()) as { sub: string; email: string }
-      userId = decoded.sub
-    } catch (err) {
+    const authUser = await resolveAuthUser(authHeader)
+    if (!authUser) {
       return NextResponse.json(
         {
           error: 'Invalid token',
-          hint: 'Ensure JWT_SECRET in this app matches the backend (required for Google sign-in).',
+          hint: 'Token validation failed in frontend and backend auth check.',
         },
         { status: 401 }
       )
     }
+    const userId = authUser.userId
 
     const pool = getPool()
     client = await pool.connect()
@@ -287,21 +316,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const token = authHeader.substring(7)
-    let userId: string
-
-    try {
-      const decoded = jwt.verify(token, getJwtSecret()) as { sub: string; email: string }
-      userId = decoded.sub
-    } catch (err) {
+    const authUser = await resolveAuthUser(authHeader)
+    if (!authUser) {
       return NextResponse.json(
         {
           error: 'Invalid token',
-          hint: 'Ensure JWT_SECRET in this app matches the backend (required for Google sign-in).',
+          hint: 'Token validation failed in frontend and backend auth check.',
         },
         { status: 401 }
       )
     }
+    const userId = authUser.userId
 
     const body = await request.json()
     const {
