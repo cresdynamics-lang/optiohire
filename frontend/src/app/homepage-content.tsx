@@ -1,194 +1,219 @@
 'use client'
 
+import type { ComponentType } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Clock, Target, Shield, CheckCircle, TrendingUp, Users } from 'lucide-react'
+import {
+  ArrowRight,
+  Clock,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Users,
+  Briefcase,
+  Building2,
+  User,
+  CheckCircle2,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function HomePageContent() {
   const router = useRouter()
+  const SafeIcon = ({ icon: Icon }: { icon: ComponentType<{ className?: string }> | undefined }) =>
+    Icon ? <Icon className="h-5 w-5 text-blue-700" /> : <Sparkles className="h-5 w-5 text-blue-700" />
+  const outcomes = [
+    {
+      title: 'Faster time-to-hire',
+      metric: '3x faster',
+      description: 'Automated screening and ranked candidates reduce manual review time across every role.',
+      icon: Clock,
+    },
+    {
+      title: 'Better quality hires',
+      metric: '+40%',
+      description: 'Structured scorecards and role-fit signals improve hiring confidence and long-term retention.',
+      icon: TrendingUp,
+    },
+    {
+      title: 'Fairer decisions',
+      metric: 'Bias-aware',
+      description: 'Consistent evaluation rubrics help teams reduce noise and keep candidate review accountable.',
+      icon: ShieldCheck,
+    },
+  ]
+
+  const useCases = [
+    {
+      title: 'High-growth startups',
+      description: 'Move quickly without compromising candidate quality while hiring for critical roles.',
+      icon: Briefcase,
+    },
+    {
+      title: 'Scaling SMEs',
+      description: 'Standardize hiring workflows across teams and keep recruiters aligned as volume increases.',
+      icon: Building2,
+    },
+    {
+      title: 'Enterprise HR teams',
+      description: 'Unify hiring decisions with measurable, auditable reports across departments.',
+      icon: Users,
+    },
+    {
+      title: 'Specialist recruiting',
+      description: 'Evaluate deeper role-readiness for technical and hard-to-fill positions.',
+      icon: User,
+    },
+  ]
 
   return (
-    <div>
-      {/* Intro strip below hero */}
-      <section className="py-12 px-4 bg-black border-t border-gray-800/50 relative">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-lg sm:text-xl text-gray-300 font-light mb-4">
-            OptioHire is a B2B HR tech SaaS by Cres Dynamics in Nairobi, Kenya.
-          </p>
-          <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto mb-8">
-            We help companies hire faster and more accurately by moving beyond resume-only screening to evaluate skills-first capability, role readiness, and cultural fit.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <button
-              onClick={() => router.push('/auth/signup')}
-              className="px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-500 text-white font-semibold rounded-lg hover:from-teal-500 hover:to-teal-400 transition-colors duration-200 shadow-lg shadow-teal-500/30"
-            >
-              Request a Demo
-            </button>
-            <button
-              onClick={() => router.push('/how-it-works')}
-              className="px-6 py-3 border border-gray-600 text-gray-300 font-semibold rounded-lg hover:border-teal-500 hover:text-teal-400 transition-colors duration-200"
-            >
-              How It Works
-            </button>
+    <div className="pb-20">
+      <section className="px-4 pb-8 sm:px-6">
+        <div className="mx-auto grid max-w-6xl gap-4 rounded-3xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_25px_80px_-50px_rgba(15,23,42,0.5)] backdrop-blur md:grid-cols-3 md:p-7">
+          <div>
+            <p className="text-sm font-semibold text-blue-700">Trusted hiring infrastructure</p>
+            <h2 className="mt-2 text-xl font-bold text-slate-900">Built for modern recruitment teams</h2>
+          </div>
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4">
+            <p className="text-sm text-slate-500">Data privacy</p>
+            <p className="mt-1 text-base font-semibold text-slate-900">Secure-by-default workflows</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4">
+            <p className="text-sm text-slate-500">Decision quality</p>
+            <p className="mt-1 text-base font-semibold text-slate-900">Clear scorecards and audit trail</p>
           </div>
         </div>
       </section>
 
-      {/* What OptioHire Changes - Outcomes Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-black via-gray-950 to-black relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/30 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl" />
-        </div>
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-              What OptioHire Changes
+      <section className="px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 max-w-3xl">
+            <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
+              Outcome-focused platform
+            </p>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              A sleek hiring workflow that keeps teams aligned.
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Real outcomes that transform how teams hire, from the moment candidates apply to the day they start.
+            <p className="mt-4 text-lg text-slate-600">
+              From screening to final decision, OptioHire gives every stakeholder the same reliable source of
+              truth.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {[
-              { icon: Clock, title: "3x Faster Hiring", description: "Reduce time-to-hire from weeks to days with intelligent automation and smart candidate matching.", metric: "75% less time" },
-              { icon: Target, title: "40% Better Hires", description: "Improve hire quality with data-driven insights that predict long-term success and cultural fit.", metric: "Higher retention" },
-              { icon: TrendingUp, title: "60% Cost Savings", description: "Cut recruitment costs dramatically while maintaining quality standards and compliance.", metric: "Lower expenses" },
-            ].map((outcome) => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {outcomes.map((outcome) => (
               <div
                 key={outcome.title}
-                className="bg-gradient-to-br from-gray-900/80 to-gray-950/80 backdrop-blur-xl border border-gray-800/50 rounded-xl p-8 text-center hover:border-teal-500/50 hover:shadow-2xl hover:shadow-teal-500/20 transition-colors duration-300"
+                className="group rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-teal-500/30">
-                  <outcome.icon className="w-8 h-8 text-white" />
+                <div className="mb-5 inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <SafeIcon icon={outcome.icon} />
                 </div>
-                <h3 className="text-2xl font-semibold text-white mb-4">{outcome.title}</h3>
-                <p className="text-gray-300 mb-4">{outcome.description}</p>
-                <div className="text-teal-400 font-semibold">{outcome.metric}</div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{outcome.metric}</p>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900">{outcome.title}</h3>
+                <p className="mt-3 leading-relaxed text-slate-600">{outcome.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works Preview - 3 Steps Short */}
-      <section className="py-20 px-4 bg-gradient-to-b from-gray-950 via-black to-gray-950 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-teal-500 to-transparent" />
-        </div>
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">How It Works</h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-              A simple 3-step process that brings clarity and confidence to every hiring decision.
-            </p>
-            <button
-              onClick={() => router.push('/how-it-works')}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-500 text-white font-semibold rounded-lg hover:from-teal-500 hover:to-teal-400 transition-colors duration-200 shadow-lg shadow-teal-500/30"
-            >
-              See Full Process
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { step: "1", title: "Smart Screening", description: "AI analyzes resumes and applications to identify candidates with the specific skills your role requires." },
-              { step: "2", title: "Fair Evaluation", description: "Each candidate receives an objective assessment, reducing bias and ensuring consistent evaluation criteria." },
-              { step: "3", title: "Confident Decisions", description: "Teams receive clear recommendations with detailed insights, making confident hiring choices." },
-            ].map((step) => (
-              <div key={step.step} className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white shadow-lg shadow-teal-500/40">
-                  {step.step}
+      <section className="px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-6xl rounded-3xl border border-slate-200/80 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-8 text-white shadow-xl sm:p-10">
+          <div className="grid items-start gap-8 lg:grid-cols-[1.2fr_1fr]">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-blue-100">
+                <Sparkles className="h-3.5 w-3.5" />
+                How it works
+              </p>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+                Structured hiring in three clear steps
+              </h2>
+              <p className="mt-4 max-w-2xl text-slate-200">
+                Keep candidate evaluation consistent and transparent from intake to final approval.
+              </p>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="mt-7 rounded-2xl px-6"
+                onClick={() => router.push('/how-it-works')}
+              >
+                Explore Process
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {[
+                'Screen candidates using role-specific criteria',
+                'Rank applicants with consistent, bias-aware scoring',
+                'Share final recommendations with hiring stakeholders',
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/15 bg-white/10 p-4">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-300" />
+                  <p className="text-sm text-slate-100">{item}</p>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">{step.title}</h3>
-                <p className="text-gray-300">{step.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Use Cases Preview */}
-      <section className="py-20 px-4 bg-black relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-teal-500/20 to-transparent" />
-        </div>
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-              Built for Every Hiring Scenario
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-              Whether you're a startup hiring fast or an enterprise managing complex recruitment,
-              OptioHire adapts to your needs.
-            </p>
-            <button
-              onClick={() => router.push('/use-cases')}
-              className="inline-flex items-center px-6 py-3 border-2 border-teal-500 text-teal-400 font-semibold rounded-lg hover:bg-teal-500 hover:text-white transition-colors duration-200 hover:shadow-lg hover:shadow-teal-500/30"
-            >
-              Explore Use Cases
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
+      <section className="px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                Designed for every hiring context
+              </h2>
+              <p className="mt-3 text-lg text-slate-600">
+                A professional UI and workflow model that scales from startup recruiting to enterprise hiring.
+              </p>
+            </div>
+            <Button variant="outline" className="rounded-2xl" onClick={() => router.push('/use-cases')}>
+              View Use Cases
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { name: "Startups", description: "Hiring fast in competitive markets" },
-              { name: "Growing SMEs", description: "Scaling teams efficiently" },
-              { name: "HR Teams", description: "Managing high-volume recruitment" },
-              { name: "Specialized Roles", description: "Finding technical experts" },
-            ].map((useCase) => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {useCases.map((useCase) => (
               <div
-                key={useCase.name}
-                className="bg-gradient-to-br from-gray-900/60 to-gray-950/60 backdrop-blur-sm border border-gray-800/50 rounded-lg p-6 text-center hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/10 transition-colors duration-300"
+                key={useCase.title}
+                className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
-                <h3 className="text-lg font-semibold text-white mb-2">{useCase.name}</h3>
-                <p className="text-gray-400 text-sm">{useCase.description}</p>
+                <div className="mb-4 inline-flex rounded-2xl bg-slate-100 p-3">
+                  <SafeIcon icon={useCase.icon} />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900">{useCase.title}</h3>
+                <p className="mt-2 text-slate-600">{useCase.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Trust & Security Preview */}
-      <section className="py-20 px-4 bg-gradient-to-b from-gray-950 via-black to-black relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute bottom-0 left-1/3 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
-        </div>
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-              Trust & Security First
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-              Your data and your candidates' privacy are protected with strong security controls
-              and responsible AI practices.
-            </p>
-            <button
-              onClick={() => router.push('/trust-security')}
-              className="inline-flex items-center px-6 py-3 border-2 border-gray-700 text-gray-300 font-semibold rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors duration-200"
-            >
-              Learn About Security
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: Shield, title: "Data Protection", description: "GDPR-aligned practices with end-to-end encryption for sensitive information." },
-              { icon: Users, title: "Bias Reduction", description: "Built-in algorithms that minimize unconscious bias in hiring decisions." },
-              { icon: CheckCircle, title: "Transparent AI", description: "Human oversight with clear explanations of how AI recommendations are made." },
-            ].map((feature) => (
-              <div key={feature.title} className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                  <feature.icon className="w-8 h-8 text-teal-400" />
+      <section className="px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-6xl rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm sm:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                Trust and transparency by design
+              </h2>
+              <p className="mt-4 text-lg text-slate-600">
+                Keep your candidate data protected and your hiring process explainable at every stage.
+              </p>
+              <Button className="mt-6 rounded-2xl" onClick={() => router.push('/trust-security')}>
+                Learn About Security
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-4">
+              {[
+                'Role-based access and secure data handling',
+                'Consistent scorecards to reduce decision bias',
+                'Human-in-the-loop oversight for AI recommendations',
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                  <p className="text-slate-700">{item}</p>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">{feature.title}</h3>
-                <p className="text-gray-300">{feature.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
