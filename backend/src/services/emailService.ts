@@ -8,6 +8,8 @@ import { ResendService } from './resendService.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
 const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+const MAX_EMAIL_RETRY_ATTEMPTS = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
+const EMAIL_RETRY_BASE_DELAY_SEC = Number(process.env.EMAIL_RETRY_BASE_DELAY_SEC || 30)
 
 /** Derive display name for salutation: use candidate name or email local part so we never show only "Dear Candidate" when we have an email */
 function getCandidateDisplayName(candidateName: string | null | undefined, candidateEmail: string): string {
@@ -1145,30 +1147,43 @@ The OptioHire Team
     emailType?: string
     recipientName?: string
     useSecondaryKey?: boolean // Use secondary Resend key for notifications (thanks for joining, welcome, etc.)
+    skipLogInsert?: boolean
+    existingEmailLogId?: string | null
   }) {
     const emailType = data.emailType || 'general'
     const recipientName = data.recipientName || null
     
     // Log email attempt
-    let emailLogId: string | null = null
-    try {
-      const { query } = await import('../db/index.js')
-      const { rows } = await query(
-        `INSERT INTO email_logs (recipient_email, recipient_name, subject, email_type, status, provider, metadata)
-         VALUES ($1, $2, $3, $4, 'pending', $5, $6)
-         RETURNING email_id`,
-        [
-          data.to,
-          recipientName,
-          data.subject,
-          emailType,
-          this.useResend ? 'resend' : (this.useSendGrid ? 'sendgrid' : 'smtp'),
-          JSON.stringify({ html: data.html, text: data.text, from: data.from })
-        ]
-      )
-      emailLogId = rows[0]?.email_id || null
-    } catch (logError) {
-      logger.error('Failed to log email:', logError)
+    let emailLogId: string | null = data.existingEmailLogId || null
+    if (!data.skipLogInsert && !emailLogId) {
+      try {
+        const { query } = await import('../db/index.js')
+        const { rows } = await query(
+          `INSERT INTO email_logs (recipient_email, recipient_name, subject, email_type, status, provider, metadata)
+           VALUES ($1, $2, $3, $4, 'pending', $5, $6)
+           RETURNING email_id`,
+          [
+            data.to,
+            recipientName,
+            data.subject,
+            emailType,
+            this.useResend ? 'resend' : (this.useSendGrid ? 'sendgrid' : 'smtp'),
+            JSON.stringify({
+              html: data.html,
+              text: data.text,
+              from: data.from,
+              fromName: data.fromName,
+              replyTo: data.replyTo,
+              retry_count: 0,
+              is_retry_eligible: true,
+              next_retry_at: null
+            })
+          ]
+        )
+        emailLogId = rows[0]?.email_id || null
+      } catch (logError) {
+        logger.error('Failed to log email:', logError)
+      }
     }
 
     // Priority 1: Use Resend if configured (recommended - domain verification support)
@@ -1193,7 +1208,17 @@ The OptioHire Team
           try {
             const { query } = await import('../db/index.js')
             await query(
-              `UPDATE email_logs SET status = 'sent', sent_at = now() WHERE email_id = $1`,
+              `UPDATE email_logs
+               SET status = 'sent',
+                   error_message = NULL,
+                   sent_at = now(),
+                   metadata = jsonb_set(
+                     jsonb_set(COALESCE(metadata, '{}'::jsonb), '{is_retry_eligible}', 'false'::jsonb, true),
+                     '{next_retry_at}',
+                     'null'::jsonb,
+                     true
+                   )
+               WHERE email_id = $1`,
               [emailLogId]
             )
           } catch (updateError) {
@@ -1275,7 +1300,18 @@ The OptioHire Team
         try {
           const { query } = await import('../db/index.js')
           await query(
-            `UPDATE email_logs SET status = 'sent', provider_message_id = $1, sent_at = now() WHERE email_id = $2`,
+            `UPDATE email_logs
+             SET status = 'sent',
+                 provider_message_id = $1,
+                 error_message = NULL,
+                 sent_at = now(),
+                 metadata = jsonb_set(
+                   jsonb_set(COALESCE(metadata, '{}'::jsonb), '{is_retry_eligible}', 'false'::jsonb, true),
+                   '{next_retry_at}',
+                   'null'::jsonb,
+                   true
+                 )
+             WHERE email_id = $2`,
             [result.messageId || null, emailLogId]
           )
         } catch (updateError) {
@@ -1298,6 +1334,54 @@ The OptioHire Team
         logger.error('4. Ensure MAIL_USER or SMTP_USER is set to your Gmail address')
       }
       
+      if (emailLogId) {
+        try {
+          const { query } = await import('../db/index.js')
+          const { rows } = await query<{ retry_count: number }>(
+            `SELECT COALESCE((metadata->>'retry_count')::int, 0) AS retry_count
+             FROM email_logs
+             WHERE email_id = $1`,
+            [emailLogId]
+          )
+          const currentRetryCount = rows[0]?.retry_count ?? 0
+          const nextRetryCount = currentRetryCount + 1
+          const canRetry = nextRetryCount < MAX_EMAIL_RETRY_ATTEMPTS
+          const delaySec = Math.min(3600, EMAIL_RETRY_BASE_DELAY_SEC * Math.pow(2, Math.max(0, currentRetryCount)))
+          const nextRetryAt = new Date(Date.now() + delaySec * 1000).toISOString()
+
+          await query(
+            `UPDATE email_logs
+             SET status = 'failed',
+                 error_message = $2,
+                 metadata = jsonb_set(
+                   jsonb_set(
+                     jsonb_set(
+                       jsonb_set(
+                         COALESCE(metadata, '{}'::jsonb),
+                         '{retry_count}',
+                         to_jsonb($3::int),
+                         true
+                       ),
+                       '{is_retry_eligible}',
+                       to_jsonb($4::boolean),
+                       true
+                     ),
+                     '{next_retry_at}',
+                     to_jsonb($5::text),
+                     true
+                   ),
+                   '{last_failed_at}',
+                   to_jsonb($6::text),
+                   true
+                 )
+             WHERE email_id = $1`,
+            [emailLogId, errorMsg, nextRetryCount, canRetry, nextRetryAt, new Date().toISOString()]
+          )
+        } catch (updateErr) {
+          logger.error('Failed to persist retry metadata in email_logs:', updateErr)
+        }
+      }
+
       await this.logEmail(data.to, data.subject, 'failed', errorMsg)
       throw error
     }

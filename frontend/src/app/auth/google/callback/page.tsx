@@ -42,7 +42,8 @@ function GoogleCallbackContent() {
         }
         localStorage.setItem('token', data.token)
         const user = data.user
-        if (!user.hasCompany && !user.companyId) {
+        const isCandidate = user.company_role === 'candidate'
+        if (!isCandidate && !user.hasCompany && !user.companyId) {
           router.replace('/company-setup')
           return
         }

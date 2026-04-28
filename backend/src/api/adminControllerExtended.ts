@@ -395,6 +395,245 @@ export async function resendEmail(req: AuthRequest, res: Response) {
   }
 }
 
+/**
+ * Dead-letter style view: failed emails that exhausted retries or were marked non-retryable.
+ */
+export async function getDeadLetterEmails(req: Request, res: Response) {
+  try {
+    const { page = '1', limit = '50', emailType } = req.query
+    const offset = (Number(page) - 1) * Number(limit)
+    const maxAttempts = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
+
+    let whereClause = `WHERE status = 'failed'
+      AND (
+        COALESCE((metadata->>'is_retry_eligible')::boolean, true) = false
+        OR COALESCE((metadata->>'retry_count')::int, 0) >= $3
+      )`
+    const params: any[] = [Number(limit), offset, maxAttempts]
+    let paramIndex = 4
+
+    if (emailType) {
+      whereClause += ` AND email_type = $${paramIndex++}`
+      params.push(String(emailType))
+    }
+
+    const { rows } = await query(
+      `SELECT *
+       FROM email_logs
+       ${whereClause}
+       ORDER BY created_at DESC
+       LIMIT $1 OFFSET $2`,
+      params
+    )
+
+    const { rows: countRows } = await query<{ count: string }>(
+      `SELECT COUNT(*) as count
+       FROM email_logs
+       ${whereClause}`,
+      params.slice(2)
+    )
+
+    return res.json({
+      emails: rows,
+      total: Number(countRows[0]?.count || 0),
+      page: Number(page),
+      limit: Number(limit),
+      maxRetryAttempts: maxAttempts
+    })
+  } catch (err) {
+    console.error('Get dead-letter emails error:', err)
+    return res.status(500).json({ error: 'Failed to fetch dead-letter emails' })
+  }
+}
+
+/**
+ * Manual admin re-queue for a failed email log.
+ */
+export async function requeueDeadLetterEmail(req: AuthRequest, res: Response) {
+  try {
+    const { emailId } = req.params
+
+    const { rows } = await query(
+      `SELECT * FROM email_logs WHERE email_id = $1`,
+      [emailId]
+    )
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Email log not found' })
+    }
+
+    const emailLog = rows[0]
+
+    await query(
+      `UPDATE email_logs
+       SET status = 'failed',
+           error_message = NULL,
+           metadata = jsonb_set(
+             jsonb_set(
+               jsonb_set(
+                 jsonb_set(COALESCE(metadata, '{}'::jsonb), '{is_retry_eligible}', 'true'::jsonb, true),
+                 '{retry_count}',
+                 '0'::jsonb,
+                 true
+               ),
+               '{next_retry_at}',
+               to_jsonb($2::text),
+               true
+             ),
+             '{manually_requeued_at}',
+             to_jsonb($3::text),
+             true
+           )
+       WHERE email_id = $1`,
+      [emailId, new Date().toISOString(), new Date().toISOString()]
+    )
+
+    await logAdminAction(req, 'requeue_dead_letter_email', 'email', emailId, {
+      recipient: emailLog.recipient_email,
+      emailType: emailLog.email_type
+    })
+
+    return res.json({ success: true, message: 'Email re-queued successfully' })
+  } catch (err) {
+    console.error('Requeue dead-letter email error:', err)
+    return res.status(500).json({ error: 'Failed to re-queue email' })
+  }
+}
+
+/**
+ * Manual admin bulk re-queue for failed email logs.
+ */
+export async function bulkRequeueDeadLetterEmails(req: AuthRequest, res: Response) {
+  try {
+    const { emailIds } = req.body || {}
+    if (!Array.isArray(emailIds) || emailIds.length === 0) {
+      return res.status(400).json({ error: 'emailIds array is required' })
+    }
+
+    const normalizedIds = emailIds
+      .map((id: unknown) => (typeof id === 'string' ? id.trim() : ''))
+      .filter(Boolean)
+
+    if (normalizedIds.length === 0) {
+      return res.status(400).json({ error: 'No valid email IDs provided' })
+    }
+
+    const nowIso = new Date().toISOString()
+    const { rowCount } = await query(
+      `UPDATE email_logs
+       SET status = 'failed',
+           error_message = NULL,
+           metadata = jsonb_set(
+             jsonb_set(
+               jsonb_set(
+                 jsonb_set(COALESCE(metadata, '{}'::jsonb), '{is_retry_eligible}', 'true'::jsonb, true),
+                 '{retry_count}',
+                 '0'::jsonb,
+                 true
+               ),
+               '{next_retry_at}',
+               to_jsonb($2::text),
+               true
+             ),
+             '{manually_requeued_at}',
+             to_jsonb($3::text),
+             true
+           )
+       WHERE email_id = ANY($1::uuid[])`,
+      [normalizedIds, nowIso, nowIso]
+    )
+
+    await logAdminAction(req, 'bulk_requeue_dead_letter_email', 'email', undefined, {
+      requested: normalizedIds.length,
+      updated: rowCount || 0
+    })
+
+    return res.json({
+      success: true,
+      message: `${rowCount || 0} email(s) re-queued successfully`,
+      requested: normalizedIds.length,
+      updated: rowCount || 0
+    })
+  } catch (err) {
+    console.error('Bulk requeue dead-letter emails error:', err)
+    return res.status(500).json({ error: 'Failed to bulk re-queue emails' })
+  }
+}
+
+/**
+ * Guarded admin action: re-queue all dead-letter emails (capped).
+ */
+export async function requeueAllDeadLetterEmails(req: AuthRequest, res: Response) {
+  try {
+    const requestedLimit = Number(req.body?.limit || 200)
+    const hardCap = Number(process.env.ADMIN_REQUEUE_ALL_HARD_CAP || 500)
+    const limit = Math.max(1, Math.min(requestedLimit, hardCap))
+    const maxAttempts = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
+
+    const { rows } = await query<{ email_id: string }>(
+      `SELECT email_id
+       FROM email_logs
+       WHERE status = 'failed'
+         AND (
+           COALESCE((metadata->>'is_retry_eligible')::boolean, true) = false
+           OR COALESCE((metadata->>'retry_count')::int, 0) >= $1
+         )
+       ORDER BY created_at ASC
+       LIMIT $2`,
+      [maxAttempts, limit]
+    )
+
+    const ids = rows.map((r) => r.email_id)
+    if (ids.length === 0) {
+      return res.json({ success: true, message: 'No dead-letter emails to re-queue', requested: limit, updated: 0 })
+    }
+
+    const nowIso = new Date().toISOString()
+    const { rowCount } = await query(
+      `UPDATE email_logs
+       SET status = 'failed',
+           error_message = NULL,
+           metadata = jsonb_set(
+             jsonb_set(
+               jsonb_set(
+                 jsonb_set(COALESCE(metadata, '{}'::jsonb), '{is_retry_eligible}', 'true'::jsonb, true),
+                 '{retry_count}',
+                 '0'::jsonb,
+                 true
+               ),
+               '{next_retry_at}',
+               to_jsonb($2::text),
+               true
+             ),
+             '{manually_requeued_at}',
+             to_jsonb($3::text),
+             true
+           )
+       WHERE email_id = ANY($1::uuid[])`,
+      [ids, nowIso, nowIso]
+    )
+
+    await logAdminAction(req, 'requeue_all_dead_letter_email', 'email', undefined, {
+      requested: limit,
+      selected: ids.length,
+      updated: rowCount || 0,
+      hardCap
+    })
+
+    return res.json({
+      success: true,
+      message: `${rowCount || 0} dead-letter email(s) re-queued`,
+      requested: limit,
+      selected: ids.length,
+      updated: rowCount || 0,
+      hardCap
+    })
+  } catch (err) {
+    console.error('Requeue all dead-letter emails error:', err)
+    return res.status(500).json({ error: 'Failed to re-queue all dead-letter emails' })
+  }
+}
+
 // ============================================================================
 // SYSTEM SETTINGS MANAGEMENT
 // ============================================================================

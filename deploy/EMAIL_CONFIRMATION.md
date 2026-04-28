@@ -85,9 +85,9 @@ IMAP_POLL_MS=10000
 
 ```env
 USE_RESEND=true
-RESEND_API_KEY=re_hWPd5r3B_4qwrsRZJvY1YERxhhuNAuLoV
-RESEND_API_KEY_SECONDARY=re_hWPd5r3B_4qwrsRZJvY1YERxhhuNAuLoV
-RESEND_API_KEY_FALLBACK=re_hWPd5r3B_4qwrsRZJvY1YERxhhuNAuLoV
+RESEND_API_KEY=re_your_resend_api_key
+RESEND_API_KEY_SECONDARY=re_your_resend_api_key_secondary
+RESEND_API_KEY_FALLBACK=re_your_resend_api_key_fallback
 
 # Fallback SMTP
 MAIL_HOST=smtp.gmail.com

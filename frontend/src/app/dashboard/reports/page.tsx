@@ -16,6 +16,9 @@ export default function ReportsPage() {
       router.push('/admin')
       return
     }
+    if (user && user.companyRole === 'candidate') {
+      router.replace('/dashboard')
+    }
   }, [user, loading, router])
 
   if (loading || (user && user.role === 'admin')) {

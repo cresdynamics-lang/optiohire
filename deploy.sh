@@ -49,7 +49,7 @@ ssh $REMOTE_HOST "cat > $APP_DIR/backend/.env << 'EOF'
 # ============================================================================
 # PostgreSQL Database Configuration (REQUIRED)
 # ============================================================================
-DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire
+DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire
 DB_SSL=false
 DATABASE_URL_POOLER=your_pooler_connection_string
 DATABASE_URL_DIRECT=your_direct_connection_string
@@ -59,7 +59,7 @@ DATABASE_URL_DIRECT=your_direct_connection_string
 # ============================================================================
 PORT=3001
 NODE_ENV=production
-JWT_SECRET=a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568
+JWT_SECRET=your_jwt_secret_key_change_this_in_production
 
 # ============================================================================
 # Frontend Configuration
@@ -80,7 +80,7 @@ GOOGLE_REDIRECT_URI=http://143.244.162.13:3000/auth/google/callback
 # Email Configuration - Priority: Resend > SendGrid > SMTP
 # ============================================================================
 USE_RESEND=true
-RESEND_API_KEY=re_a3ZF8uD6_FRk3Xo8ATzYKCNhFK2RLHTsP
+RESEND_API_KEY=your_resend_api_key
 RESEND_DOMAIN=optiohire.com
 RESEND_FROM_EMAIL=noreply@optiohire.com
 RESEND_FROM_NAME=OptioHire
@@ -93,11 +93,11 @@ SENDGRID_FROM_NAME=OptioHire
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=applicationsoptiohire@gmail.com
-SMTP_PASS=mfbt hngy awnu guou
+SMTP_PASS=your_gmail_app_password
 
 MAIL_HOST=smtp.gmail.com
 MAIL_USER=applicationsoptiohire@gmail.com
-MAIL_PASS=mfbt hngy awnu guou
+MAIL_PASS=your_gmail_app_password
 MAIL_PORT=587
 
 # ============================================================================
@@ -106,7 +106,7 @@ MAIL_PORT=587
 IMAP_HOST=imap.gmail.com
 IMAP_PORT=993
 IMAP_USER=applicationsoptiohire@gmail.com
-IMAP_PASS=mfbt hngy awnu guou
+IMAP_PASS=your_gmail_app_password
 IMAP_SECURE=true
 IMAP_POLL_MS=10000
 ENABLE_EMAIL_READER=true
@@ -214,7 +214,7 @@ DISABLE_REPORT_SCHEDULER=false
 # Admin Configuration
 # ============================================================================
 ADMIN_EMAIL=manage@optiohire.com
-ADMIN_PASSWORD=Admin@2026
+ADMIN_PASSWORD=your_secure_admin_password
 
 # ============================================================================
 # Storage Configuration (S3 Compatible)

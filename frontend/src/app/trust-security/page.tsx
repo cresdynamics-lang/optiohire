@@ -83,9 +83,9 @@ export default function TrustSecurityPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.12),transparent_42%),linear-gradient(180deg,#f8fbff_0%,#f8fafc_55%,#f1f5f9_100%)]">
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-white">
+      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
             Trust & Security
@@ -112,10 +112,10 @@ export default function TrustSecurityPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {trustPrinciples.map((principle, index) => (
-              <div key={principle.title} className="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+              <div key={principle.title} className="bg-white/95 border border-slate-200 rounded-2xl p-8 shadow-sm">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-                    <principle.icon className="w-6 h-6 text-teal-600" />
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <principle.icon className="w-6 h-6 text-blue-600" />
                   </div>
                   <h3 className="text-2xl font-semibold text-gray-900">{principle.title}</h3>
                 </div>
@@ -127,7 +127,7 @@ export default function TrustSecurityPage() {
                 <ul className="space-y-3">
                   {principle.details.map((detail, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                       <span className="text-gray-600">{detail}</span>
                     </li>
                   ))}
@@ -139,7 +139,7 @@ export default function TrustSecurityPage() {
       </section>
 
       {/* Security Features */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -153,10 +153,10 @@ export default function TrustSecurityPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {securityFeatures.map((feature, index) => (
-              <div key={feature.title} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <div key={feature.title} className="bg-white/95 p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                    <feature.icon className="w-5 h-5 text-teal-600" />
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <feature.icon className="w-5 h-5 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
                 </div>
@@ -182,7 +182,7 @@ export default function TrustSecurityPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div className="flex gap-4">
-                <CheckCircle className="w-6 h-6 text-teal-600 mt-1 flex-shrink-0" />
+                <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Data Privacy Rights</h3>
                   <p className="text-gray-600 text-sm">
@@ -192,7 +192,7 @@ export default function TrustSecurityPage() {
               </div>
 
               <div className="flex gap-4">
-                <CheckCircle className="w-6 h-6 text-teal-600 mt-1 flex-shrink-0" />
+                <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Bias Prevention</h3>
                   <p className="text-gray-600 text-sm">
@@ -202,7 +202,7 @@ export default function TrustSecurityPage() {
               </div>
 
               <div className="flex gap-4">
-                <CheckCircle className="w-6 h-6 text-teal-600 mt-1 flex-shrink-0" />
+                <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Transparent Scoring</h3>
                   <p className="text-gray-600 text-sm">
@@ -214,7 +214,7 @@ export default function TrustSecurityPage() {
 
             <div className="space-y-6">
               <div className="flex gap-4">
-                <CheckCircle className="w-6 h-6 text-teal-600 mt-1 flex-shrink-0" />
+                <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Feedback Opportunities</h3>
                   <p className="text-gray-600 text-sm">
@@ -224,7 +224,7 @@ export default function TrustSecurityPage() {
               </div>
 
               <div className="flex gap-4">
-                <CheckCircle className="w-6 h-6 text-teal-600 mt-1 flex-shrink-0" />
+                <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Secure Data Handling</h3>
                   <p className="text-gray-600 text-sm">
@@ -234,7 +234,7 @@ export default function TrustSecurityPage() {
               </div>
 
               <div className="flex gap-4">
-                <CheckCircle className="w-6 h-6 text-teal-600 mt-1 flex-shrink-0" />
+                <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Ethical AI Use</h3>
                   <p className="text-gray-600 text-sm">
@@ -248,7 +248,7 @@ export default function TrustSecurityPage() {
       </section>
 
       {/* Certifications & Compliance */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -267,7 +267,7 @@ export default function TrustSecurityPage() {
               { name: 'Ethical AI', status: 'Framework' },
             ].map((cert) => (
               <div key={cert.name} className="text-center">
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                <div className="bg-white/95 rounded-2xl p-6 shadow-sm border border-slate-200">
                   <h3 className="font-semibold text-gray-900 mb-2">{cert.name}</h3>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                     cert.status === 'Implemented' ? 'bg-green-100 text-green-800' :
@@ -296,22 +296,22 @@ export default function TrustSecurityPage() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div className="bg-white/95 p-6 rounded-2xl shadow-sm border border-slate-200">
               <h3 className="font-semibold text-gray-900 mb-2">Data Protection</h3>
               <p className="text-gray-600 text-sm mb-3">
                 Questions about GDPR, data privacy, or security practices.
               </p>
-              <a href="mailto:privacy@optiohire.com" className="text-teal-600 hover:text-teal-700 font-medium text-sm">
+              <a href="mailto:privacy@optiohire.com" className="text-blue-700 hover:text-blue-800 font-medium text-sm">
                 privacy@optiohire.com
               </a>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div className="bg-white/95 p-6 rounded-2xl shadow-sm border border-slate-200">
               <h3 className="font-semibold text-gray-900 mb-2">Ethical AI</h3>
               <p className="text-gray-600 text-sm mb-3">
                 Questions about bias reduction, fairness, or AI ethics.
               </p>
-              <a href="mailto:ethics@optiohire.com" className="text-teal-600 hover:text-teal-700 font-medium text-sm">
+              <a href="mailto:ethics@optiohire.com" className="text-blue-700 hover:text-blue-800 font-medium text-sm">
                 ethics@optiohire.com
               </a>
             </div>
@@ -321,7 +321,7 @@ export default function TrustSecurityPage() {
             <p className="text-gray-600 mb-4">
               For general inquiries about trust and security:
             </p>
-            <a href="mailto:trust@optiohire.com" className="inline-flex items-center px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors duration-200">
+            <a href="mailto:trust@optiohire.com" className="inline-flex items-center rounded-xl px-6 py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors duration-200">
               Contact Trust Team
             </a>
           </div>

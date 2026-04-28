@@ -36,6 +36,12 @@ interface EmailLog {
   sent_at?: string
   delivered_at?: string
   created_at: string
+  metadata?: {
+    retry_count?: number
+    is_retry_eligible?: boolean
+    next_retry_at?: string | null
+    manually_requeued_at?: string
+  }
 }
 
 interface EmailStats {
@@ -59,6 +65,8 @@ export default function EmailManagementPage() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [deadLetters, setDeadLetters] = useState<EmailLog[]>([])
+  const [deadLettersLoading, setDeadLettersLoading] = useState(false)
 
   useEffect(() => {
     // Check for admin session first
@@ -78,6 +86,7 @@ export default function EmailManagementPage() {
     if (adminSession || (user && user.role === 'admin')) {
       loadEmails()
       loadStats()
+      loadDeadLetters()
     }
   }, [user, page, statusFilter, typeFilter])
 
@@ -139,6 +148,29 @@ export default function EmailManagementPage() {
     }
   }
 
+  const loadDeadLetters = async () => {
+    try {
+      setDeadLettersLoading(true)
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      if (!token) return
+
+      const response = await fetch('/api/admin/emails/dead-letter?page=1&limit=20', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) return
+      const data = await response.json()
+      setDeadLetters(data.emails || [])
+    } catch (err) {
+      console.error('Error loading dead-letter emails:', err)
+    } finally {
+      setDeadLettersLoading(false)
+    }
+  }
+
   const handleResend = async (emailId: string) => {
     try {
       const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
@@ -161,6 +193,33 @@ export default function EmailManagementPage() {
       alert('Email resent successfully')
     } catch (err: any) {
       alert(err.message || 'Failed to resend email')
+    }
+  }
+
+  const handleRequeue = async (emailId: string) => {
+    try {
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      if (!token) throw new Error('Not authenticated')
+
+      const response = await fetch(`/api/admin/emails/${emailId}/requeue`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to re-queue email')
+      }
+
+      await loadDeadLetters()
+      await loadEmails()
+      await loadStats()
+      alert('Email re-queued successfully')
+    } catch (err: any) {
+      alert(err.message || 'Failed to re-queue email')
     }
   }
 
@@ -234,7 +293,10 @@ export default function EmailManagementPage() {
             <Link href="/admin/dashboard">
               <Button variant="outline">Dashboard</Button>
             </Link>
-            <Button variant="outline" onClick={() => { loadEmails(); loadStats() }} disabled={isLoading}>
+            <Link href="/admin/emails/dead-letter">
+              <Button variant="outline">Dead-letter Queue</Button>
+            </Link>
+            <Button variant="outline" onClick={() => { loadEmails(); loadStats(); loadDeadLetters() }} disabled={isLoading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
@@ -294,6 +356,51 @@ export default function EmailManagementPage() {
             </Card>
           </div>
         )}
+
+        {/* Dead-letter Queue */}
+        <Card className="bg-neutral-900 border-neutral-800">
+          <CardHeader>
+            <CardTitle className="text-white">Dead-letter queue</CardTitle>
+            <CardDescription>
+              Failed emails that exhausted retries or were marked non-retryable.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {deadLettersLoading ? (
+              <div className="flex items-center gap-2 text-neutral-400">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading dead-letter emails...
+              </div>
+            ) : deadLetters.length === 0 ? (
+              <div className="text-sm text-neutral-400">No dead-letter emails.</div>
+            ) : (
+              deadLetters.map((email) => (
+                <div
+                  key={`dead-${email.email_id}`}
+                  className="rounded-md border border-neutral-800 bg-neutral-950 p-3"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-white">{email.subject}</p>
+                      <p className="text-xs text-neutral-400">{email.recipient_email}</p>
+                      <p className="text-xs text-neutral-500">
+                        retries: {email.metadata?.retry_count ?? 0}
+                        {email.metadata?.next_retry_at ? ` | next retry: ${new Date(email.metadata.next_retry_at).toLocaleString()}` : ''}
+                      </p>
+                      {email.error_message ? (
+                        <p className="text-xs text-red-300">Error: {email.error_message}</p>
+                      ) : null}
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => handleRequeue(email.email_id)}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Re-queue
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
 
         {/* Filters */}
         <Card className="bg-neutral-900 border-neutral-800">

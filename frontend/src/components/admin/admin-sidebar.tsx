@@ -19,6 +19,7 @@ import {
   UserCheck,
   HelpCircle,
   Send,
+  AlertTriangle,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,7 @@ const navigation: Array<{
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Signups', href: '/admin/signups', icon: UserCheck },
   { name: 'Emails', href: '/admin/emails', icon: Mail },
+  { name: 'Dead-letter Emails', href: '/admin/emails/dead-letter', icon: AlertTriangle },
   { name: 'Check & Send Emails', href: '/admin/check-emails', icon: Send },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
   { name: 'Login Activity', href: '/admin/logins', icon: Key },
@@ -53,9 +55,9 @@ export function AdminSidebar() {
   const { signOut } = useAuth()
 
   return (
-    <div className="flex h-full w-64 shrink-0 flex-col bg-neutral-950 border-r border-neutral-800">
-      <div className="flex h-16 items-center border-b border-neutral-800 px-6">
-        <h2 className="text-lg font-semibold text-white tracking-tight">Admin Panel</h2>
+    <div className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
+      <div className="flex h-16 items-center border-b border-slate-200 px-6">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-900">Admin Panel</h2>
       </div>
       <nav className="flex-1 space-y-0.5 px-3 py-4 overflow-y-auto">
         {navigation.map((item) => {
@@ -71,8 +73,8 @@ export function AdminSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               )}
             >
               <item.icon className="w-5 h-5 shrink-0" />
@@ -81,10 +83,10 @@ export function AdminSidebar() {
           )
         })}
       </nav>
-      <div className="border-t border-neutral-800 p-4">
+      <div className="border-t border-slate-200 p-4">
         <Button
           variant="ghost"
-          className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
+          className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
           onClick={() => signOut()}
         >
           <LogOut className="w-4 h-4 mr-2" />

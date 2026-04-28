@@ -65,6 +65,72 @@ export class EmailReader {
     this.emailService = new EmailService()
   }
 
+  private normalizeCandidateLinks(parsed: {
+    linkedin: string | null
+    github: string | null
+    other_links: string[]
+  }): string[] {
+    const links = [parsed.linkedin, parsed.github, ...(parsed.other_links || [])]
+      .filter((v): v is string => !!v && typeof v === 'string')
+      .map((v) => v.trim())
+      .filter((v) => /^https?:\/\//i.test(v))
+
+    const seen = new Set<string>()
+    const deduped: string[] = []
+    for (const link of links) {
+      const key = link.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      deduped.push(link)
+    }
+    return deduped.slice(0, 5)
+  }
+
+  private async scanCandidateLinks(links: string[]): Promise<string[]> {
+    const summaries: string[] = []
+    const timeoutMs = Number(process.env.CANDIDATE_LINK_SCAN_TIMEOUT_MS || 4500)
+
+    for (const link of links) {
+      const ctrl = new AbortController()
+      const timeout = setTimeout(() => ctrl.abort(), timeoutMs)
+      try {
+        const res = await fetch(link, {
+          method: 'GET',
+          redirect: 'follow',
+          signal: ctrl.signal,
+          headers: {
+            'User-Agent': 'OptioHire-LinkScanner/1.0'
+          }
+        })
+        if (!res.ok) {
+          summaries.push(`${link} -> unavailable (${res.status})`)
+          continue
+        }
+        const contentType = (res.headers.get('content-type') || '').toLowerCase()
+        if (!contentType.includes('text/html') && !contentType.includes('text/plain') && !contentType.includes('application/json')) {
+          summaries.push(`${link} -> non-text content (${contentType || 'unknown'})`)
+          continue
+        }
+        const body = await res.text()
+        const flattened = body
+          .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+          .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+        const preview = flattened.slice(0, 220)
+        summaries.push(`${link} -> ${preview || 'content available, but no preview extracted'}`)
+      } catch (err: any) {
+        const msg = err?.name === 'AbortError' ? `timeout after ${timeoutMs}ms` : err?.message || 'scan failed'
+        summaries.push(`${link} -> ${msg}`)
+      } finally {
+        clearTimeout(timeout)
+      }
+    }
+
+    return summaries
+  }
+
   private scheduleReconnect(delayMs: number = 30000) {
     if (this.reconnectTimer) return
     const nextDelay = Math.min(
@@ -1190,6 +1256,9 @@ export class EmailReader {
       // Extract skills
       const extractedSkills = this.cvParser.extractSkills(parsed.textContent, job.required_skills || [])
 
+      const candidateLinks = this.normalizeCandidateLinks(parsed)
+      const linkInsights = await this.scanCandidateLinks(candidateLinks)
+
       // Score candidate (aligned with new input format - includes company details)
       const scoringResult = await this.aiScoring.scoreCandidate({
         job: {
@@ -1205,7 +1274,13 @@ export class EmailReader {
           hiring_manager_email: company.hiring_manager_email || null,
           settings: company.settings || null
         },
-        cvText: parsed.textContent // Full CV text - no truncation before passing to AI
+        cvText: parsed.textContent, // Full CV text - no truncation before passing to AI
+        candidateEvidence: {
+          linkedin: parsed.linkedin,
+          github: parsed.github,
+          other_links: parsed.other_links || [],
+          link_insights: linkInsights
+        }
       })
 
       // Map status: FLAGGED -> FLAG, REJECTED -> REJECT (to match database enum)

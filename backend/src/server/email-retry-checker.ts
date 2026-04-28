@@ -47,6 +47,8 @@ export class EmailRetryChecker {
 
   private async checkAndSendMissingEmails() {
     try {
+      await this.retryFailedEmailLogs()
+
       // Find applications with SHORTLIST or REJECT status that don't have sent emails
       // Check applications from last 1 hour
       const { rows: missingEmails } = await query<{
@@ -139,6 +141,62 @@ export class EmailRetryChecker {
       }
     } catch (err: any) {
       logger.error('Error in email retry checker:', err)
+    }
+  }
+
+  private async retryFailedEmailLogs() {
+    const { rows: retryRows } = await query<{
+      email_id: string
+      recipient_email: string
+      subject: string
+      email_type: string
+      metadata: any
+    }>(
+      `SELECT email_id, recipient_email, subject, email_type, metadata
+       FROM email_logs
+       WHERE status = 'failed'
+         AND COALESCE((metadata->>'is_retry_eligible')::boolean, true) = true
+         AND (
+           metadata->>'next_retry_at' IS NULL
+           OR (metadata->>'next_retry_at')::timestamptz <= now()
+         )
+       ORDER BY created_at ASC
+       LIMIT 20`
+    )
+
+    if (retryRows.length === 0) {
+      return
+    }
+
+    logger.info(`🔁 [EMAIL RETRY CHECKER] Replaying ${retryRows.length} failed email log(s)`)
+
+    for (const row of retryRows) {
+      const metadata = row.metadata || {}
+      const html = typeof metadata.html === 'string' ? metadata.html : ''
+      const text = typeof metadata.text === 'string' ? metadata.text : ''
+
+      if (!html || !text) {
+        logger.warn(`Skipping replay for email log ${row.email_id}: missing html/text payload in metadata`)
+        continue
+      }
+
+      try {
+        await this.emailService.sendEmail({
+          to: row.recipient_email,
+          subject: row.subject,
+          html,
+          text,
+          from: typeof metadata.from === 'string' ? metadata.from : undefined,
+          fromName: typeof metadata.fromName === 'string' ? metadata.fromName : undefined,
+          replyTo: typeof metadata.replyTo === 'string' ? metadata.replyTo : undefined,
+          emailType: row.email_type || 'general',
+          skipLogInsert: true,
+          existingEmailLogId: row.email_id
+        })
+        logger.info(`✅ [EMAIL RETRY CHECKER] Replayed email log ${row.email_id} -> ${row.recipient_email}`)
+      } catch (err: any) {
+        logger.warn(`❌ [EMAIL RETRY CHECKER] Replay failed for email log ${row.email_id}: ${err?.message || String(err)}`)
+      }
     }
   }
 }

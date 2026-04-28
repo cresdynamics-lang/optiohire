@@ -9,11 +9,11 @@ import { AlertCircle, RefreshCw } from 'lucide-react'
 function AdminSidebarFallback() {
   return (
     <div
-      className="flex h-full w-64 shrink-0 flex-col bg-neutral-950 border-r border-neutral-800"
+      className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white"
       aria-hidden
     >
-      <div className="h-16 border-b border-neutral-800" />
-      <div className="flex-1 animate-pulse bg-neutral-900/70" />
+      <div className="h-16 border-b border-slate-200" />
+      <div className="flex-1 animate-pulse bg-slate-100" />
     </div>
   )
 }
@@ -39,15 +39,15 @@ class AdminErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-950 p-4">
-          <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl p-6">
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+          <div className="max-w-md w-full rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
               <AlertCircle className="w-6 h-6 text-red-500" />
-              <h2 className="text-xl font-semibold text-white">
+              <h2 className="text-xl font-semibold text-slate-900">
                 Something went wrong
               </h2>
             </div>
-            <p className="text-neutral-300 mb-4">
+            <p className="mb-4 text-slate-600">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
             <div className="flex gap-2">
@@ -87,12 +87,12 @@ export default function AdminLayout({
 
   return (
     <AdminErrorBoundary>
-      <div className="dark flex min-h-screen bg-neutral-950 text-neutral-100">
+      <div className="dark flex min-h-screen bg-slate-50 text-slate-900">
         <Suspense fallback={<AdminSidebarFallback />}>
           <AdminErrorBoundary
             fallback={
-              <div className="flex h-full w-64 shrink-0 flex-col bg-neutral-950 border-r border-neutral-800 p-4">
-                <p className="text-sm text-neutral-400">
+              <div className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-4">
+                <p className="text-sm text-slate-500">
                   Sidebar unavailable. Please refresh.
                 </p>
               </div>
@@ -101,7 +101,7 @@ export default function AdminLayout({
             <AdminSidebar />
           </AdminErrorBoundary>
         </Suspense>
-        <main className="flex-1 overflow-auto bg-neutral-950">
+        <main className="flex-1 overflow-auto bg-slate-50">
           <AdminErrorBoundary>
             {children}
           </AdminErrorBoundary>

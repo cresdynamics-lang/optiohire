@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS users (
   name text,
   email text UNIQUE NOT NULL,
   password_hash text NOT NULL,
-  company_role text CHECK (company_role IN ('hr', 'hiring_manager')),
+  company_role text CHECK (company_role IS NULL OR company_role IN ('hr', 'hiring_manager', 'candidate')),
   role text DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   is_active boolean DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -82,9 +82,26 @@ BEGIN
     SELECT 1 FROM information_schema.columns 
     WHERE table_name = 'users' AND column_name = 'company_role'
   ) THEN
-    ALTER TABLE users ADD COLUMN company_role text CHECK (company_role IN ('hr', 'hiring_manager'));
+    ALTER TABLE users ADD COLUMN company_role text CHECK (company_role IS NULL OR company_role IN ('hr', 'hiring_manager', 'candidate'));
     RAISE NOTICE 'Added company_role column to users table';
   END IF;
+END $$;
+
+-- Relax company_role constraint on existing DBs (allow job seekers: candidate)
+DO $$
+BEGIN
+  ALTER TABLE users DROP CONSTRAINT IF EXISTS users_company_role_check;
+EXCEPTION
+  WHEN undefined_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  ALTER TABLE users ADD CONSTRAINT users_company_role_check CHECK (
+    company_role IS NULL OR company_role IN ('hr', 'hiring_manager', 'candidate')
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
 END $$;
 
 -- Add role column if it doesn't exist
@@ -260,7 +277,7 @@ BEGIN
     SELECT 1 FROM information_schema.columns 
     WHERE table_name = 'users' AND column_name = 'company_role'
   ) THEN
-    ALTER TABLE users ADD COLUMN company_role text CHECK (company_role IN ('hr', 'hiring_manager'));
+    ALTER TABLE users ADD COLUMN company_role text CHECK (company_role IS NULL OR company_role IN ('hr', 'hiring_manager', 'candidate'));
     RAISE NOTICE 'Added company_role column to users table';
   END IF;
 END $$;

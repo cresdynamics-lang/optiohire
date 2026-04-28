@@ -35,6 +35,12 @@ export interface ScoringInput {
     settings?: any // jsonb settings
   }
   cvText: string
+  candidateEvidence?: {
+    linkedin?: string | null
+    github?: string | null
+    other_links?: string[]
+    link_insights?: string[]
+  }
 }
 
 export class AIScoringEngine {
@@ -374,6 +380,12 @@ JOB DETAILS:
 - Job Title: ${input.job.title}
 - Job Description: ${input.job.description}
 - Required Skills: ${input.job.required_skills.join(', ')}
+
+CANDIDATE LINKS (if provided in CV):
+- LinkedIn: ${input.candidateEvidence?.linkedin || 'Not provided'}
+- GitHub: ${input.candidateEvidence?.github || 'Not provided'}
+- Other links: ${(input.candidateEvidence?.other_links || []).slice(0, 6).join(', ') || 'None'}
+- Link insights: ${(input.candidateEvidence?.link_insights || []).slice(0, 6).join(' | ') || 'None'}
 
 CANDIDATE CV TEXT (${isTruncated ? `First ${maxCvLength.toLocaleString()} characters - CV was truncated` : 'Complete CV'}):
 ${cvText}${isTruncated ? `\n\n[Note: CV text was truncated at ${maxCvLength.toLocaleString()} characters. Analyze based on the content provided above.]` : ''}

@@ -33,10 +33,10 @@ fi
 
 # Create DB and user if not exists
 sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='optiohire_user'" | grep -q 1 || \
-  sudo -u postgres psql -c "CREATE USER optiohire_user WITH PASSWORD 'optiohire_pass_2024';"
+  sudo -u postgres psql -c "CREATE USER optiohire_user WITH PASSWORD 'your_db_password_here';"
 sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='optiohire'" | grep -q 1 || \
   sudo -u postgres psql -c "CREATE DATABASE optiohire OWNER optiohire_user;"
-sudo -u postgres psql -c "ALTER USER optiohire_user WITH PASSWORD 'optiohire_pass_2024';"
+sudo -u postgres psql -c "ALTER USER optiohire_user WITH PASSWORD 'your_db_password_here';"
 # Allow local connections (pg_hba.conf path varies by version)
 PG_HBA=$(find /etc/postgresql -name pg_hba.conf 2>/dev/null | head -1)
 if [ -n "$PG_HBA" ] && ! grep -q "optiohire_user" "$PG_HBA" 2>/dev/null; then
@@ -58,7 +58,7 @@ if [ ! -f "$APP_DIR/backend/.env" ]; then
   cat > "$APP_DIR/backend/.env" << 'ENVBACK'
 PORT=3001
 NODE_ENV=production
-DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire
+DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire
 DB_SSL=false
 JWT_SECRET=optiohire_jwt_secret_change_in_production_2024
 NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com
@@ -84,7 +84,7 @@ fi
 echo "NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com" > "$APP_DIR/frontend/.env.local"
 echo "NEXTAUTH_URL=https://www.optiohire.com" >> "$APP_DIR/frontend/.env.local"
 echo "NODE_ENV=production" >> "$APP_DIR/frontend/.env.local"
-echo "DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire" >> "$APP_DIR/frontend/.env.local"
+echo "DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire" >> "$APP_DIR/frontend/.env.local"
 echo "DB_SSL=false" >> "$APP_DIR/frontend/.env.local"
 
 # 5b. Apply database schema

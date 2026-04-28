@@ -20,7 +20,7 @@
 
 3. **Environment**
    - Copy `backend/.env.example` to `backend/.env` and set at least:
-     - `DATABASE_URL` (e.g. `postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire`)
+     - `DATABASE_URL` (e.g. `postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire`)
      - For OTP and emails: `RESEND_API_KEY` and `RESEND_FROM_EMAIL`, or SMTP vars (`SMTP_USER`, `SMTP_PASS`).
 
 ## Before developing: preflight check

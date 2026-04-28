@@ -34,18 +34,19 @@ export const MetricCard = memo(function MetricCard({
       transition={{ duration: 0.5, delay }}
     >
       <Card className={cn(
-        "relative overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800",
+        "relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_18px_50px_-42px_rgba(15,23,42,0.35)] transition-all duration-300 group hover:border-blue-200/70 hover:shadow-[0_22px_56px_-38px_rgba(37,99,235,0.28)] dark:bg-gray-900 dark:border-gray-800",
         className
       )}>
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2D2DDD]/5 via-[#2D2DDD]/5 to-[#2D2DDD]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <CardContent className="p-6 relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 font-figtree">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.06),transparent_52%)] opacity-90" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2563eb]/[0.06] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-[#2563eb]/15" />
+        <CardContent className="relative p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="font-figtree text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-gray-400">
                 {title}
               </p>
               <motion.p 
-                className="text-2xl font-bold font-figtree text-[#2D2DDD] dark:text-white mt-2"
+                className="mt-2 font-figtree text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-[1.65rem]"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.3, delay: delay + 0.2 }}
@@ -66,8 +67,8 @@ export const MetricCard = memo(function MetricCard({
                 </div>
               )}
             </div>
-            <div className="p-3 rounded-lg bg-gradient-to-br from-[#2D2DDD]/10 to-[#2D2DDD]/10 dark:from-[#2D2DDD]/20 dark:to-[#2D2DDD]/20 group-hover:from-[#2D2DDD]/20 group-hover:to-[#2D2DDD]/20 transition-all duration-300">
-              <Icon className="w-6 h-6 text-[#2D2DDD]" />
+            <div className="rounded-xl border border-blue-100/90 bg-blue-50/90 p-3 shadow-inner shadow-blue-900/5 transition-colors duration-300 group-hover:bg-blue-100/90 dark:border-blue-900/60 dark:bg-blue-950/60 dark:shadow-none">
+              <Icon className="h-6 w-6 shrink-0 text-blue-700 dark:text-blue-400" />
             </div>
           </div>
         </CardContent>

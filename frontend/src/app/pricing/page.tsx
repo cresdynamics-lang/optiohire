@@ -80,9 +80,9 @@ export default function PricingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.12),transparent_42%),linear-gradient(180deg,#f8fbff_0%,#f8fafc_55%,#f1f5f9_100%)]">
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-white">
+      <section className="px-4 pb-16 pt-32 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
             Simple, Transparent Pricing
@@ -91,7 +91,7 @@ export default function PricingPage() {
             Choose the plan that fits your hiring needs. Every plan includes skills-first
             screening and fair evaluation workflows with no hidden fees.
           </p>
-          <div className="mt-8 inline-flex items-center gap-2 bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800">
             <Star className="w-4 h-4" />
             14-day free trial • No credit card required
           </div>
@@ -105,15 +105,15 @@ export default function PricingPage() {
             {plans.map((plan, index) => (
               <div
                 key={plan.name}
-                className={`relative bg-white rounded-2xl shadow-lg border-2 transition-all duration-300 hover:shadow-xl ${
+                className={`relative rounded-3xl border bg-white/95 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
                   plan.popular
-                    ? 'border-teal-500 scale-105'
-                    : 'border-gray-200 hover:border-teal-300'
+                    ? 'border-blue-500 ring-2 ring-blue-200/70'
+                    : 'border-slate-200 hover:border-blue-200'
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    <div className="rounded-full bg-blue-600 px-4 py-1 text-sm font-medium text-white">
                       Most Popular
                     </div>
                   </div>
@@ -132,17 +132,17 @@ export default function PricingPage() {
                   <ul className="space-y-4 mb-8">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                         <span className="text-gray-700 text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
                   <button
-                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
+                    className={`w-full rounded-xl py-3 px-6 font-semibold transition-all duration-200 ${
                       plan.popular
-                        ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-lg hover:shadow-xl'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                        ? 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl'
+                        : 'bg-slate-900 text-white hover:bg-slate-800'
                     }`}
                   >
                     {plan.cta}
@@ -155,7 +155,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -168,7 +168,7 @@ export default function PricingPage() {
 
           <div className="space-y-6">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-white rounded-lg p-6 shadow-sm">
+              <div key={index} className="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   {faq.question}
                 </h3>
@@ -180,23 +180,25 @@ export default function PricingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-teal-600">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
+          <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 sm:p-10 shadow-xl">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
             Evaluate OptioHire with a 14-day free trial and see how skills-first
             screening improves hiring quality and speed.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="inline-flex items-center px-8 py-4 bg-white text-teal-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <button className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-4 font-semibold text-white transition-colors duration-200 hover:bg-blue-700">
               Start Free Trial
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
-            <button className="px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors duration-200">
+            <button className="rounded-xl border border-slate-400 px-8 py-4 font-semibold text-white transition-colors duration-200 hover:bg-white/10">
               Contact Sales
             </button>
+          </div>
           </div>
         </div>
       </section>

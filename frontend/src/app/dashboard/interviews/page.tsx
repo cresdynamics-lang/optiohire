@@ -8,6 +8,11 @@ import { OptimizedDashboardLayout } from '@/components/dashboard/optimized-dashb
 export default function InterviewsPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+  const isJobSeeker =
+    normalizedCompanyRole === 'candidate' ||
+    normalizedCompanyRole === 'job_seeker' ||
+    normalizedCompanyRole === 'jobseeker'
 
   useEffect(() => {
     if (loading) return
@@ -16,7 +21,8 @@ export default function InterviewsPage() {
       router.push('/admin')
       return
     }
-  }, [user, loading, router])
+    // Keep `/dashboard/interviews` available for job seekers: they now have a dedicated candidate interviews experience.
+  }, [user, loading, router, isJobSeeker])
 
   if (loading || (user && user.role === 'admin')) {
     return (

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Briefcase, CalendarDays, Mail, User, ArrowRight, Sparkles } from 'lucide-react'
+import { Briefcase, CalendarDays, Mail, User, ArrowRight, Sparkles, ShieldCheck, Trophy } from 'lucide-react'
 
 export function JobSeekerOverviewSection() {
   const { user } = useAuth()
@@ -40,6 +40,26 @@ export function JobSeekerOverviewSection() {
             <Button asChild variant="outline" size="lg" className="min-h-[48px] w-full touch-manipulation rounded-2xl border-slate-300 bg-white/90 sm:w-auto sm:min-h-0 dark:bg-gray-950 dark:border-gray-700">
               <Link href="/dashboard/profile">My profile</Link>
             </Button>
+          </div>
+          <div className="mt-6 grid grid-cols-1 gap-3 min-[480px]:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/60">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Status</p>
+              <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                Candidate workspace active
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/60">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Focus</p>
+              <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <Trophy className="h-4 w-4 text-amber-500" />
+                Profile completeness
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/60">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Role</p>
+              <p className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">Job seeker account</p>
+            </div>
           </div>
         </div>
       </div>

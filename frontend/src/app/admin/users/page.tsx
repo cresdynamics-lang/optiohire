@@ -174,24 +174,24 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-neutral-400 hover:text-white"
+            className="text-slate-500 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Manage Users</h1>
-            <p className="text-neutral-400">View and manage all system users</p>
+            <h1 className="text-3xl font-bold text-slate-900">Manage Users</h1>
+            <p className="text-slate-600">View and manage all system users</p>
           </div>
         </div>
 
-        <Card className="bg-neutral-900 border-neutral-800 mb-6">
+        <Card className="mb-6 border-slate-200 bg-white">
           <CardContent className="p-4">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 relative min-w-[200px]">
@@ -203,11 +203,11 @@ export default function AdminUsersPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="pl-10 bg-neutral-800 border-neutral-700 text-white"
+                  className="pl-10 border-slate-300 bg-white text-slate-900"
                 />
               </div>
               <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1) }}>
-                <SelectTrigger className="w-[150px] bg-neutral-800 border-neutral-700 text-white">
+                <SelectTrigger className="w-[150px] border-slate-300 bg-white text-slate-900">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
@@ -218,7 +218,7 @@ export default function AdminUsersPage() {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1) }}>
-                <SelectTrigger className="w-[150px] bg-neutral-800 border-neutral-700 text-white">
+                <SelectTrigger className="w-[150px] border-slate-300 bg-white text-slate-900">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
           </div>
         ) : (
           <>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader>
                 <CardTitle>Users ({total})</CardTitle>
               </CardHeader>
@@ -262,7 +262,7 @@ export default function AdminUsersPage() {
                     return (
                       <div
                         key={userItem.user_id}
-                        className={`flex items-center justify-between p-4 bg-neutral-800 rounded-lg hover:bg-neutral-700 ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                        className={`flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                       >
                         <div className="flex items-center gap-3">
                           <input
@@ -306,34 +306,34 @@ export default function AdminUsersPage() {
                               {userItem.is_active ? 'Active' : 'Inactive'}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-400 mt-1">
+                          <p className="mt-1 text-sm text-slate-500">
                             Created: {new Date(userItem.created_at).toLocaleDateString()}
                           </p>
                           {userItem.name && (
-                            <p className="text-sm text-gray-400 mt-1">
+                            <p className="mt-1 text-sm text-slate-500">
                               Name: {userItem.name}
                             </p>
                           )}
                           {userItem.username && (
-                            <p className="text-sm text-gray-400 mt-1">
+                            <p className="mt-1 text-sm text-slate-500">
                               Username: @{userItem.username}
                             </p>
                           )}
                           {userItem.company_role && (
-                            <p className="text-sm text-gray-400 mt-1">
+                            <p className="mt-1 text-sm text-slate-500">
                               Company Role: {userItem.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                             </p>
                           )}
                           {userItem.company && (
-                            <p className="text-sm text-gray-400 mt-1">
+                            <p className="mt-1 text-sm text-slate-500">
                               Company: {userItem.company.company_name}
                             </p>
                           )}
                           {/* Password Hash Display */}
                           {userItem.password_hash && (
-                            <div className="mt-2 p-2 bg-neutral-700 rounded text-xs">
+                            <div className="mt-2 rounded bg-slate-200 p-2 text-xs">
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-gray-300 flex items-center gap-1">
+                                <span className="flex items-center gap-1 text-slate-600">
                                   <Shield className="w-3 h-3" />
                                   Password Hash (Admin View):
                                 </span>
@@ -353,13 +353,13 @@ export default function AdminUsersPage() {
                                   )}
                                 </Button>
                               </div>
-                              <div className="font-mono text-gray-400 break-all">
+                              <div className="break-all font-mono text-slate-600">
                                 {showPasswords[userItem.user_id] ? userItem.password_hash : '••••••••••••••••'}
                               </div>
                             </div>
                           )}
                           {userItem.role === 'admin' && userItem.admin_permissions && Object.keys(userItem.admin_permissions).length > 0 && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="mt-1 text-xs text-slate-500">
                               Permissions: {Object.entries(userItem.admin_permissions)
                                 .filter(([_, enabled]) => enabled)
                                 .map(([key, _]) => key.replace('_', ' '))
@@ -385,7 +385,7 @@ export default function AdminUsersPage() {
                                   })
                                 }
                               }}
-                              className="bg-[#2D2DDD] hover:bg-[#2D2DDD]/90"
+                              className="bg-blue-600 hover:bg-blue-700"
                             >
                               <Shield className="h-4 w-4 mr-1" />
                               Make Admin
@@ -475,7 +475,7 @@ export default function AdminUsersPage() {
                 </div>
 
                 {users.length === 0 && (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="py-12 text-center text-slate-500">
                     No users found
                   </div>
                 )}
@@ -489,7 +489,7 @@ export default function AdminUsersPage() {
                     >
                       Previous
                     </Button>
-                    <span className="flex items-center px-4 text-gray-400">
+                    <span className="flex items-center px-4 text-slate-500">
                       Page {page} of {Math.ceil(total / 20)}
                     </span>
                     <Button

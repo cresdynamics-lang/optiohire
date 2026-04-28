@@ -66,9 +66,9 @@ export default function UseCasesPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.12),transparent_42%),linear-gradient(180deg,#f8fbff_0%,#f8fafc_55%,#f1f5f9_100%)]">
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-white">
+      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
             Use Cases
@@ -87,7 +87,7 @@ export default function UseCasesPage() {
             {useCases.map((useCase, index) => (
               <div
                 key={useCase.title}
-                className="bg-white border border-gray-200 rounded-lg p-8 hover:shadow-lg transition-all duration-300 hover:border-teal-200"
+                className="rounded-2xl border border-slate-200 bg-white/95 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
               >
                 <div className={`w-14 h-14 bg-gradient-to-r ${useCase.color} rounded-lg flex items-center justify-center mb-6`}>
                   <useCase.icon className="w-7 h-7 text-white" />
@@ -116,8 +116,8 @@ export default function UseCasesPage() {
                     <h4 className="font-medium text-gray-900 mb-2">Results</h4>
                     <ul className="space-y-1">
                       {useCase.outcomes.map((outcome, i) => (
-                        <li key={i} className="text-sm text-teal-600 flex items-center">
-                          <span className="w-1.5 h-1.5 bg-teal-600 rounded-full mr-2"></span>
+                        <li key={i} className="text-sm text-blue-700 flex items-center">
+                          <span className="mr-2 h-1.5 w-1.5 rounded-full bg-blue-600"></span>
                           {outcome}
                         </li>
                       ))}
@@ -126,7 +126,7 @@ export default function UseCasesPage() {
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-100">
-                  <button className="w-full flex items-center justify-center px-4 py-2 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-colors duration-200 font-medium">
+                  <button className="flex w-full items-center justify-center rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-700 transition-colors duration-200 hover:bg-blue-100">
                     Learn More
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </button>
@@ -138,7 +138,7 @@ export default function UseCasesPage() {
       </section>
 
       {/* Industries Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -159,9 +159,9 @@ export default function UseCasesPage() {
               { name: 'Education', count: '100+ hires' },
             ].map((industry) => (
               <div key={industry.name} className="text-center">
-                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                <div className="rounded-xl border border-slate-200 bg-white/95 p-4 shadow-sm transition-shadow duration-200 hover:shadow-md">
                   <h3 className="font-semibold text-gray-900 mb-1">{industry.name}</h3>
-                  <p className="text-sm text-teal-600">{industry.count}</p>
+                  <p className="text-sm text-blue-700">{industry.count}</p>
                 </div>
               </div>
             ))}
@@ -183,8 +183,8 @@ export default function UseCasesPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-8 bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="text-4xl font-bold text-teal-600 mb-2">1-50</div>
+            <div className="text-center p-8 bg-white/95 rounded-2xl shadow-sm border border-slate-200">
+              <div className="text-4xl font-bold text-blue-600 mb-2">1-50</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Early Stage</h3>
               <p className="text-gray-600 mb-4">
                 Startups and small teams focused on quality hires that drive growth.
@@ -196,8 +196,8 @@ export default function UseCasesPage() {
               </ul>
             </div>
 
-            <div className="text-center p-8 bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="text-4xl font-bold text-teal-600 mb-2">51-500</div>
+            <div className="text-center p-8 bg-white/95 rounded-2xl shadow-sm border border-slate-200">
+              <div className="text-4xl font-bold text-blue-600 mb-2">51-500</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Growing Companies</h3>
               <p className="text-gray-600 mb-4">
                 Scaling businesses needing efficient processes for multiple roles.
@@ -209,8 +209,8 @@ export default function UseCasesPage() {
               </ul>
             </div>
 
-            <div className="text-center p-8 bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="text-4xl font-bold text-teal-600 mb-2">500+</div>
+            <div className="text-center p-8 bg-white/95 rounded-2xl shadow-sm border border-slate-200">
+              <div className="text-4xl font-bold text-blue-600 mb-2">500+</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Enterprise</h3>
               <p className="text-gray-600 mb-4">
                 Large organizations with complex hiring needs and compliance requirements.
@@ -226,19 +226,21 @@ export default function UseCasesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-teal-600">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
+          <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 sm:p-10 shadow-xl">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Find Your Use Case
           </h2>
-          <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
             Every hiring scenario is different. Let's discuss how OptioHire can
             be tailored to your specific needs and challenges.
           </p>
-          <button className="inline-flex items-center px-8 py-3 bg-white text-teal-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200">
+          <button className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-blue-700">
             Request a Demo
             <ArrowRight className="ml-2 w-5 h-5" />
           </button>
+          </div>
         </div>
       </section>
     </div>

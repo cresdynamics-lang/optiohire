@@ -143,24 +143,24 @@ export default function AdminCompaniesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-neutral-400 hover:text-white"
+            className="text-slate-500 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Manage Companies</h1>
-            <p className="text-neutral-400">View and manage all companies</p>
+            <h1 className="text-3xl font-bold text-slate-900">Manage Companies</h1>
+            <p className="text-slate-600">View and manage all companies</p>
           </div>
         </div>
 
-        <Card className="bg-neutral-900 border-neutral-800 mb-6">
+        <Card className="mb-6 border-slate-200 bg-white">
           <CardContent className="p-4">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 relative min-w-[200px]">
@@ -172,7 +172,7 @@ export default function AdminCompaniesPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="pl-10 bg-neutral-800 border-neutral-700 text-white"
+                  className="pl-10 border-slate-300 bg-white text-slate-900"
                 />
               </div>
             </div>
@@ -203,7 +203,7 @@ export default function AdminCompaniesPage() {
           </div>
         ) : (
           <>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader>
                 <CardTitle>Companies ({total})</CardTitle>
               </CardHeader>
@@ -212,34 +212,34 @@ export default function AdminCompaniesPage() {
                   {companies.map((company) => (
                     <div
                       key={company.company_id}
-                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg hover:bg-neutral-700"
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <Building2 className="h-5 w-5 text-blue-400" />
                           <span className="font-semibold text-lg">{company.company_name}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
+                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
                           <div>
-                            <span className="text-gray-500">Domain:</span> {company.company_domain}
+                            <span className="text-slate-500">Domain:</span> {company.company_domain}
                           </div>
                           <div>
-                            <span className="text-gray-500">Email:</span> {company.company_email || 'N/A'}
+                            <span className="text-slate-500">Email:</span> {company.company_email || 'N/A'}
                           </div>
                           <div>
-                            <span className="text-gray-500">HR Email:</span> {company.hr_email}
+                            <span className="text-slate-500">HR Email:</span> {company.hr_email}
                           </div>
                           <div>
-                            <span className="text-gray-500">Created:</span> {new Date(company.created_at).toLocaleDateString()}
+                            <span className="text-slate-500">Created:</span> {new Date(company.created_at).toLocaleDateString()}
                           </div>
                           {typeof company.jobs_count === 'number' && (
                             <div>
-                              <span className="text-gray-500">Jobs:</span> {company.jobs_count}
+                              <span className="text-slate-500">Jobs:</span> {company.jobs_count}
                             </div>
                           )}
                           {typeof company.applications_count === 'number' && (
                             <div>
-                              <span className="text-gray-500">Applications:</span> {company.applications_count}
+                              <span className="text-slate-500">Applications:</span> {company.applications_count}
                             </div>
                           )}
                         </div>
@@ -267,7 +267,7 @@ export default function AdminCompaniesPage() {
                 </div>
 
                 {companies.length === 0 && (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="py-12 text-center text-slate-500">
                     No companies found
                   </div>
                 )}
@@ -281,7 +281,7 @@ export default function AdminCompaniesPage() {
                     >
                       Previous
                     </Button>
-                    <span className="flex items-center px-4 text-gray-400">
+                    <span className="flex items-center px-4 text-slate-500">
                       Page {page} of {Math.ceil(total / 20)}
                     </span>
                     <Button

@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 export default function WhyOptioHirePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.12),transparent_42%),linear-gradient(180deg,#f8fbff_0%,#f8fafc_55%,#f1f5f9_100%)]">
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-white">
+      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
             Why OptioHire?
@@ -73,7 +73,7 @@ export default function WhyOptioHirePage() {
       </section>
 
       {/* Why Resumes Fail */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -85,7 +85,7 @@ export default function WhyOptioHirePage() {
           </div>
 
           <div className="space-y-8">
-            <div className="bg-white p-8 rounded-lg shadow-sm">
+            <div className="bg-white/95 p-8 rounded-2xl border border-slate-200 shadow-sm">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 Resumes Don't Show Real Readiness
               </h3>
@@ -96,7 +96,7 @@ export default function WhyOptioHirePage() {
               </p>
             </div>
 
-            <div className="bg-white p-8 rounded-lg shadow-sm">
+            <div className="bg-white/95 p-8 rounded-2xl border border-slate-200 shadow-sm">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 ATS Systems Create False Matches
               </h3>
@@ -107,7 +107,7 @@ export default function WhyOptioHirePage() {
               </p>
             </div>
 
-            <div className="bg-white p-8 rounded-lg shadow-sm">
+            <div className="bg-white/95 p-8 rounded-2xl border border-slate-200 shadow-sm">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 Manual Review is Inconsistent
               </h3>
@@ -211,7 +211,7 @@ export default function WhyOptioHirePage() {
       </section>
 
       {/* Differentiation */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -223,7 +223,7 @@ export default function WhyOptioHirePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-lg">
+            <div className="bg-white/95 p-6 rounded-2xl border border-slate-200">
               <h3 className="font-semibold text-gray-900 mb-3">What We Are</h3>
               <ul className="space-y-2 text-gray-600">
                 <li>✓ Focused on hiring outcomes</li>
@@ -233,7 +233,7 @@ export default function WhyOptioHirePage() {
               </ul>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
               <h3 className="font-semibold text-gray-900 mb-3">What We're Not</h3>
               <ul className="space-y-2 text-gray-500">
                 <li>✗ Generic AI resume filtering</li>
@@ -247,19 +247,21 @@ export default function WhyOptioHirePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-teal-600">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
+          <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 sm:p-10 shadow-xl">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Ready to Hire with Confidence?
           </h2>
-          <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
             Join teams who've discovered that better hiring isn't about having more
             data — it's about having the right insights.
           </p>
-          <button className="inline-flex items-center px-8 py-3 bg-white text-teal-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200">
+          <button className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-blue-700">
             Request a Demo
             <ArrowRight className="ml-2 w-5 h-5" />
           </button>
+          </div>
         </div>
       </section>
     </div>

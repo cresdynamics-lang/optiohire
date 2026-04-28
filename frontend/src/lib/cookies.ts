@@ -96,7 +96,16 @@ export function trackActivity(event: string, data?: Record<string, any>) {
  */
 async function sendActivityToBackend(activity: any) {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+    const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim()
+    const isLocalHost =
+      typeof window !== 'undefined' &&
+      ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    const backendUrl = envUrl
+      ? envUrl.replace(/\/$/, '')
+      : isLocalHost
+        ? 'http://localhost:3001'
+        : ''
+    if (!backendUrl) return
     const token = localStorage.getItem('token')
     
     await fetch(`${backendUrl}/api/analytics/track`, {
@@ -109,7 +118,7 @@ async function sendActivityToBackend(activity: any) {
     })
   } catch (error) {
     // Silently fail - analytics should not break the app
-    console.error('Analytics tracking error:', error)
+    console.debug('Analytics tracking skipped:', error)
   }
 }
 

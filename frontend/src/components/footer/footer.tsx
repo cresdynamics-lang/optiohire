@@ -58,15 +58,26 @@ export function Footer() {
   ]
 
   return (
-    <footer className="bg-gradient-to-b from-white to-slate-50 border-t border-slate-200 relative h-fit overflow-hidden pt-8 sm:pt-6">
-      {/* Mobile and tablet separator line above footer */}
-      <div className="block lg:hidden w-full h-px bg-slate-200 mb-6"></div>
+    <footer className="relative h-fit overflow-hidden border-t border-slate-200 bg-slate-950 pt-10 text-slate-200">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.2),transparent_45%)]" aria-hidden />
+      <div className="relative mx-auto max-w-7xl px-6 py-10 sm:px-8 md:px-12">
+        <div className="mb-10 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-200">OptioHire</p>
+            <p className="mt-1 text-sm text-slate-300">Modern recruitment infrastructure for high-performing teams.</p>
+          </div>
+          <Link
+            href="/auth/signup"
+            className="inline-flex w-fit items-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-blue-50"
+          >
+            Get Started
+          </Link>
+        </div>
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-12 py-8 md:py-10 z-40 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-6 lg:gap-8 pb-6">
+        <div className="grid grid-cols-1 gap-8 pb-6 md:grid-cols-2 lg:grid-cols-4">
           {/* Quick Links */}
           <div>
-            <h4 className="text-slate-900 text-xs font-semibold mb-3 font-figtree tracking-wider uppercase">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-100">
               {footerSections[0].title}
             </h4>
             <ul className="space-y-2">
@@ -74,7 +85,7 @@ export function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-600 hover:text-primary transition-all duration-200 font-figtree inline-block"
+                    className="inline-block text-sm text-slate-300 transition-all duration-200 hover:text-white"
                   >
                     {link.label}
                   </Link>
@@ -85,7 +96,7 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="text-slate-900 text-xs font-semibold mb-3 font-figtree tracking-wider uppercase">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-100">
               {footerSections[1].title}
             </h4>
             <ul className="space-y-2">
@@ -93,7 +104,7 @@ export function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-600 hover:text-primary transition-all duration-200 font-figtree inline-block"
+                    className="inline-block text-sm text-slate-300 transition-all duration-200 hover:text-white"
                   >
                     {link.label}
                   </Link>
@@ -104,7 +115,7 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-slate-900 text-xs font-semibold mb-3 font-figtree tracking-wider uppercase">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-100">
               {footerSections[2].title}
             </h4>
             <ul className="space-y-2">
@@ -112,7 +123,7 @@ export function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-600 hover:text-primary transition-all duration-200 font-figtree inline-block"
+                    className="inline-block text-sm text-slate-300 transition-all duration-200 hover:text-white"
                   >
                     {link.label}
                   </Link>
@@ -123,24 +134,24 @@ export function Footer() {
 
           {/* Contact & Social */}
           <div>
-            <h4 className="text-slate-900 text-xs font-semibold mb-3 font-figtree tracking-wider uppercase">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-100">
               Contact & Social
             </h4>
             <ul className="space-y-3 mb-4">
               {contactInfo.map((item, i) => (
                 <li key={i} className="flex items-start space-x-2 group">
-                  <div className="mt-0.5 text-gray-400 group-hover:text-primary transition-colors duration-200">
+                  <div className="mt-0.5 text-slate-400 transition-colors duration-200 group-hover:text-blue-300">
                     {item.icon}
                   </div>
                   {item.href ? (
                     <a
                       href={item.href}
-                      className="text-sm text-slate-700 hover:text-primary transition-colors font-figtree hover:underline decoration-primary decoration-1 underline-offset-4"
+                      className="text-sm text-slate-300 transition-colors hover:text-white hover:underline decoration-blue-300 decoration-1 underline-offset-4"
                     >
                       {item.text}
                     </a>
                   ) : (
-                    <span className="text-sm text-slate-600 font-figtree">
+                    <span className="text-sm text-slate-300">
                       {item.text}
                     </span>
                   )}
@@ -154,7 +165,7 @@ export function Footer() {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 hover:bg-primary hover:border-primary text-slate-500 hover:text-white transition-all duration-200"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-300 transition-all duration-200 hover:border-blue-300 hover:bg-blue-400/20 hover:text-white"
                 >
                   {icon}
                 </a>
@@ -163,11 +174,11 @@ export function Footer() {
           </div>
         </div>
 
-        <hr className="border-t border-slate-200 mt-6 mb-4" />
+        <hr className="mb-4 mt-6 border-t border-white/10" />
 
         {/* Footer bottom */}
         <div className="text-center pb-4">
-          <p className="text-xs text-slate-500 font-figtree">
+          <p className="text-xs text-slate-400">
             &copy; 2026 OptioHire. All rights reserved.
           </p>
         </div>

@@ -41,6 +41,10 @@ import {
   getEmailLogs,
   getEmailStats,
   resendEmail,
+  getDeadLetterEmails,
+  requeueDeadLetterEmail,
+  bulkRequeueDeadLetterEmails,
+  requeueAllDeadLetterEmails,
   getSystemSettings,
   updateSystemSetting,
   getFeatureFlags,
@@ -98,6 +102,10 @@ router.post('/users/bulk-reject', bulkRejectSignups)
 router.get('/emails', getEmailLogs)
 router.get('/emails/stats', getEmailStats)
 router.post('/emails/:emailId/resend', resendEmail)
+router.get('/emails/dead-letter', getDeadLetterEmails)
+router.post('/emails/:emailId/requeue', requeueDeadLetterEmail)
+router.post('/emails/requeue-bulk', bulkRequeueDeadLetterEmails)
+router.post('/emails/requeue-all', requeueAllDeadLetterEmails)
 
 // Email Diagnostics
 router.get('/email-service/check', checkEmailService)

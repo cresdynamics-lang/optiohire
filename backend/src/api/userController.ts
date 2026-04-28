@@ -152,6 +152,17 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       hasCompany = true
     }
 
+    // Job seekers never use employer company context in the app, even if a legacy company row exists.
+    if (user.company_role === 'candidate') {
+      hasCompany = false
+      companyId = null
+      companyName = null
+      companyEmail = null
+      hrEmail = null
+      hiringManagerEmail = null
+      companyLogoUrl = null
+    }
+
     const userData = {
       id: user.user_id,
       user_id: user.user_id,

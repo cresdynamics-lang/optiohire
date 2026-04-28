@@ -14,7 +14,7 @@ Copy everything below (from `# Backend env` to `pm2 status`) and paste into your
 cat > /var/www/optiohire/backend/.env << 'EOF'
 PORT=3001
 NODE_ENV=production
-DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire
+DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire
 DB_SSL=false
 JWT_SECRET=optiohire_jwt_secret_change_in_production_2024
 NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com
@@ -29,7 +29,7 @@ EOF
 echo "NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com" > /var/www/optiohire/frontend/.env.local
 echo "NEXTAUTH_URL=https://www.optiohire.com" >> /var/www/optiohire/frontend/.env.local
 echo "NODE_ENV=production" >> /var/www/optiohire/frontend/.env.local
-echo "DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire" >> /var/www/optiohire/frontend/.env.local
+echo "DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire" >> /var/www/optiohire/frontend/.env.local
 echo "DB_SSL=false" >> /var/www/optiohire/frontend/.env.local
 
 # Schema (if needed)

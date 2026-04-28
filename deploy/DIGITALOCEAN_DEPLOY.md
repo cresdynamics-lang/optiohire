@@ -44,7 +44,7 @@ sudo apt update
 sudo apt install -y postgresql postgresql-contrib
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
-sudo -u postgres psql -c "CREATE USER optiohire_user WITH PASSWORD 'optiohire_pass_2024';" 2>/dev/null || true
+sudo -u postgres psql -c "CREATE USER optiohire_user WITH PASSWORD 'your_db_password_here';" 2>/dev/null || true
 sudo -u postgres psql -c "CREATE DATABASE optiohire OWNER optiohire_user;" 2>/dev/null || true
 PG_HBA=$(find /etc/postgresql -name pg_hba.conf 2>/dev/null | head -1)
 if [ -n "$PG_HBA" ] && ! grep -q "optiohire_user" "$PG_HBA" 2>/dev/null; then
@@ -70,7 +70,7 @@ cd /var/www/optiohire
 cat > /var/www/optiohire/backend/.env << 'EOF'
 PORT=3001
 NODE_ENV=production
-DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire
+DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire
 DB_SSL=false
 JWT_SECRET=optiohire_jwt_secret_change_in_production_2024
 NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com
@@ -90,7 +90,7 @@ EOF
 echo "NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com" > /var/www/optiohire/frontend/.env.local
 echo "NEXTAUTH_URL=https://www.optiohire.com" >> /var/www/optiohire/frontend/.env.local
 echo "NODE_ENV=production" >> /var/www/optiohire/frontend/.env.local
-echo "DATABASE_URL=postgresql://optiohire_user:optiohire_pass_2024@localhost:5432/optiohire" >> /var/www/optiohire/frontend/.env.local
+echo "DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire" >> /var/www/optiohire/frontend/.env.local
 echo "DB_SSL=false" >> /var/www/optiohire/frontend/.env.local
 ```
 

@@ -92,7 +92,8 @@ export async function signup(req: Request, res: Response) {
       if (hasCompanyRoleColumn) {
         columns.push('company_role')
         values.push(`$${paramIndex++}`)
-        params.push(isCandidateSignup ? null : company_role)
+        // Persist candidate role so sign-in and /me can route job seekers to the correct dashboard.
+        params.push(company_role)
       }
       columns.push('is_active')
       values.push('true')
@@ -283,8 +284,16 @@ export async function signin(req: Request, res: Response) {
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' })
     }
-    const { rows } = await query<{ user_id: string; password_hash: string; role: string; is_active: boolean; created_at: string }>(
-      `select user_id, password_hash, role, is_active, created_at from users where email = $1`,
+    const { rows } = await query<{
+      user_id: string
+      password_hash: string
+      role: string
+      is_active: boolean
+      created_at: string
+      name: string | null
+      company_role: string | null
+    }>(
+      `select user_id, password_hash, role, is_active, created_at, name, company_role from users where email = $1`,
       [email.toLowerCase()]
     )
     if (rows.length === 0) {
@@ -351,6 +360,15 @@ export async function signin(req: Request, res: Response) {
       hasCompany = true
     }
 
+    // Job seeker accounts never use employer company setup, even if an old company row matched by email.
+    if (rows[0].company_role === 'candidate') {
+      hasCompany = false
+      companyId = null
+      companyName = null
+      companyEmail = null
+      hrEmail = null
+    }
+
     const token = jwt.sign({ sub: rows[0].user_id, email: email.toLowerCase(), role: rows[0].role }, JWT_SECRET, { expiresIn: '7d' })
     return res.status(200).json({ 
       token, 
@@ -358,7 +376,9 @@ export async function signin(req: Request, res: Response) {
         user_id: rows[0].user_id,
         id: rows[0].user_id, // Also include as 'id' for frontend compatibility
         email: email.toLowerCase(),
+        name: rows[0].name,
         role: rows[0].role,
+        company_role: rows[0].company_role,
         created_at: rows[0].created_at,
         hasCompany,
         companyId,
@@ -826,8 +846,14 @@ export async function googleSignIn(req: Request, res: Response) {
     const email = info.email.toLowerCase()
     const name = (info.name || email.split('@')[0] || 'User').trim()
 
-    const { rows: existing } = await query<{ user_id: string; role: string; name: string | null; is_active: boolean }>(
-      `SELECT user_id, role, name, is_active FROM users WHERE email = $1`,
+    const { rows: existing } = await query<{
+      user_id: string
+      role: string
+      name: string | null
+      is_active: boolean
+      company_role: string | null
+    }>(
+      `SELECT user_id, role, name, is_active, company_role FROM users WHERE email = $1`,
       [email]
     )
 
@@ -889,6 +915,16 @@ export async function googleSignIn(req: Request, res: Response) {
       }
     }
 
+    const resolvedCompanyRole = existing.length > 0 ? existing[0].company_role : null
+    if (resolvedCompanyRole === 'candidate') {
+      hasCompany = false
+      companyId = null
+      companyName = null
+      companyEmail = null
+      hrEmail = null
+      hiringManagerEmail = null
+    }
+
     const token = jwt.sign(
       { sub: userId, email },
       JWT_SECRET,
@@ -903,7 +939,7 @@ export async function googleSignIn(req: Request, res: Response) {
         name: userName,
         email,
         role: existing.length > 0 ? existing[0].role : 'user',
-        company_role: null,
+        company_role: resolvedCompanyRole,
         created_at: null,
         hasCompany,
         companyId,
