@@ -65,6 +65,7 @@ coverage/
 # Editor / IDE
 .idea/
 .vscode/
+*.backup
 *.swp
 *.swo
 *.sublime-*
