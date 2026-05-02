@@ -1,5 +1,5 @@
 #!/bin/bash
-# Deploy OptioHire to DigitalOcean: Node 18, PM2, NGINX, Let's Encrypt
+# Deploy OptioHire to DigitalOcean: Node 20, PM2, NGINX, Let's Encrypt
 # Domain: optiohire.com, www.optiohire.com, api.optiohire.com
 # Run as root on droplet
 
@@ -62,7 +62,8 @@ DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/op
 DB_SSL=false
 JWT_SECRET=optiohire_jwt_secret_change_in_production_2024
 NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com
-CORS_ORIGIN=https://www.optiohire.com
+# Backend reads CORS_ORIGINS (comma-separated), not CORS_ORIGIN — include apex + www
+CORS_ORIGINS=https://www.optiohire.com,https://optiohire.com
 USE_RESEND=true
 RESEND_FROM_EMAIL=noreply@optiohire.com
 RESEND_FROM_NAME=OptioHire
@@ -97,7 +98,11 @@ fi
 echo "Installing backend..."
 cd "$APP_DIR/backend" && npm install && npm run build && cd "$APP_DIR"
 echo "Installing frontend..."
-cd "$APP_DIR/frontend" && npm install --legacy-peer-deps && NODE_OPTIONS='--max-old-space-size=2048' npm run build && cd "$APP_DIR"
+cd "$APP_DIR/frontend" && npm install --legacy-peer-deps && (
+  NODE_OPTIONS='--max-old-space-size=2048' npm run build ||
+  NODE_OPTIONS='--max-old-space-size=1536' npm run build:low-memory ||
+  npm run build:server
+) && cd "$APP_DIR"
 
 # 7. PM2
 npm install -g pm2 2>/dev/null || true

@@ -5,6 +5,8 @@ Host the OptioHire app (Next.js frontend + Express backend + PostgreSQL) on a Di
 **Domain:** optiohire.com, www.optiohire.com, api.optiohire.com  
 **API reference:** [API_REFERENCE.md](../API_REFERENCE.md) in the repo root.
 
+**Know when you’re finished:** follow [DIGITALOCEAN_HOSTING_COMPLETE.md](./DIGITALOCEAN_HOSTING_COMPLETE.md) (verification checklist + CORS/TLS/PM2).
+
 ---
 
 ## Quick start: host this app on Digital Ocean
@@ -74,7 +76,7 @@ DATABASE_URL=postgresql://optiohire_user:your_db_password_here@localhost:5432/op
 DB_SSL=false
 JWT_SECRET=optiohire_jwt_secret_change_in_production_2024
 NEXT_PUBLIC_BACKEND_URL=https://api.optiohire.com
-CORS_ORIGIN=https://www.optiohire.com
+CORS_ORIGINS=https://www.optiohire.com,https://optiohire.com
 USE_RESEND=true
 RESEND_FROM_EMAIL=noreply@optiohire.com
 RESEND_FROM_NAME=OptioHire
