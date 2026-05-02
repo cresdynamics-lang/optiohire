@@ -75,7 +75,7 @@ export default function CompanyDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -83,8 +83,8 @@ export default function CompanyDetailsPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Card className="bg-neutral-900 border-neutral-800">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Card className="border-slate-200 bg-white">
           <CardContent className="p-6">
             <p className="text-white">Company not found</p>
           </CardContent>
@@ -94,7 +94,7 @@ export default function CompanyDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
@@ -133,7 +133,7 @@ export default function CompanyDetailsPage() {
           </Card>
         </div>
 
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <CardTitle>Company Information</CardTitle>
           </CardHeader>

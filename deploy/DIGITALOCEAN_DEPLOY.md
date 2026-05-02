@@ -123,7 +123,11 @@ sudo npm i -g pm2
 cd /var/www/optiohire/backend
 pm2 start dist/server.js --name optiohire-backend
 cd /var/www/optiohire/frontend
-pm2 start npm --name optiohire-frontend -- start
+mkdir -p .next/standalone/.next
+mkdir -p .next/standalone/public
+cp -r .next/static .next/standalone/.next/static
+cp -r public/. .next/standalone/public/
+pm2 start /usr/bin/node --name optiohire-frontend --cwd /var/www/optiohire/frontend -- .next/standalone/server.js
 pm2 save
 pm2 startup
 ```
@@ -131,6 +135,7 @@ pm2 startup
 *(Run the command `pm2 startup` prints so the app starts on reboot.)*
 
 Check: `pm2 status` — both should be “online”. You can open http://165.227.56.148:3000 and http://165.227.56.148:3001 to test.
+If frontend styling is missing, verify static files are reachable: `curl -I http://127.0.0.1:3000/_next/static/chunks/main-app.js`.
 
 ### 9. UFW firewall
 
@@ -228,7 +233,7 @@ sudo certbot renew --dry-run
 
 ---
 
-After this, open **https://optiohire.com** and **https://api.optiohire.com**. Add your real API keys in `/var/www/optiohire/backend/.env` and run `pm2 restart optiohire-backend optiohire-frontend && pm2 save`.
+After this, open **https://optiohire.com** and **https://api.optiohire.com**. Add your real API keys in `/var/www/optiohire/backend/.env` and run `pm2 restart optiohire-backend optiohire-frontend --update-env && pm2 save`.
 
 ---
 
@@ -343,7 +348,7 @@ nano /var/www/optiohire/frontend/.env.local
 Then restart PM2:
 
 ```bash
-pm2 restart optiohire-backend optiohire-frontend
+pm2 restart optiohire-backend optiohire-frontend --update-env
 pm2 save
 ```
 
@@ -404,7 +409,7 @@ Check the inbox for that email; the script also prints the code in the terminal.
   - `RESEND_API_KEY=re_...` (the key from the account that has optiohire.com verified)
   - `RESEND_FROM_EMAIL=noreply@optiohire.com`
   - Leave `RESEND_API_KEY_SECONDARY` and `RESEND_API_KEY_FALLBACK` **unset** if they are from other accounts (otherwise you get 403 then rate limit, and no fallback).
-- Restart: `pm2 restart optiohire-backend && pm2 save`.
+- Restart: `pm2 restart optiohire-backend --update-env && pm2 save`.
 
 **If Resend still fails and fallback fails:** configure SMTP in `backend/.env` (e.g. `MAIL_HOST`, `MAIL_USER`, `MAIL_PASS` for Gmail App Password) so verification emails can send when Resend is unavailable.
 
@@ -435,14 +440,14 @@ If the backend logs "relation \"job_postings\" does not exist", apply the schema
 sudo -u postgres psql -d optiohire -f /var/www/optiohire/backend/src/db/complete_schema.sql
 ```
 
-Then restart the backend: `pm2 restart optiohire-backend`.
+Then restart the backend: `pm2 restart optiohire-backend --update-env`.
 
 ## 9. Useful commands on the server
 
 ```bash
 pm2 status
 pm2 logs
-pm2 restart optiohire-backend
+pm2 restart optiohire-backend --update-env
 pm2 restart optiohire-frontend
 nginx -t && systemctl reload nginx
 ```
@@ -477,7 +482,7 @@ cd /var/www/optiohire
 git pull origin main
 cd backend && npm install && npm run build
 cd ../frontend && npm install --legacy-peer-deps && NODE_OPTIONS='--max-old-space-size=2048' npm run build
-pm2 restart optiohire-backend optiohire-frontend
+pm2 restart optiohire-backend optiohire-frontend --update-env
 pm2 save
 ```
 
@@ -516,7 +521,7 @@ cd /var/www/optiohire/frontend
 npm run build:low-memory
 # or if it still fails: npm run build:server
 cd /var/www/optiohire
-pm2 restart optiohire-backend optiohire-frontend
+pm2 restart optiohire-backend optiohire-frontend --update-env
 pm2 save
 ```
 
@@ -525,7 +530,7 @@ pm2 save
 ```bash
 cd /var/www/optiohire/frontend
 npm run build:server
-# then from /var/www/optiohire: pm2 restart optiohire-backend optiohire-frontend && pm2 save
+# then from /var/www/optiohire: pm2 restart optiohire-backend optiohire-frontend --update-env && pm2 save
 ```
 
 The package name for the Baseline warning is **`baseline-browser-mapping`** (with a hyphen). It is now in the repo; after `git pull` and `npm install --legacy-peer-deps` the warning should reduce or go away.

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/api-auth'
+import { requireAuthWithFallback } from '@/lib/api-auth'
 import { query } from '@/lib/db'
 
 type CandidateRow = {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    const user = requireAuth(request)
+    await requireAuthWithFallback(request)
     const { searchParams } = new URL(request.url)
     const jobId = searchParams.get('jobId')
 

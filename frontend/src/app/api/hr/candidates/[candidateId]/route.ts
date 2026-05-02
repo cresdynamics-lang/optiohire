@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/api-auth'
+import { requireAuthWithFallback } from '@/lib/api-auth'
 import { query } from '@/lib/db'
 
 type CandidateDetailRow = {
@@ -23,7 +23,7 @@ export async function GET(
   { params }: { params: Promise<{ candidateId: string }> }
 ) {
   try {
-    const user = requireAuth(request)
+    await requireAuthWithFallback(request)
     // In Next.js 16, params is always a Promise
     const resolvedParams = await params
     const candidateId = resolvedParams.candidateId

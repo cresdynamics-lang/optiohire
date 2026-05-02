@@ -1,82 +1,548 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Briefcase, MapPin, Sparkles, TrendingUp } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Briefcase, Sparkles, TrendingUp, Upload, FileText, Link2, CheckCircle2, Clock3, AlertTriangle, XCircle, ChevronDown } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
-const suggestedJobs = [
-  {
-    id: '1',
-    title: 'Frontend Engineer',
-    company: 'Acme Labs',
-    location: 'Remote',
-    status: 'Open',
-  },
-  {
-    id: '2',
-    title: 'Product Designer',
-    company: 'BrightOps',
-    location: 'Nairobi',
-    status: 'Open',
-  },
-  {
-    id: '3',
-    title: 'Data Analyst',
-    company: 'Vertex People',
-    location: 'Hybrid',
-    status: 'Closing soon',
-  },
-]
+type CandidateJob = {
+  job_posting_id: string
+  job_title: string
+  job_description: string
+  skills_required: string[] | string | null
+  application_deadline: string | null
+  company_name: string | null
+}
+
+type CandidateApplication = {
+  application_id: string
+  created_at: string
+  updated_at?: string | null
+  ai_score?: number | null
+  ai_status?: 'SHORTLIST' | 'FLAG' | 'REJECT' | null
+  reasoning?: string | null
+  phone?: string | null
+  resume_url?: string | null
+  parsed_resume_json?: {
+    links?: {
+      resumeUrl?: string | null
+      linkedinUrl?: string | null
+      githubUrl?: string | null
+      otherUrl?: string | null
+    }
+    document?: {
+      name?: string | null
+      mimeType?: string | null
+    }
+    note?: string | null
+  } | null
+  job_posting_id: string
+  job_title: string
+  company_name?: string | null
+}
 
 export function JobSeekerJobsSection() {
+  const { user } = useAuth()
+  const [jobs, setJobs] = useState<CandidateJob[]>([])
+  const [loading, setLoading] = useState(false)
+  const [submittingJobId, setSubmittingJobId] = useState<string | null>(null)
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null)
+  const [formByJobId, setFormByJobId] = useState<
+    Record<
+      string,
+      {
+        resumeUrl: string
+        resumeFileName: string
+        resumeMimeType: string
+        linkedinUrl: string
+        githubUrl: string
+        otherUrl: string
+        phone: string
+        message: string
+      }
+    >
+  >({})
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [uploadingJobId, setUploadingJobId] = useState<string | null>(null)
+  const [applications, setApplications] = useState<CandidateApplication[]>([])
+  const [expandedApplicationId, setExpandedApplicationId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        setStatusMessage(null)
+        const token = localStorage.getItem('token')
+        if (!token) {
+          setStatusMessage('Please sign in to view jobs.')
+          return
+        }
+        const response = await fetch('/api/candidate/jobs', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}))
+          throw new Error(data.error || 'Failed to load jobs')
+        }
+        const data = await response.json()
+        setJobs(data.jobs || [])
+
+        const appResponse = await fetch('/api/candidate/applications', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        if (appResponse.ok) {
+          const appData = await appResponse.json()
+          setApplications(appData.applications || [])
+        }
+      } catch (error: any) {
+        setStatusMessage(error?.message || 'Unable to load jobs right now.')
+      } finally {
+        // Keep jobs section interactive; no loading lock.
+      }
+    }
+    void loadJobs()
+  }, [])
+
+  const normalizedJobs = useMemo(
+    () =>
+      jobs.map((job) => ({
+        ...job,
+        skills: Array.isArray(job.skills_required)
+          ? job.skills_required
+          : typeof job.skills_required === 'string'
+            ? job.skills_required.split(',').map((s) => s.trim()).filter(Boolean)
+            : [],
+      })),
+    [jobs]
+  )
+
+  const updateForm = (jobId: string, key: string, value: string) => {
+    setFormByJobId((prev) => ({
+      ...prev,
+      [jobId]: {
+        resumeUrl: prev[jobId]?.resumeUrl || '',
+        resumeFileName: prev[jobId]?.resumeFileName || '',
+        resumeMimeType: prev[jobId]?.resumeMimeType || '',
+        linkedinUrl: prev[jobId]?.linkedinUrl || '',
+        githubUrl: prev[jobId]?.githubUrl || '',
+        otherUrl: prev[jobId]?.otherUrl || '',
+        phone: prev[jobId]?.phone || '',
+        message: prev[jobId]?.message || '',
+        [key]: value,
+      },
+    }))
+  }
+
+  const applyToJob = async (jobId: string) => {
+    const form = formByJobId[jobId] || {
+      resumeUrl: '',
+      resumeFileName: '',
+      resumeMimeType: '',
+      linkedinUrl: '',
+      githubUrl: '',
+      otherUrl: '',
+      phone: '',
+      message: '',
+    }
+    try {
+      setSubmittingJobId(jobId)
+      setStatusMessage(null)
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('Please sign in before applying.')
+      const response = await fetch('/api/candidate/applications', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jobPostingId: jobId,
+          resumeUrl: form.resumeUrl,
+          resumeFileName: form.resumeFileName,
+          resumeMimeType: form.resumeMimeType,
+          linkedinUrl: form.linkedinUrl,
+          githubUrl: form.githubUrl,
+          otherUrl: form.otherUrl,
+          phone: form.phone,
+          message: form.message,
+        }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Application failed')
+      }
+      setStatusMessage('Application submitted successfully. You can update it anytime by re-submitting.')
+      setExpandedJobId(null)
+      const refreshToken = localStorage.getItem('token')
+      if (refreshToken) {
+        const appResponse = await fetch('/api/candidate/applications', {
+          headers: {
+            Authorization: `Bearer ${refreshToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        if (appResponse.ok) {
+          const appData = await appResponse.json()
+          setApplications(appData.applications || [])
+        }
+      }
+    } catch (error: any) {
+      setStatusMessage(error?.message || 'Could not submit application.')
+    } finally {
+      setSubmittingJobId(null)
+    }
+  }
+
+  const uploadDocument = async (jobId: string, file: File) => {
+    try {
+      setUploadingJobId(jobId)
+      setStatusMessage(null)
+
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('Please sign in before uploading a document.')
+
+      const formData = new FormData()
+      formData.append('document', file)
+
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const response = await fetch(`${backendUrl}/api/upload/candidate-document`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to upload document')
+      }
+
+      const data = await response.json()
+      updateForm(jobId, 'resumeUrl', data.url || '')
+      updateForm(jobId, 'resumeFileName', data.originalName || file.name || '')
+      updateForm(jobId, 'resumeMimeType', data.mimetype || file.type || '')
+      setStatusMessage('Document uploaded. It has been attached to your application.')
+    } catch (error: any) {
+      setStatusMessage(error?.message || 'Unable to upload document right now.')
+    } finally {
+      setUploadingJobId(null)
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-8">
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.38)] sm:p-8">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" aria-hidden />
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent" aria-hidden />
         <div className="relative space-y-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-700">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
             <Sparkles className="h-3.5 w-3.5" />
             Candidate Jobs
           </span>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Open roles for your profile</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Open roles you can apply to</h2>
           <p className="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-            Review opportunities that fit your skill direction and keep your profile up to date to improve shortlist chances.
+            Apply using your CV link, LinkedIn, GitHub, and any additional portfolio link. Your latest submission is saved.
+          </p>
+          <p className="inline-flex items-center gap-2 text-xs font-medium text-slate-500">
+            <TrendingUp className="h-3.5 w-3.5" />
+            AI watcher continuously reviews submitted evidence and updates employer decisions.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {suggestedJobs.map((job) => (
-          <Card key={job.id} className="group border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <CardHeader className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle className="flex items-center gap-2 text-base text-slate-900">
-                  <Briefcase className="h-4 w-4 text-slate-500" />
-                  {job.title}
-                </CardTitle>
-                <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-                  {job.status}
-                </Badge>
-              </div>
-              <CardDescription className="flex flex-wrap items-center gap-3 text-slate-600">
-                <span>{job.company}</span>
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {job.location}
-                </span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm leading-relaxed text-slate-500">
-                Keep your profile updated to improve matching and interview invitations.
-              </p>
-              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                <span className="inline-flex items-center gap-1">
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  Match quality improves with complete profile data
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <Card className="border-slate-200 bg-white shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base text-slate-900">Application History</CardTitle>
+          <CardDescription className="text-slate-600">
+            Track watcher decisions and recruiter pipeline progress for your submissions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {applications.length === 0 ? (
+            <p className="text-sm text-slate-600">No applications submitted yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {applications.slice(0, 8).map((application) => {
+                const status = (application.ai_status || 'PENDING').toUpperCase()
+                const statusUi =
+                  status === 'SHORTLIST'
+                    ? { label: 'Shortlisted', icon: CheckCircle2, className: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+                    : status === 'FLAG'
+                      ? { label: 'Under Review', icon: AlertTriangle, className: 'bg-amber-50 text-amber-700 border-amber-200' }
+                      : status === 'REJECT'
+                        ? { label: 'Not Selected', icon: XCircle, className: 'bg-red-50 text-red-700 border-red-200' }
+                        : { label: 'Submitted', icon: Clock3, className: 'bg-slate-100 text-slate-700 border-slate-200' }
+                const StatusIcon = statusUi.icon
+                return (
+                  <div
+                    key={application.application_id}
+                    className="rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-900">{application.job_title}</p>
+                        <p className="text-xs text-slate-500">
+                          {application.company_name || 'Employer'} - {new Date(application.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {typeof application.ai_score === 'number' ? (
+                          <span className="text-xs font-medium text-slate-600">Score: {Math.round(application.ai_score)}</span>
+                        ) : null}
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${statusUi.className}`}>
+                          <StatusIcon className="h-3.5 w-3.5" />
+                          {statusUi.label}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setExpandedApplicationId(
+                              expandedApplicationId === application.application_id ? null : application.application_id
+                            )
+                          }
+                          className="h-8 border-slate-300 px-2"
+                        >
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              expandedApplicationId === application.application_id ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {expandedApplicationId === application.application_id ? (
+                      <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                        <p>
+                          <span className="font-semibold text-slate-700">Resume:</span>{' '}
+                          {application.resume_url ? (
+                            <a
+                              href={application.resume_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-slate-800 underline"
+                            >
+                              Open resume/document
+                            </a>
+                          ) : (
+                            'Not provided'
+                          )}
+                        </p>
+                        {application.parsed_resume_json?.document?.name ? (
+                          <p>
+                            <span className="font-semibold text-slate-700">Document:</span>{' '}
+                            {application.parsed_resume_json.document.name}
+                          </p>
+                        ) : null}
+                        <p>
+                          <span className="font-semibold text-slate-700">LinkedIn:</span>{' '}
+                          {application.parsed_resume_json?.links?.linkedinUrl || 'Not provided'}
+                        </p>
+                        <p>
+                          <span className="font-semibold text-slate-700">GitHub:</span>{' '}
+                          {application.parsed_resume_json?.links?.githubUrl || 'Not provided'}
+                        </p>
+                        <p>
+                          <span className="font-semibold text-slate-700">Other link:</span>{' '}
+                          {application.parsed_resume_json?.links?.otherUrl || 'Not provided'}
+                        </p>
+                        {application.parsed_resume_json?.note ? (
+                          <p>
+                            <span className="font-semibold text-slate-700">Candidate note:</span>{' '}
+                            {application.parsed_resume_json.note}
+                          </p>
+                        ) : null}
+                        {application.reasoning ? (
+                          <p>
+                            <span className="font-semibold text-slate-700">Watcher reasoning:</span>{' '}
+                            {application.reasoning.slice(0, 220)}
+                            {application.reasoning.length > 220 ? '...' : ''}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {statusMessage ? (
+        <Card className="border-slate-200 bg-white">
+          <CardContent className="pt-5 text-sm text-slate-700">{statusMessage}</CardContent>
+        </Card>
+      ) : null}
+
+      {normalizedJobs.length === 0 ? (
+        <Card className="border-slate-200 bg-white">
+          <CardContent className="pt-5 text-sm text-slate-600">No active job postings are available right now.</CardContent>
+        </Card>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-4">
+        {normalizedJobs.map((job) => {
+          const form = formByJobId[job.job_posting_id] || {
+            resumeUrl: '',
+            resumeFileName: '',
+            resumeMimeType: '',
+            linkedinUrl: '',
+            githubUrl: '',
+            otherUrl: '',
+            phone: '',
+            message: '',
+          }
+          const isExpanded = expandedJobId === job.job_posting_id
+          const isSubmitting = submittingJobId === job.job_posting_id
+          const isUploading = uploadingJobId === job.job_posting_id
+          const hasApplicationEvidence = Boolean(
+            form.resumeUrl || form.linkedinUrl || form.githubUrl || form.otherUrl
+          )
+          return (
+            <Card key={job.job_posting_id} className="group border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+              <CardHeader className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="flex items-center gap-2 text-base text-slate-900">
+                    <Briefcase className="h-4 w-4 text-slate-500" />
+                    {job.job_title}
+                  </CardTitle>
+                  <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                    Open
+                  </Badge>
+                </div>
+                <CardDescription className="flex flex-wrap items-center gap-3 text-slate-600">
+                  <span>{job.company_name || 'OptioHire Employer'}</span>
+                  {job.application_deadline ? (
+                    <span>Deadline: {new Date(job.application_deadline).toLocaleDateString()}</span>
+                  ) : null}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm leading-relaxed text-slate-600">{job.job_description}</p>
+                {job.skills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {job.skills.slice(0, 6).map((skill) => (
+                      <Badge key={`${job.job_posting_id}-${skill}`} variant="outline" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <span className="inline-flex items-center gap-1">
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    Apply with your professional links
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setExpandedJobId(isExpanded ? null : job.job_posting_id)}
+                    className="bg-slate-900 text-white hover:bg-slate-800"
+                  >
+                    {isExpanded ? 'Close' : 'Apply'}
+                  </Button>
+                </div>
+
+                {isExpanded ? (
+                  <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <Input value={user?.email || ''} readOnly disabled />
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <p className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+                        <FileText className="h-3.5 w-3.5" />
+                        Upload CV / resume document
+                      </p>
+                      <label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50">
+                        <span className="inline-flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          {isUploading ? 'Uploading document...' : 'Choose file (PDF, DOC, DOCX, TXT, image)'}
+                        </span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.jpg,.jpeg,.png,.webp"
+                          disabled={isUploading}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              void uploadDocument(job.job_posting_id, file)
+                            }
+                            e.currentTarget.value = ''
+                          }}
+                        />
+                      </label>
+                      <p className="mt-2 text-xs text-slate-500">
+                        Uploaded document becomes your application CV link and is visible to the AI watcher.
+                      </p>
+                      {form.resumeFileName ? (
+                        <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Document attached: {form.resumeFileName}
+                        </p>
+                      ) : null}
+                    </div>
+                    <Input
+                      placeholder="CV/Resume URL (or upload above)"
+                      value={form.resumeUrl}
+                      onChange={(e) => updateForm(job.job_posting_id, 'resumeUrl', e.target.value)}
+                    />
+                    <p className="inline-flex items-center gap-1 text-xs text-slate-500">
+                      <Link2 className="h-3.5 w-3.5" />
+                      Add relevant links so the watcher can analyze your evidence more accurately.
+                    </p>
+                    <Input
+                      placeholder="LinkedIn URL"
+                      value={form.linkedinUrl}
+                      onChange={(e) => updateForm(job.job_posting_id, 'linkedinUrl', e.target.value)}
+                    />
+                    <Input
+                      placeholder="GitHub URL"
+                      value={form.githubUrl}
+                      onChange={(e) => updateForm(job.job_posting_id, 'githubUrl', e.target.value)}
+                    />
+                    <Input
+                      placeholder="Other professional link (portfolio, Behance, website...)"
+                      value={form.otherUrl}
+                      onChange={(e) => updateForm(job.job_posting_id, 'otherUrl', e.target.value)}
+                    />
+                    <Input
+                      placeholder="Phone (optional)"
+                      value={form.phone}
+                      onChange={(e) => updateForm(job.job_posting_id, 'phone', e.target.value)}
+                    />
+                    <Textarea
+                      placeholder="Short note to employer (optional)"
+                      value={form.message}
+                      onChange={(e) => updateForm(job.job_posting_id, 'message', e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      disabled={!hasApplicationEvidence}
+                      onClick={() => void applyToJob(job.job_posting_id)}
+                      className="bg-slate-900 text-white hover:bg-slate-800"
+                    >
+                      Submit Application
+                    </Button>
+                    {!hasApplicationEvidence ? (
+                      <p className="text-xs text-amber-700">
+                        Add at least one link (or upload a document) before submitting.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )

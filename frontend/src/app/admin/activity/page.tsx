@@ -278,7 +278,7 @@ export default function ActivityTrackingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Error Display */}
         {error && (
@@ -319,7 +319,7 @@ export default function ActivityTrackingPage() {
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value as '7d' | '30d' | '90d' | 'all')}
-              className="px-3 py-2 border border-neutral-700 bg-neutral-900 text-neutral-200 rounded text-sm"
+              className="px-3 py-2 rounded border border-slate-200 bg-white text-sm text-slate-900"
             >
               <option value="7d">Last 7 days</option>
               <option value="30d">Last 30 days</option>
@@ -337,7 +337,7 @@ export default function ActivityTrackingPage() {
         {telemetry && !telemetryLoading && (
           <div className="space-y-6">
             {/* Activity Over Time - Line Chart */}
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
@@ -368,7 +368,7 @@ export default function ActivityTrackingPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Action Types Distribution - Pie Chart */}
-              <Card className="bg-neutral-900 border-neutral-800">
+              <Card className="border-slate-200 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="w-5 h-5" />
@@ -400,7 +400,7 @@ export default function ActivityTrackingPage() {
               </Card>
 
               {/* Status Code Distribution - Pie Chart */}
-              <Card className="bg-neutral-900 border-neutral-800">
+              <Card className="border-slate-200 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="w-5 h-5" />
@@ -434,7 +434,7 @@ export default function ActivityTrackingPage() {
 
             {/* Top Users - Bar Chart */}
             {telemetry.topUsers.length > 0 && (
-              <Card className="bg-neutral-900 border-neutral-800">
+              <Card className="border-slate-200 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
@@ -466,7 +466,7 @@ export default function ActivityTrackingPage() {
 
             {/* Response Time Distribution - Bar Chart */}
             {telemetry.responseTimeDistribution.length > 0 && (
-              <Card className="bg-neutral-900 border-neutral-800">
+              <Card className="border-slate-200 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="w-5 h-5" />
@@ -490,7 +490,7 @@ export default function ActivityTrackingPage() {
 
             {/* Top Endpoints - Bar Chart */}
             {telemetry.topEndpoints.length > 0 && (
-              <Card className="bg-neutral-900 border-neutral-800">
+              <Card className="border-slate-200 bg-white">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="w-5 h-5" />
@@ -525,7 +525,7 @@ export default function ActivityTrackingPage() {
         {/* Performance Metrics */}
         {metrics && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Total Requests</p>
@@ -533,7 +533,7 @@ export default function ActivityTrackingPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Avg Response</p>
@@ -583,14 +583,14 @@ export default function ActivityTrackingPage() {
         )}
 
         {/* Filters */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="w-4 h-4 text-gray-400" />
               <select
                 value={actionFilter}
                 onChange={(e) => setActionFilter(e.target.value)}
-                className="px-3 py-2 border border-neutral-700 bg-neutral-900 text-neutral-200 rounded"
+                className="px-3 py-2 rounded border border-slate-200 bg-white text-slate-900"
               >
                 <option value="all">All Actions</option>
                 <option value="api_call">API Calls</option>
@@ -603,7 +603,7 @@ export default function ActivityTrackingPage() {
                 placeholder="Filter by User ID..."
                 value={userIdFilter}
                 onChange={(e) => setUserIdFilter(e.target.value)}
-                className="px-3 py-2 border border-neutral-700 bg-neutral-900 text-neutral-200 rounded"
+                className="px-3 py-2 rounded border border-slate-200 bg-white text-slate-900"
               />
               <Button onClick={loadActivities}>Apply Filters</Button>
             </div>
@@ -613,7 +613,7 @@ export default function ActivityTrackingPage() {
         {/* Activities List */}
         <div className="space-y-4">
           {activities.map((activity) => (
-            <Card key={activity.track_id} className="bg-neutral-900 border-neutral-800">
+            <Card key={activity.track_id} className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -663,7 +663,7 @@ export default function ActivityTrackingPage() {
         </div>
 
         {activities.length === 0 && (
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardContent className="pt-6">
               <div className="text-center py-12">
                 <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />

@@ -131,7 +131,7 @@ export default function AdminAnalyticsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-950">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
       </div>
     )
@@ -146,7 +146,7 @@ export default function AdminAnalyticsPage() {
   const jobActiveRate = stats?.job_postings.total ? ((stats.job_postings.active / stats.job_postings.total) * 100).toFixed(1) : '0'
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -197,7 +197,7 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -216,7 +216,7 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Companies</CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -235,7 +235,7 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Job Postings</CardTitle>
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -254,7 +254,7 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Applications</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
@@ -274,7 +274,7 @@ export default function AdminAnalyticsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
@@ -335,7 +335,7 @@ export default function AdminAnalyticsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
@@ -353,19 +353,19 @@ export default function AdminAnalyticsPage() {
               ) : (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-4">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs text-muted-foreground">Total Scored</p>
                       <p className="text-xl font-semibold">{aiAudit.total}</p>
                     </div>
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-4">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs text-muted-foreground">Borderline Decisions</p>
                       <p className="text-xl font-semibold text-amber-400">{aiAudit.borderline}</p>
                     </div>
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-4">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs text-muted-foreground">Sensitive Reasoning Flags</p>
                       <p className="text-xl font-semibold text-red-400">{aiAudit.sensitiveReasoningFlags}</p>
                     </div>
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-4">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs text-muted-foreground">Missing Reasoning</p>
                       <p className="text-xl font-semibold text-orange-300">{aiAudit.missingReasoning}</p>
                     </div>

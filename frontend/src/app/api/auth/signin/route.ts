@@ -3,16 +3,15 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(request: NextRequest) {
   try {
     const bodyText = await request.text()
-    const backendUrl = (process.env.BACKEND_URL || '').trim()
+    const backendUrl = (
+      process.env.BACKEND_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      'http://localhost:3001'
+    )
+      .trim()
+      .replace(/\/$/, '')
 
-    if (!backendUrl) {
-      return NextResponse.json(
-        { error: 'Signin service is not configured. Set BACKEND_URL in your environment.' },
-        { status: 500 }
-      )
-    }
-
-    const backendRes = await fetch(`${backendUrl.replace(/\/$/, '')}/auth/signin`, {
+    const backendRes = await fetch(`${backendUrl}/auth/signin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: bodyText,

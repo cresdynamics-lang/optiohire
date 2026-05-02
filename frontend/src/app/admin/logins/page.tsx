@@ -112,7 +112,7 @@ export default function AdminLoginsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-6">
+    <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
@@ -129,7 +129,7 @@ export default function AdminLoginsPage() {
           </div>
         </div>
 
-        <Card className="bg-neutral-900 border-neutral-800 mb-6">
+        <Card className="border-slate-200 bg-white mb-6">
           <CardContent className="p-4">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 relative min-w-[200px]">
@@ -141,7 +141,7 @@ export default function AdminLoginsPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="pl-10 bg-neutral-950 border-neutral-700 text-white"
+                  className="pl-10 border-slate-200 bg-white text-slate-900"
                 />
               </div>
               <select
@@ -150,7 +150,7 @@ export default function AdminLoginsPage() {
                   setActionFilter(e.target.value)
                   setPage(1)
                 }}
-                className="px-4 py-2 bg-neutral-950 border border-neutral-700 rounded-md text-white"
+                className="px-4 py-2 rounded-md border border-slate-200 bg-white text-slate-900"
               >
                 <option value="login">Logins</option>
                 <option value="logout">Logouts</option>
@@ -177,7 +177,7 @@ export default function AdminLoginsPage() {
           </div>
         ) : (
           <>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader>
                 <CardTitle className="text-white">
                   Activity Logs ({total})
@@ -188,7 +188,7 @@ export default function AdminLoginsPage() {
                   {logins.map((activity) => (
                     <div
                       key={activity.track_id}
-                      className="flex items-start justify-between p-4 bg-neutral-950 rounded-lg border border-neutral-800 hover:bg-neutral-900 transition-colors"
+                      className="flex items-start justify-between p-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
                     >
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3 flex-wrap">

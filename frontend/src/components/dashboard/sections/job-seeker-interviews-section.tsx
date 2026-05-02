@@ -22,10 +22,10 @@ const upcomingInterviews = [
 export function JobSeekerInterviewsSection() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-8">
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_24px_70px_-48px_rgba(15,23,42,0.38)] sm:p-8">
-        <div className="pointer-events-none absolute -right-12 -top-14 h-52 w-52 rounded-full bg-emerald-500/10 blur-3xl" aria-hidden />
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent" aria-hidden />
         <div className="relative space-y-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
             <Sparkles className="h-3.5 w-3.5" />
             Candidate Interviews
           </span>

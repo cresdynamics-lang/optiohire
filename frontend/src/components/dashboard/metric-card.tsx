@@ -34,11 +34,10 @@ export const MetricCard = memo(function MetricCard({
       transition={{ duration: 0.5, delay }}
     >
       <Card className={cn(
-        "relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_18px_50px_-42px_rgba(15,23,42,0.35)] transition-all duration-300 group hover:border-blue-200/70 hover:shadow-[0_22px_56px_-38px_rgba(37,99,235,0.28)] dark:bg-gray-900 dark:border-gray-800",
+        "relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_16px_40px_-30px_rgba(15,23,42,0.25)] transition-all duration-300 group hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_24px_58px_-32px_rgba(15,23,42,0.32)] dark:bg-gray-900 dark:border-gray-800",
         className
       )}>
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.06),transparent_52%)] opacity-90" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2563eb]/[0.06] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-[#2563eb]/15" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/60 to-transparent dark:from-slate-800/35" />
         <CardContent className="relative p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -59,7 +58,7 @@ export const MetricCard = memo(function MetricCard({
                     "text-xs font-medium",
                     trend.isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                   )}>
-                    {trend.isPositive ? "+" : ""}{trend.value}%
+                    {trend.isPositive ? "+" : ""}{trend.value}
                   </span>
                   <span className="text-xs text-gray-600 dark:text-gray-400">
                     {trend.label}
@@ -67,8 +66,8 @@ export const MetricCard = memo(function MetricCard({
                 </div>
               )}
             </div>
-            <div className="rounded-xl border border-blue-100/90 bg-blue-50/90 p-3 shadow-inner shadow-blue-900/5 transition-colors duration-300 group-hover:bg-blue-100/90 dark:border-blue-900/60 dark:bg-blue-950/60 dark:shadow-none">
-              <Icon className="h-6 w-6 shrink-0 text-blue-700 dark:text-blue-400" />
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-inner shadow-slate-900/5 transition-colors duration-300 group-hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
+              <Icon className="h-6 w-6 shrink-0 text-slate-700 dark:text-slate-200" />
             </div>
           </div>
         </CardContent>

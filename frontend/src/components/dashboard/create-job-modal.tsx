@@ -182,10 +182,10 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           >
-            <Card className="bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800">
+            <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_30px_90px_-56px_rgba(15,23,42,0.45)] dark:border-slate-700 dark:bg-slate-900">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-figtree font-extralight text-[#2D2DDD] dark:text-white">
+                  <CardTitle className="text-xl font-figtree font-semibold text-slate-900 dark:text-white">
                     Create New Job Posting
                   </CardTitle>
                   <Button
@@ -300,7 +300,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                           className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
                         />
-                        <Button type="button" onClick={addSkill} variant="outline" className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white border-[#2D2DDD] shadow-none hover:shadow-none">
+                        <Button type="button" onClick={addSkill} variant="outline" className="border-slate-900 bg-slate-900 text-white shadow-none hover:border-slate-800 hover:bg-slate-800 dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200">
                           <Plus className="w-4 h-4" />
                         </Button>
                       </div>
@@ -328,7 +328,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                   {/* Application Deadline */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-[#2D2DDD]" />
+                      <Clock className="w-5 h-5 text-slate-700 dark:text-slate-200" />
                       Application Deadline
                     </h3>
                     
@@ -366,7 +366,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                           type="button"
                           variant="outline"
                           onClick={() => window.open('https://meet.google.com/new', '_blank', 'noopener,noreferrer')}
-                          className="flex-shrink-0 border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white dark:border-[#5F5FFF] dark:text-[#5F5FFF] dark:hover:bg-[#5F5FFF] dark:hover:text-white inline-flex items-center gap-2"
+                          className="inline-flex flex-shrink-0 items-center gap-2 border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
                           aria-label="Open Google Meet to create a new meeting"
                         >
                           <Video className="w-4 h-4" aria-hidden />
@@ -408,14 +408,14 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                       variant="outline" 
                       onClick={onClose}
                       disabled={isSubmitting}
-                      className="bg-[#2D2DDD] hover:bg-[#2525B0] border-[#2D2DDD] hover:border-[#2525B0] text-white hover:text-white dark:bg-transparent dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:border-gray-500 dark:hover:text-white"
+                      className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit" 
                       disabled={isSubmitting}
-                      className="flex items-center gap-2 bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
+                      className="flex items-center gap-2 bg-slate-900 text-white shadow-none hover:bg-slate-800 hover:shadow-none dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                     >
                       {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                       {isSubmitting ? 'Creating Job Posting...' : 'Create Job Posting'}
@@ -441,12 +441,12 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
               </DialogTitle>
             </div>
             <DialogDescription className="text-base text-gray-700 dark:text-gray-200 pt-2">
-              <div className="mb-2 text-gray-900 dark:text-gray-100">
+              <span className="mb-2 block text-gray-900 dark:text-gray-100">
                 The job posting <strong className="font-semibold text-gray-900 dark:text-white">"{createdJobInfo?.jobTitle}"</strong> has been successfully created for <strong className="font-semibold text-gray-900 dark:text-white">{createdJobInfo?.companyName}</strong>.
-              </div>
-              <div className="text-sm mt-3 text-gray-600 dark:text-gray-300">
+              </span>
+              <span className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
                 The job is now listed in your dashboard for progress tracking. You can monitor applications, review candidates, and track recruitment analytics.
-              </div>
+              </span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -468,7 +468,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                 setWebhookStatus({ status: 'idle', message: '' })
                 setCreatedJobInfo(null)
               }}
-              className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white w-full sm:w-auto shadow-none hover:shadow-none"
+              className="w-full bg-slate-900 text-white shadow-none hover:bg-slate-800 hover:shadow-none sm:w-auto dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
             >
               View Job Listings
             </Button>

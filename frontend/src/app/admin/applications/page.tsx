@@ -15,8 +15,9 @@ interface Application {
   email: string
   job_title: string
   company_name: string
-  ai_status: string
+  ai_status: string | null
   ai_score: number | null
+  reasoning?: string | null
   created_at: string
 }
 
@@ -117,6 +118,20 @@ export default function AdminApplicationsPage() {
     }
   }
 
+  const getDecisionSummary = (status: string | null) => {
+    const normalized = (status || 'PENDING').toUpperCase()
+    if (normalized === 'SHORTLIST') {
+      return { label: 'Selected', tone: 'text-emerald-700', note: 'Candidate is selected for the next stage.' }
+    }
+    if (normalized === 'REJECT') {
+      return { label: 'Not selected', tone: 'text-red-700', note: 'Candidate is not selected based on AI evaluation.' }
+    }
+    if (normalized === 'FLAG') {
+      return { label: 'Under review', tone: 'text-amber-700', note: 'Candidate needs manual review before a final decision.' }
+    }
+    return { label: 'Pending decision', tone: 'text-slate-700', note: 'AI decision is still pending.' }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -196,6 +211,20 @@ export default function AdminApplicationsPage() {
                               Score: {Number(app.ai_score).toFixed(1)}
                             </span>
                           )}
+                        </div>
+                        <div className="mb-2 rounded-md border border-slate-200 bg-white p-3">
+                          <p className={`text-sm font-semibold ${getDecisionSummary(app.ai_status).tone}`}>
+                            {getDecisionSummary(app.ai_status).label}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-600">
+                            {getDecisionSummary(app.ai_status).note}
+                          </p>
+                          {app.ai_status?.toUpperCase() === 'REJECT' || app.ai_status?.toUpperCase() === 'FLAG' ? (
+                            <p className="mt-2 text-xs text-slate-700">
+                              <span className="font-semibold">Reason:</span>{' '}
+                              {app.reasoning?.trim() ? app.reasoning : 'No reason was provided by the AI scorer.'}
+                            </p>
+                          ) : null}
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
                           <div>

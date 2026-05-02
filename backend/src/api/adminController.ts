@@ -73,39 +73,59 @@ export async function getAllUsers(req: Request, res: Response) {
        LIMIT $1 OFFSET $2`,
       params
     )
-    
-    // Get company info for each user (including hiring_manager_email)
-    const usersWithCompanies = await Promise.all(
-      users.map(async (user) => {
-        let companyInfo = null
-        try {
-          // Try to find company by user_id first
-          const { rows: companyRows } = await query<{
-            company_id: string
-            company_name: string
-            company_email: string
-            hr_email: string
-            hiring_manager_email: string
-          }>(
-            `SELECT company_id, company_name, company_email, hr_email, hiring_manager_email 
-             FROM companies 
-             WHERE user_id = $1 OR hr_email = $2 OR company_email = $2 
-             LIMIT 1`,
-            [user.user_id, user.email]
-          )
-          if (companyRows.length > 0) {
-            companyInfo = companyRows[0]
+
+    type CompanyRow = {
+      company_id: string
+      company_name: string
+      company_email: string
+      hr_email: string
+      hiring_manager_email: string
+      user_id: string | null
+    }
+
+    const byUserId = new Map<string, CompanyRow>()
+    const byEmail = new Map<string, CompanyRow>()
+    if (users.length > 0) {
+      try {
+        const userIds = users.map((u) => u.user_id)
+        const emails = [...new Set(users.map((u) => u.email.toLowerCase()))]
+        const { rows: companyRows } = await query<CompanyRow>(
+          `SELECT company_id, company_name, company_email, hr_email, hiring_manager_email, user_id
+           FROM companies 
+           WHERE user_id::text = ANY($1::text[])
+              OR LOWER(hr_email) = ANY($2::text[])
+              OR LOWER(company_email) = ANY($2::text[])`,
+          [userIds, emails]
+        )
+        for (const c of companyRows) {
+          if (c.user_id) {
+            const k = String(c.user_id)
+            if (!byUserId.has(k)) byUserId.set(k, c)
           }
-        } catch (err) {
-          console.error('Error fetching company for user:', user.user_id, err)
+          if (c.hr_email) {
+            const k = c.hr_email.toLowerCase()
+            if (!byEmail.has(k)) byEmail.set(k, c)
+          }
+          if (c.company_email) {
+            const k = c.company_email.toLowerCase()
+            if (!byEmail.has(k)) byEmail.set(k, c)
+          }
         }
-        
-        return {
-          ...user,
-          company: companyInfo
-        }
-      })
-    )
+      } catch (err) {
+        console.error('Error batch-loading companies for admin user list:', err)
+      }
+    }
+
+    const usersWithCompanies = users.map((user) => {
+      const uid = String(user.user_id)
+      const em = user.email.toLowerCase()
+      const companyInfo =
+        byUserId.get(uid) || byEmail.get(em) || null
+      return {
+        ...user,
+        company: companyInfo,
+      }
+    })
 
     const { rows: countRows } = await query<{ count: string }>(
       `SELECT COUNT(*) as count FROM users ${whereClause}`,

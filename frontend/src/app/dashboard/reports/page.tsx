@@ -8,23 +8,32 @@ import { OptimizedDashboardLayout } from '@/components/dashboard/optimized-dashb
 export default function ReportsPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+  const normalizedRole = user?.role?.toLowerCase()
+  const isJobSeeker =
+    normalizedCompanyRole === 'candidate' ||
+    normalizedCompanyRole === 'job_seeker' ||
+    normalizedCompanyRole === 'jobseeker' ||
+    normalizedRole === 'candidate' ||
+    normalizedRole === 'job_seeker' ||
+    normalizedRole === 'jobseeker'
 
   useEffect(() => {
-    if (loading) return
+    if (loading && !user) return
     // STRICT: Admin should NOT access HR dashboard
     if (user && user.role === 'admin') {
       router.push('/admin')
       return
     }
-    if (user && user.companyRole === 'candidate') {
+    if (user && isJobSeeker) {
       router.replace('/dashboard')
     }
-  }, [user, loading, router])
+  }, [user, loading, router, isJobSeeker])
 
-  if (loading || (user && user.role === 'admin')) {
+  if (user?.role === 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2D2DDD] border-t-transparent" />
       </div>
     )
   }

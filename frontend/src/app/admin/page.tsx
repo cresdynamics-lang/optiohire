@@ -1,9 +1,8 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
-import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,6 +68,15 @@ function AdminDashboardContent() {
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const usersLoadedRef = useRef(false)
+  const lastLoadKeyRef = useRef<string | null>(null)
+  const requestCtxRef = useRef<{
+    adminEmail: string | null
+    adminSession: string | null
+    userId?: string
+    userEmail?: string | null
+  }>({ adminEmail: null, adminSession: null })
   const [searchTerm, setSearchTerm] = useState('')
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
@@ -124,6 +132,13 @@ function AdminDashboardContent() {
 
   const isSeniorAdmin = currentUser?.email === 'applicationsoptiohire@gmail.com'
 
+  requestCtxRef.current = {
+    adminEmail,
+    adminSession,
+    userId: user?.id,
+    userEmail: user?.email ?? null,
+  }
+
   useEffect(() => {
     // Check for admin session (state or localStorage directly to avoid race condition)
     const hasAdminSession = adminSession || (typeof window !== 'undefined' && localStorage.getItem('admin_session'))
@@ -136,18 +151,20 @@ function AdminDashboardContent() {
     if (!authLoading && (!user || user.role !== 'admin')) {
       router.push('/admin/login')
     }
-  }, [user, authLoading, router, adminSession])
+  }, [user?.id, user?.role, authLoading, router, adminSession])
 
-  useEffect(() => {
-    // Check for admin session or regular admin user
-    if (adminSession || (user && user.role === 'admin')) {
-      loadUsers()
-    }
-  }, [user, adminSession])
+  const loadUsers = useCallback(async () => {
+    const ctx = requestCtxRef.current
+    const displayEmail = ctx.adminSession ? ctx.adminEmail : ctx.userEmail
+    const currentAdminId = ctx.adminSession ? ctx.adminEmail : ctx.userId || ctx.userEmail
 
-  const loadUsers = async () => {
     try {
-      setIsLoading(true)
+      const firstLoad = !usersLoadedRef.current
+      if (firstLoad) {
+        setIsLoading(true)
+      } else {
+        setIsRefreshing(true)
+      }
       setError(null)
       const token = localStorage.getItem('token')
       if (!token) {
@@ -157,11 +174,11 @@ function AdminDashboardContent() {
       // Use admin token if available, otherwise use regular token
       const adminToken = localStorage.getItem('admin_token')
       const authToken = adminToken || token
-      const response = await fetch('/api/admin/users?limit=100', {
+      const response = await fetch('/api/admin/users?limit=20', {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
-          'X-Admin-Email': currentUser?.email || ''
+          'X-Admin-Email': displayEmail || ''
         }
       })
 
@@ -171,18 +188,28 @@ function AdminDashboardContent() {
 
       const data = await response.json()
       // Filter out the current admin user from the list
-      const currentAdminId = currentUser?.id || currentUser?.email
       const filteredUsers = (data.users || []).filter((u: User) => {
-        return u.user_id !== currentAdminId && u.email !== currentAdminId && u.email !== currentUser?.email
+        return u.user_id !== currentAdminId && u.email !== currentAdminId && u.email !== displayEmail
       })
       setUsers(filteredUsers)
+      usersLoadedRef.current = true
     } catch (err: any) {
       console.error('Error loading users:', err)
       setError(err.message || 'Failed to load users')
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!(adminSession || (user && user.role === 'admin'))) return
+    const loadKey = `${adminSession ? 'session' : 'user'}:${user?.id ?? ''}:${user?.role ?? ''}`
+    if (usersLoadedRef.current && lastLoadKeyRef.current === loadKey) return
+    lastLoadKeyRef.current = loadKey
+    void loadUsers()
+    // Intentionally narrow deps: profile sync updates `user` object identity often — do not refetch on every enrichment.
+  }, [adminSession, user?.id, user?.role, loadUsers])
 
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
@@ -276,26 +303,32 @@ function AdminDashboardContent() {
     }))
   }
 
-  const filteredUsers = users.filter(u => {
-    // If activeSection is 'admins', only show admin users
-    if (activeSection === 'admins' && u.role !== 'admin') {
-      return false
-    }
-    
-    // Apply search filter
-    if (searchTerm && activeSection !== 'admins') {
-      return (
-        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.company?.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-    
-    return true
-  })
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      if (activeSection === 'admins' && u.role !== 'admin') {
+        return false
+      }
+      if (searchTerm && activeSection !== 'admins') {
+        return (
+          u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.company?.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      }
+      return true
+    })
+  }, [users, searchTerm, activeSection])
 
-  if (authLoading || isLoading) {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
+      </div>
+    )
+  }
+
+  if (isLoading && users.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
@@ -313,16 +346,12 @@ function AdminDashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-zinc-950 p-8 text-zinc-100">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between"
-        >
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="mb-2 text-3xl font-bold text-zinc-100">
               Admin Management
               {isSeniorAdmin && (
                 <span className="ml-3 px-3 py-1 rounded-full text-sm font-medium bg-primary text-white">
@@ -330,7 +359,7 @@ function AdminDashboardContent() {
                 </span>
               )}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-zinc-400">
               {isSeniorAdmin ? 'Full system access - All rights enabled' : 'Manage users, jobs, applicants, and admins'}
             </p>
           </div>
@@ -342,42 +371,43 @@ function AdminDashboardContent() {
               </Button>
             </Link>
             <Button
-              onClick={loadUsers}
+              onClick={() => void loadUsers()}
               variant="outline"
               className="flex items-center gap-2"
+              disabled={isRefreshing}
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Admin Profile Section */}
         {currentUser && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-slate-900">
+          <div>
+            <Card className="border border-zinc-800 bg-zinc-900/90">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-800 flex items-center justify-center">
-                    <Crown className="w-6 h-6 text-white" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-800">
+                    <Crown className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-blue-300">
+                    <CardTitle className="flex items-center gap-2 text-zinc-100">
                       Admin Profile
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200">
+                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                         ADMIN
                       </span>
                     </CardTitle>
-                    <CardDescription className="text-blue-200/80">
-                      Your administrator account information
-                    </CardDescription>
+                    <CardDescription className="text-zinc-400">Your administrator account information</CardDescription>
                   </div>
                   {isSecure !== null && (
-                    <div className={`ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${isSecure ? 'bg-green-500/20 text-green-700 dark:text-green-300 border border-green-500/40' : 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40'}`}>
+                    <div
+                      className={`ml-auto flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${
+                        isSecure
+                          ? 'border border-emerald-700/40 bg-emerald-950/30 text-emerald-300'
+                          : 'border border-amber-700/40 bg-amber-950/30 text-amber-300'
+                      }`}
+                    >
                       <Shield className="w-3.5 h-3.5" />
                       {isSecure ? 'SSL' : 'HTTP'}
                     </div>
@@ -385,137 +415,121 @@ function AdminDashboardContent() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-neutral-300">
-                      <User className="w-4 h-4" />
+                    <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                      <User className="h-4 w-4" />
                       Name
                     </div>
-                    <p className="text-neutral-200">
-                      {currentUser.name || 'Not set'}
-                    </p>
+                    <p className="text-zinc-200">{currentUser.name || 'Not set'}</p>
                   </div>
-                  
+
                   {(currentUser as any).username && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
-                        <User className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                        <User className="h-4 w-4" />
                         Username
                       </div>
-                      <p className="text-neutral-200 font-mono">
-                        @{(currentUser as any).username}
-                      </p>
+                      <p className="font-mono text-zinc-200">@{(currentUser as any).username}</p>
                     </div>
                   )}
-                  
+
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-neutral-300">
-                      <Mail className="w-4 h-4" />
+                    <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                      <Mail className="h-4 w-4" />
                       Email
                     </div>
-                    <p className="text-neutral-200">
-                      {currentUser.email}
-                    </p>
+                    <p className="text-zinc-200">{currentUser.email}</p>
                   </div>
-                  
+
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-neutral-300">
-                      <Shield className="w-4 h-4" />
+                    <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                      <Shield className="h-4 w-4" />
                       Role
                     </div>
-                    <p className="text-neutral-200 capitalize">
-                      {currentUser.role}
-                    </p>
+                    <p className="capitalize text-zinc-200">{currentUser.role}</p>
                   </div>
-                  
+
                   {(currentUser as any).companyRole && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
-                        <Key className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                        <Key className="h-4 w-4" />
                         Company Role
                       </div>
-                      <p className="text-neutral-200 capitalize">
+                      <p className="capitalize text-zinc-200">
                         {(currentUser as any).companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                       </p>
                     </div>
                   )}
-                  
+
                   {(currentUser as any).created_at && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
-                        <Calendar className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                        <Calendar className="h-4 w-4" />
                         Member Since
                       </div>
-                      <p className="text-blue-200">
+                      <p className="text-zinc-200">
                         {new Date((currentUser as any).created_at).toLocaleDateString()}
                       </p>
                     </div>
                   )}
-                  
+
                   {(currentUser as any).companyName && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
-                        <Building2 className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                        <Building2 className="h-4 w-4" />
                         Organization
                       </div>
-                      <p className="text-blue-200">
-                        {(currentUser as any).companyName}
-                      </p>
+                      <p className="text-zinc-200">{(currentUser as any).companyName}</p>
                     </div>
                   )}
-                  
+
                   {(currentUser as any).companyEmail && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
-                        <Mail className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                        <Mail className="h-4 w-4" />
                         Company Email
                       </div>
-                      <p className="text-blue-200">
-                        {(currentUser as any).companyEmail}
-                      </p>
+                      <p className="text-zinc-200">{(currentUser as any).companyEmail}</p>
                     </div>
                   )}
-                  
+
                   {(currentUser as any).hrEmail && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-blue-300">
-                        <Mail className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+                        <Mail className="h-4 w-4" />
                         HR Email
                       </div>
-                      <p className="text-blue-200">
-                        {(currentUser as any).hrEmail}
-                      </p>
+                      <p className="text-zinc-200">{(currentUser as any).hrEmail}</p>
                     </div>
                   )}
-                  
+
                   {(currentUser as any).hiringManagerEmail && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-[#2D2DDD] dark:text-[#2D2DDD]">
-                        <Mail className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-[#2D2DDD]">
+                        <Mail className="h-4 w-4" />
                         Hiring Manager Email
                       </div>
-                      <p className="text-[#2D2DDD]/90 dark:text-[#2D2DDD]">
-                        {(currentUser as any).hiringManagerEmail}
-                      </p>
+                      <p className="text-[#2D2DDD]">{(currentUser as any).hiringManagerEmail}</p>
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Search - Only show for users section */}
         {activeSection === 'users' && (
-          <Card>
+          <Card className="border border-zinc-800 bg-zinc-900/90">
             <CardContent className="pt-6">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500" />
                 <Input
                   placeholder="Search by email, name, or company..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="border-zinc-700 bg-zinc-900 pl-10 text-zinc-100 placeholder:text-zinc-500"
                 />
               </div>
             </CardContent>
@@ -524,9 +538,9 @@ function AdminDashboardContent() {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-            <p className="text-red-700 dark:text-red-300">{error}</p>
+          <div className="flex items-center gap-2 rounded-lg border border-red-800/60 bg-red-950/40 p-4">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <p className="text-red-300">{error}</p>
           </div>
         )}
 
@@ -534,13 +548,13 @@ function AdminDashboardContent() {
         {activeSection === 'users' || activeSection === 'admins' ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-zinc-100">
                 {activeSection === 'admins' ? 'All Admins' : 'All Users'} ({filteredUsers.length})
               </h2>
             </div>
           <div className="grid gap-4">
             {filteredUsers.map((user) => (
-            <Card key={user.user_id} className="hover:shadow-lg transition-shadow">
+            <Card key={user.user_id} className="border border-zinc-800 bg-zinc-900/80 transition-shadow hover:shadow-lg hover:shadow-black/30">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-4">
@@ -551,67 +565,67 @@ function AdminDashboardContent() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          <h3 className="text-lg font-semibold text-zinc-100">
                             {user.name || 'No Name'}
                           </h3>
                           {(user as any).username && (
-                            <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                            <span className="font-mono text-sm text-zinc-500">
                               @{(user as any).username}
                             </span>
                           )}
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             user.is_active 
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                              ? 'border border-emerald-800/40 bg-emerald-950/40 text-emerald-300' 
+                              : 'border border-red-800/40 bg-red-950/40 text-red-300'
                           }`}>
                             {user.is_active ? 'Active' : 'Inactive'}
                           </span>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             user.role === 'admin'
-                              ? 'bg-[#2D2DDD]/10 text-[#2D2DDD] dark:bg-[#2D2DDD]/20 dark:text-[#2D2DDD]'
-                              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                              ? 'border border-[#2D2DDD]/40 bg-[#2D2DDD]/20 text-[#8f97ff]'
+                              : 'border border-blue-800/40 bg-blue-950/40 text-blue-300'
                           }`}>
                             {user.role}
                           </span>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center gap-2 text-zinc-400">
                             <Mail className="w-4 h-4" />
                             <span>{user.email}</span>
                           </div>
                           
                           {(user as any).username && (
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-2 text-zinc-400">
                               <User className="w-4 h-4" />
                               <span className="font-mono">@{user.username}</span>
                             </div>
                           )}
                           
                           {user.company_role && (
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-2 text-zinc-400">
                               <Key className="w-4 h-4" />
                               <span className="capitalize">{user.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}</span>
                             </div>
                           )}
                           
                           {user.company && (
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-2 text-zinc-400">
                               <Building2 className="w-4 h-4" />
                               <span>{user.company.company_name}</span>
                             </div>
                           )}
                           
-                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center gap-2 text-zinc-400">
                             <Calendar className="w-4 h-4" />
                             <span>{new Date(user.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
 
                         {/* Password Display */}
-                        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
                           <div className="flex items-center justify-between mb-2">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <label className="flex items-center gap-2 text-sm font-medium text-zinc-300">
                               <Shield className="w-4 h-4" />
                               Password Hash (Admin View)
                             </label>
@@ -628,16 +642,16 @@ function AdminDashboardContent() {
                               )}
                             </Button>
                           </div>
-                          <div className="font-mono text-xs text-gray-600 dark:text-gray-400 break-all">
+                          <div className="font-mono text-xs text-zinc-400 break-all">
                             {showPasswords[user.user_id] ? user.password_hash : '••••••••••••••••'}
                           </div>
                         </div>
 
                         {/* Company Details */}
                         {user.company && (
-                          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Company Details</h4>
-                            <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="mt-4 rounded-lg border border-blue-900/40 bg-blue-950/30 p-3">
+                            <h4 className="mb-2 text-sm font-semibold text-zinc-100">Company Details</h4>
+                            <div className="space-y-1 text-sm text-zinc-400">
                               <p><span className="font-medium">Organization:</span> {user.company.company_name}</p>
                               <p><span className="font-medium">Company Email:</span> {user.company.company_email}</p>
                               <p><span className="font-medium">HR Email:</span> {user.company.hr_email}</p>
@@ -752,17 +766,17 @@ function AdminDashboardContent() {
           
           {filteredUsers.length === 0 && (
             <div className="text-center py-12">
-              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
+              <Users className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
+              <p className="text-zinc-400">
                 {activeSection === 'admins' ? 'No admins found' : 'No users found'}
               </p>
             </div>
           )}
         </div>
         ) : (
-          <Card>
+          <Card className="border border-zinc-800 bg-zinc-900/90">
             <CardContent className="pt-6">
-              <p className="text-gray-600 dark:text-gray-400 text-center py-8">
+              <p className="py-8 text-center text-zinc-400">
                 Navigate to the specific section using the navigation buttons above.
               </p>
             </CardContent>
@@ -776,7 +790,7 @@ function AdminDashboardContent() {
 export default function AdminDashboard() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-neutral-950">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
         <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
       </div>
     }>

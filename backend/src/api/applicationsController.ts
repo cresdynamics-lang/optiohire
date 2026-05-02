@@ -7,6 +7,48 @@ import { AIScoringEngine } from '../lib/ai-scoring.js'
 import { EmailService } from '../services/emailService.js'
 import { logger } from '../utils/logger.js'
 
+async function scanCandidateLinks(links: string[]): Promise<string[]> {
+  const uniqueLinks = Array.from(new Set(links.filter(Boolean))).slice(0, 5)
+  const timeoutMs = Number(process.env.CANDIDATE_LINK_SCAN_TIMEOUT_MS || 4500)
+  const insights: string[] = []
+
+  await Promise.all(
+    uniqueLinks.map(async (link) => {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), timeoutMs)
+      try {
+        const response = await fetch(link, {
+          method: 'GET',
+          redirect: 'follow',
+          signal: controller.signal,
+          headers: { 'User-Agent': 'OptioHire/1.0 (+candidate-portal-scanner)' }
+        })
+        const contentType = response.headers.get('content-type') || 'unknown'
+        if (!response.ok) {
+          insights.push(`${link} -> ${response.status} ${response.statusText}`)
+          return
+        }
+        const raw = await response.text()
+        const preview = raw
+          .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+          .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 240)
+        insights.push(`${link} -> ${contentType}; preview: ${preview || 'No readable content'}`)
+      } catch (error: any) {
+        const reason = error?.name === 'AbortError' ? 'timeout' : (error?.message || 'failed to fetch')
+        insights.push(`${link} -> ${reason}`)
+      } finally {
+        clearTimeout(timeout)
+      }
+    })
+  )
+
+  return insights
+}
+
 export async function parseEmailApplications(req: Request, res: Response) {
   try {
     startImapIngestion().catch(() => {})
@@ -57,7 +99,26 @@ export async function scoreApplication(req: Request, res: Response) {
     const app = appRows[0] as any
 
     const parsed = app.parsed_resume_json || (await parseResumeText(''))
-    const cvText = (typeof parsed?.textContent === 'string' && parsed.textContent.trim()) ? parsed.textContent.trim() : ''
+    const candidateLinks = [
+      parsed?.links?.resumeUrl,
+      parsed?.links?.linkedinUrl,
+      parsed?.links?.githubUrl,
+      parsed?.links?.otherUrl,
+      ...(Array.isArray(parsed?.links?.other_links) ? parsed.links.other_links : []),
+    ].filter((value): value is string => Boolean(value && typeof value === 'string'))
+    const linkInsights = await scanCandidateLinks(candidateLinks)
+    const fallbackCvText = [
+      parsed?.note ? `Candidate note: ${String(parsed.note)}` : '',
+      candidateLinks.length ? `Submitted links: ${candidateLinks.join(', ')}` : '',
+      linkInsights.length ? `Link insights: ${linkInsights.join(' | ')}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n')
+
+    const cvText =
+      (typeof parsed?.textContent === 'string' && parsed.textContent.trim())
+        ? parsed.textContent.trim()
+        : fallbackCvText
 
     // Get company for Groq scoring and for emails
     const { rows: companyRows } = await query(
@@ -80,6 +141,7 @@ export async function scoreApplication(req: Request, res: Response) {
         job: {
           title: job.job_title,
           description: job.job_description,
+          responsibilities: job.responsibilities || '',
           required_skills: Array.isArray(job.skills_required) ? job.skills_required : []
         },
         company: {
@@ -91,6 +153,13 @@ export async function scoreApplication(req: Request, res: Response) {
           settings: company.settings ?? null
         },
         cvText
+        ,
+        candidateEvidence: {
+          linkedin: parsed?.links?.linkedinUrl || null,
+          github: parsed?.links?.githubUrl || null,
+          other_links: candidateLinks,
+          link_insights: linkInsights,
+        }
       })
       score = scoringResult.score
       reasoning = scoringResult.reasoning

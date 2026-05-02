@@ -9,7 +9,7 @@ import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
 import { Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react'
 
-type UserRole = 'employer' | 'candidate' | null
+type UserRole = 'employer' | null
 
 const employerSignUpSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -23,6 +23,8 @@ const employerSignUpSchema = z.object({
   confirmPassword: z.string(),
   company_role: z.enum(['hr', 'hiring_manager']),
   organization_name: z.string().min(2, 'Organization name is required'),
+  company_email: z.string().email('Please enter a valid company email'),
+  hr_email: z.string().email('Please enter a valid HR email'),
   hiring_manager_email: z.string().email('Please enter a valid hiring manager email'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -76,7 +78,8 @@ export default function SignUpPage() {
         data.password,
         data.company_role,
         data.organization_name,
-        data.email,
+        data.company_email,
+        data.hr_email,
         data.hiring_manager_email
       )
       const { error, needsEmailVerification, email } = result
@@ -113,6 +116,7 @@ export default function SignUpPage() {
         'candidate', // role for candidates
         'Individual', // default organization for candidates
         data.email, // use personal email as company email
+        data.email, // use personal email as hr email
         data.email // use personal email as hiring manager email
       )
       const { error, needsEmailVerification, email } = result
@@ -138,6 +142,10 @@ export default function SignUpPage() {
   }
 
   const handleRoleSelect = (role: UserRole) => {
+    if (role !== 'employer') {
+      setError('Only HR and hiring manager accounts can be created here.')
+      return
+    }
     setUserRole(role)
     setStep(2)
     setError(null)
@@ -161,9 +169,6 @@ export default function SignUpPage() {
 
     if (userRole === 'employer') {
       const isValid = await employerForm.trigger(['name', 'email', 'password', 'confirmPassword'])
-      if (!isValid) return
-    } else if (userRole === 'candidate') {
-      const isValid = await candidateForm.trigger(['name', 'email', 'password', 'confirmPassword'])
       if (!isValid) return
     } else {
       return
@@ -225,7 +230,7 @@ export default function SignUpPage() {
               <div className="space-y-6">
                 <div className="text-center">
                   <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">What brings you here?</h2>
-                  <p className="text-gray-600 font-figtree text-sm">Choose your account type to get started</p>
+                  <p className="text-gray-600 font-figtree text-sm">This platform is for HR and hiring managers only</p>
                 </div>
 
                 <div className="space-y-4">
@@ -244,20 +249,6 @@ export default function SignUpPage() {
                     </div>
                   </button>
 
-                  <button
-                    onClick={() => handleRoleSelect('candidate')}
-                    className="w-full p-4 border-2 border-slate-200 rounded-xl hover:border-primary hover:bg-blue-50 transition-all text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <AlertCircle className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900 font-figtree">I'm a Job Seeker</h3>
-                        <p className="text-sm text-slate-600 font-figtree">Find and apply to jobs</p>
-                      </div>
-                    </div>
-                  </button>
                 </div>
               </div>
             )}
@@ -279,13 +270,13 @@ export default function SignUpPage() {
                     type="text"
                     id="name"
                     placeholder="Enter your full name"
-                    {...(userRole === 'employer' ? employerForm.register('name') : candidateForm.register('name'))}
+                    {...employerForm.register('name')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                     required
                   />
-                  {(userRole === 'employer' ? employerForm.formState.errors.name : candidateForm.formState.errors.name) && (
+                  {employerForm.formState.errors.name && (
                     <p className="text-sm text-red-500 mt-1 font-figtree">
-                      {userRole === 'employer' ? employerForm.formState.errors.name?.message : candidateForm.formState.errors.name?.message}
+                      {employerForm.formState.errors.name?.message}
                     </p>
                   )}
                 </div>
@@ -299,13 +290,13 @@ export default function SignUpPage() {
                     type="email"
                     id="email"
                     placeholder="Email Address"
-                    {...(userRole === 'employer' ? employerForm.register('email') : candidateForm.register('email'))}
+                    {...employerForm.register('email')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                     required
                   />
-                  {(userRole === 'employer' ? employerForm.formState.errors.email : candidateForm.formState.errors.email) && (
+                  {employerForm.formState.errors.email && (
                     <p className="text-sm text-red-500 mt-1 font-figtree">
-                      {userRole === 'employer' ? employerForm.formState.errors.email?.message : candidateForm.formState.errors.email?.message}
+                      {employerForm.formState.errors.email?.message}
                     </p>
                   )}
                 </div>
@@ -320,7 +311,7 @@ export default function SignUpPage() {
                       type={showPassword ? 'text' : 'password'}
                       id="password"
                       placeholder="Password"
-                      {...(userRole === 'employer' ? employerForm.register('password') : candidateForm.register('password'))}
+                      {...employerForm.register('password')}
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                       required
                     />
@@ -336,9 +327,9 @@ export default function SignUpPage() {
                       )}
                     </button>
                   </div>
-                  {(userRole === 'employer' ? employerForm.formState.errors.password : candidateForm.formState.errors.password) && (
+                  {employerForm.formState.errors.password && (
                     <p className="text-sm text-red-500 mt-1 font-figtree">
-                      {userRole === 'employer' ? employerForm.formState.errors.password?.message : candidateForm.formState.errors.password?.message}
+                      {employerForm.formState.errors.password?.message}
                     </p>
                   )}
                   <p className="text-xs text-gray-500 mt-1 font-figtree">
@@ -356,7 +347,7 @@ export default function SignUpPage() {
                       type={showConfirmPassword ? 'text' : 'password'}
                       id="confirmPassword"
                       placeholder="Confirm Password"
-                      {...(userRole === 'employer' ? employerForm.register('confirmPassword') : candidateForm.register('confirmPassword'))}
+                      {...employerForm.register('confirmPassword')}
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                       required
                     />
@@ -372,9 +363,9 @@ export default function SignUpPage() {
                       )}
                     </button>
                   </div>
-                  {(userRole === 'employer' ? employerForm.formState.errors.confirmPassword : candidateForm.formState.errors.confirmPassword) && (
+                  {employerForm.formState.errors.confirmPassword && (
                     <p className="text-sm text-red-500 mt-1 font-figtree">
-                      {userRole === 'employer' ? employerForm.formState.errors.confirmPassword?.message : candidateForm.formState.errors.confirmPassword?.message}
+                      {employerForm.formState.errors.confirmPassword?.message}
                     </p>
                   )}
                 </div>
@@ -448,6 +439,42 @@ export default function SignUpPage() {
                 )}
               </div>
 
+              {/* Company Email Field */}
+              <div className="mb-4">
+                <label htmlFor="company_email" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
+                  Company Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="company_email"
+                  placeholder="jobs@yourcompany.com"
+                  {...employerForm.register('company_email')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
+                  required
+                />
+                {employerForm.formState.errors.company_email && (
+                  <p className="text-sm text-red-500 mt-1 font-figtree">{employerForm.formState.errors.company_email.message}</p>
+                )}
+              </div>
+
+              {/* HR Email Field */}
+              <div className="mb-4">
+                <label htmlFor="hr_email" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
+                  HR Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="hr_email"
+                  placeholder="hr@yourcompany.com"
+                  {...employerForm.register('hr_email')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
+                  required
+                />
+                {employerForm.formState.errors.hr_email && (
+                  <p className="text-sm text-red-500 mt-1 font-figtree">{employerForm.formState.errors.hr_email.message}</p>
+                )}
+              </div>
+
               {/* Hiring Manager Email Field */}
               <div>
                 <label htmlFor="hiring_manager_email" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
@@ -479,7 +506,16 @@ export default function SignUpPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={nextStep}
+                    onClick={async () => {
+                      const ok = await employerForm.trigger([
+                        'company_role',
+                        'organization_name',
+                        'company_email',
+                        'hr_email',
+                        'hiring_manager_email',
+                      ])
+                      if (ok) nextStep()
+                    }}
                     className="flex-1 bg-primary text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors font-figtree"
                   >
                     Next
@@ -489,7 +525,7 @@ export default function SignUpPage() {
             )}
 
             {/* Step 3: Candidate Details (simpler) */}
-            {step === 3 && userRole === 'candidate' && (
+            {false && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">Almost Done!</h2>
@@ -550,9 +586,17 @@ export default function SignUpPage() {
                         <span className="text-sm text-gray-600 font-figtree">Organization:</span>
                         <span className="text-sm font-medium text-gray-900 font-figtree">{employerForm.watch('organization_name')}</span>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600 font-figtree">Company Email:</span>
+                        <span className="text-sm font-medium text-gray-900 font-figtree">{employerForm.watch('company_email')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600 font-figtree">HR Email:</span>
+                        <span className="text-sm font-medium text-gray-900 font-figtree">{employerForm.watch('hr_email')}</span>
+                      </div>
                     </>
                   )}
-                  {userRole === 'candidate' && (
+                  {false && (
                     <>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600 font-figtree">Name:</span>
@@ -587,7 +631,7 @@ export default function SignUpPage() {
                   </button>
                   <button
                     type="submit"
-                    onClick={userRole === 'employer' ? handleEmployerSubmit : handleCandidateSubmit}
+                    onClick={handleEmployerSubmit}
                     disabled={isLoading}
                     className="flex-1 bg-primary text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
                   >

@@ -195,20 +195,20 @@ export default function AdminJobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-neutral-400 hover:text-white"
+            className="text-slate-600 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Manage Job Postings</h1>
-            <p className="text-neutral-400">View and manage all job postings</p>
+            <p className="text-slate-600">View and manage all job postings</p>
           </div>
         </div>
 
@@ -248,7 +248,7 @@ export default function AdminJobsPage() {
           </Card>
         )}
 
-        <Card className="bg-neutral-900 border-neutral-800 mb-6">
+        <Card className="border-slate-200 bg-white mb-6">
           <CardContent className="p-4">
             <div className="flex gap-4">
               <div className="flex-1 relative">
@@ -260,7 +260,7 @@ export default function AdminJobsPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="pl-10 bg-neutral-800 border-neutral-700 text-white"
+                  className="border-slate-200 bg-white pl-10 text-slate-900"
                 />
               </div>
               <select
@@ -269,7 +269,7 @@ export default function AdminJobsPage() {
                   setStatusFilter(e.target.value)
                   setPage(1)
                 }}
-                className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-md text-white"
+                className="rounded-md border border-slate-200 bg-white px-4 py-2 text-slate-900"
               >
                 <option value="">All Status</option>
                 <option value="ACTIVE">Active</option>
@@ -286,7 +286,7 @@ export default function AdminJobsPage() {
           </div>
         ) : (
           <>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader>
                 <CardTitle>Job Postings ({total})</CardTitle>
               </CardHeader>
@@ -295,11 +295,11 @@ export default function AdminJobsPage() {
                   {jobs.map((job) => (
                     <div
                       key={job.job_posting_id}
-                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg hover:bg-neutral-700"
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100"
                     >
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Briefcase className="h-5 w-5 text-green-400" />
+                        <div className="mb-2 flex items-center gap-3">
+                          <Briefcase className="h-5 w-5 text-green-600" />
                           <span className="font-semibold text-lg">{job.job_title}</span>
                           <Badge 
                             variant={
@@ -312,7 +312,7 @@ export default function AdminJobsPage() {
                             {job.status?.toUpperCase() || 'ACTIVE'}
                           </Badge>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
+                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
                           <div>
                             <span className="text-gray-500">Company:</span> {job.company_name}
                           </div>

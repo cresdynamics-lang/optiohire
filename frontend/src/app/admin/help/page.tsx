@@ -139,7 +139,7 @@ export default function AdminHelpPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-6">
+    <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -161,7 +161,7 @@ export default function AdminHelpPage() {
         </div>
 
         {/* Quick Links */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Book className="w-5 h-5" />
@@ -175,7 +175,7 @@ export default function AdminHelpPage() {
                 const Icon = link.icon
                 return (
                   <Link key={link.title} href={link.link}>
-                    <Card className="hover:shadow-md transition-all cursor-pointer border border-neutral-800 hover:border-primary/40 bg-neutral-950">
+                    <Card className="cursor-pointer border border-slate-200 bg-white transition-all hover:border-primary/40 hover:shadow-md">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <Icon className={`w-6 h-6 ${link.color} flex-shrink-0 mt-1`} />
@@ -198,7 +198,7 @@ export default function AdminHelpPage() {
         </Card>
 
         {/* Admin Capabilities */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
@@ -256,7 +256,7 @@ export default function AdminHelpPage() {
         </Card>
 
         {/* Support */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <CardTitle>Need More Help?</CardTitle>
             <CardDescription>Contact support or view documentation</CardDescription>

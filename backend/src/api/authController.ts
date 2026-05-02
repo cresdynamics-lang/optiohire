@@ -16,37 +16,59 @@ export async function signup(req: Request, res: Response) {
   const client = await pool.connect()
   try {
     const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email } = req.body || {}
-    const isCandidateSignup = company_role === 'candidate'
+    const rawCompanyRole = String(company_role || '').toLowerCase().trim()
+    const isCandidateSignup =
+      rawCompanyRole === 'candidate' ||
+      rawCompanyRole === 'job_seeker' ||
+      rawCompanyRole === 'jobseeker' ||
+      rawCompanyRole === 'job seeker' ||
+      rawCompanyRole === 'job-seeker'
+    const isEmployerSignupAlias = rawCompanyRole === 'employer' || rawCompanyRole === 'company' || rawCompanyRole === 'recruiter'
+    const normalizedCompanyRole = isCandidateSignup
+      ? 'candidate'
+      : isEmployerSignupAlias
+        ? 'hr'
+        : rawCompanyRole
+    const normalizedEmail = String(email || '').toLowerCase().trim()
+    const normalizedCompanyEmail = String(company_email || '').toLowerCase().trim()
+    const normalizedHrEmail = String(hr_email || '').toLowerCase().trim()
+    const normalizedHiringManagerEmail = String(hiring_manager_email || '').toLowerCase().trim()
+    const resolvedHiringManagerEmail = normalizedHiringManagerEmail || normalizedHrEmail
     
     // STRICT: Validate all required fields - ALL MANDATORY
-    if (!name || !email || !password) {
+    if (!name || !normalizedEmail || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required' })
     }
-    if (!company_role) {
+    if (!normalizedCompanyRole) {
       return res.status(400).json({ error: 'Company role is required' })
     }
-    if (!isCandidateSignup && (!company_name || !company_email || !hr_email || !hiring_manager_email)) {
-      return res.status(400).json({ error: 'Company role, organization name, company email, HR email, and hiring manager email are all required' })
+    if (isCandidateSignup) {
+      return res.status(403).json({
+        error: 'Candidate account creation is disabled. This platform supports HR and hiring manager accounts only.',
+      })
+    }
+    if (!isCandidateSignup && (!company_name || !normalizedCompanyEmail || !normalizedHrEmail)) {
+      return res.status(400).json({ error: 'Company role, organization name, company email, and HR email are required' })
     }
     
     // Validate company_role
-    if (company_role !== 'hr' && company_role !== 'hiring_manager' && company_role !== 'candidate') {
-      return res.status(400).json({ error: 'Company role must be either "hr", "hiring_manager", or "candidate"' })
+    if (normalizedCompanyRole !== 'hr' && normalizedCompanyRole !== 'hiring_manager') {
+      return res.status(400).json({ error: 'Company role must be either "hr" or "hiring_manager"' })
     }
 
     // Validate email formats
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       return res.status(400).json({ error: 'All email addresses must be valid' })
     }
-    if (!isCandidateSignup && (!emailRegex.test(company_email) || !emailRegex.test(hr_email) || !emailRegex.test(hiring_manager_email))) {
+    if (!isCandidateSignup && (!emailRegex.test(normalizedCompanyEmail) || !emailRegex.test(normalizedHrEmail) || !emailRegex.test(resolvedHiringManagerEmail))) {
       return res.status(400).json({ error: 'All email addresses must be valid' })
     }
 
     // Check if email already exists
     const { rows: existing } = await query<{ user_id: string }>(
       `select user_id from users where email = $1`,
-      [email.toLowerCase()]
+      [normalizedEmail]
     )
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Account with this email already exists' })
@@ -83,7 +105,7 @@ export async function signup(req: Request, res: Response) {
       }
       columns.push('email')
       values.push(`$${paramIndex++}`)
-      params.push(email.toLowerCase())
+      params.push(normalizedEmail)
       columns.push('password_hash')
       values.push(`$${paramIndex++}`)
       params.push(hash)
@@ -93,7 +115,7 @@ export async function signup(req: Request, res: Response) {
         columns.push('company_role')
         values.push(`$${paramIndex++}`)
         // Persist candidate role so sign-in and /me can route job seekers to the correct dashboard.
-        params.push(company_role)
+        params.push(isCandidateSignup ? 'candidate' : normalizedCompanyRole)
       }
       columns.push('is_active')
       values.push('true')
@@ -132,11 +154,11 @@ export async function signup(req: Request, res: Response) {
         
         try {
           const queueCompanyName = isCandidateSignup ? 'Individual' : company_name
-          const queueCompanyEmail = isCandidateSignup ? email.toLowerCase() : company_email
+          const queueCompanyEmail = isCandidateSignup ? normalizedEmail : normalizedCompanyEmail
           await client.query(
             `INSERT INTO signup_queue (user_id, email, name, company_name, company_email, status)
              VALUES ($1, $2, $3, $4, $5, 'pending')`,
-            [userId, email.toLowerCase(), name, queueCompanyName, queueCompanyEmail]
+            [userId, normalizedEmail, name, queueCompanyName, queueCompanyEmail]
           )
         } catch (queueError) {
           console.error('Failed to add to signup queue:', queueError)
@@ -147,7 +169,7 @@ export async function signup(req: Request, res: Response) {
       let companyId: string | null = null
       if (!isCandidateSignup) {
         // Extract domain from company_email or hr_email
-        const companyDomain = company_email.split('@')[1] || hr_email.split('@')[1] || null
+        const companyDomain = normalizedCompanyEmail.split('@')[1] || normalizedHrEmail.split('@')[1] || null
 
         // Check if user_id column exists
         let hasUserIdColumn = false
@@ -163,20 +185,53 @@ export async function signup(req: Request, res: Response) {
           hasUserIdColumn = false
         }
 
-        // Create company for employer signup.
-        if (hasUserIdColumn) {
+        // Reuse existing company only when it is already owned by this user OR currently unowned.
+        // Never reassign a company from one user to another; that causes shared/crossed dashboards.
+        const { rows: existingCompanies } = await client.query<{ company_id: string }>(
+          `select company_id
+           from companies
+           where (company_email = $1
+              or hr_email = $2
+              or (company_domain is not null and company_domain = $3))
+             and ($4::boolean = false or user_id is null or user_id = $5)
+           limit 1`,
+          [normalizedCompanyEmail, normalizedHrEmail, companyDomain, hasUserIdColumn, userId]
+        )
+
+        if (existingCompanies.length > 0) {
+          companyId = existingCompanies[0].company_id
+          if (hasUserIdColumn) {
+            await client.query(
+              `update companies
+               set user_id = $1,
+                   company_name = $2,
+                   company_email = $3,
+                   hr_email = $4,
+                   hiring_manager_email = $5,
+                   company_domain = $6,
+                   updated_at = now()
+               where company_id = $7`,
+              [userId, company_name, normalizedCompanyEmail, normalizedHrEmail, resolvedHiringManagerEmail, companyDomain, companyId]
+            )
+          } else {
+            await client.query(
+              `update companies
+               set company_name = $1,
+                   company_email = $2,
+                   hr_email = $3,
+                   hiring_manager_email = $4,
+                   company_domain = $5,
+                   updated_at = now()
+               where company_id = $6`,
+              [company_name, normalizedCompanyEmail, normalizedHrEmail, resolvedHiringManagerEmail, companyDomain, companyId]
+            )
+          }
+        } else if (hasUserIdColumn) {
           const companyResult = await client.query<{ company_id: string }>(
             `insert into companies (user_id, company_name, hr_email, hiring_manager_email, company_domain, company_email)
              values ($1, $2, $3, $4, $5, $6)
              returning company_id`,
-            [
-              userId,
-              company_name,
-              hr_email,
-              hiring_manager_email,
-              companyDomain,
-              company_email
-            ]
+            [userId, company_name, normalizedHrEmail, resolvedHiringManagerEmail, companyDomain, normalizedCompanyEmail]
           )
           companyId = companyResult.rows[0].company_id
         } else {
@@ -184,13 +239,7 @@ export async function signup(req: Request, res: Response) {
             `insert into companies (company_name, hr_email, hiring_manager_email, company_domain, company_email)
              values ($1, $2, $3, $4, $5)
              returning company_id`,
-            [
-              company_name,
-              hr_email,
-              hiring_manager_email,
-              companyDomain,
-              company_email
-            ]
+            [company_name, normalizedHrEmail, resolvedHiringManagerEmail, companyDomain, normalizedCompanyEmail]
           )
           companyId = companyResult.rows[0].company_id
         }
@@ -208,9 +257,9 @@ export async function signup(req: Request, res: Response) {
       try {
         await query(
           `INSERT INTO email_verification_codes (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)`,
-          [userId, email.toLowerCase(), code, expiresAt]
+          [userId, normalizedEmail, code, expiresAt]
         )
-        const recipientEmail = email.toLowerCase()
+        const recipientEmail = normalizedEmail
         const recipientName = name?.trim() || 'User'
         const emailService = new EmailService()
         void emailService
@@ -226,7 +275,7 @@ export async function signup(req: Request, res: Response) {
         // User is already created; they can request "Resend code" on verify-email page
       }
 
-      const token = jwt.sign({ sub: userId, email: email.toLowerCase(), role: 'user' }, JWT_SECRET, { expiresIn: '7d' })
+      const token = jwt.sign({ sub: userId, email: normalizedEmail, role: 'user' }, JWT_SECRET, { expiresIn: '7d' })
       return res.status(201).json({
         token,
         needsEmailVerification: true,
@@ -234,16 +283,16 @@ export async function signup(req: Request, res: Response) {
           user_id: userId,
           id: userId, // Also include as 'id' for frontend compatibility
           name: name.trim(),
-          email: email.toLowerCase(),
+          email: normalizedEmail,
           role: 'user',
-          company_role: company_role,
+          company_role: isCandidateSignup ? 'candidate' : normalizedCompanyRole,
           created_at: rows[0].created_at,
           hasCompany: !isCandidateSignup,
           companyId,
           companyName: isCandidateSignup ? null : company_name,
-          companyEmail: isCandidateSignup ? null : company_email,
-          hrEmail: isCandidateSignup ? null : hr_email,
-          hiringManagerEmail: isCandidateSignup ? null : hiring_manager_email,
+          companyEmail: isCandidateSignup ? null : normalizedCompanyEmail,
+          hrEmail: isCandidateSignup ? null : normalizedHrEmail,
+          hiringManagerEmail: isCandidateSignup ? null : resolvedHiringManagerEmail,
           is_active: !requireApproval, // Set based on approval requirement
           requires_approval: requireApproval
         },
@@ -252,9 +301,9 @@ export async function signup(req: Request, res: Response) {
           : {
               company_id: companyId,
               company_name,
-              company_email,
-              hr_email,
-              hiring_manager_email
+              company_email: normalizedCompanyEmail,
+              hr_email: normalizedHrEmail,
+              hiring_manager_email: resolvedHiringManagerEmail
             }
       })
     } catch (err) {
@@ -264,6 +313,27 @@ export async function signup(req: Request, res: Response) {
     }
   } catch (err) {
     console.error('Signup error:', err)
+    const dbErr = err as any
+    if (dbErr?.code === '23505') {
+      const detail = String(dbErr?.detail || '').toLowerCase()
+      if (detail.includes('users_email') || detail.includes('(email)')) {
+        return res.status(409).json({ error: 'Account with this email already exists' })
+      }
+      if (detail.includes('companies_company_email') || detail.includes('company_email')) {
+        return res.status(409).json({ error: 'A company with this email already exists. Try signing in instead.' })
+      }
+      if (detail.includes('companies_hr_email') || detail.includes('hr_email')) {
+        return res.status(409).json({ error: 'An account already exists for this HR email. Try signing in instead.' })
+      }
+      return res.status(409).json({ error: 'This account already exists. Try signing in.' })
+    }
+    if (dbErr?.code === '23514') {
+      const constraint = String(dbErr?.constraint || '')
+      if (constraint.includes('users_company_role_check')) {
+        return res.status(400).json({ error: 'Invalid account role. Please select Employer or Job Seeker and try again.' })
+      }
+      return res.status(400).json({ error: dbErr?.detail || 'Validation failed. Please review your details and try again.' })
+    }
     const errorMessage = err instanceof Error ? err.message : 'Unknown error'
     // Check if it's a database connection error
     if (errorMessage.includes('password') || errorMessage.includes('authentication') || errorMessage.includes('ECONNREFUSED')) {

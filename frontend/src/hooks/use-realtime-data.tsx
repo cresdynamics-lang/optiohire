@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -20,22 +20,28 @@ export function useRealtimeData({
   filter
 }: UseRealtimeDataOptions) {
   const { user } = useAuth()
+  const onUpdateRef = useRef(onUpdate)
+  const onInsertRef = useRef(onInsert)
+  const onDeleteRef = useRef(onDelete)
+  onUpdateRef.current = onUpdate
+  onInsertRef.current = onInsert
+  onDeleteRef.current = onDelete
 
   const handleRealtimeUpdate = useCallback((payload: any) => {
     console.log(`Real-time update for ${table}:`, payload)
-    
+
     switch (payload.eventType) {
       case 'UPDATE':
-        onUpdate?.(payload)
+        onUpdateRef.current?.(payload)
         break
       case 'INSERT':
-        onInsert?.(payload)
+        onInsertRef.current?.(payload)
         break
       case 'DELETE':
-        onDelete?.(payload)
+        onDeleteRef.current?.(payload)
         break
     }
-  }, [table, onUpdate, onInsert, onDelete])
+  }, [table])
 
   useEffect(() => {
     if (!user) return
@@ -68,6 +74,8 @@ export function useRealtimeData({
 // Specific hook for applicants data
 export function useApplicantsRealtime(onDataChange?: () => void) {
   const { user } = useAuth()
+  const onDataChangeRef = useRef(onDataChange)
+  onDataChangeRef.current = onDataChange
 
   useEffect(() => {
     if (!user) return
@@ -83,7 +91,7 @@ export function useApplicantsRealtime(onDataChange?: () => void) {
         },
         (payload: any) => {
           console.log('Applicants real-time update:', payload)
-          onDataChange?.()
+          onDataChangeRef.current?.()
         }
       )
       .subscribe()
@@ -91,12 +99,14 @@ export function useApplicantsRealtime(onDataChange?: () => void) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [user, onDataChange])
+  }, [user])
 }
 
 // Specific hook for recruitment analytics
 export function useAnalyticsRealtime(onDataChange?: () => void) {
   const { user } = useAuth()
+  const onDataChangeRef = useRef(onDataChange)
+  onDataChangeRef.current = onDataChange
 
   useEffect(() => {
     if (!user) return
@@ -112,7 +122,7 @@ export function useAnalyticsRealtime(onDataChange?: () => void) {
         },
         (payload: any) => {
           console.log('Analytics real-time update:', payload)
-          onDataChange?.()
+          onDataChangeRef.current?.()
         }
       )
       .subscribe()
@@ -120,12 +130,14 @@ export function useAnalyticsRealtime(onDataChange?: () => void) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [user, onDataChange])
+  }, [user])
 }
 
 // Hook for job postings updates
 export function useJobsRealtime(onDataChange?: () => void) {
   const { user } = useAuth()
+  const onDataChangeRef = useRef(onDataChange)
+  onDataChangeRef.current = onDataChange
 
   useEffect(() => {
     if (!user) return
@@ -141,7 +153,7 @@ export function useJobsRealtime(onDataChange?: () => void) {
         },
         (payload: any) => {
           console.log('Jobs real-time update:', payload)
-          onDataChange?.()
+          onDataChangeRef.current?.()
         }
       )
       .subscribe()
@@ -149,5 +161,5 @@ export function useJobsRealtime(onDataChange?: () => void) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [user, onDataChange])
+  }, [user])
 }

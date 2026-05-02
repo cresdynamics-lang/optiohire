@@ -30,7 +30,7 @@ export function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <Sidebar onSectionChange={setActiveSection} />
       <main className="flex-1 overflow-auto">
         <div className="p-8">
           {renderSection()}

@@ -5,6 +5,7 @@ import path from 'path'
 import { cleanJobTitle } from '../utils/jobTitle.js'
 import { SendGridService } from './sendGridService.js'
 import { ResendService } from './resendService.js'
+import { APPLICATION_INBOX_EMAIL, getRecommendedApplicationSubject } from '../config/applicationInbox.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
 const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
@@ -468,7 +469,7 @@ Resume: ${data.resumeUrl || 'No attachment found'}
   }) {
     const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
     const companyName = data.companyName || '[Company Name]'
-    const recommendedSubject = `${cleanedJobTitle} at ${companyName}`
+    const recommendedSubject = getRecommendedApplicationSubject(cleanedJobTitle, companyName)
 
     const html = `
 <!DOCTYPE html>
@@ -586,7 +587,7 @@ HireBit System
         <p><strong>What to do next:</strong> You have two options to send candidate applications to OptioHire for AI screening and ranking:</p>
         <ol style="margin-top: 12px; padding-left: 20px;">
           <li><strong>Option 1:</strong> Set up email forwarding rules (recommended for high volume)</li>
-          <li><strong>Option 2:</strong> Have candidates email directly to <strong>applicationsoptiohire@gmail.com</strong></li>
+          <li><strong>Option 2:</strong> Have candidates email directly to <strong>${APPLICATION_INBOX_EMAIL}</strong></li>
         </ol>
       </div>
       <p><strong>Step 1 – Subject line for email applications</strong></p>
@@ -597,17 +598,17 @@ HireBit System
       <ol>
         <li>Open Gmail logged in as the inbox where candidates will send applications (e.g. your HR email).</li>
         <li>Click the gear icon → <strong>See all settings</strong> → <strong>Forwarding and POP/IMAP</strong>.</li>
-        <li>Under “Forwarding”, click <strong>Add a forwarding address</strong> and enter <strong>applicationsoptiohire@gmail.com</strong>.</li>
+        <li>Under “Forwarding”, click <strong>Add a forwarding address</strong> and enter <strong>${APPLICATION_INBOX_EMAIL}</strong>.</li>
         <li>Confirm the forwarding address using the verification link Google sends.</li>
-        <li>Add a filter (Settings → <strong>Filters and blocked addresses</strong>) with <strong>Subject</strong> contains <code>${recommendedSubject}</code> and choose “Forward” to <strong>applicationsoptiohire@gmail.com</strong>.</li>
+        <li>Add a filter (Settings → <strong>Filters and blocked addresses</strong>) with <strong>Subject</strong> contains <code>${recommendedSubject}</code> and choose “Forward” to <strong>${APPLICATION_INBOX_EMAIL}</strong>.</li>
       </ol>
       <p><strong>Other email providers (Outlook, work email, etc.)</strong></p>
-      <p>Create a rule/filter that forwards emails where the <strong>Subject</strong> contains <code>${recommendedSubject}</code> to <strong>applicationsoptiohire@gmail.com</strong>.</p>
+      <p>Create a rule/filter that forwards emails where the <strong>Subject</strong> contains <code>${recommendedSubject}</code> to <strong>${APPLICATION_INBOX_EMAIL}</strong>.</p>
       
       <p><strong>Option 2: Direct email to OptioHire</strong></p>
       <p>Alternatively, you can have candidates email their applications directly to:</p>
       <p style="margin-top: 8px; padding: 10px; background: #fff; border-radius: 6px; border: 1px dashed #ccc; font-weight: bold;">
-        <strong>applicationsoptiohire@gmail.com</strong>
+        <strong>${APPLICATION_INBOX_EMAIL}</strong>
       </p>
       <p>Make sure candidates use the subject line <code>${recommendedSubject}</code> so we can route their application to the correct job.</p>
       
@@ -632,7 +633,7 @@ Application deadline: ${deadlineText}
 WHAT TO DO NEXT: You have two options to send candidate applications to OptioHire for AI screening and ranking:
 
   Option 1: Set up email forwarding rules (recommended for high volume)
-  Option 2: Have candidates email directly to applicationsoptiohire@gmail.com
+  Option 2: Have candidates email directly to ${APPLICATION_INBOX_EMAIL}
 
 Step 1 – Subject line for email applications:
 
@@ -644,15 +645,15 @@ OPTION 1: Set up email forwarding (Gmail example):
 Forward application emails from your inbox to OptioHire:
   1) Open Gmail logged in as the inbox where candidates will send applications (e.g. your HR email).
   2) Go to Settings → See all settings → Forwarding and POP/IMAP.
-  3) Under “Forwarding”, click “Add a forwarding address” and enter "applicationsoptiohire@gmail.com".
+  3) Under “Forwarding”, click “Add a forwarding address” and enter "${APPLICATION_INBOX_EMAIL}".
   4) Confirm the forwarding address using the verification link Google sends.
-  5) Add a filter where Subject contains "${recommendedSubject}" and choose to forward those emails to "applicationsoptiohire@gmail.com".
+  5) Add a filter where Subject contains "${recommendedSubject}" and choose to forward those emails to "${APPLICATION_INBOX_EMAIL}".
 
 Other email providers (Outlook, work email, etc.):
-Create a rule/filter that forwards emails where the Subject contains "${recommendedSubject}" to "applicationsoptiohire@gmail.com".
+Create a rule/filter that forwards emails where the Subject contains "${recommendedSubject}" to "${APPLICATION_INBOX_EMAIL}".
 
 OPTION 2: Direct email to OptioHire:
-Alternatively, you can have candidates email their applications directly to: applicationsoptiohire@gmail.com
+Alternatively, you can have candidates email their applications directly to: ${APPLICATION_INBOX_EMAIL}
 Make sure candidates use the subject line "${recommendedSubject}" so we can route their application to the correct job.
 
 Need help? If you need assistance setting up forwarding rules or have questions about either option, contact developer@optiohire.com and we'll guide you through it.

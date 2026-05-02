@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, Video, ExternalLink, Loader2, MapPin, User } from 'lucide-react'
+import { Calendar, Clock, Video, ExternalLink, Loader2, User } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { createTimeoutSignal } from '@/lib/utils'
 import { JobPosting } from '@/types'
@@ -97,15 +97,33 @@ export function InterviewsSection() {
 
       setInterviews(interviewsData)
     } catch (err) {
-      console.error('Error loading interviews:', err)
-      setError('Failed to load interview data')
-      setInterviews([])
+      const errName = err instanceof Error ? err.name : ''
+      const errMessage = err instanceof Error ? err.message : ''
+      const isTimeoutLike =
+        errName === 'AbortError' ||
+        errName === 'TimeoutError' ||
+        /abort|timeout/i.test(errMessage)
+
+      if (!options?.silent) {
+        if (isTimeoutLike) {
+          console.warn('Interviews request timed out, keeping existing data')
+          setError('Interview data is taking longer than expected. Please retry.')
+        } else {
+          console.error('Error loading interviews:', err)
+          setError('Failed to load interview data')
+        }
+      }
+
+      // Keep prior state during silent refresh to avoid UI flicker/noise.
+      if (!options?.silent && interviews.length === 0) {
+        setInterviews([])
+      }
     } finally {
       if (!options?.silent) {
         setIsLoading(false)
       }
     }
-  }, [user])
+  }, [user, interviews.length])
 
   useEffect(() => {
     loadInterviews()
@@ -137,11 +155,11 @@ export function InterviewsSection() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900/90"
+        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8 dark:border-gray-800 dark:bg-gray-900"
       >
-        <div className="pointer-events-none absolute right-0 top-0 h-36 w-44 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.11),transparent_68%)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent dark:from-slate-800/50" aria-hidden />
         <div className="relative">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-400">Scheduling</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">Scheduling</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
             Interviews
           </h1>
@@ -183,28 +201,28 @@ export function InterviewsSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_22px_70px_-48px_rgba(15,23,42,0.38)] dark:border-gray-800 dark:bg-gray-900/80">
+          <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_22px_70px_-48px_rgba(15,23,42,0.38)] dark:border-gray-800 dark:bg-gray-900">
             <CardHeader>
               <CardTitle className="text-xl font-figtree font-semibold flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <Calendar className="h-5 w-5 text-slate-700 dark:text-slate-200" />
                 Interview Summary
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 sm:gap-6">
                 <div className="text-center">
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 shadow-lg shadow-blue-600/25 dark:bg-blue-600">
-                    <Calendar className="w-8 h-8 text-white" />
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 shadow-lg shadow-slate-500/20 dark:bg-slate-100">
+                    <Calendar className="w-8 h-8 text-white dark:text-slate-900" />
                   </div>
                   <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Total Interviews</h3>
-                  <p className="font-figtree text-xl font-bold text-blue-700 dark:text-blue-300">{interviews.length}</p>
+                  <p className="font-figtree text-xl font-bold text-slate-900 dark:text-slate-100">{interviews.length}</p>
                 </div>
                 <div className="text-center">
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 shadow-lg shadow-blue-600/25 dark:bg-blue-600">
-                    <Clock className="w-8 h-8 text-white" />
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 shadow-lg shadow-slate-500/20 dark:bg-slate-100">
+                    <Clock className="w-8 h-8 text-white dark:text-slate-900" />
                   </div>
                   <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Upcoming</h3>
-                  <p className="font-figtree text-xl font-bold text-blue-700 dark:text-blue-300">{upcomingInterviews.length}</p>
+                  <p className="font-figtree text-xl font-bold text-slate-900 dark:text-slate-100">{upcomingInterviews.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -219,10 +237,10 @@ export function InterviewsSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_22px_70px_-48px_rgba(15,23,42,0.38)] dark:border-gray-800 dark:bg-gray-900/80">
+          <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_22px_70px_-48px_rgba(15,23,42,0.38)] dark:border-gray-800 dark:bg-gray-900">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-                <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <Calendar className="h-5 w-5 text-slate-700 dark:text-slate-200" />
                 Upcoming interviews
               </CardTitle>
               <CardDescription>
@@ -250,7 +268,7 @@ export function InterviewsSection() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.1 }}
                       >
-                        <Card className="hover:shadow-lg transition-all duration-300">
+                        <Card className="border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900">
                           <CardContent className="p-4 sm:p-6">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                               <div className="flex-1">
@@ -285,7 +303,7 @@ export function InterviewsSection() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => window.open(interview.meeting_link!, '_blank')}
-                                    className="min-h-[44px] w-full touch-manipulation rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/25 hover:bg-blue-700 sm:min-h-0 sm:w-auto"
+                                    className="min-h-[44px] w-full touch-manipulation rounded-xl bg-slate-900 text-white hover:bg-slate-800 sm:min-h-0 sm:w-auto dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                                   >
                                     <Video className="w-4 h-4 mr-1" />
                                     Join Meeting
@@ -297,7 +315,7 @@ export function InterviewsSection() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => interview.google_calendar_link && window.open(interview.google_calendar_link, '_blank')}
-                                    className="min-h-[44px] w-full touch-manipulation rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/25 hover:bg-blue-700 sm:min-h-0 sm:w-auto"
+                                    className="min-h-[44px] w-full touch-manipulation rounded-xl bg-slate-100 text-slate-900 hover:bg-slate-200 sm:min-h-0 sm:w-auto dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                                   >
                                     <ExternalLink className="w-4 h-4 mr-1" />
                                     Calendar

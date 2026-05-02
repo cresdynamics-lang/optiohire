@@ -4,9 +4,9 @@ import VideoSection from '@/components/ui/video-section'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 
 export const metadata: Metadata = {
-  title: 'How OptioHire Works | Simple, Fair Hiring Process',
-  description: 'See how OptioHire, built by Cres Dynamics in Nairobi, helps companies hire 3x faster through Smart Screening, Fair Evaluation, and Confident Decisions.',
-  keywords: 'skills-first hiring, role readiness, cultural fit, smart screening, fair evaluation, confident hiring decisions'
+  title: 'From 300 Applications to Top 5 | OptioHire',
+  description: 'Understand how OptioHire works: create a role, receive applications, scan candidates fairly, send automated shortlist/rejection updates, and schedule interviews.',
+  keywords: 'how optiohire works, HR hiring workflow, candidate screening, shortlist automation, interview scheduling'
 }
 
 export default function HowItWorksPage() {
@@ -16,22 +16,58 @@ export default function HowItWorksPage() {
       <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-            How OptioHire Works
+            How OptioHire Works for HR Teams
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            A simple, transparent process that helps teams hire 3x faster with objective candidate evaluation and data-driven final decisions.
+            OptioHire is built for HR managers and hiring managers. You create a job, receive applications in one
+            pipeline, get fair AI-assisted screening, and move shortlisted candidates to interviews faster.
           </p>
+          <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Every step is transparent and traceable, so your team can explain hiring decisions with confidence and
+            maintain a professional candidate experience.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <a href="#video" className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black">
+              See It in Action
+            </a>
+            <a href="/auth/signup" className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+              Start Free Trial
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Bar */}
+      <section className="px-4 pb-8 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-5xl gap-4 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+            <p className="text-sm font-medium text-slate-500">Shortlisting speed</p>
+            <p className="mt-1 text-lg font-semibold text-slate-900">3x faster shortlisting</p>
+            <p className="mt-1 text-sm text-slate-600">Even for high-volume roles</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+            <p className="text-sm font-medium text-slate-500">Top-candidate coverage</p>
+            <p className="mt-1 text-lg font-semibold text-slate-900">95% found in first pass</p>
+            <p className="mt-1 text-sm text-slate-600">Without manual CV marathons</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+            <p className="text-sm font-medium text-slate-500">Process quality</p>
+            <p className="mt-1 text-lg font-semibold text-slate-900">Zero spreadsheet chaos</p>
+            <p className="mt-1 text-sm text-slate-600">No WhatsApp threads or email chains</p>
+          </div>
         </div>
       </section>
 
       {/* See It in Action Video Section */}
-      <ErrorBoundary fallback={null}>
-        <VideoSection
-          useHowdyGo={true}
-          title="See It in Action"
-          description="Watch how our AI-powered platform transforms your hiring process"
-        />
-      </ErrorBoundary>
+      <div id="video">
+        <ErrorBoundary fallback={null}>
+          <VideoSection
+            useHowdyGo={false}
+            title="See It in Action"
+            description="Watch how OptioHire handles real hiring workflows from application intake to interview scheduling."
+          />
+        </ErrorBoundary>
+      </div>
 
       {/* 3-Step Process */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
@@ -41,7 +77,8 @@ export default function HowItWorksPage() {
               The OptioHire Process
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Three clear steps that transform how teams evaluate and select candidates.
+              A practical, end-to-end workflow for real recruiting teams: post roles, process applications, screen
+              fairly, and schedule interviews from one place.
             </p>
           </div>
 
@@ -52,25 +89,25 @@ export default function HowItWorksPage() {
                 <span className="text-2xl font-bold text-white">1</span>
               </div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                Smart Screening
+                Create Job + Collect Applications
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Our AI analyzes resumes and applications to identify candidates who demonstrate
-                the specific skills and experience your role requires. No more sifting through
-                hundreds of unqualified applicants.
+                HR creates a job listing with role requirements and company details. Candidates apply through the
+                configured channel (including email workflow), and all applications are captured into your OptioHire
+                pipeline for the right job.
               </p>
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Skills-based matching</span>
+                  <span>Role requirements captured clearly</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Experience validation</span>
+                  <span>Applications routed to the correct job</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Automated qualification</span>
+                  <span>Centralized candidate pipeline</span>
                 </div>
               </div>
             </div>
@@ -81,24 +118,25 @@ export default function HowItWorksPage() {
                 <span className="text-2xl font-bold text-white">2</span>
               </div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                Fair Evaluation
+                AI Screening + Fair Ranking
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Each candidate receives an objective assessment based on role requirements,
-                reducing unconscious bias and ensuring fair consideration for all qualified applicants.
+                The AI analyzes each application against your job requirements and produces a transparent score with
+                reasoning. Candidates are categorized (shortlist, flagged, or reject) using the same criteria for
+                consistency and fairness.
               </p>
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Bias-aware scoring</span>
+                  <span>Requirement-based scoring</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Transparent criteria</span>
+                  <span>Reasoning visible to HR</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Consistent evaluation</span>
+                  <span>Consistent evaluation across all candidates</span>
                 </div>
               </div>
             </div>
@@ -109,24 +147,25 @@ export default function HowItWorksPage() {
                 <span className="text-2xl font-bold text-white">3</span>
               </div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                Confident Decisions
+                Candidate Updates + Interview Scheduling
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Teams receive clear recommendations with detailed insights, making it easy to
-                identify top candidates and move forward with confidence in their hiring choices.
+                OptioHire sends candidate outcome emails automatically (shortlisted or not selected). HR can then
+                schedule interviews for shortlisted candidates directly from the dashboard and send interview invites
+                with the meeting link.
               </p>
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Data-driven insights</span>
+                  <span>Automated shortlist/rejection communication</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Clear recommendations</span>
+                  <span>One-click interview scheduling from dashboard</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-blue-600" />
-                  <span>Confidence in choices</span>
+                  <span>Full decision trail for internal review</span>
                 </div>
               </div>
             </div>
@@ -142,7 +181,7 @@ export default function HowItWorksPage() {
               What Teams See
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              A clean, intuitive dashboard that brings clarity to the hiring process.
+              A clean workspace for HR and hiring managers to track every candidate from first application to final interview.
             </p>
           </div>
 
@@ -153,14 +192,14 @@ export default function HowItWorksPage() {
                 <h3 className="text-xl font-semibold text-gray-900">Candidate Overview</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                See all qualified candidates at a glance with clear scoring and key highlights.
-                No more digging through resumes to find the right person.
+                View all candidates per job with status, score, and reasoning in one list. Quickly identify who to
+                review, who to shortlist, and who is not a fit.
               </p>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>• Match percentage for each candidate</li>
                 <li>• Key skills and experience highlights</li>
                 <li>• Red flags and concerns (if any)</li>
-                <li>• Comparison tools for side-by-side evaluation</li>
+                <li>• Clear shortlist / flagged / reject status</li>
               </ul>
             </div>
 
@@ -170,14 +209,14 @@ export default function HowItWorksPage() {
                 <h3 className="text-xl font-semibold text-gray-900">Decision Support</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                Get actionable recommendations based on data, not just gut feelings.
-                Make confident hiring decisions with clear rationale.
+                Move faster with structured recommendations and direct actions. Schedule interviews from shortlisted
+                candidates and keep communication professional and timely.
               </p>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Top candidate recommendations</li>
+                <li>• Ranked candidate recommendations</li>
                 <li>• Detailed scoring breakdown</li>
-                <li>• Interview question suggestions</li>
-                <li>• Risk assessment for each candidate</li>
+                <li>• Interview scheduling actions</li>
+                <li>• Outcome communication history</li>
               </ul>
             </div>
           </div>
@@ -209,8 +248,8 @@ export default function HowItWorksPage() {
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Clear Communication</h3>
               <p className="text-gray-600 text-sm">
-                Candidates receive timely updates about their application status
-                and constructive feedback when appropriate.
+                Candidates receive clear outcome communication (shortlisted or not selected) instead of waiting
+                without feedback.
               </p>
             </div>
 
@@ -269,8 +308,8 @@ export default function HowItWorksPage() {
             Ready to Experience Better Hiring?
           </h2>
           <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
-            See how OptioHire makes hiring simpler, fairer, and more successful
-            with skills-first evaluation and transparent AI recommendations.
+            Replace scattered hiring steps with one professional workflow your HR team can trust — from job post to
+            interview scheduling.
           </p>
           <button className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-blue-700">
             Request a Demo

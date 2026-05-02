@@ -255,7 +255,7 @@ export default function EmailManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Error Display */}
         {error && (
@@ -306,7 +306,7 @@ export default function EmailManagementPage() {
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
@@ -314,7 +314,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Sent</p>
@@ -322,7 +322,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Delivered</p>
@@ -330,7 +330,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Failed</p>
@@ -338,7 +338,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Bounced</p>
@@ -346,7 +346,7 @@ export default function EmailManagementPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
@@ -358,7 +358,7 @@ export default function EmailManagementPage() {
         )}
 
         {/* Dead-letter Queue */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <CardTitle className="text-white">Dead-letter queue</CardTitle>
             <CardDescription>
@@ -377,7 +377,7 @@ export default function EmailManagementPage() {
               deadLetters.map((email) => (
                 <div
                   key={`dead-${email.email_id}`}
-                  className="rounded-md border border-neutral-800 bg-neutral-950 p-3"
+                  className="rounded-md border border-slate-200 bg-slate-50 p-3"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
@@ -403,7 +403,7 @@ export default function EmailManagementPage() {
         </Card>
 
         {/* Filters */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div className="relative">
@@ -421,7 +421,7 @@ export default function EmailManagementPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-neutral-700 bg-neutral-900 text-neutral-200 rounded"
+                  className="px-3 py-2 rounded border border-slate-200 bg-white text-slate-900"
                 >
                   <option value="all">All Status</option>
                   <option value="sent">Sent</option>
@@ -433,7 +433,7 @@ export default function EmailManagementPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-3 py-2 border border-neutral-700 bg-neutral-900 text-neutral-200 rounded"
+                  className="px-3 py-2 rounded border border-slate-200 bg-white text-slate-900"
                 >
                   <option value="all">All Types</option>
                   <option value="password_reset">Password Reset</option>
@@ -450,7 +450,7 @@ export default function EmailManagementPage() {
         {/* Emails List */}
         <div className="space-y-4">
           {emails.map((email) => (
-            <Card key={email.email_id} className="bg-neutral-900 border-neutral-800">
+            <Card key={email.email_id} className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -512,7 +512,7 @@ export default function EmailManagementPage() {
         </div>
 
         {emails.length === 0 && (
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardContent className="pt-6">
               <div className="text-center py-12">
                 <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />

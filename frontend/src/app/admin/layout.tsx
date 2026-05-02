@@ -1,15 +1,15 @@
 'use client'
 
-import { Suspense, Component, ReactNode } from 'react'
+import { Suspense, Component, ReactNode, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, RefreshCw } from 'lucide-react'
+import { AlertCircle, Menu, RefreshCw, X } from 'lucide-react'
 
 function AdminSidebarFallback() {
   return (
     <div
-      className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white"
+      className="fixed inset-y-0 left-0 z-50 flex h-full w-64 -translate-x-full flex-col border-r border-slate-200 bg-white"
       aria-hidden
     >
       <div className="h-16 border-b border-slate-200" />
@@ -39,13 +39,11 @@ class AdminErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-          <div className="max-w-md w-full rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertCircle className="w-6 h-6 text-red-500" />
-              <h2 className="text-xl font-semibold text-slate-900">
-                Something went wrong
-              </h2>
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <AlertCircle className="h-6 w-6 text-red-500" />
+              <h2 className="text-xl font-semibold text-slate-900">Something went wrong</h2>
             </div>
             <p className="mb-4 text-slate-600">
               {this.state.error?.message || 'An unexpected error occurred'}
@@ -60,7 +58,7 @@ class AdminErrorBoundary extends Component<
                 }}
                 className="flex-1"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Reload Page
               </Button>
             </div>
@@ -80,6 +78,27 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname()
   const isLoginPage = pathname === '/admin/login'
+  const [navOpen, setNavOpen] = useState(false)
+
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setNavOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navOpen])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (navOpen) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prev
+      }
+    }
+  }, [navOpen])
 
   if (isLoginPage) {
     return <>{children}</>
@@ -87,21 +106,42 @@ export default function AdminLayout({
 
   return (
     <AdminErrorBoundary>
-      <div className="dark flex min-h-screen bg-slate-50 text-slate-900">
+      <div className="relative min-h-screen bg-slate-50 text-slate-900">
+        {/* Menu opens the admin nav drawer; sidebar stays hidden until clicked */}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="fixed top-4 left-4 z-[60] h-11 w-11 shrink-0 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+          onClick={() => setNavOpen((o) => !o)}
+          aria-expanded={navOpen}
+          aria-label={navOpen ? 'Close admin menu' : 'Open admin menu'}
+        >
+          {navOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
+
+        {navOpen ? (
+          <button
+            type="button"
+            className="fixed inset-0 z-40 cursor-default bg-slate-900/40"
+            aria-label="Close menu"
+            onClick={() => setNavOpen(false)}
+          />
+        ) : null}
+
         <Suspense fallback={<AdminSidebarFallback />}>
           <AdminErrorBoundary
             fallback={
-              <div className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-4">
-                <p className="text-sm text-slate-500">
-                  Sidebar unavailable. Please refresh.
-                </p>
+              <div className="fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 bg-white p-4">
+                <p className="text-sm text-slate-500">Sidebar unavailable. Please refresh.</p>
               </div>
             }
           >
-            <AdminSidebar />
+            <AdminSidebar open={navOpen} onOpenChange={setNavOpen} />
           </AdminErrorBoundary>
         </Suspense>
-        <main className="flex-1 overflow-auto bg-slate-50">
+
+        <main className="min-h-screen overflow-auto bg-slate-50">
           <AdminErrorBoundary>
             {children}
           </AdminErrorBoundary>

@@ -4,10 +4,10 @@ import { Loader2 } from 'lucide-react'
 
 export default function AdminLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-950">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50">
       <div className="text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD] mx-auto mb-4" />
-        <p className="text-neutral-400">Loading admin section...</p>
+        <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-slate-600" />
+        <p className="text-slate-600">Loading admin section...</p>
       </div>
     </div>
   )

@@ -264,7 +264,7 @@ export default function AdminReportsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-950">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
       </div>
     )
@@ -295,9 +295,9 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -336,7 +336,7 @@ export default function AdminReportsPage() {
                     type="checkbox"
                     checked={autoRefreshEnabled}
                     onChange={(e) => setAutoRefreshEnabled(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-600 bg-neutral-900"
+                    className="h-4 w-4 rounded border-slate-300 bg-white"
                   />
                   Auto-refresh
                 </label>
@@ -344,7 +344,7 @@ export default function AdminReportsPage() {
                   value={autoRefreshSeconds}
                   onChange={(e) => setAutoRefreshSeconds(Number(e.target.value))}
                   disabled={!autoRefreshEnabled}
-                  className="px-2 py-1 bg-neutral-950 border border-neutral-700 rounded-lg text-xs disabled:opacity-50"
+                  className="px-2 py-1 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 disabled:opacity-50"
                 >
                   <option value={30}>30s</option>
                   <option value={45}>45s</option>
@@ -373,7 +373,7 @@ export default function AdminReportsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search candidate, email, job, company"
-                className="w-full px-3 py-2 bg-neutral-950 border border-neutral-700 rounded-lg text-sm"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
               />
               <select
                 value={companyIdFilter}
@@ -382,7 +382,7 @@ export default function AdminReportsPage() {
                   setCompanyIdFilter(e.target.value)
                   setJobIdFilter('')
                 }}
-                className="w-full px-3 py-2 bg-neutral-950 border border-neutral-700 rounded-lg text-sm"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
               >
                 <option value="">All companies</option>
                 {companyOptions.map((company) => (
@@ -397,7 +397,7 @@ export default function AdminReportsPage() {
                   setPage(1)
                   setJobIdFilter(e.target.value)
                 }}
-                className="w-full px-3 py-2 bg-neutral-950 border border-neutral-700 rounded-lg text-sm"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
               >
                 <option value="">All jobs</option>
                 {jobOptions.map((job) => (
@@ -413,12 +413,12 @@ export default function AdminReportsPage() {
                   setJobIdFilter(e.target.value)
                 }}
                 placeholder="Or paste exact job_id"
-                className="w-full px-3 py-2 bg-neutral-950 border border-neutral-700 rounded-lg text-sm"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
               />
               <select
                 value={riskFilter}
                 onChange={(e) => setRiskFilter(e.target.value as 'all' | 'risky')}
-                className="px-3 py-2 bg-neutral-950 border border-neutral-700 rounded-lg text-sm"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
               >
                 <option value="all">All records</option>
                 <option value="risky">Risky only</option>
@@ -429,7 +429,7 @@ export default function AdminReportsPage() {
                   setPage(1)
                   setLimit(Number(e.target.value))
                 }}
-                className="px-3 py-2 bg-neutral-950 border border-neutral-700 rounded-lg text-sm"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
               >
                 <option value={20}>20 / page</option>
                 <option value={50}>50 / page</option>
@@ -457,9 +457,9 @@ export default function AdminReportsPage() {
               </div>
             )}
 
-            <div className="overflow-x-auto rounded-xl border border-neutral-800">
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
               <table className="min-w-full text-sm">
-                <thead className="bg-neutral-900/80">
+                <thead className="bg-slate-100">
                   <tr className="text-left text-neutral-400">
                     <th className="px-3 py-2">Candidate</th>
                     <th className="px-3 py-2">Job / Company</th>
@@ -475,13 +475,13 @@ export default function AdminReportsPage() {
                       row.fairnessFlags.reasoning_mentions_sensitive_attribute ||
                       row.fairnessFlags.missing_reasoning
                     return (
-                      <tr key={row.application_id} className="border-t border-neutral-800 align-top">
+                      <tr key={row.application_id} className="border-t border-slate-200 align-top">
                         <td className="px-3 py-2">
                           <div className="font-medium text-neutral-100">{row.candidate.name || 'Unknown'}</div>
                           <div className="text-xs text-neutral-400">{row.candidate.email}</div>
                         </td>
                         <td className="px-3 py-2">
-                          <div className="text-neutral-200">{row.job.title || 'Untitled Job'}</div>
+                          <div className="text-slate-800">{row.job.title || 'Untitled Job'}</div>
                           <div className="text-xs text-neutral-400">{row.job.company_name || 'Unknown company'}</div>
                         </td>
                         <td className="px-3 py-2">

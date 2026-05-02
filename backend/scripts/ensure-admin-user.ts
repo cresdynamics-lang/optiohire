@@ -32,7 +32,7 @@ async function main() {
 
     if (existing.length > 0) {
       await client.query(
-        `UPDATE users SET role = 'admin', is_active = true, password_hash = $1, name = $2 WHERE email = $3`,
+        `UPDATE users SET role = 'admin', company_role = NULL, is_active = true, password_hash = $1, name = $2, updated_at = now() WHERE email = $3`,
         [hash, ADMIN_NAME, ADMIN_EMAIL.toLowerCase()]
       )
       console.log('Admin user updated: admin@optiohire.com (password set to OptioHire@Admin)')

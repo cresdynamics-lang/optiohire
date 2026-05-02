@@ -142,9 +142,9 @@ export default function UserDetailsPage() {
 
   if (error || !userDetails) {
     return (
-      <div className="min-h-screen bg-neutral-950 p-8">
+      <div className="min-h-screen bg-slate-50 p-8">
         <div className="max-w-4xl mx-auto">
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-red-300">
                 <AlertTriangle className="w-5 h-5" />
@@ -162,7 +162,7 @@ export default function UserDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -193,7 +193,7 @@ export default function UserDetailsPage() {
         </div>
 
         {/* User Info Card */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

@@ -310,7 +310,7 @@ export default function SignupQueuePage() {
   const rejectedSignups = signups.filter(s => s.status === 'rejected')
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -345,7 +345,7 @@ export default function SignupQueuePage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -356,7 +356,7 @@ export default function SignupQueuePage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -367,7 +367,7 @@ export default function SignupQueuePage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -381,7 +381,7 @@ export default function SignupQueuePage() {
         </div>
 
         {/* Filters */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Button
@@ -414,7 +414,7 @@ export default function SignupQueuePage() {
 
         {/* Bulk Actions */}
         {statusFilter === 'pending' && pendingSignups.length > 0 && (
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -478,7 +478,7 @@ export default function SignupQueuePage() {
         {/* Signups List */}
         <div className="space-y-4">
           {signups.map((signup) => (
-            <Card key={signup.queue_id} className="bg-neutral-900 border-neutral-800">
+            <Card key={signup.queue_id} className="border-slate-200 bg-white">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
                   {statusFilter === 'pending' && (
@@ -576,7 +576,7 @@ export default function SignupQueuePage() {
         </div>
 
         {signups.length === 0 && (
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardContent className="pt-6">
               <div className="text-center py-12">
                 <UserCheck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -591,7 +591,7 @@ export default function SignupQueuePage() {
         {/* Reject Modal */}
         {showRejectModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-md bg-neutral-900 border-neutral-800">
+            <Card className="w-full max-w-md border-slate-200 bg-white">
               <CardHeader>
                 <CardTitle>Reject Signup</CardTitle>
                 <CardDescription>
@@ -600,7 +600,7 @@ export default function SignupQueuePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <textarea
-                  className="w-full p-2 border border-neutral-700 bg-neutral-950 text-neutral-200 rounded"
+                  className="w-full rounded border border-slate-200 bg-white p-2 text-slate-900"
                   rows={4}
                   placeholder="Enter rejection reason..."
                   value={rejectReason}

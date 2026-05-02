@@ -29,9 +29,10 @@ import path from 'path'
 import { startReportScheduler } from './cron/reportScheduler.js'
 import { startDeadlineStatusScheduler } from './cron/scheduler.js'
 // Email reader enabled - monitors inbox for job applications
-import { emailReaderStatus } from './server/email-reader.js'
+import { emailReaderStatus, startEmailReader } from './server/email-reader.js'
+import { APPLICATION_INBOX_EMAIL } from './config/applicationInbox.js'
 import { emailRetryChecker } from './server/email-retry-checker.js'
-import { apiLimiter, authLimiter, passwordResetLimiter, aiOperationLimiter } from './middleware/rateLimiter.js'
+import { apiLimiter } from './middleware/rateLimiter.js'
 import { initRedis } from './utils/redis.js'
 import { errorHandler } from './utils/errorHandler.js'
 import { performanceMonitor } from './middleware/performance.js'
@@ -39,6 +40,8 @@ import { ResendService } from './services/resendService.js'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
+const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS || 1)
+app.set('trust proxy', trustProxyHops)
 
 const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')
@@ -227,6 +230,21 @@ app.use(errorHandler)
 async function start() {
   await ensureStorageDir()
 
+  if (process.env.NODE_ENV !== 'test' && process.env.ENABLE_EMAIL_READER !== 'false') {
+    await startEmailReader()
+    if (emailReaderStatus.running) {
+      logger.info(
+        `📧 Application watcher active → inbox ${emailReaderStatus.inboxAddress || APPLICATION_INBOX_EMAIL} (aligned with APPLICATION_INBOX_EMAIL=${APPLICATION_INBOX_EMAIL}). Pipeline: parse → JSON → AI → emails.`
+      )
+    } else if (emailReaderStatus.disabledReason) {
+      logger.warn(`📧 Application watcher not running: ${emailReaderStatus.disabledReason}`)
+    } else {
+      logger.warn(
+        `📧 Application watcher degraded (IMAP not connected). Check IMAP_* in .env and GET /health/email-reader`
+      )
+    }
+  }
+
   if (process.env.USE_RESEND === 'true' || process.env.RESEND_API_KEY) {
     try {
       const resendService = new ResendService()
@@ -240,10 +258,11 @@ async function start() {
   }
   
   // Initialize Redis cache (optional - falls back gracefully if unavailable)
-  if (process.env.REDIS_URL || process.env.REDIS_HOST) {
+  const redisEnabled = String(process.env.REDIS_ENABLED || '').toLowerCase() === 'true'
+  if (redisEnabled && (process.env.REDIS_URL || process.env.REDIS_HOST)) {
     initRedis()
   } else {
-    logger.info('Redis not configured - caching disabled')
+    logger.info('Redis disabled or not configured - caching disabled')
   }
   
   // Start deadline status scheduler

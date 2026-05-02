@@ -6,6 +6,18 @@ import pg from 'pg'
 const JWT_SECRET = process.env.JWT_SECRET
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001'
 
+function createTimeoutSignal(ms: number): AbortSignal {
+  if (
+    typeof AbortSignal !== 'undefined' &&
+    typeof (AbortSignal as { timeout?: (timeoutMs: number) => AbortSignal }).timeout === 'function'
+  ) {
+    return (AbortSignal as { timeout: (timeoutMs: number) => AbortSignal }).timeout(ms)
+  }
+  const controller = new AbortController()
+  setTimeout(() => controller.abort(), ms)
+  return controller.signal
+}
+
 function getJwtSecret(): string {
   if (!JWT_SECRET) {
     throw new Error('JWT_SECRET is required but not configured')
@@ -30,7 +42,7 @@ async function resolveAuthUser(authHeader: string): Promise<{ userId: string; em
           Authorization: authHeader,
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(8000),
+        signal: createTimeoutSignal(8000),
       })
       if (!meResp.ok) return null
       const me = await meResp.json().catch(() => null)
@@ -100,11 +112,11 @@ export async function GET(request: NextRequest) {
     )
     const hasUserIdColumn = columnCheck.length > 0
 
-    // Get user's company - try multiple methods
+    // Get user's company - strict ownership first
     let companyId: string | null = null
     
     if (hasUserIdColumn) {
-      // Method 1: Find by user_id
+      // Method 1: Find strictly by user_id (preferred and safest)
       const { rows: userRows } = await client.query<{ company_id: string }>(
         `SELECT company_id FROM companies WHERE user_id = $1 LIMIT 1`,
         [userId]
@@ -114,10 +126,17 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Method 2: Fallback - find by user's email (hr_email or company_email)
+    // Method 2: Legacy fallback - by email only when company is currently unowned.
+    // This prevents linking one user's dashboard to another user's company row.
     if (!companyId && userEmail) {
       const { rows: emailRows } = await client.query<{ company_id: string }>(
-        `SELECT company_id FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
+        hasUserIdColumn
+          ? `SELECT company_id
+             FROM companies
+             WHERE (hr_email = $1 OR company_email = $1)
+               AND user_id IS NULL
+             LIMIT 1`
+          : `SELECT company_id FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
         [userEmail.toLowerCase()]
       )
       if (emailRows.length > 0) {
@@ -132,44 +151,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // If no company found, try to find jobs directly by user's email in company
+    // If no company found, only query the resolved company.
+    // Avoid broad email/domain fallbacks because they can leak/share dashboards.
     let companyIds: string[] = []
-    if (!companyId && userEmail) {
-      console.log('No company found, trying to find companies by email:', userEmail)
-      // Find ALL company_ids that match user's email
-      const { rows: companyByEmail } = await client.query<{ company_id: string }>(
-        `SELECT DISTINCT company_id FROM companies WHERE hr_email = $1 OR company_email = $1`,
-        [userEmail.toLowerCase()]
-      )
-      if (companyByEmail.length > 0) {
-        companyIds = companyByEmail.map(c => c.company_id)
-        companyId = companyIds[0] // Use first for linking
-        console.log('Found companies by email fallback:', companyIds)
-        // Link them to user if possible
-        if (hasUserIdColumn) {
-          await client.query(
-            `UPDATE companies SET user_id = $1 WHERE company_id = ANY($2::uuid[])`,
-            [userId, companyIds]
-          )
-        }
-      }
-    } else if (companyId) {
+    if (companyId) {
       companyIds = [companyId]
-    }
-
-    // Final fallback: If no companies found but user has email, try to find jobs via company emails
-    if (companyIds.length === 0 && userEmail) {
-      console.log('No companies found, trying direct job lookup via company emails for:', userEmail)
-      // Find companies that have this email and get their IDs
-      const { rows: directCompanyRows } = await client.query<{ company_id: string }>(
-        `SELECT company_id FROM companies 
-         WHERE hr_email = $1 OR company_email = $1 OR hiring_manager_email = $1`,
-        [userEmail.toLowerCase()]
-      )
-      if (directCompanyRows.length > 0) {
-        companyIds = directCompanyRows.map(r => r.company_id)
-        console.log('Found companies via direct lookup:', companyIds)
-      }
     }
 
     // If still no companies found, return empty
@@ -508,9 +494,8 @@ export async function POST(request: NextRequest) {
 
       await client.query('COMMIT')
 
-      // Send "job created" email notification via backend (Resend/SMTP) - SYNCHRONOUSLY
-      let emailSent = false
-      let emailError: string | null = null
+      // Send "job created" email notification via backend (Resend/SMTP) in background.
+      // Do not block job creation response on mail provider latency.
       const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
       
       // Prepare recipients
@@ -519,53 +504,45 @@ export async function POST(request: NextRequest) {
       )
 
       if (recipients.length > 0 && authHeader) {
-        try {
-          console.log(`[Job Creation] Sending email notification to: ${recipients.join(', ')}`)
-          const notifRes = await fetch(`${backendUrl}/api/job-postings/send-created-notification`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': authHeader
-            },
-            body: JSON.stringify({
-              hr_email,
-              company_email,
-              job_title,
-              company_name,
-              application_deadline: deadlineDate.toISOString()
-            }),
-            signal: AbortSignal.timeout(30000) // 30 second timeout
-          })
-
-          const notifData = await notifRes.json().catch(() => ({}))
-
-          if (!notifRes.ok) {
-            emailError = notifData?.error?.message || notifData?.error || `Failed to send email (${notifRes.status})`
-            console.error('[Job Creation] Email notification failed:', emailError)
-          } else {
-            emailSent = true
-            console.log(`[Job Creation] ✅ Email notification sent successfully to: ${recipients.join(', ')}`)
+        void (async () => {
+          try {
+            const notifRes = await fetch(`${backendUrl}/api/job-postings/send-created-notification`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authHeader
+              },
+              body: JSON.stringify({
+                hr_email,
+                company_email,
+                job_title,
+                company_name,
+                application_deadline: deadlineDate.toISOString()
+              }),
+              signal: createTimeoutSignal(8000),
+            })
+            if (!notifRes.ok) {
+              const notifData = await notifRes.json().catch(() => ({}))
+              const emailError =
+                notifData?.error?.message ||
+                notifData?.error ||
+                `Failed to send email (${notifRes.status})`
+              console.error('[Job Creation] Background email notification failed:', emailError)
+            }
+          } catch (notifErr: any) {
+            console.error(
+              '[Job Creation] Background email notification error:',
+              notifErr?.message || notifErr
+            )
           }
-        } catch (notifErr: any) {
-          emailError = notifErr?.message || 'Failed to send email notification'
-          console.error('[Job Creation] Error sending email notification:', notifErr)
-        }
-      } else {
-        if (recipients.length === 0) {
-          emailError = 'No valid email addresses provided (hr_email and company_email are required)'
-          console.warn('[Job Creation] Cannot send email: no valid recipients')
-        } else if (!authHeader) {
-          emailError = 'Not authenticated - cannot send email'
-          console.warn('[Job Creation] Cannot send email: no auth header')
-        }
+        })()
       }
 
       return NextResponse.json({
         success: true,
         job_posting_id: jobPostingId,
         company_id: companyId,
-        emailSent,
-        emailError: emailError || undefined,
+        emailQueued: recipients.length > 0,
         recipients: recipients.length > 0 ? recipients : undefined
       })
     } catch (err) {

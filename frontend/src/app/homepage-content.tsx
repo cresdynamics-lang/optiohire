@@ -7,38 +7,38 @@ export default function HomePageContent() {
   const router = useRouter()
   const outcomes = [
     {
-      title: 'Faster time-to-hire',
-      metric: '3x faster',
-      description: 'Automated screening and ranked candidates reduce manual review time across every role.',
+      title: '3x faster shortlisting',
+      metric: 'No more weekend CV marathons',
+      description: 'Move from stacked inboxes to interview-ready shortlists without manual spreadsheet churn.',
     },
     {
-      title: 'Better quality hires',
-      metric: '+40%',
-      description: 'Structured scorecards and role-fit signals improve hiring confidence and long-term retention.',
+      title: 'Bias-aware scoring',
+      metric: 'Same criteria for every candidate',
+      description: 'Structured scorecards keep decisions consistent across interviewers and hiring teams.',
     },
     {
-      title: 'Fairer decisions',
-      metric: 'Bias-aware',
-      description: 'Consistent evaluation rubrics help teams reduce noise and keep candidate review accountable.',
+      title: 'Full audit trail',
+      metric: 'Answer any decision with confidence',
+      description: 'Every stage is documented, so rejected-candidate queries and stakeholder reviews are clear.',
     },
   ]
 
   const useCases = [
     {
       title: 'High-growth startups',
-      description: 'Move quickly without compromising candidate quality while hiring for critical roles.',
+      description: 'Hiring your first 20 employees? Do not let a weak process cost you.',
     },
     {
       title: 'Scaling SMEs',
-      description: 'Standardize hiring workflows across teams and keep recruiters aligned as volume increases.',
+      description: 'Growing from one office to many? Keep hiring consistent in Nairobi, Mombasa, and Kisumu.',
     },
     {
       title: 'Enterprise HR teams',
-      description: 'Unify hiring decisions with measurable, auditable reports across departments.',
+      description: 'Unify 10 departments with one scorecard and one source of truth.',
     },
     {
-      title: 'Specialist recruiting',
-      description: 'Evaluate deeper role-readiness for technical and hard-to-fill positions.',
+      title: 'NGOs & development orgs',
+      description: 'Donor-funded roles require fair, documented selection. OptioHire makes that practical.',
     },
   ]
 
@@ -68,12 +68,16 @@ export default function HomePageContent() {
               Outcome-focused platform
             </p>
             <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              A sleek hiring workflow that keeps teams aligned.
+              Stop screening CVs manually. Start hiring confidently.
             </h2>
             <p className="mt-4 text-lg text-slate-600">
-              From screening to final decision, OptioHire gives every stakeholder the same reliable source of
-              truth.
+              OptioHire helps Kenyan teams cut through hundreds of applicants — fairly, fast, and with a clear audit
+              trail your stakeholders can trust.
             </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button className="rounded-2xl" onClick={() => router.push('/demo')}>Request Demo</Button>
+              <Button variant="outline" className="rounded-2xl" onClick={() => router.push('/how-it-works')}>See How It Works</Button>
+            </div>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {outcomes.map((outcome) => (
@@ -93,6 +97,26 @@ export default function HomePageContent() {
         </div>
       </section>
 
+      <section className="px-4 pb-4 sm:px-6">
+        <div className="mx-auto grid max-w-6xl gap-4 rounded-3xl border border-slate-200/80 bg-white/85 p-6 md:grid-cols-2">
+          <div>
+            <h3 className="text-2xl font-bold tracking-tight text-slate-900">Sound familiar?</h3>
+            <ul className="mt-4 space-y-2 text-slate-600">
+              <li>• Your inbox has 300 applications for one role</li>
+              <li>• Shortlisting took your team 4 days — for one position</li>
+              <li>• A rejected candidate asks why they were not selected and you have no clear answer</li>
+              <li>• Different interviewers score differently and alignment is a nightmare</li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
+            <h4 className="text-lg font-semibold text-slate-900">OptioHire fixes this — with structure, not just software.</h4>
+            <p className="mt-3 text-slate-600">
+              Standardized scoring, transparent evidence, and a full decision trail from first pass to final interview.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-6xl rounded-3xl border border-slate-200/80 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-8 text-white shadow-xl sm:p-10">
           <div className="grid items-start gap-8 lg:grid-cols-[1.2fr_1fr]">
@@ -102,10 +126,10 @@ export default function HomePageContent() {
                 How it works
               </p>
               <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-                Structured hiring in three clear steps
+                From 300 applicants to 5 final interviews — in under 48 hours
               </h2>
               <p className="mt-4 max-w-2xl text-slate-200">
-                Keep candidate evaluation consistent and transparent from intake to final approval.
+                No spreadsheets. No CV marathons. Just a clear, structured process your whole team can trust.
               </p>
               <Button
                 size="lg"
@@ -175,6 +199,9 @@ export default function HomePageContent() {
               </h2>
               <p className="mt-4 text-lg text-slate-600">
                 Keep your candidate data protected and your hiring process explainable at every stage.
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                Hosted with data residency standards — your candidate data stays protected, in line with Kenya&apos;s Data Protection Act 2019.
               </p>
               <Button className="mt-6 rounded-2xl" onClick={() => router.push('/trust-security')}>
                 Learn About Security

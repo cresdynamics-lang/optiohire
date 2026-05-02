@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,14 +8,13 @@ import { LogOut, Mail, User, ShieldCheck, Briefcase, CalendarClock } from 'lucid
 
 export function JobSeekerProfileSection() {
   const { user, signOut } = useAuth()
-  const router = useRouter()
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-2xl space-y-8 px-1 pb-10 sm:px-0">
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-5 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900/90">
-        <div className="pointer-events-none absolute right-0 top-0 h-40 w-44 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.14),transparent_68%)]" aria-hidden />
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-5 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8 dark:border-gray-800 dark:bg-gray-900">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent dark:from-slate-800/50" aria-hidden />
         <div className="relative">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-400">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">
             Candidate account
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white">My profile</h1>
@@ -30,7 +28,7 @@ export function JobSeekerProfileSection() {
       <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_22px_70px_-48px_rgba(15,23,42,0.38)] dark:border-gray-800 dark:bg-gray-900/85">
         <CardHeader className="border-b border-slate-100 pb-6 dark:border-gray-800">
           <CardTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 shadow-inner dark:bg-blue-950/70 dark:text-blue-300">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 shadow-inner dark:bg-slate-800 dark:text-slate-200">
               <User className="h-5 w-5" />
             </span>
             Account details
@@ -87,9 +85,8 @@ export function JobSeekerProfileSection() {
             <Button
               variant="destructive"
               className="min-h-[44px] gap-2 rounded-2xl shadow-sm shadow-red-500/15 touch-manipulation sm:min-h-10"
-              onClick={async () => {
-                await signOut()
-                router.push('/auth/signin')
+              onClick={() => {
+                void signOut()
               }}
             >
               <LogOut className="h-4 w-4" />

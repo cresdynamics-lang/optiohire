@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { pool, query } from '../db/index.js'
 import { logger } from '../utils/logger.js'
+import { APPLICATION_INBOX_EMAIL, getRecommendedApplicationSubject } from '../config/applicationInbox.js'
 
 const createJobSchema = z.object({
   company_name: z.string().min(2).max(255),
@@ -468,6 +469,8 @@ export async function createJobPosting(req: Request, res: Response) {
       job_posting_id: jobPostingId,
       company_id: companyId,
       message: 'Job posted and workflows scheduled',
+      applicationInboxEmail: APPLICATION_INBOX_EMAIL,
+      recommendedApplicationSubject: getRecommendedApplicationSubject(payload.job_title, payload.company_name),
       emailSent,
       emailError: emailError || undefined,
       recipients: recipients.length > 0 ? recipients : undefined
@@ -541,7 +544,9 @@ export async function sendJobPostingCreatedNotification(req: Request, res: Respo
     return res.status(200).json({ 
       success: true, 
       message: 'Notification sent',
-      recipients 
+      recipients,
+      applicationInboxEmail: APPLICATION_INBOX_EMAIL,
+      recommendedApplicationSubject: getRecommendedApplicationSubject(job_title, company_name)
     })
   } catch (err: any) {
     const errorMessage = err?.message || String(err)

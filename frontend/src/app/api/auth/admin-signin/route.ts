@@ -12,7 +12,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = (
+      process.env.BACKEND_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      'http://localhost:3001'
+    )
     const url = `${backendUrl.replace(/\/$/, '')}/auth/admin-signin`
 
     const res = await fetch(url, {

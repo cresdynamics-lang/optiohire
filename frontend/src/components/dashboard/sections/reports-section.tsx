@@ -30,6 +30,7 @@ import {
 import { useAuth } from '@/hooks/use-auth'
 import { JobPosting } from '@/types'
 import { ApplicantReportModal } from '../applicant-report-modal'
+import { createTimeoutSignal } from '@/lib/utils'
 
 interface JobReportItem {
   job: JobPosting
@@ -169,7 +170,7 @@ export function ReportsSection() {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          signal: AbortSignal.timeout(10000),
+          signal: createTimeoutSignal(10000),
         })
 
         if (!response.ok) {
@@ -266,11 +267,11 @@ export function ReportsSection() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900/90"
+        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8 dark:border-gray-800 dark:bg-gray-900"
       >
-        <div className="pointer-events-none absolute right-0 top-0 h-36 w-44 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.11),transparent_68%)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent dark:from-slate-800/50" aria-hidden />
         <div className="relative">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-400">Insights</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">Insights</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
             Reports & analytics
           </h1>
@@ -307,18 +308,18 @@ export function ReportsSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.05 }}
           >
-            <Card className="bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 border border-gray-200 dark:border-[#2D2DDD]/30 shadow-xl">
+            <Card className="bg-white border border-slate-200 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.42)] dark:bg-slate-900 dark:border-slate-700">
               <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="text-lg sm:text-xl font-figtree font-semibold text-gray-900 dark:text-white flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-[#2D2DDD]" />
+                    <FileText className="w-5 h-5 text-slate-700 dark:text-slate-200" />
                     Job Performance Overview
                   </CardTitle>
                   <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-slate-300">
                     Horizontal stacked comparison of shortlisted, flagged, and rejected applicants per job.
                   </p>
                 </div>
-                <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full bg-gray-100 dark:bg-slate-900/60 border border-gray-300 dark:border-slate-700/70 p-1 shadow-sm dark:shadow-[0_0_0_1px_rgba(15,23,42,0.9)]">
+                <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full bg-slate-100 border border-slate-300 p-1 shadow-sm dark:bg-slate-800 dark:border-slate-700">
                   {[
                     { id: '7d', label: 'Last 7 days' },
                     { id: '30d', label: 'Last 30 days' },
@@ -330,8 +331,8 @@ export function ReportsSection() {
                       onClick={() => setTimeRange(range.id as TimeRange)}
                       className={`min-h-[40px] touch-manipulation px-3 py-2 text-xs sm:min-h-0 sm:py-1.5 sm:text-sm rounded-full transition-all ${
                         timeRange === range.id
-                          ? 'bg-[#2D2DDD] text-white shadow-[0_0_18px_rgba(45,45,221,0.65)]'
-                          : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-slate-800/80'
+                          ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {range.label}
@@ -347,7 +348,7 @@ export function ReportsSection() {
                     </p>
                   </div>
                 ) : (
-                  <div className="h-full w-full rounded-xl bg-gray-50 dark:bg-slate-950/40 border border-gray-200 dark:border-slate-800/80 p-3 sm:p-4 shadow-inner">
+                  <div className="h-full w-full rounded-xl bg-slate-50 border border-slate-200 p-3 sm:p-4 shadow-inner dark:bg-slate-950/40 dark:border-slate-800/80">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart
                         data={chartData}
@@ -572,9 +573,9 @@ export function ReportsSection() {
                           yAxisId="right"
                           type="monotone"
                           dataKey="hireRate"
-                          stroke="#2D2DDD"
+                          stroke="#0f172a"
                           strokeWidth={2}
-                          dot={{ r: 3, stroke: '#E5E7EB', strokeWidth: 1, fill: '#2D2DDD' }}
+                          dot={{ r: 3, stroke: '#E5E7EB', strokeWidth: 1, fill: '#0f172a' }}
                           activeDot={{ r: 5 }}
                           name="Hire rate (%)"
                         />
@@ -592,10 +593,10 @@ export function ReportsSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.12 }}
           >
-          <Card>
+          <Card className="border border-slate-200 bg-white shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)] dark:border-slate-700 dark:bg-slate-900">
             <CardHeader>
               <CardTitle className="text-xl font-figtree font-semibold flex items-center gap-3">
-                <FileText className="w-5 h-5 text-[#2D2DDD]" />
+                <FileText className="w-5 h-5 text-slate-700 dark:text-slate-200" />
                 Job Reports
               </CardTitle>
             </CardHeader>
@@ -613,7 +614,7 @@ export function ReportsSection() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.05 }}
                       >
-                      <Card className="hover:shadow-lg transition-all duration-300">
+                      <Card className="border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900">
                         <CardContent className="p-4 sm:p-6">
                           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div className="flex-1 min-w-0">
@@ -637,7 +638,7 @@ export function ReportsSection() {
                                   {new Date(item.job.created_at).toLocaleDateString()}
                                 </div>
                               </div>
-                              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
                                 <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:grid-cols-4 sm:gap-4">
                                   <div className="text-center">
                                     <div className="flex items-center justify-center gap-1 mb-1">
@@ -697,7 +698,7 @@ export function ReportsSection() {
                                 type="button"
                                 variant="outline" 
                                 size="sm" 
-                                  className="min-h-[44px] w-full touch-manipulation gap-2 border-[#2D2DDD] bg-[#2D2DDD] text-white shadow-none hover:border-[#2D2DDD] hover:bg-[#2D2DDD] hover:shadow-none sm:min-h-9 sm:w-auto dark:bg-[#2D2DDD] dark:text-white dark:border-[#2D2DDD] dark:hover:bg-[#2D2DDD]"
+                                  className="min-h-[44px] w-full touch-manipulation gap-2 border-slate-900 bg-slate-900 text-white hover:border-slate-800 hover:bg-slate-800 sm:min-h-9 sm:w-auto dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                                 onClick={() => {
                                   setSelectedJobPosting(item.job)
                                   setIsReportModalOpen(true)

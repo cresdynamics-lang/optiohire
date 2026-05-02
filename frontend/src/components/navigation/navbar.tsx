@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'How It Works', href: '/how-it-works' },
-  { name: 'Why Us', href: '/why-optiohire' },
-  { name: 'Features', href: '/features' },
-  { name: 'Pricing', href: '/pricing' },
+  { name: 'Use Cases', href: '/use-cases' },
+  { name: 'About', href: '/about' },
+  { name: 'Security', href: '/security' },
+  { name: 'Demo', href: '/demo' },
 ]
 
 export function Navbar() {
@@ -53,7 +55,15 @@ export function Navbar() {
       <nav ref={navRef} className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex items-center flex-shrink-0 z-10">
-          <Link href="/" className="-m-1.5 p-1.5 flex items-center">
+          <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
+            <Image
+              src="/assets/logo/logo.png"
+              alt="OptioHire logo"
+              width={34}
+              height={34}
+              className="h-[34px] w-[34px] rounded-md object-contain"
+              priority
+            />
             <span className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
               OptioHire
             </span>
@@ -79,8 +89,14 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Desktop Get Started button - visible on lg screens and above */}
-        <div className="hidden lg:flex lg:items-center lg:flex-shrink-0">
+        {/* Desktop auth buttons - visible on lg screens and above */}
+        <div className="hidden lg:flex lg:items-center lg:flex-shrink-0 lg:gap-2">
+          <Link
+            href="/auth/signin"
+            className="whitespace-nowrap rounded-2xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:text-slate-900"
+          >
+            Sign In
+          </Link>
           <Link
             href="/auth/signup"
             className="whitespace-nowrap rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-black"
@@ -122,9 +138,18 @@ export function Navbar() {
                   {item.name}
                 </Link>
               ))}
-              {/* Mobile Get Started button */}
+              {/* Mobile auth buttons */}
+              <Link
+                href="/auth/signin"
+                prefetch={process.env.NODE_ENV === 'production'}
+                className="mt-2 block rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50 hover:text-slate-900"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign In
+              </Link>
               <Link
                 href="/auth/signup"
+                prefetch={process.env.NODE_ENV === 'production'}
                 className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white transition-colors duration-200 hover:bg-black"
                 onClick={() => setMobileMenuOpen(false)}
               >

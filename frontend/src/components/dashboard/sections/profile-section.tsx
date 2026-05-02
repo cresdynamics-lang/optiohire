@@ -32,7 +32,6 @@ import {
 import { ImageUpload } from '@/components/ui/image-upload'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 import { JobSeekerProfileSection } from './job-seeker-profile-section'
 
 interface CompanyData {
@@ -46,7 +45,6 @@ interface CompanyData {
 
 export function ProfileSection() {
   const { user, signOut } = useAuth()
-  const router = useRouter()
   const [company, setCompany] = useState<CompanyData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -368,11 +366,7 @@ export function ProfileSection() {
         }
       }
 
-      await signOut()
-      router.push('/')
-      
-      setSaveMessage({ type: 'success', text: 'Account deletion initiated. Please contact support for complete account removal.' })
-      
+      await signOut({ next: '/' })
     } catch (error: any) {
       console.error('Error deleting account:', error)
       setSaveMessage({ type: 'error', text: error.message || 'Failed to delete account. Please contact support.' })
@@ -403,8 +397,8 @@ export function ProfileSection() {
             <div className="flex flex-col items-stretch justify-between gap-6 sm:flex-row sm:items-start">
               <div className="min-w-0 flex-1">
                 <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-200/90 bg-blue-50/90 shadow-sm ring-4 ring-blue-500/5 dark:border-gray-700 dark:bg-gray-800/80 sm:h-20 sm:w-20">
-                    <User className="h-8 w-8 text-[#2D2DDD] sm:h-10 sm:w-10" />
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-200/90 bg-slate-100 shadow-sm ring-4 ring-slate-500/5 dark:border-gray-700 dark:bg-gray-800/80 sm:h-20 sm:w-20">
+                    <User className="h-8 w-8 text-slate-700 dark:text-slate-200 sm:h-10 sm:w-10" />
                   </div>
                   <div className="min-w-0">
                     <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
@@ -478,12 +472,12 @@ export function ProfileSection() {
               
               <div className="flex shrink-0 flex-col gap-3 sm:w-40">
                 <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 p-4 text-center dark:border-gray-700 dark:bg-gray-800/60">
-                  <Shield className="mx-auto mb-2 h-6 w-6 text-[#2D2DDD] dark:text-blue-400" />
+                  <Shield className="mx-auto mb-2 h-6 w-6 text-slate-700 dark:text-slate-200" />
                   <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Security</p>
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">Protected</p>
                 </div>
                 <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 p-4 text-center dark:border-gray-700 dark:bg-gray-800/60">
-                  <Award className="mx-auto mb-2 h-6 w-6 text-[#2D2DDD] dark:text-blue-400" />
+                  <Award className="mx-auto mb-2 h-6 w-6 text-slate-700 dark:text-slate-200" />
                   <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Status</p>
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">Active</p>
                 </div>
@@ -515,10 +509,10 @@ export function ProfileSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile Information Card */}
-        <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700">
+        <Card className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
+          <CardHeader className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700">
             <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -623,11 +617,11 @@ export function ProfileSection() {
         </Card>
 
         {/* Company Information Card */}
-        <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700">
+        <Card className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
+          <CardHeader className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700">
             <CardTitle className="flex items-center justify-between text-gray-900 dark:text-white">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -651,7 +645,7 @@ export function ProfileSection() {
                   }}
                   className={isEditingCompany 
                     ? 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
-                    : 'bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none'
+                    : 'bg-slate-900 hover:bg-slate-800 text-white shadow-none hover:shadow-none dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200'
                   }
                 >
                   {isEditingCompany ? 'Close' : 'Edit company profile'}
@@ -662,7 +656,7 @@ export function ProfileSection() {
           <CardContent className="p-6 space-y-4">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
+                <Loader2 className="w-8 h-8 animate-spin text-slate-700 dark:text-slate-200" />
               </div>
             ) : company ? (
               <>
@@ -696,8 +690,8 @@ export function ProfileSection() {
                 {/* When not editing: show read-only profile fields */}
                 {!isEditingCompany ? (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 p-3 bg-[#2D2DDD]/10 dark:bg-[#2D2DDD]/20 border border-[#2D2DDD]/30 dark:border-[#2D2DDD]/40 rounded-lg mb-2">
-                      <Mail className="w-5 h-5 text-[#2D2DDD] dark:text-[#2D2DDD] flex-shrink-0" />
+                <div className="flex items-center gap-2 p-3 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg mb-2">
+                      <Mail className="w-5 h-5 text-slate-700 dark:text-slate-200 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white">
                           Email for applications & candidate contact
@@ -812,7 +806,7 @@ export function ProfileSection() {
                           setIsEditingCompany(false)
                         }}
                         disabled={isSaving}
-                        className="flex-1 bg-gradient-to-r from-[#2D2DDD] to-[#2D2DDD]/90 hover:from-[#2D2DDD]/90 hover:to-[#2D2DDD] text-white shadow-lg"
+                        className="flex-1 bg-slate-900 hover:bg-slate-800 text-white shadow-lg dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                       >
                         {isSaving ? (
                           <>
@@ -857,10 +851,10 @@ export function ProfileSection() {
       </div>
 
       {/* Security Settings */}
-      <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <Card className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
+        <CardHeader className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700">
           <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
               <Lock className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -883,7 +877,7 @@ export function ProfileSection() {
               </div>
               <Button
                 onClick={() => setShowPasswordForm(true)}
-                className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
+                className="bg-slate-900 hover:bg-slate-800 text-white shadow-none hover:shadow-none dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
               >
                 <Key className="w-4 h-4 mr-2" />
                 Change Password
@@ -958,7 +952,7 @@ export function ProfileSection() {
                 <Button
                   onClick={handleChangePassword}
                   disabled={isSaving}
-                  className="flex-1 bg-gradient-to-r from-[#2D2DDD] to-[#2D2DDD]/90 hover:from-[#2D2DDD]/90 hover:to-[#2D2DDD] text-white"
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                 >
                   {isSaving ? (
                     <>
@@ -989,10 +983,10 @@ export function ProfileSection() {
       </Card>
 
       {/* Account Actions */}
-      <Card className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <Card className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
+        <CardHeader className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700">
           <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
               <LogOut className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -1010,11 +1004,10 @@ export function ProfileSection() {
               </p>
             </div>
             <Button
-              onClick={async () => {
-                await signOut()
-                router.push('/auth/signin')
+              onClick={() => {
+                void signOut()
               }}
-              className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
+              className="bg-slate-900 hover:bg-slate-800 text-white shadow-none hover:shadow-none dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out

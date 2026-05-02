@@ -1,13 +1,16 @@
 import rateLimit from 'express-rate-limit'
 import { logger } from '../utils/logger.js'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 /**
  * General API rate limiter
- * Limits: 100 requests per 15 minutes per IP
+ * Production: 100 requests per 15 minutes per IP.
+ * Development: much higher — Next.js HMR, prefetch, and dashboard polling burn through 100 quickly and cause 429 spam that feels like the app is “reloading” or breaking.
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: isProduction ? 100 : 10_000,
   message: {
     error: 'Too many requests',
     details: 'Please try again later.'
@@ -47,23 +50,46 @@ export const authLimiter = rateLimit({
 })
 
 /**
- * Strict rate limiter for password reset endpoints
- * Limits: 3 requests per hour per IP
+ * Strict limiter for requesting a reset code.
+ * Keeps anti-abuse protection on the expensive/email-sending endpoint.
  */
-export const passwordResetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 requests per hour
+export const passwordResetRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Allow legitimate retries but still throttle abuse
   message: {
     error: 'Too many password reset attempts',
-    details: 'Please try again after 1 hour.'
+    details: 'Please try again after 15 minutes.'
   },
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
-    logger.warn(`Password reset rate limit exceeded for IP: ${req.ip}`)
+    logger.warn(`Password reset request rate limit exceeded for IP: ${req.ip}`)
     res.status(429).json({
       error: 'Too many password reset attempts',
-      details: 'Please try again after 1 hour.'
+      details: 'Please try again after 15 minutes.'
+    })
+  }
+})
+
+/**
+ * Separate limiter for reset-flow verification/update endpoints.
+ * The reset UX can call these multiple times (verify code, verify token, submit),
+ * so this is intentionally less strict than reset-code requests.
+ */
+export const passwordResetFlowLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,
+  message: {
+    error: 'Too many password reset attempts',
+    details: 'Please wait a few minutes and try again.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    logger.warn(`Password reset flow rate limit exceeded for IP: ${req.ip}`)
+    res.status(429).json({
+      error: 'Too many password reset attempts',
+      details: 'Please wait a few minutes and try again.'
     })
   }
 })

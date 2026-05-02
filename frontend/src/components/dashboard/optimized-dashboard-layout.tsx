@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback, Component, ReactNode } from 'react'
+import { useState, useEffect, useCallback, useRef, Component, ReactNode } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/toaster'
-import { Bell, X, CheckCircle2 } from 'lucide-react'
+import { Bell, X, CheckCircle2, Briefcase } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { NotificationProvider, useNotifications } from '@/contexts/notification-context'
 import { Sidebar } from './sidebar'
@@ -40,13 +41,38 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
   }
 }
 
-// Loading component for sections
-const SectionLoader = ({ sectionName }: { sectionName: string }) => (
-  <div className="flex items-center justify-center py-12">
-    <div className="text-center">
-      <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-      <p className="text-gray-600 dark:text-gray-400">Loading {sectionName}...</p>
+// Shown only while auth is unknown (no token yet in client tree) — not a spinner
+const DashboardChromeSkeleton = () => (
+  <div className="flex min-h-screen flex-col lg:flex-row">
+    <div className="hidden h-screen w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] shrink-0 animate-pulse border-r border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900 lg:block" />
+    <div className="min-w-0 flex-1">
+      <div className="h-14 animate-pulse border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950" />
+      <div className="mx-auto max-w-[1440px] space-y-4 p-4 md:p-8">
+        <div className="h-40 animate-pulse rounded-2xl bg-slate-200/80 dark:bg-slate-800/80" />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-200/70 dark:bg-slate-800/70" />
+          ))}
+        </div>
+      </div>
     </div>
+  </div>
+)
+
+// Lightweight skeleton while lazy sections load (no blocking second “preload” gate)
+const SectionLoader = ({ sectionName }: { sectionName: string }) => (
+  <div className="space-y-6 px-1 py-2" aria-busy="true" aria-label={`Loading ${sectionName}`}>
+    <div className="h-36 animate-pulse rounded-2xl bg-gradient-to-br from-slate-200/90 to-slate-100/80 dark:from-slate-800/90 dark:to-slate-900/80" />
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {[0, 1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="h-24 animate-pulse rounded-xl bg-slate-200/70 dark:bg-slate-800/70"
+          style={{ animationDelay: `${i * 75}ms` }}
+        />
+      ))}
+    </div>
+    <div className="h-40 animate-pulse rounded-2xl bg-slate-200/60 dark:bg-slate-800/60" />
   </div>
 )
 
@@ -340,38 +366,55 @@ function DashboardContent() {
   const pathname = usePathname()
   const router = useRouter()
   const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+  const normalizedRole = user?.role?.toLowerCase()
   const isJobSeeker =
     normalizedCompanyRole === 'candidate' ||
     normalizedCompanyRole === 'job_seeker' ||
-    normalizedCompanyRole === 'jobseeker'
+    normalizedCompanyRole === 'jobseeker' ||
+    normalizedRole === 'candidate' ||
+    normalizedRole === 'job_seeker' ||
+    normalizedRole === 'jobseeker'
   const pageMeta = dashboardPageMeta(pathname, isJobSeeker)
   const [activeSection, setActiveSection] = useState('overview')
-  const [isPreloading, setIsPreloading] = useState(true)
-  const [preloadTime, setPreloadTime] = useState<number>(0)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  /** Nav drawer closed by default on all breakpoints; open via menu icon only. */
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } = useNotifications()
+  /** Avoid firing duplicate client navigations on every paint — feels like the site is “constantly refreshing”. */
+  const redirectOnceRef = useRef<{ signIn?: boolean; admin?: boolean; companySetup?: boolean }>({})
 
   // STRICT: Check if user has company (except admin)
   useEffect(() => {
-    if (loading) return // Wait for auth to load
-    
+    if (loading && !user) return
+
     if (!user) {
-      router.push('/auth/signin')
+      if (!redirectOnceRef.current.signIn) {
+        redirectOnceRef.current.signIn = true
+        router.replace('/auth/signin')
+      }
       return
     }
+    redirectOnceRef.current.signIn = false
 
     // STRICT: Admin should ONLY access admin dashboard, not HR dashboard
     if (user.role === 'admin') {
-      router.push('/admin')
+      if (!redirectOnceRef.current.admin) {
+        redirectOnceRef.current.admin = true
+        router.replace('/admin')
+      }
       return
     }
+    redirectOnceRef.current.admin = false
 
     // STRICT: Require company setup before dashboard (e.g. Google sign-in). Keep token; redirect to company-setup.
     if (!isJobSeeker && user.hasCompany === false && !user.companyId) {
-      router.replace('/company-setup')
+      if (!redirectOnceRef.current.companySetup) {
+        redirectOnceRef.current.companySetup = true
+        router.replace('/company-setup')
+      }
       return
     }
+    redirectOnceRef.current.companySetup = false
     // If hasCompany is undefined but companyId exists, allow access (company exists)
     // This handles cases where hasCompany wasn't set but company was created
   }, [user, loading, router, isJobSeeker])
@@ -399,59 +442,9 @@ function DashboardContent() {
     }
   }, [pathname, isJobSeeker])
 
-  // Preload critical data for instant rendering
-  const preloadCriticalData = useCallback(async () => {
-    if (!user) {
-      setIsPreloading(false)
-      return
-    }
-    
-    const startTime = performance.now()
-    
-    try {
-      setIsPreloading(true)
-      
-      // Preload components by importing them (with timeout to not block UI)
-      // Wrap each import in a try-catch to prevent one failure from blocking others
-      await Promise.race([
-        Promise.allSettled([
-          import('./sidebar').catch(err => {
-            console.warn('Sidebar preload failed:', err)
-            return null
-          }),
-          (isJobSeeker
-            ? import('./sections/job-seeker-overview-section')
-            : import('./sections/overview-section')
-          ).catch(err => {
-            console.warn('Dashboard overview preload failed:', err)
-            return null
-          }),
-        ]),
-        new Promise(resolve => setTimeout(resolve, 200)) // Max 200ms preload time
-      ])
-      
-      const endTime = performance.now()
-      setPreloadTime(endTime - startTime)
-      
-      if (endTime - startTime < 200) {
-        console.log(`Dashboard preloaded in ${(endTime - startTime).toFixed(2)}ms`)
-      }
-    } catch (error) {
-      console.error('Dashboard preloading failed:', error)
-      // Don't block rendering on preload errors
-    } finally {
-      setIsPreloading(false)
-    }
-  }, [user, isJobSeeker])
-
-  // Preload data on mount
-  useEffect(() => {
-    preloadCriticalData()
-  }, [preloadCriticalData])
-
-  // Optimized section rendering with lazy loading
+  // Optimized section rendering with lazy loading (no artificial preload gate — avoids double loading UX)
   const renderSection = useCallback(() => {
-    if (isPreloading || !user) {
+    if (!user) {
       return <SectionLoader sectionName="dashboard" />
     }
 
@@ -487,21 +480,20 @@ function DashboardContent() {
         </div>
       )
     }
-  }, [activeSection, isPreloading, user, isJobSeeker, router])
+  }, [activeSection, user, isJobSeeker, router])
 
-  // Prefetch main dashboard routes once user is ready for snappier navigation
+  // Defer a single prefetch so the first dashboard paint is not competing with five parallel prefetches
   useEffect(() => {
     if (!user) return
-    try {
-      router.prefetch('/dashboard')
-      router.prefetch('/dashboard/jobs')
-      router.prefetch('/dashboard/interviews')
-      if (!isJobSeeker) router.prefetch('/dashboard/reports')
-      router.prefetch('/dashboard/profile')
-    } catch (e) {
-      console.warn('Dashboard prefetch failed:', e)
-    }
-  }, [router, user, isJobSeeker])
+    const t = window.setTimeout(() => {
+      try {
+        void router.prefetch('/dashboard/jobs')
+      } catch {
+        /* ignore */
+      }
+    }, 1500)
+    return () => clearTimeout(t)
+  }, [router, user])
 
   // Optimized section change handler - now includes URL navigation
   const handleSectionChange = useCallback((section: string) => {
@@ -525,73 +517,110 @@ function DashboardContent() {
     router.push(newPath)
   }, [router, isJobSeeker])
 
-  // Don't render until user is loaded and validated
-  // Only block if hasCompany is explicitly false AND no companyId exists
-  // If companyId exists, allow access even if hasCompany is undefined/false
-  if (loading || !user || (user.role !== 'admin' && !isJobSeeker && user.hasCompany === false && !user.companyId)) {
+  // No session: redirect runs in useEffect — avoid skeleton (reads as “stuck loading”) during client nav / sign-out
+  if (!user) {
+    return <div className="min-h-screen bg-slate-50" aria-hidden />
+  }
+
+  // Company setup redirect in flight — minimal pulse (effect calls router.replace)
+  if (user.role !== 'admin' && !isJobSeeker && user.hasCompany === false && !user.companyId) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-50 [background-image:linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]">
+        <DashboardChromeSkeleton />
       </div>
     )
   }
 
   return (
-    <div
-      className="flex min-h-screen bg-slate-50 text-foreground [background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]"
-    >
-      {/* Mobile Sidebar Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
+    <div className="flex min-h-screen flex-col bg-slate-50 text-foreground [background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]">
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]"
+          onClick={() => setIsSidebarOpen(false)}
           aria-hidden
         />
       )}
-      
-      {/* Sidebar - hidden on mobile, visible on tablet and up; w-64 so column is always reserved */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto flex h-[100dvh] max-h-[100dvh] w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] flex-shrink-0 transform transition-transform duration-300 supports-[padding:max(0px)]:pl-[env(safe-area-inset-left)] ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      }`}>
+
+      <aside
+        id="dashboard-sidebar"
+        role="navigation"
+        aria-label="Dashboard navigation"
+        className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] max-h-[100dvh] w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] flex-shrink-0 border-r border-slate-200/90 bg-white shadow-xl shadow-slate-900/10 transform transition-transform duration-300 ease-out supports-[padding:max(0px)]:pl-[env(safe-area-inset-left)] dark:border-slate-800 dark:bg-slate-950 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
+        }`}
+      >
         <ErrorBoundary fallback={<div className="w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen p-4 flex items-center justify-center"><p className="text-gray-600 dark:text-gray-400">Sidebar unavailable. Refresh the page.</p></div>}>
           <Sidebar
-            activeSection={activeSection}
             onSectionChange={(section) => {
               handleSectionChange(section)
-              setIsMobileMenuOpen(false)
+              setIsSidebarOpen(false)
             }}
           />
         </ErrorBoundary>
       </aside>
       
-      <main className="flex-1 overflow-auto w-full lg:w-auto bg-transparent">
+      <main className="min-w-0 flex-1 overflow-auto bg-transparent">
         {/* Top bar: wayfinding + notifications */}
-        <div className="sticky top-0 z-10 border-b border-slate-200/90 bg-white/90 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-900/5 backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-2 p-3 sm:gap-3 sm:p-4 md:px-6 md:py-5">
+        <div className="sticky top-0 z-10 border-b border-slate-200/90 bg-white/95 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-900/[0.06] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#2D2DDD]/35 to-transparent" aria-hidden />
+          <div className="relative flex items-center justify-between gap-2 p-3 sm:gap-3 sm:p-4 md:px-6 md:py-4">
             <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="flex-shrink-0 lg:hidden">
+              <div className="flex-shrink-0">
                 <button
                   type="button"
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:scale-[0.98]"
-                  aria-label="Menu"
-                  aria-expanded={isMobileMenuOpen}
+                  onClick={() => setIsSidebarOpen((open) => !open)}
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={isSidebarOpen}
+                  aria-controls="dashboard-sidebar"
                 >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-[11px]">
-                  {pageMeta.eyebrow}
-                </p>
-                <h1 className="truncate text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
+                <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-[11px] dark:text-slate-400">
+                    {pageMeta.eyebrow}
+                  </p>
+                  {!isJobSeeker && (
+                    <span className="rounded-full bg-[#2D2DDD]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#2D2DDD] ring-1 ring-[#2D2DDD]/25">
+                      Hiring
+                    </span>
+                  )}
+                </div>
+                <h1 className="truncate text-base font-semibold tracking-tight text-slate-900 sm:text-lg dark:text-slate-50">
                   {pageMeta.title}
                 </h1>
               </div>
             </div>
-            <div className="flex flex-shrink-0 items-center gap-3 sm:gap-4">
+            <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+              {!isJobSeeker && (
+                <>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0 rounded-xl border-slate-200 sm:hidden dark:border-slate-700"
+                    aria-label="Job postings"
+                  >
+                    <Link href="/dashboard/jobs" prefetch={false}>
+                      <Briefcase className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="hidden h-9 rounded-lg bg-[#2D2DDD] px-3 text-xs font-semibold text-white shadow-none hover:bg-[#2525c4] sm:inline-flex md:h-10 md:px-4 md:text-sm"
+                  >
+                    <Link href="/dashboard/jobs" prefetch={false}>
+                      <Briefcase className="mr-1.5 h-3.5 w-3.5 md:h-4 md:w-4" aria-hidden />
+                      Post a role
+                    </Link>
+                  </Button>
+                </>
+              )}
               {/* Notifications Bell - Moved to far right */}
               <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
                 <PopoverTrigger asChild>
@@ -703,7 +732,15 @@ function DashboardContent() {
         </div>
         <div className="mx-auto w-full max-w-[1440px] px-3 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:p-8 lg:px-10 lg:pb-12">
           <ErrorBoundary fallback={<SectionLoader sectionName={activeSection} />}>
-          {renderSection()}
+            <div
+              className={
+                isJobSeeker
+                  ? ''
+                  : 'rounded-2xl border-2 border-slate-200/90 bg-white p-4 shadow-lg shadow-slate-900/[0.07] ring-1 ring-[#2D2DDD]/15 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-950/60 dark:ring-[#2D2DDD]/25 sm:p-6 md:p-8'
+              }
+            >
+              {renderSection()}
+            </div>
           </ErrorBoundary>
         </div>
       </main>

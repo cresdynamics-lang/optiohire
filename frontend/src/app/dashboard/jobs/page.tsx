@@ -15,7 +15,7 @@ export default function JobsPage() {
     normalizedCompanyRole === 'jobseeker'
 
   useEffect(() => {
-    if (loading) return
+    if (loading && !user) return
     // STRICT: Admin should NOT access HR dashboard
     if (user && user.role === 'admin') {
       router.push('/admin')
@@ -24,10 +24,10 @@ export default function JobsPage() {
     // Keep `/dashboard/jobs` available for job seekers: they now have a dedicated candidate jobs experience.
   }, [user, loading, router, isJobSeeker])
 
-  if (loading || (user && user.role === 'admin')) {
+  if (user?.role === 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2D2DDD] border-t-transparent" />
       </div>
     )
   }

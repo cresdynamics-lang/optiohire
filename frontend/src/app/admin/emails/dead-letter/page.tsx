@@ -203,7 +203,7 @@ export default function DeadLetterEmailsPage() {
   if (!adminSession && (!user || user.role !== 'admin')) return null
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -230,7 +230,7 @@ export default function DeadLetterEmailsPage() {
           </Card>
         ) : null}
 
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <CardTitle className="text-white">Queue Controls</CardTitle>
             <CardDescription>Filter and bulk re-queue dead-letter emails.</CardDescription>
@@ -261,7 +261,7 @@ export default function DeadLetterEmailsPage() {
           {filteredEmails.map((email) => {
             const selected = selectedIds.includes(email.email_id)
             return (
-              <Card key={email.email_id} className="bg-neutral-900 border-neutral-800">
+              <Card key={email.email_id} className="border-slate-200 bg-white">
                 <CardContent className="pt-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
@@ -299,7 +299,7 @@ export default function DeadLetterEmailsPage() {
           })}
 
           {filteredEmails.length === 0 ? (
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardContent className="pt-6 text-neutral-400">No dead-letter emails found.</CardContent>
             </Card>
           ) : null}

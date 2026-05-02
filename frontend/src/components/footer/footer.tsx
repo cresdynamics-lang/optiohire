@@ -7,6 +7,7 @@ import {
   Instagram,
   X,
   Linkedin,
+  Shield,
 } from 'lucide-react'
 
 export function Footer() {
@@ -17,22 +18,23 @@ export function Footer() {
       links: [
         { label: "Home", href: "/" },
         { label: "How It Works", href: "/how-it-works" },
-        { label: "Features", href: "/features" },
-        { label: "Why Us", href: "/why-optiohire" },
+        { label: "Use Cases", href: "/use-cases" },
+        { label: "Demo", href: "/demo" },
       ],
     },
     {
       title: "Company",
       links: [
         { label: "About OptioHire", href: "/about" },
-        { label: "Built by Cres Dynamics", href: "#" },
+        { label: "Case Studies", href: "/customers" },
+        { label: "Resources", href: "/blog" },
       ],
     },
     {
       title: "Legal",
       links: [
         { label: "Privacy Policy", href: "/privacy" },
-        { label: "Terms of Service", href: "/terms" },
+        { label: "Security & Compliance", href: "/security" },
       ],
     },
   ]
@@ -64,13 +66,13 @@ export function Footer() {
         <div className="mb-10 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-200">OptioHire</p>
-            <p className="mt-1 text-sm text-slate-300">Modern recruitment infrastructure for high-performing teams.</p>
+            <p className="mt-1 text-sm text-slate-300">Ready to hire better, faster, and fairly? Join forward-thinking Kenyan companies using OptioHire.</p>
           </div>
           <Link
             href="/auth/signup"
             className="inline-flex w-fit items-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-blue-50"
           >
-            Get Started
+            Book a Free Demo
           </Link>
         </div>
 
@@ -176,11 +178,19 @@ export function Footer() {
 
         <hr className="mb-4 mt-6 border-t border-white/10" />
 
-        {/* Footer bottom */}
-        <div className="text-center pb-4">
-          <p className="text-xs text-slate-400">
+        {/* Footer bottom: copyright + separate admin entry (icon only) */}
+        <div className="flex flex-col items-center gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-center text-xs text-slate-400 sm:text-left">
             &copy; 2026 OptioHire. All rights reserved.
           </p>
+          <Link
+            href="/admin/login"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-400 transition-all duration-200 hover:border-slate-500/50 hover:bg-white/10 hover:text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+            aria-label="Admin login"
+            title="Admin login"
+          >
+            <Shield className="h-4 w-4" aria-hidden />
+          </Link>
         </div>
       </div>
     </footer>

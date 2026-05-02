@@ -52,7 +52,7 @@ type CompanySetupFormData = z.infer<typeof companySetupSchema>
 
 export default function CompanySetupPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [skillInput, setSkillInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,10 +60,14 @@ export default function CompanySetupPage() {
   // If user already has a company, redirect to dashboard
   useEffect(() => {
     const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+    const normalizedRole = user?.role?.toLowerCase()
     const isJobSeeker =
       normalizedCompanyRole === 'candidate' ||
       normalizedCompanyRole === 'job_seeker' ||
-      normalizedCompanyRole === 'jobseeker'
+      normalizedCompanyRole === 'jobseeker' ||
+      normalizedRole === 'candidate' ||
+      normalizedRole === 'job_seeker' ||
+      normalizedRole === 'jobseeker'
 
     if (isJobSeeker) {
       router.replace('/dashboard')
@@ -73,7 +77,15 @@ export default function CompanySetupPage() {
     if (user?.hasCompany && user?.companyId) {
       router.replace('/dashboard')
     }
-  }, [user?.companyRole, user?.hasCompany, user?.companyId, router])
+  }, [user?.companyRole, user?.role, user?.hasCompany, user?.companyId, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   const {
     register,

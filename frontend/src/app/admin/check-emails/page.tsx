@@ -140,7 +140,7 @@ export default function CheckEmailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -179,7 +179,7 @@ export default function CheckEmailsPage() {
         {/* Statistics Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Applications
@@ -195,7 +195,7 @@ export default function CheckEmailsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Jobs
@@ -211,7 +211,7 @@ export default function CheckEmailsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-neutral-900 border-neutral-800">
+            <Card className="border-slate-200 bg-white">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Emails Sent
@@ -227,7 +227,7 @@ export default function CheckEmailsPage() {
               </CardContent>
             </Card>
 
-            <Card className={`bg-neutral-900 border-neutral-800 ${stats.missingEmails > 0 ? 'border-orange-700/50 bg-orange-900/20' : ''}`}>
+            <Card className={`border-slate-200 bg-white ${stats.missingEmails > 0 ? 'border-orange-700/50 bg-orange-900/20' : ''}`}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Missing Emails
@@ -246,7 +246,7 @@ export default function CheckEmailsPage() {
         )}
 
         {/* Action Button */}
-        <Card className="bg-neutral-900 border-neutral-800">
+        <Card className="border-slate-200 bg-white">
           <CardHeader>
             <CardTitle>Check & Send Missing Emails</CardTitle>
             <CardDescription>
@@ -277,7 +277,7 @@ export default function CheckEmailsPage() {
 
         {/* Results */}
         {results && (
-          <Card className="bg-neutral-900 border-neutral-800">
+          <Card className="border-slate-200 bg-white">
             <CardHeader>
               <CardTitle>Operation Results</CardTitle>
               <CardDescription>

@@ -106,6 +106,7 @@ class GroqService {
     model: string = process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
     options: {
       temperature?: number
+      maxTokens?: number
       systemPrompt?: string
       apiKey?: 'primary' | 'secondary' | 'tertiary'
     } = {}
@@ -115,6 +116,7 @@ class GroqService {
       ...options,
       systemPrompt,
       temperature: 0.1,
+      maxTokens: options.maxTokens ?? 1536,
     })
 
     try {

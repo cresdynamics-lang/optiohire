@@ -14,11 +14,13 @@ import { EmailService } from '../services/emailService.js'
 import { GoogleCalendarService } from '../services/googleCalendarService.js'
 import { logger } from '../utils/logger.js'
 import { cleanJobTitle } from '../utils/jobTitle.js'
+import { APPLICATION_INBOX_EMAIL } from '../config/applicationInbox.js'
 
 type EmailReaderStatus = {
   enabled: boolean
   running: boolean
   disabledReason: string | null
+  inboxAddress: string | null
   lastProcessedAt: string | null
   lastError: string | null
   consecutiveFailures: number
@@ -30,6 +32,7 @@ export const emailReaderStatus: EmailReaderStatus = {
   enabled: process.env.ENABLE_EMAIL_READER !== 'false',
   running: false,
   disabledReason: null,
+  inboxAddress: (process.env.IMAP_USER || null),
   lastProcessedAt: null,
   lastError: null,
   consecutiveFailures: 0,
@@ -247,8 +250,16 @@ export class EmailReader {
       ].filter(Boolean)
       const reason = `IMAP credentials not configured (${missing.join(', ')}), email reader disabled`
       emailReaderStatus.disabledReason = reason
+      emailReaderStatus.inboxAddress = imapUser || null
       logger.warn(reason)
       return
+    }
+    emailReaderStatus.inboxAddress = imapUser
+    if (imapUser.toLowerCase().trim() !== APPLICATION_INBOX_EMAIL) {
+      logger.warn(
+        `IMAP_USER (${imapUser}) differs from configured APPLICATION_INBOX_EMAIL (${APPLICATION_INBOX_EMAIL}).` +
+          ' Use the same inbox so job adverts and watcher routing stay consistent.'
+      )
     }
 
     try {
@@ -658,6 +669,7 @@ export class EmailReader {
                 jp.company_id,
                 jp.job_title,
                 jp.job_description,
+                jp.responsibilities,
                 jp.skills_required as required_skills,
                 jp.application_deadline,
                 jp.interview_start_time,
@@ -696,6 +708,7 @@ export class EmailReader {
                       jp.company_id,
                       jp.job_title,
                       jp.job_description,
+                      jp.responsibilities,
                       jp.skills_required as required_skills,
                       jp.application_deadline,
                       jp.interview_start_time,
@@ -1264,6 +1277,7 @@ export class EmailReader {
         job: {
           title: job.job_title,
           description: job.job_description,
+          responsibilities: job.responsibilities || '',
           required_skills: job.required_skills || []
         },
         company: {
@@ -1620,17 +1634,29 @@ Meeting: ${meetingLink}`,
   }
 }
 
-// Start email reader if enabled
-if (process.env.ENABLE_EMAIL_READER !== 'false') {
-  const emailReader = new EmailReader()
-  emailReader.start().catch(err => {
-    logger.error('Failed to start email reader:', err)
-    emailReaderStatus.lastError = (err as any)?.message || String(err)
-  })
-} else {
-  const reason = 'Email reader disabled via ENABLE_EMAIL_READER=false'
-  emailReaderStatus.enabled = false
-  emailReaderStatus.disabledReason = reason
-  logger.info(reason)
-}
+let emailReaderSingleton: EmailReader | null = null
 
+/**
+ * Start the IMAP watcher after storage is ready (call from server bootstrap).
+ * Pipeline: inbox → attachments → CV parsed to structured JSON → AI scoring (fairness-aware) → DB → shortlist/reject emails.
+ */
+export async function startEmailReader(): Promise<void> {
+  if (process.env.ENABLE_EMAIL_READER === 'false') {
+    emailReaderStatus.enabled = false
+    emailReaderStatus.disabledReason = 'Email reader disabled via ENABLE_EMAIL_READER=false'
+    emailReaderStatus.running = false
+    logger.info(emailReaderStatus.disabledReason)
+    return
+  }
+
+  if (!emailReaderSingleton) {
+    emailReaderSingleton = new EmailReader()
+  }
+
+  try {
+    await emailReaderSingleton.start()
+  } catch (err: any) {
+    logger.error('Failed to start email reader:', err)
+    emailReaderStatus.lastError = err?.message || String(err)
+  }
+}

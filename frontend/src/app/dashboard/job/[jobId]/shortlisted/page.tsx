@@ -96,10 +96,12 @@ export default function ShortlistedPage() {
         const statusText = candidatesResponse.statusText || 'Unknown error'
         let errorMessage = `Failed to fetch candidates (${status})`
         let errorDetails: any = null
+        let rawErrorText = ''
         
         try {
           // Try to get response as text first
           const textResponse = await candidatesResponse.text()
+          rawErrorText = textResponse
           
           if (textResponse) {
             try {
@@ -133,6 +135,10 @@ export default function ShortlistedPage() {
         if (errorDetails) {
           errorLog.errorDetails = errorDetails
         }
+
+        if (rawErrorText) {
+          errorLog.rawErrorText = rawErrorText.slice(0, 1000)
+        }
         
         console.error('Candidates API error:', errorLog)
         
@@ -156,14 +162,18 @@ export default function ShortlistedPage() {
   useEffect(() => {
     if (!user || user.role === 'admin') return
     fetchCandidates()
-  }, [jobId, user, fetchCandidates])
+  }, [jobId, user?.id, user?.role, fetchCandidates])
 
-  // Realtime: poll for candidate updates every 10s for instant updates
+  // Light polling while tab is visible (reduces load vs 10s interval)
   useEffect(() => {
     if (!jobId || !user || user.role === 'admin') return
-    const interval = setInterval(fetchCandidates, 10000) // 10 seconds for faster updates
+    const tick = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+      fetchCandidates()
+    }
+    const interval = setInterval(tick, 60000)
     return () => clearInterval(interval)
-  }, [jobId, user, fetchCandidates])
+  }, [jobId, user?.id, user?.role, fetchCandidates])
 
   const handleScheduleClick = useCallback((candidate: Candidate) => {
     setSelectedCandidate(candidate)
@@ -190,37 +200,6 @@ export default function ShortlistedPage() {
 
   // Show UI immediately, only show loading spinner for data fetching
   const isLoadingData = loading && !authLoading
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <TopNavigation />
-            </div>
-          </div>
-        </div>
-        <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="pt-6">
-              <div className="text-center">
-                <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                <p className="text-red-500 text-lg font-semibold mb-2">Failed to load candidates</p>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-                <Button 
-                  onClick={fetchCandidates} 
-                  className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
-                >
-              Retry
-            </Button>
-              </div>
-          </CardContent>
-        </Card>
-        </div>
-      </div>
-    )
-  }
 
   const getRankIcon = useCallback((rank: number) => {
     if (rank === 1) return <Trophy className="w-5 h-5 text-yellow-500" />
@@ -252,6 +231,37 @@ export default function ShortlistedPage() {
     if (reasoning.length <= maxLength) return reasoning
     return reasoning.substring(0, maxLength) + '...'
   }, [])
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <TopNavigation />
+            </div>
+          </div>
+        </div>
+        <div className="container mx-auto p-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <p className="text-red-500 text-lg font-semibold mb-2">Failed to load candidates</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+                <Button
+                  onClick={fetchCandidates}
+                  className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
+                >
+                  Retry
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">

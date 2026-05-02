@@ -20,6 +20,7 @@ import {
   HelpCircle,
   Send,
   AlertTriangle,
+  X,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -48,18 +49,39 @@ const navigation: Array<{
   { name: 'Help', href: '/admin/help', icon: HelpCircle },
 ]
 
-export function AdminSidebar() {
+type AdminSidebarProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const section = searchParams.get('section')
   const { signOut } = useAuth()
 
   return (
-    <div className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
-      <div className="flex h-16 items-center border-b border-slate-200 px-6">
+    <div
+      className={cn(
+        'fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 ease-out',
+        open ? 'translate-x-0' : '-translate-x-full pointer-events-none'
+      )}
+      aria-hidden={!open}
+    >
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-4">
         <h2 className="text-lg font-semibold tracking-tight text-slate-900">Admin Panel</h2>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+          onClick={() => onOpenChange(false)}
+          aria-label="Close admin menu"
+        >
+          <X className="h-5 w-5" />
+        </Button>
       </div>
-      <nav className="flex-1 space-y-0.5 px-3 py-4 overflow-y-auto">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {navigation.map((item) => {
           const isAdminRoot = pathname === '/admin'
           const isActive =
@@ -70,6 +92,8 @@ export function AdminSidebar() {
             <Link
               key={item.name}
               href={item.href}
+              prefetch={false}
+              onClick={() => onOpenChange(false)}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
@@ -77,7 +101,7 @@ export function AdminSidebar() {
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               )}
             >
-              <item.icon className="w-5 h-5 shrink-0" />
+              <item.icon className="h-5 w-5 shrink-0" />
               <span className="truncate">{item.name}</span>
             </Link>
           )
@@ -89,14 +113,10 @@ export function AdminSidebar() {
           className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
           onClick={() => signOut()}
         >
-          <LogOut className="w-4 h-4 mr-2" />
+          <LogOut className="mr-2 h-4 w-4" />
           Sign Out
         </Button>
       </div>
     </div>
   )
 }
-
-
-
-

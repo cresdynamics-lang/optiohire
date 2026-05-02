@@ -18,6 +18,7 @@ const nextConfig = {
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
+    qualities: [75, 85],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -116,6 +117,16 @@ const nextConfig = {
   //   }
   //   return config
   // },
+
+  async redirects() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/icon',
+        permanent: false,
+      },
+    ]
+  },
 
   // Output optimization
   output: 'standalone',

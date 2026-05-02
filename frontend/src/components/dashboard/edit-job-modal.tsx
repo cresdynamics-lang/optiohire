@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus, Calendar, Clock, Video, ExternalLink } from 'lucide-react'
+import { X, Plus, Clock, Video, ExternalLink } from 'lucide-react'
 import { JobPosting } from '@/types'
 
 interface EditJobModalProps {
@@ -86,10 +86,10 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           >
-            <Card className="bg-white shadow-2xl">
+            <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_30px_90px_-56px_rgba(15,23,42,0.45)] dark:border-slate-700 dark:bg-slate-900">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-figtree font-extralight text-[#2D2DDD] dark:text-white">
+                  <CardTitle className="text-xl font-figtree font-semibold text-slate-900 dark:text-white">
                     Edit Job Posting
                   </CardTitle>
                   <Button
@@ -119,7 +119,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                         onChange={(e) => handleInputChange('job_title', e.target.value)}
                         placeholder="e.g., Senior Software Engineer"
                         required
-                        className="text-gray-900 dark:text-white dark:bg-gray-800 focus-visible:ring-[#2D2DDD] hover:border-[#2D2DDD]/50 focus-visible:border-[#2D2DDD]"
+                        className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                       />
                     </div>
                     
@@ -132,7 +132,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                         placeholder="Describe the role, responsibilities, and requirements..."
                         rows={4}
                         required
-                        className="text-gray-900 dark:text-white dark:bg-gray-800 focus-visible:ring-[#2D2DDD] hover:border-[#2D2DDD]/50 focus-visible:border-[#2D2DDD]"
+                        className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                       />
                     </div>
                     
@@ -145,13 +145,13 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                           onChange={(e) => setNewSkill(e.target.value)}
                           placeholder="Add a skill"
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                          className="text-gray-900 dark:text-white dark:bg-gray-800 focus-visible:ring-[#2D2DDD] hover:border-[#2D2DDD]/50 focus-visible:border-[#2D2DDD]"
+                          className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                         />
                         <Button 
                           type="button" 
                           onClick={addSkill} 
                           variant="outline"
-                          className="border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white dark:border-white dark:text-white dark:hover:bg-[#2D2DDD] dark:hover:text-white"
+                          className="border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
                         >
                           <Plus className="w-4 h-4" />
                         </Button>
@@ -183,7 +183,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                         id="status"
                         value={formData.status || 'active'}
                         onChange={(e) => handleInputChange('status', e.target.value as 'active' | 'paused' | 'closed')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D2DDD] focus:border-[#2D2DDD] dark:text-white dark:border-gray-600 dark:bg-gray-800 hover:border-[#2D2DDD]/50"
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-0 focus:border-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-slate-200"
                       >
                         <option value="active">Active</option>
                         <option value="paused">Paused</option>
@@ -195,7 +195,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                   {/* Application Deadline */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-[#2D2DDD]" />
+                      <Clock className="w-5 h-5 text-slate-700 dark:text-slate-200" />
                       Application Deadline
                     </h3>
                     
@@ -206,7 +206,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                         type="datetime-local"
                         value={formData.application_deadline ? new Date(formData.application_deadline).toISOString().slice(0, 16) : ''}
                         onChange={(e) => handleInputChange('application_deadline', e.target.value)}
-                        className="text-gray-900 dark:text-white dark:bg-gray-800 focus-visible:ring-[#2D2DDD] hover:border-[#2D2DDD]/50 focus-visible:border-[#2D2DDD]"
+                        className="border border-slate-300 bg-white text-slate-900 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                       />
                     </div>
                   </div>
@@ -225,13 +225,13 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                           value={formData.interview_meeting_link || ''}
                           onChange={(e) => handleInputChange('interview_meeting_link', e.target.value)}
                           placeholder="https://meet.google.com/..."
-                          className="text-gray-900 dark:text-white dark:bg-gray-800 focus-visible:ring-[#2D2DDD] hover:border-[#2D2DDD]/50 focus-visible:border-[#2D2DDD] flex-1"
+                          className="flex-1 border border-slate-300 bg-white text-slate-900 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => window.open('https://meet.google.com/new', '_blank', 'noopener,noreferrer')}
-                          className="flex-shrink-0 border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white dark:border-[#5F5FFF] dark:text-[#5F5FFF] dark:hover:bg-[#5F5FFF] dark:hover:text-white inline-flex items-center gap-2"
+                          className="inline-flex flex-shrink-0 items-center gap-2 border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
                           aria-label="Open Google Meet to create a new meeting"
                         >
                           <Video className="w-4 h-4" aria-hidden />
@@ -251,13 +251,13 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                       type="button" 
                       variant="outline" 
                       onClick={onClose}
-                      className="border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white dark:border-white dark:text-white dark:hover:bg-[#2D2DDD] dark:hover:text-white"
+                      className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit"
-                      className="bg-[#2D2DDD] text-white hover:bg-[#2D2DDD] dark:bg-[#2D2DDD] dark:text-white dark:hover:bg-[#2D2DDD] shadow-none hover:shadow-none"
+                      className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 shadow-none hover:shadow-none"
                     >
                       Save Changes
                     </Button>

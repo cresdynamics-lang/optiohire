@@ -11,12 +11,11 @@ import {
   Calendar,
   Users,
   UserCheck,
-  MapPin,
   ExternalLink,
   Edit,
   Trash2,
-  AlertTriangle,
   RefreshCw,
+  ArrowUpRight,
 } from 'lucide-react'
 import { CreateJobModal } from '../create-job-modal'
 import { JobDetailsModal } from '../job-details-modal'
@@ -174,7 +173,7 @@ export function JobsSection() {
     }
     
     loadJobs()
-  }, [user])
+  }, [user?.id, user?.email])
 
   // Add a refresh function that can be called externally
   const refreshJobs = async () => {
@@ -333,14 +332,9 @@ export function JobsSection() {
       const jobPostingId: string = data.job_posting_id
       const companyId: string = data.company_id
       
-      console.log('New job created via backend:', { jobPostingId, companyId })
-      console.log('Created job company_id:', companyId)
-      console.log('Current user:', { id: user.id, email: user.email })
-      
       // Store company_id in localStorage for future queries
       if (companyId) {
         localStorage.setItem('user_company_id', companyId)
-        console.log('💾 Stored company_id in localStorage:', companyId)
       }
       
       // Compose local job object for immediate UI feedback
@@ -370,34 +364,12 @@ export function JobsSection() {
         processingStatus: 'processing'
       }
       
-      console.log('New job created via backend:', { jobPostingId, companyId })
-      console.log('Created job company_id:', companyId)
-      console.log('Current user:', { id: user.id, email: user.email })
-      
-      // Refresh jobs list to get the actual job from database
-      // Await refresh to ensure job appears in list before showing success
-      console.log('Refreshing jobs list after creation...')
-      try {
-        await refreshJobs()
-        console.log('Jobs list refreshed - new job should be visible')
-        
-        // Double-check: Query directly to verify job exists
-        const { data: verifyJobs, error: verifyError } = await supabase
-          .from('job_postings')
-          .select('*')
-          .eq('job_posting_id', jobPostingId)
-        
-        console.log('Verification query result:', { verifyJobs, verifyError })
-        if (verifyJobs && verifyJobs.length > 0) {
-          console.log('Job verified in database:', verifyJobs[0])
-          console.log('Job company_id:', verifyJobs[0].company_id)
-        } else {
-          console.warn('Job not found in verification query')
-        }
-      } catch (err) {
-        console.error('Error refreshing jobs after creation:', err)
-        // Don't throw - job was created successfully, refresh can happen later
-      }
+      // Optimistic UI update: show the new job immediately for a snappy UX.
+      setJobs((prev) => [composedJob, ...prev])
+      // Refresh in the background to sync counters/derived fields without blocking.
+      setTimeout(() => {
+        void refreshJobs()
+      }, 50)
       
       // Show success guidance: tell HR to check email for forwarding/subject instructions
       try {
@@ -559,12 +531,12 @@ export function JobsSection() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900/90"
+        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8 dark:border-gray-800 dark:bg-gray-900"
       >
-        <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_65%)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent dark:from-slate-800/50" aria-hidden />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-400">Hiring</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">Hiring</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
             Job postings
           </h1>
@@ -588,7 +560,7 @@ export function JobsSection() {
             variant="default" 
             size="sm"
             type="button"
-            className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/25 hover:bg-blue-700 sm:min-h-9 sm:w-auto"
+            className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-slate-900 text-white shadow-sm shadow-slate-500/20 hover:bg-slate-800 sm:min-h-9 sm:w-auto dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
             onClick={() => setIsCreateModalOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -657,7 +629,7 @@ export function JobsSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
           >
-                        <Card className="hover:shadow-lg transition-all duration-300">
+                        <Card className="border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900">
                           <CardContent className="p-4 sm:p-6">
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1">
@@ -708,10 +680,11 @@ export function JobsSection() {
                         type="button"
                         variant="default" 
                         size="sm"
-                      className="min-h-[44px] w-full touch-manipulation bg-[#2D2DDD] text-white hover:bg-[#2D2DDD] shadow-none hover:shadow-none sm:min-h-9"
+                      className="min-h-[44px] w-full touch-manipulation rounded-xl bg-slate-900 text-white hover:bg-slate-800 sm:min-h-9 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                     >
                       <Users className="w-4 h-4 mr-2" />
                       View Candidates
+                      <ArrowUpRight className="ml-auto h-4 w-4" />
                     </Button>
                     </Link>
                     <div className="flex flex-row gap-2">
@@ -720,7 +693,7 @@ export function JobsSection() {
                         variant="outline" 
                         size="sm"
                         onClick={() => handleEditJob(job.id)}
-                        className="min-h-[44px] flex-1 touch-manipulation border-[#2D2DDD] text-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white sm:min-h-9"
+                        className="min-h-[44px] flex-1 touch-manipulation border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 sm:min-h-9 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                       >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
@@ -730,7 +703,7 @@ export function JobsSection() {
                         variant="outline" 
                         size="sm"
                         onClick={() => handleViewDetails(job.id)}
-                        className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/25 hover:bg-blue-700 sm:min-h-9 sm:w-auto"
+                        className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-slate-100 text-slate-900 shadow-sm hover:bg-slate-200 sm:min-h-9 sm:w-auto dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                       >
                         <ExternalLink className="w-4 h-4 mr-1" />
                         View Details

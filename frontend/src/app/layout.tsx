@@ -85,7 +85,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${syne.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${dmSans.variable} ${syne.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         {/* Favicon */}
         <link rel="icon" href="/assets/logo/logo.png" type="image/png" />
@@ -96,9 +96,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        {/* Prefetch critical routes */}
-        <link rel="prefetch" href="/auth/signin" />
-        <link rel="prefetch" href="/auth/signup" />
+        {/* Prefetch auth routes in production only — dev HMR + prefetch causes noisy RSC fetches that feel like endless reloads */}
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <link rel="prefetch" href="/auth/signin" />
+            <link rel="prefetch" href="/auth/signup" />
+          </>
+        )}
         {/* Prefetch logo instead of preload to avoid unused resource warning */}
         <link rel="prefetch" href="/assets/logo/logo.png" as="image" type="image/png" />
         {/* Performance hints */}

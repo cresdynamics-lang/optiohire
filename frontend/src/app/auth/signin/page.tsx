@@ -24,7 +24,6 @@ export default function SignInPage() {
   const router = useRouter()
   const { signIn } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const {
@@ -36,7 +35,6 @@ export default function SignInPage() {
   })
 
   const onSubmit = async (data: SignInFormData) => {
-    setIsLoading(true)
     setError(null)
 
     try {
@@ -45,12 +43,30 @@ export default function SignInPage() {
       if (error) {
         setError(error.message)
       } else {
-        router.push('/dashboard')
+        // Send candidates directly to Jobs for faster perceived load.
+        const token = localStorage.getItem('token')
+        let target = '/dashboard'
+        if (token) {
+          try {
+            const payloadBase64 = token.split('.')[1]
+            if (payloadBase64) {
+              const padded = payloadBase64.padEnd(payloadBase64.length + ((4 - (payloadBase64.length % 4)) % 4), '=')
+              const payload = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')))
+              const role = String(payload?.company_role || payload?.companyRole || payload?.role || '').toLowerCase()
+              if (role === 'candidate' || role === 'job_seeker' || role === 'jobseeker') {
+                target = '/dashboard/jobs'
+              }
+            }
+          } catch {
+            // Fallback to default dashboard target
+          }
+        }
+        router.push(target)
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
     } finally {
-      setIsLoading(false)
+      // Keep UI responsive during sign in; no explicit loading lock.
     }
   }
 
@@ -151,10 +167,9 @@ export default function SignInPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
+              className="w-full bg-primary text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors font-figtree"
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              Sign In
             </button>
 
             {GOOGLE_CLIENT_ID && (

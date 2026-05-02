@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { MetricCard } from '../metric-card'
 import { 
   TrendingUp,
-  Clock,
   CheckCircle,
   BarChart3,
   Loader2,
@@ -16,7 +15,9 @@ import {
   UserX,
   AlertTriangle,
   ChevronDown,
-  Plus
+  Plus,
+  ArrowUpRight,
+  Target
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -85,7 +86,7 @@ export function OverviewSection() {
     flaggedApplicants: 0,
     rejectedApplicants: 0
   })
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([])
   const [allJobsData, setAllJobsData] = useState<any[]>([]) // Store full job data with applicant counts
@@ -94,7 +95,12 @@ export function OverviewSection() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const [selectedJobData, setSelectedJobData] = useState<any>(null)
   const [isTourOpen, setIsTourOpen] = useState(false)
-  const [hasShownNoJobsToast, setHasShownNoJobsToast] = useState(false)
+  const hasShownNoJobsToastRef = useRef(false)
+  const hasShownMetricsWarning = useRef(false)
+  const toastRef = useRef(toast)
+  const addNotificationRef = useRef(addNotification)
+  toastRef.current = toast
+  addNotificationRef.current = addNotification
 
   const getGreeting = () => {
     const now = new Date()
@@ -187,14 +193,10 @@ export function OverviewSection() {
         // No company found or no jobs - this is okay, just show empty state
         jobs = []
       } else if (response.status === 401 || response.status === 403) {
-        console.warn('Authentication/permission error while fetching jobs, keeping session')
-        setError(
-          response.status === 403
-            ? 'Your account does not yet have employer access for job analytics.'
-            : 'Unable to verify your session for job analytics right now. Please retry.'
-        )
-        setIsLoading(false)
-        return
+        // Keep dashboard usable even if metrics auth temporarily fails.
+        // This avoids the disruptive "Failed to load dashboard metrics" banner.
+        console.warn('Authentication/permission error while fetching metrics, using fallback empty metrics')
+        jobs = []
       } else {
         console.error('Failed to fetch jobs:', response.status, await response.text().catch(() => ''))
         // Continue with empty array rather than showing error
@@ -275,14 +277,14 @@ export function OverviewSection() {
       })
 
       // Smart popup when there are no jobs yet
-      if (totalJobs === 0 && !preserveSelection && !hasShownNoJobsToast) {
-        setHasShownNoJobsToast(true)
-        addNotification({
+      if (totalJobs === 0 && !preserveSelection && !hasShownNoJobsToastRef.current) {
+        hasShownNoJobsToastRef.current = true
+        addNotificationRef.current({
           title: 'No jobs yet',
           description: `Create the first role for ${getCompanyLabel()} from the Jobs tab to start receiving applications.`,
           type: 'info',
         })
-        toast({
+        toastRef.current({
           title: 'Welcome to your hiring workspace',
           description: `You have no job posts yet for ${getCompanyLabel()}. Head to the Jobs section to create your first role.`,
           variant: 'info',
@@ -292,24 +294,54 @@ export function OverviewSection() {
       // Skip analytics loading if no jobs
       setIsLoadingAnalytics(false)
     } catch (err) {
-      console.error('Error loading dashboard metrics:', err)
-      setError('Failed to load dashboard metrics')
-      
-      addNotification({
-        title: 'Error loading dashboard',
-        description: err instanceof Error ? err.message : 'Failed to load dashboard metrics. Please try again.',
-        type: 'error',
+      const errName = err instanceof Error ? err.name : ''
+      const errMessage = err instanceof Error ? err.message : ''
+      const isTimeoutLike =
+        errName === 'AbortError' ||
+        errName === 'TimeoutError' ||
+        /abort|timeout/i.test(errMessage)
+
+      if (isTimeoutLike) {
+        console.warn('Dashboard metrics request timed out, using fallback metrics')
+      } else {
+        console.error('Error loading dashboard metrics:', err)
+      }
+
+      // Keep the dashboard usable even when metrics endpoint is temporarily unavailable.
+      setError(null)
+      setJobPostings([])
+      setAllJobsData([])
+      setSelectedJobId(null)
+      setSelectedJobData(null)
+      setMetrics({
+        activeJobs: 0,
+        totalJobs: 0,
+        totalReports: 0,
+        readyReports: 0,
+        totalApplicants: 0,
+        shortlistedApplicants: 0,
+        flaggedApplicants: 0,
+        rejectedApplicants: 0
       })
-      
-      toast({
-        title: 'Error loading dashboard',
-        description: err instanceof Error ? err.message : 'Failed to load dashboard metrics. Please try again.',
-        variant: 'error',
-      })
+
+      if (!hasShownMetricsWarning.current) {
+        hasShownMetricsWarning.current = true
+        addNotificationRef.current({
+          title: 'Metrics temporarily unavailable',
+          description: 'Dashboard loaded in fallback mode. You can still use Jobs and other sections.',
+          type: 'warning',
+        })
+
+        toastRef.current({
+          title: 'Metrics temporarily unavailable',
+          description: 'Dashboard loaded in fallback mode. You can still use Jobs and other sections.',
+          variant: 'warning',
+        })
+      }
     } finally {
       setIsLoading(false)
     }
-  }, [user, toast, addNotification, hasShownNoJobsToast]) // Removed selectedJobId from dependencies to prevent re-runs on selection change
+  }, [user])
 
   // Handle job selection change
   const handleJobSelect = useCallback((jobId: string) => {
@@ -318,7 +350,6 @@ export function OverviewSection() {
       return
     }
     
-    console.log('Switching to job:', jobId, 'Available jobs:', allJobsData.length)
     setIsPopoverOpen(false)
     
     // Normalize the jobId to string for consistent matching
@@ -326,8 +357,6 @@ export function OverviewSection() {
     
     // If no jobs data loaded yet, wait for it to load
     if (allJobsData.length === 0) {
-      console.log('Jobs data not loaded yet, loading...')
-      // Set the selection and let loadDashboardMetrics handle it
       loadDashboardMetrics(normalizedJobId, true)
       return
     }
@@ -340,14 +369,6 @@ export function OverviewSection() {
     })
     
     if (selectedJob) {
-      console.log('Found job in cache, updating metrics:', {
-        jobId: normalizedJobId,
-        applicant_count: selectedJob.applicant_count,
-        shortlisted_count: selectedJob.shortlisted_count,
-        flagged_count: selectedJob.flagged_count,
-        rejected_count: selectedJob.rejected_count
-      })
-      
       // Update state immediately for instant UI feedback
       setSelectedJobId(normalizedJobId)
       setSelectedJobData(selectedJob)
@@ -364,20 +385,7 @@ export function OverviewSection() {
         ...prev,
         ...jobApplicants,
       }))
-      
-      // Show notification when job is selected
-      addNotification({
-        title: 'Job selected',
-        description: `Viewing analytics for "${selectedJob.job_title}"`,
-        type: 'info',
-      })
-      
-      toast({
-        title: 'Job selected',
-        description: `Viewing analytics for "${selectedJob.job_title}"`,
-        variant: 'info',
-      })
-      
+
       loadJobAnalytics(normalizedJobId)
     } else {
       // If job not found in cached data, refresh from API
@@ -393,12 +401,13 @@ export function OverviewSection() {
 
 
 
-  // Load metrics on component mount
+  // Load metrics once per signed-in user (avoids duplicate fetches when `user` object identity changes)
+  const userKey = user?.id ?? user?.email ?? null
   useEffect(() => {
-    if (user) {
-      loadDashboardMetrics(null, false) // Don't preserve selection on initial load
+    if (userKey) {
+      loadDashboardMetrics(null, false)
     }
-  }, [user, loadDashboardMetrics])
+  }, [userKey, loadDashboardMetrics])
 
   // Refresh job data when needed (e.g., after creating a new job)
   const refreshJobData = useCallback(async () => {
@@ -448,12 +457,8 @@ export function OverviewSection() {
           }))
         }
       } else if (response.status === 401 || response.status === 403) {
-        console.warn('Authentication/permission error while refreshing jobs, keeping session')
-        setError(
-          response.status === 403
-            ? 'Your account does not yet have employer access for job analytics.'
-            : 'Unable to verify your session for job analytics right now. Please retry.'
-        )
+        // Keep overview usable even when refresh endpoint briefly returns auth/permission errors.
+        console.warn('Authentication/permission error while refreshing jobs, preserving existing overview data')
         return
       }
     } catch (err) {
@@ -495,7 +500,7 @@ export function OverviewSection() {
       icon: BarChart3,
       trend: metrics.totalReports > 0 ? { 
         value: metrics.readyReports, 
-        label: 'ready', 
+        label: 'ready reports', 
         isPositive: true 
       } : undefined,
     },
@@ -586,6 +591,66 @@ export function OverviewSection() {
     },
   ]
 
+  const candidateConversionRate =
+    metrics.totalApplicants > 0
+      ? Math.round((metrics.shortlistedApplicants / metrics.totalApplicants) * 100)
+      : 0
+  const flaggedRate =
+    metrics.totalApplicants > 0
+      ? Math.round((metrics.flaggedApplicants / metrics.totalApplicants) * 100)
+      : 0
+  const rejectionRate =
+    metrics.totalApplicants > 0
+      ? Math.round((metrics.rejectedApplicants / metrics.totalApplicants) * 100)
+      : 0
+
+  const quickActions = [
+    {
+      key: 'jobs',
+      title: 'Manage Jobs',
+      description: 'Create or update active roles',
+      icon: Briefcase,
+      onHover: () => router.prefetch('/dashboard/jobs'),
+      onClick: () => router.push('/dashboard/jobs'),
+    },
+    {
+      key: 'candidates',
+      title: 'View Candidates',
+      description: 'Review shortlisted and flagged profiles',
+      icon: Users,
+      onHover: () => {
+        if (jobPostings.length > 0) {
+          router.prefetch(`/dashboard/job/${jobPostings[0].id}/shortlisted`)
+        } else {
+          router.prefetch('/dashboard/jobs')
+        }
+      },
+      onClick: () => {
+        if (jobPostings.length > 0) {
+          router.push(`/dashboard/job/${jobPostings[0].id}/shortlisted`)
+        } else {
+          router.push('/dashboard/jobs')
+        }
+      },
+    },
+    {
+      key: 'reports',
+      title: 'Open Reports',
+      description: 'Track hiring insights and outcomes',
+      icon: BarChart3,
+      onHover: () => router.prefetch('/dashboard/reports'),
+      onClick: () => router.push('/dashboard/reports'),
+    },
+    {
+      key: 'post',
+      title: 'Post New Job',
+      description: 'Launch a role and start sourcing',
+      icon: Plus,
+      onHover: () => router.prefetch('/dashboard/jobs'),
+      onClick: () => router.push('/dashboard/jobs'),
+    },
+  ]
+
   return (
     <div className="space-y-8">
       <ProductTour
@@ -608,8 +673,8 @@ export function OverviewSection() {
         transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
         className="gpu-accelerated"
       >
-        <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-[0_28px_90px_-54px_rgba(15,23,42,0.45)] backdrop-blur-[2px] sm:p-8 dark:border-gray-800 dark:bg-gray-900/90">
-          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.09),transparent_62%)] sm:block" aria-hidden />
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8 dark:border-gray-800 dark:bg-gray-900">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent dark:from-slate-800/50" aria-hidden />
           <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           {/* Welcome Section */}
           <div className="flex-1 min-w-0">
@@ -625,7 +690,7 @@ export function OverviewSection() {
                 size="sm"
                 type="button"
                 onClick={() => setIsTourOpen(true)}
-                className="h-9 min-h-[44px] shrink-0 px-3 text-xs text-[#2D2DDD] hover:text-[#2424c0] hover:bg-[#2D2DDD]/10 border border-[#2D2DDD]/20 rounded-lg transition-all sm:h-8 sm:min-h-0"
+                className="h-9 min-h-[44px] shrink-0 rounded-lg border border-slate-300 px-3 text-xs text-slate-700 transition-all hover:bg-slate-100 sm:h-8 sm:min-h-0"
                 aria-label="Start product tour"
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
@@ -640,6 +705,20 @@ export function OverviewSection() {
                 ? `You have no active job posts yet. Create a role for ${getCompanyLabel()} to start capturing and auto-screening applications.`
                 : `You have ${metrics.activeJobs} active job${metrics.activeJobs === 1 ? '' : 's'} at ${getCompanyLabel()} and ${metrics.totalApplicants} applicant${metrics.totalApplicants === 1 ? '' : 's'} on the selected role.`}
             </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <Target className="h-3.5 w-3.5" />
+                Shortlist rate: {candidateConversionRate}%
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Flagged: {flaggedRate}%
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <UserX className="h-3.5 w-3.5" />
+                Rejected: {rejectionRate}%
+              </div>
+            </div>
           </div>
           
           {/* Action Buttons */}
@@ -656,7 +735,7 @@ export function OverviewSection() {
                   type="button"
                   variant="outline"
                   disabled={isLoading || jobPostings.length === 0}
-                  className="h-11 min-h-[44px] w-full min-w-0 max-w-full justify-start border border-gray-300 sm:h-10 sm:min-h-0 sm:min-w-[200px] sm:max-w-[280px] dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 hover:!text-gray-900 dark:hover:!text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-shadow"
+                  className="h-11 min-h-[44px] w-full min-w-0 max-w-full justify-start border border-slate-300 sm:h-10 sm:min-h-0 sm:min-w-[200px] sm:max-w-[280px] dark:border-slate-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-gray-800 hover:!text-slate-900 dark:hover:!text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-shadow"
                 >
                   <Briefcase className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="min-w-0 flex-1 truncate text-left text-sm font-figtree font-medium sm:max-w-[150px] sm:flex-none">
@@ -689,7 +768,7 @@ export function OverviewSection() {
                         className={cn(
                           "min-h-[44px] w-full rounded-md px-3 py-2.5 text-left text-sm font-figtree transition-colors sm:min-h-0 sm:py-2",
                           String(selectedJobId) === String(job.id)
-                            ? "bg-[#2D2DDD] text-white"
+                            ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         )}
                       >
@@ -724,43 +803,27 @@ export function OverviewSection() {
         </motion.div>
       )}
 
-      {/* Loading State */}
-      {isLoading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center justify-center py-12"
-        >
-          <div className="text-center">
-            <Loader2 className="animate-spin-smooth rounded-full h-8 w-8 border-b-2 border-[#2D2DDD] mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading dashboard metrics...</p>
-          </div>
-        </motion.div>
-      )}
-
       {/* Metrics Grid */}
-      {!isLoading && (
-        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {metricsData.map((metric, index) => {
-            const tourId = metric.title === 'Active Jobs' ? 'active-jobs' :
-                          metric.title === 'Total Jobs' ? 'total-jobs' :
-                          metric.title === 'Reports Generated' ? 'reports-generated' :
-                          metric.title === 'Ready Reports' ? 'ready-reports' : null
-            
-            return (
-              <div key={metric.title} data-tour={tourId || undefined}>
-                <MetricCard
-                  title={metric.title}
-                  value={metric.value}
-                  icon={metric.icon}
-                  trend={metric.trend}
-                  delay={index * 0.1}
-                />
-              </div>
-            )
-          })}
-        </div>
-      )}
+      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {metricsData.map((metric, index) => {
+          const tourId = metric.title === 'Active Jobs' ? 'active-jobs' :
+                        metric.title === 'Total Jobs' ? 'total-jobs' :
+                        metric.title === 'Reports Generated' ? 'reports-generated' :
+                        metric.title === 'Ready Reports' ? 'ready-reports' : null
+          
+          return (
+            <div key={metric.title} data-tour={tourId || undefined}>
+              <MetricCard
+                title={metric.title}
+                value={metric.value}
+                icon={metric.icon}
+                trend={metric.trend}
+                delay={index * 0.1}
+              />
+            </div>
+          )
+        })}
+      </div>
 
       {/* Applicant Analytics Section */}
       <motion.div
@@ -857,10 +920,10 @@ export function OverviewSection() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
       >
-        <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+        <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_22px_60px_-44px_rgba(15,23,42,0.42)] dark:border-gray-800 dark:bg-gray-900">
           <CardHeader>
             <CardTitle className="text-lg font-figtree font-extralight flex items-center gap-3 text-gray-900 dark:text-white">
-              <BarChart3 className="w-4 h-4 text-[#2D2DDD]" />
+              <BarChart3 className="w-4 h-4 text-slate-700 dark:text-slate-200" />
               Quick Actions
             </CardTitle>
             <CardDescription className="text-sm font-figtree font-light text-gray-600 dark:text-gray-400">
@@ -869,87 +932,33 @@ export function OverviewSection() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <button
-                onMouseEnter={() => router.prefetch('/dashboard/jobs')}
-                onClick={() => router.push('/dashboard/jobs')}
-                className="group"
-              >
-                <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer h-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-[#2D2DDD] dark:hover:border-[#2D2DDD]">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/70 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                      <Briefcase className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-base font-semibold mb-2 text-gray-900 dark:text-white">Manage Jobs</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      View and edit job postings
-                    </p>
-                  </CardContent>
-                </Card>
-              </button>
-              <button
-                onMouseEnter={() => {
-                  if (jobPostings.length > 0) {
-                    const target = `/dashboard/job/${jobPostings[0].id}/shortlisted`
-                    router.prefetch(target)
-                  } else {
-                    router.prefetch('/dashboard/jobs')
-                  }
-                }}
-                onClick={() => {
-                  if (jobPostings.length > 0) {
-                    router.push(`/dashboard/job/${jobPostings[0].id}/shortlisted`)
-                  } else {
-                    router.push('/dashboard/jobs')
-                  }
-                }}
-                className="group"
-              >
-                <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer h-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-[#2D2DDD] dark:hover:border-[#2D2DDD]">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                      <Users className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-base font-semibold mb-2 text-gray-900 dark:text-white">View Candidates</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Manage applicants and candidates
-                    </p>
-                  </CardContent>
-                </Card>
-              </button>
-              <button
-                onMouseEnter={() => router.prefetch('/dashboard/reports')}
-                onClick={() => router.push('/dashboard/reports')}
-                className="group"
-              >
-                <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer h-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-[#2D2DDD] dark:hover:border-[#2D2DDD]">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#2D2DDD] to-[#2D2DDD]/80 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                      <BarChart3 className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-base font-semibold mb-2 text-gray-900 dark:text-white">View Reports</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Analytics and insights
-                    </p>
-                  </CardContent>
-                </Card>
-              </button>
-              <button
-                onMouseEnter={() => router.prefetch('/dashboard/jobs')}
-                onClick={() => router.push('/dashboard/jobs')}
-                className="group"
-              >
-                <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer h-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-[#2D2DDD] dark:hover:border-[#2D2DDD]">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                      <Plus className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-base font-semibold mb-2 text-gray-900 dark:text-white">Post New Job</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Create new positions
-                    </p>
-                  </CardContent>
-                </Card>
-              </button>
+              {quickActions.map((action) => {
+                const Icon = action.icon
+                return (
+                  <button
+                    key={action.key}
+                    onMouseEnter={action.onHover}
+                    onClick={action.onClick}
+                    className="group"
+                    type="button"
+                  >
+                    <Card className="h-full cursor-pointer border border-slate-200 bg-slate-50/70 transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-xl dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800">
+                      <CardContent className="p-5">
+                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-300 bg-white shadow-sm transition-transform duration-300 group-hover:scale-105 dark:border-slate-600 dark:bg-slate-900">
+                          <Icon className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{action.title}</h3>
+                          <ArrowUpRight className="h-4 w-4 text-slate-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-slate-300" />
+                        </div>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                          {action.description}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </button>
+                )
+              })}
             </div>
           </CardContent>
         </Card>

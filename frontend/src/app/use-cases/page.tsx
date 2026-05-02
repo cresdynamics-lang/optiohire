@@ -1,9 +1,9 @@
 import { Metadata } from 'next'
-import { ArrowRight, Rocket, Building2, Users, Briefcase, Zap, Target } from 'lucide-react'
+import { ArrowRight, Rocket, Building2, Users, Briefcase } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Use Cases | OptioHire for Every Hiring Scenario',
-  description: 'Discover how OptioHire, built by Cres Dynamics in Nairobi, supports startups, SMEs, and HR teams with faster, fairer, skills-first hiring workflows.',
+  title: 'Use Cases | OptioHire for Kenyan Hiring Teams',
+  description: 'Use cases for startups, SMEs, enterprise HR, and NGOs in Kenya. Fair, fast, auditable hiring at scale.',
   keywords: 'skills-first hiring use cases, startup hiring, SME recruitment, volume hiring, technical hiring, role readiness hiring'
 }
 
@@ -11,57 +11,39 @@ export default function UseCasesPage() {
   const useCases = [
     {
       icon: Rocket,
-      title: 'Startups Hiring Fast',
-      description: 'Growing startups need to hire quickly without compromising on quality. OptioHire helps identify candidates who can contribute immediately.',
-      pain: 'Need great hires yesterday but can\'t afford months of recruitment',
-      solution: 'Rapid screening with a skills-first focus on growth potential and role readiness',
-      outcomes: ['50% faster hiring cycles', 'Higher retention rates', 'Cost-effective scaling'],
+      title: 'High-growth startups',
+      description: 'Hiring your first 20 employees? Do not let a bad process cost you.',
+      pain: 'Lean teams cannot spend days manually screening CVs',
+      solution: 'Fast shortlist generation with structured, role-fit scoring',
+      outcomes: ['3x faster shortlist cycles', 'Higher confidence in final interviews', 'Cleaner hiring records'],
       color: 'from-blue-500 to-cyan-600'
     },
     {
       icon: Building2,
-      title: 'Growing SMEs Scaling Teams',
-      description: 'Small to medium businesses expanding their teams need efficient hiring that supports their growth trajectory.',
-      pain: 'Hiring multiple roles simultaneously while maintaining quality',
-      solution: 'Streamlined processes for volume hiring with consistent quality',
-      outcomes: ['3x faster scaling', 'Consistent hire quality', 'Reduced hiring costs'],
+      title: 'Scaling SMEs',
+      description: 'Your team is in Nairobi, Mombasa, and Kisumu — keep hiring consistent.',
+      pain: 'Different teams use different hiring standards',
+      solution: 'One shared scorecard and process for every vacancy',
+      outcomes: ['Consistent candidate quality', 'Aligned interviewer feedback', 'Faster hiring decisions'],
       color: 'from-green-500 to-emerald-600'
     },
     {
       icon: Users,
-      title: 'HR Teams Managing Volume',
-      description: 'Dedicated HR teams handling high-volume recruitment need tools that maintain quality while increasing efficiency.',
-      pain: 'Managing hundreds of applications across multiple roles',
-      solution: 'Automated screening with human oversight for quality control',
-      outcomes: ['60% time savings', 'Better candidate experience', 'Improved team productivity'],
+      title: 'Enterprise HR',
+      description: 'Unify 10 departments. One scorecard. One source of truth.',
+      pain: 'Large organizations struggle with fragmented recruiter workflows',
+      solution: 'Centralized review, reporting, and final recommendation tracking',
+      outcomes: ['Cross-department consistency', 'Auditable decision history', 'Lower process risk'],
       color: 'from-purple-500 to-pink-600'
     },
     {
       icon: Briefcase,
-      title: 'Specialized Technical Roles',
-      description: 'Finding qualified developers, engineers, and technical specialists requires deep understanding of technical skills.',
-      pain: 'Hard to assess real technical capabilities from resumes',
-      solution: 'Skills-focused evaluation with technical competency validation',
-      outcomes: ['Higher technical-role alignment', 'Reduced technical interviews', 'Better team fit'],
+      title: 'NGOs & development orgs',
+      description: 'Donor-funded roles need fair, documented selection. We make that easy.',
+      pain: 'Funding stakeholders require traceable and fair hiring decisions',
+      solution: 'Bias-aware scoring with full audit trails for every candidate',
+      outcomes: ['Documented fairness', 'Compliance-ready reporting', 'Faster panel alignment'],
       color: 'from-orange-500 to-red-600'
-    },
-    {
-      icon: Zap,
-      title: 'Sales & Operations Hiring',
-      description: 'High-performing sales teams and operational roles require specific behavioral assessments beyond basic qualifications.',
-      pain: 'Traditional methods miss critical behavioral competencies',
-      solution: 'Role-specific evaluation criteria with behavioral insights',
-      outcomes: ['40% higher performance', 'Lower turnover', 'Better team dynamics'],
-      color: 'from-teal-500 to-blue-600'
-    },
-    {
-      icon: Target,
-      title: 'Entry-Level & Graduate Hiring',
-      description: 'Identifying promising early-career talent requires looking beyond traditional qualifications and experience.',
-      pain: 'Hard to assess potential in candidates with limited experience',
-      solution: 'Focus on growth potential, learning ability, and cultural fit',
-      outcomes: ['Higher long-term retention', 'Better cultural integration', 'Future-ready talent'],
-      color: 'from-pink-500 to-rose-600'
     }
   ]
 
