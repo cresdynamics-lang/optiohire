@@ -12,7 +12,7 @@ Use this after [DIGITALOCEAN_DEPLOY.md](./DIGITALOCEAN_DEPLOY.md). Hosting is **
 | Code | Repo cloned at `/var/www/optiohire` and `git pull origin main` works. |
 | DNS | **A** records for `@`, `www`, and `api` point to the droplet’s **public IPv4**. |
 
-Verify DNS from your PC (replace IP if yours differs):
+Verify DNS from your PC (production droplet IP is **67.205.164.114** unless you change it):
 
 ```bash
 nslookup optiohire.com

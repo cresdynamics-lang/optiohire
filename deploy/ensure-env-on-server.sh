@@ -12,8 +12,8 @@ FRONTEND_ENV="$APP_DIR/frontend/.env.local"
 # Defaults (replace with your server IP/domain if different)
 DEFAULT_JWT_SECRET="a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568"
 DEFAULT_DATABASE_URL="postgresql://optiohire_user:your_db_password_here@localhost:5432/optiohire"
-# Use droplet IP or domain - detect from hostname or use 165.227.56.148
-SERVER_URL="${SERVER_URL:-http://165.227.56.148}"
+# Use droplet IP or domain - detect from hostname or use current droplet IP
+SERVER_URL="${SERVER_URL:-http://67.205.164.114}"
 BACKEND_URL="${BACKEND_URL:-$SERVER_URL:3001}"
 FRONTEND_URL="${FRONTEND_URL:-$SERVER_URL:3000}"
 

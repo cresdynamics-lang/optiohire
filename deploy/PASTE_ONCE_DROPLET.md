@@ -1,7 +1,7 @@
 # Paste once: build + env (with API URLs) + PM2
 
 Use this **after** the repo is at `/var/www/optiohire`, Node 20 and PM2 are installed, and Postgres + NGINX are set up.  
-**Droplet IP:** 165.227.56.148 | **Domain / API:** optiohire.com, www.optiohire.com, api.optiohire.com
+**Droplet IP:** 67.205.164.114 | **Domain / API:** optiohire.com, www.optiohire.com, api.optiohire.com
 
 ---
 

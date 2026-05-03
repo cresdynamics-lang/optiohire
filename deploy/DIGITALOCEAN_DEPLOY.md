@@ -11,22 +11,31 @@ Host the OptioHire app (Next.js frontend + Express backend + PostgreSQL) on a Di
 
 ## Quick start: host this app on Digital Ocean
 
-1. **Create a Droplet** (see [Prerequisites](#0-prerequisites--create-a-droplet)); current IP **165.227.56.148**.
+1. **Create a Droplet** (see [Prerequisites](#0-prerequisites--create-a-droplet)); current IP **67.205.164.114**.
 2. **Push code:** `git push origin main`
-3. **SSH in:** `ssh -o ServerAliveInterval=60 root@165.227.56.148`
+3. **SSH in:** `ssh -o ServerAliveInterval=60 root@67.205.164.114`
 4. **Run the deploy script** or follow [All commands to run on the droplet console](#all-commands-to-run-on-the-droplet-console).
-5. **Point DNS** for `@`, `www`, and `api` to **165.227.56.148**.
+5. **Point DNS** for `@`, `www`, and `api` to **67.205.164.114**.
 6. **Run Certbot** for SSL (see [§4](#4-add-ssl-lets-encrypt)).
 7. **Add secrets** in `backend/.env` and restart PM2 (see [§6](#6-after-first-deploy-add-secrets)).
 
-**Droplet IP:** **165.227.56.148**  
+**Fast path (already cloned on server):** after DNS points here, SSH in and run:
+
+```bash
+export CERTBOT_EMAIL='your-real-email@example.com'
+cd /var/www/optiohire && git pull origin main && bash deploy/update-droplet-and-ssl.sh
+```
+
+See [update-droplet-and-ssl.sh](./update-droplet-and-ssl.sh).
+
+**Droplet IP:** **67.205.164.114**  
 **Domain:** optiohire.com, www.optiohire.com, api.optiohire.com
 
 ---
 
 ## All commands to run on the droplet console
 
-SSH in first: `ssh root@165.227.56.148` (or with keepalive: `ssh -o ServerAliveInterval=60 root@165.227.56.148`). Then run these in order. Replace `your@email.com` in the Certbot command with your real email.
+SSH in first: `ssh root@67.205.164.114` (or with keepalive: `ssh -o ServerAliveInterval=60 root@67.205.164.114`). Then run these in order. Replace `your@email.com` in the Certbot command with your real email.
 
 ---
 
@@ -136,7 +145,7 @@ pm2 startup
 
 *(Run the command `pm2 startup` prints so the app starts on reboot.)*
 
-Check: `pm2 status` — both should be “online”. You can open http://165.227.56.148:3000 and http://165.227.56.148:3001 to test.
+Check: `pm2 status` — both should be “online”. You can open http://67.205.164.114:3000 and http://67.205.164.114:3001 to test.
 If frontend styling is missing, verify static files are reachable: `curl -I http://127.0.0.1:3000/_next/static/chunks/main-app.js`.
 
 ### 9. UFW firewall
@@ -205,10 +214,10 @@ sudo systemctl restart nginx
 ### 11. DNS (do this in DigitalOcean / your registrar)
 
 - In **DigitalOcean** → Networking → Domains, add **optiohire.com**.
-- Add **A** records pointing to **165.227.56.148**:
-  - `@` → 165.227.56.148  
-  - `www` → 165.227.56.148  
-  - `api` → 165.227.56.148  
+- Add **A** records pointing to **67.205.164.114**:
+  - `@` → 67.205.164.114  
+  - `www` → 67.205.164.114  
+  - `api` → 67.205.164.114  
 
 If the domain is at another registrar (e.g. Namecheap), set **custom nameservers** to:
 
@@ -251,7 +260,7 @@ If you don’t have a server yet:
 4. **Datacenter:** Choose one close to your users.
 5. **Authentication:** Add your SSH key (recommended) or use password and keep it safe.
 6. **Hostname:** e.g. `optiohire-prod`.
-7. Create the Droplet and note the **IP address**. Current production IP: **165.227.56.148**.
+7. Create the Droplet and note the **IP address**. Current production IP: **67.205.164.114**.
 
 ---
 
@@ -267,13 +276,13 @@ git push origin main
 Use keepalive so the connection does not drop during long runs:
 
 ```bash
-ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 root@165.227.56.148
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 root@67.205.164.114
 ```
 
 If you use password auth instead of SSH keys:
 
 ```bash
-ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o PreferredAuthentications=password -o PubkeyAuthentication=no root@165.227.56.148
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o PreferredAuthentications=password -o PubkeyAuthentication=no root@67.205.164.114
 ```
 
 ## 3. Run the deploy script on the server
@@ -289,7 +298,7 @@ cd /var/www/optiohire && git pull origin main && bash deploy/digitalocean-deploy
 From your machine:
 
 ```bash
-scp deploy/digitalocean-deploy.sh root@165.227.56.148:/root/
+scp deploy/digitalocean-deploy.sh root@67.205.164.114:/root/
 ```
 
 On the droplet:
@@ -329,11 +338,11 @@ certbot renew --dry-run
 
 ## 5. DNS (DigitalOcean / your registrar)
 
-Point all to **165.227.56.148** (or your droplet IP if different).
+Point all to **67.205.164.114** (or your droplet IP if different).
 
-- **A** record: `@` (or optiohire.com) → **165.227.56.148**  
-- **A** record: `www` → **165.227.56.148**  
-- **A** record: `api` → **165.227.56.148**  
+- **A** record: `@` (or optiohire.com) → **67.205.164.114**  
+- **A** record: `www` → **67.205.164.114**  
+- **A** record: `api` → **67.205.164.114**  
 
 ## 6. After first deploy: add secrets
 
@@ -497,7 +506,7 @@ The droplet may not have enough RAM for `next build`. Use **pre-build locally an
 ```bash
 # On your machine (where build works):
 cd /path/to/optiohire
-SERVER=root@165.227.56.148 ./deploy/prebuild-and-deploy-frontend.sh
+SERVER=root@67.205.164.114 ./deploy/prebuild-and-deploy-frontend.sh
 ```
 
 This builds the frontend locally, rsyncs `.next` to the server, and restarts PM2. Ensure the server has the latest backend (run `git pull` + backend build first if needed).
