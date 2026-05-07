@@ -192,7 +192,7 @@ export default function SignUpPage() {
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="p-6 sm:p-8 flex flex-col">
             <div className="mb-6">
-              <h1 className="text-2xl sm:text-3xl font-semibold font-figtree text-slate-900 mb-2">Create an Account</h1>
+              <h1 className="headline-platform text-2xl sm:text-3xl mb-2 !font-semibold">Create an Account</h1>
               <p className="text-slate-600 font-figtree text-sm">
               Already have an account?{' '}
               <Link href="/auth/signin" className="text-primary hover:text-blue-700 font-medium">
@@ -229,7 +229,7 @@ export default function SignUpPage() {
             {step === 1 && (
               <div className="space-y-6">
                 <div className="text-center">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">What brings you here?</h2>
+                  <h2 className="headline-platform text-xl !font-semibold mb-2">What brings you here?</h2>
                   <p className="text-gray-600 font-figtree text-sm">This platform is for HR and hiring managers only</p>
                 </div>
 
@@ -243,7 +243,7 @@ export default function SignUpPage() {
                         <AlertCircle className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 font-figtree">I'm an Employer</h3>
+                        <h3 className="headline-platform !font-semibold">I'm an Employer</h3>
                         <p className="text-sm text-gray-600 font-figtree">Post jobs and find candidates</p>
                       </div>
                     </div>
@@ -257,7 +257,7 @@ export default function SignUpPage() {
             {step === 2 && (
               <form className="space-y-6">
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">Account Details</h2>
+                  <h2 className="headline-platform text-xl !font-semibold mb-2">Account Details</h2>
                   <p className="text-gray-600 font-figtree text-sm">Create your login credentials</p>
                 </div>
 
@@ -394,7 +394,7 @@ export default function SignUpPage() {
             {step === 3 && userRole === 'employer' && (
               <form onSubmit={handleEmployerSubmit} className="space-y-6">
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">Company Information</h2>
+                  <h2 className="headline-platform text-xl !font-semibold mb-2">Company Information</h2>
                   <p className="text-gray-600 font-figtree text-sm">Tell us about your organization</p>
                 </div>
 
@@ -528,7 +528,7 @@ export default function SignUpPage() {
             {false && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">Almost Done!</h2>
+                  <h2 className="headline-platform text-xl !font-semibold mb-2">Almost Done!</h2>
                   <p className="text-gray-600 font-figtree text-sm">Review your information and create your account</p>
                 </div>
 
@@ -561,7 +561,7 @@ export default function SignUpPage() {
             {step === 4 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">Confirm Your Account</h2>
+                  <h2 className="headline-platform text-xl !font-semibold mb-2">Confirm Your Account</h2>
                   <p className="text-gray-600 font-figtree text-sm">Review your details and create your account</p>
                 </div>
 

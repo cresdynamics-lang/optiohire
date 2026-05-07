@@ -1,7 +1,48 @@
 'use client'
 
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { useRef } from 'react'
+
+type InteractiveCardProps = {
+  title: string
+  subtitle: string
+  description: string
+  index: number
+}
+
+const InteractiveScrollCard = ({ title, subtitle, description, index }: InteractiveCardProps) => {
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const shouldReduceMotion = useReducedMotion()
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ['start 92%', 'end 15%'],
+  })
+
+  const y = useTransform(scrollYProgress, [0, 1], [36, -18])
+  const scale = useTransform(scrollYProgress, [0, 1], [0.94, 1.03])
+  const rotate = useTransform(scrollYProgress, [0, 1], [index % 2 === 0 ? -2 : 2, 0])
+  const opacity = useTransform(scrollYProgress, [0, 0.25, 1], [0.3, 0.92, 1])
+
+  return (
+    <motion.div
+      ref={cardRef}
+      style={shouldReduceMotion ? undefined : { y, scale, rotate, opacity }}
+      whileHover={shouldReduceMotion ? undefined : { y: -8, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 210, damping: 26 }}
+      className="group relative overflow-hidden rounded-3xl border border-blue-200/70 bg-white/95 p-6 shadow-[0_16px_60px_-34px_rgba(45,45,221,0.55)]"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(45,45,221,0.2),transparent_55%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+      <div className="mb-5 inline-flex rounded-2xl border border-blue-200/70 bg-blue-50/80 p-3">
+        <span className="h-5 w-5 rounded-full bg-[#2D2DDD]/30" />
+      </div>
+      <p className="text-sm font-semibold uppercase tracking-wide text-[#2D2DDD]">{subtitle}</p>
+      <h3 className="headline-platform mt-2 text-lg sm:text-xl md:text-2xl !leading-snug">{title}</h3>
+      <p className="mt-3 leading-relaxed text-slate-600">{description}</p>
+    </motion.div>
+  )
+}
 
 export default function HomePageContent() {
   const router = useRouter()
@@ -48,7 +89,9 @@ export default function HomePageContent() {
         <div className="mx-auto grid max-w-6xl gap-4 rounded-3xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_25px_80px_-50px_rgba(15,23,42,0.5)] backdrop-blur md:grid-cols-3 md:p-7">
           <div>
             <p className="text-sm font-semibold text-blue-700">Trusted hiring infrastructure</p>
-            <h2 className="mt-2 text-xl font-bold text-slate-900">Built for modern recruitment teams</h2>
+            <h2 className="headline-platform mt-2 text-xl sm:text-2xl md:text-3xl">
+              Built for modern recruitment teams
+            </h2>
           </div>
           <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4">
             <p className="text-sm text-slate-500">Data privacy</p>
@@ -67,7 +110,7 @@ export default function HomePageContent() {
             <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
               Outcome-focused platform
             </p>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            <h2 className="headline-platform mt-4 text-3xl sm:text-5xl md:text-6xl">
               Stop screening CVs manually. Start hiring confidently.
             </h2>
             <p className="mt-4 text-lg text-slate-600">
@@ -80,27 +123,23 @@ export default function HomePageContent() {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {outcomes.map((outcome) => (
-              <div
+            {outcomes.map((outcome, index) => (
+              <InteractiveScrollCard
                 key={outcome.title}
-                className="group rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
-              >
-                <div className="mb-5 inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                  <span className="h-5 w-5 rounded-full bg-blue-700/20" />
-                </div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">{outcome.metric}</p>
-                <h3 className="mt-2 text-xl font-semibold text-slate-900">{outcome.title}</h3>
-                <p className="mt-3 leading-relaxed text-slate-600">{outcome.description}</p>
-              </div>
+                title={outcome.title}
+                subtitle={outcome.metric}
+                description={outcome.description}
+                index={index}
+              />
             ))}
           </div>
         </div>
       </section>
 
       <section className="px-4 pb-4 sm:px-6">
-        <div className="mx-auto grid max-w-6xl gap-4 rounded-3xl border border-slate-200/80 bg-white/85 p-6 md:grid-cols-2">
+        <div className="brand-dominant-surface mx-auto grid max-w-6xl gap-4 rounded-3xl border p-6 md:grid-cols-2">
           <div>
-            <h3 className="text-2xl font-bold tracking-tight text-slate-900">Sound familiar?</h3>
+            <h3 className="headline-platform text-2xl sm:text-3xl md:text-4xl">Sound familiar?</h3>
             <ul className="mt-4 space-y-2 text-slate-600">
               <li>• Your inbox has 300 applications for one role</li>
               <li>• Shortlisting took your team 4 days — for one position</li>
@@ -109,7 +148,9 @@ export default function HomePageContent() {
             </ul>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
-            <h4 className="text-lg font-semibold text-slate-900">OptioHire fixes this — with structure, not just software.</h4>
+            <h4 className="headline-platform text-lg sm:text-xl md:text-2xl !text-[#2D2DDD]">
+              OptioHire fixes this — with structure, not just software.
+            </h4>
             <p className="mt-3 text-slate-600">
               Standardized scoring, transparent evidence, and a full decision trail from first pass to final interview.
             </p>
@@ -125,7 +166,7 @@ export default function HomePageContent() {
                 <span className="h-2 w-2 rounded-full bg-blue-200" />
                 How it works
               </p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 className="headline-platform-dark mt-4 text-3xl sm:text-4xl md:text-5xl">
                 From 300 applicants to 5 final interviews — in under 48 hours
               </h2>
               <p className="mt-4 max-w-2xl text-slate-200">
@@ -161,7 +202,7 @@ export default function HomePageContent() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div className="max-w-2xl">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h2 className="headline-platform text-3xl sm:text-5xl md:text-6xl">
                 Designed for every hiring context
               </h2>
               <p className="mt-3 text-lg text-slate-600">
@@ -174,17 +215,14 @@ export default function HomePageContent() {
             </Button>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {useCases.map((useCase) => (
-              <div
+            {useCases.map((useCase, index) => (
+              <InteractiveScrollCard
                 key={useCase.title}
-                className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className="mb-4 inline-flex rounded-2xl bg-slate-100 p-3">
-                  <span className="h-5 w-5 rounded-full bg-blue-700/20" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900">{useCase.title}</h3>
-                <p className="mt-2 text-slate-600">{useCase.description}</p>
-              </div>
+                title={useCase.title}
+                subtitle={`Use case ${index + 1}`}
+                description={useCase.description}
+                index={index}
+              />
             ))}
           </div>
         </div>
@@ -194,7 +232,7 @@ export default function HomePageContent() {
         <div className="mx-auto max-w-6xl rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h2 className="headline-platform text-3xl sm:text-5xl md:text-6xl">
                 Trust and transparency by design
               </h2>
               <p className="mt-4 text-lg text-slate-600">

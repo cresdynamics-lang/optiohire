@@ -84,7 +84,7 @@ export default function PricingPage() {
       {/* Hero Section */}
       <section className="px-4 pb-16 pt-32 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="headline-platform text-4xl sm:text-5xl lg:text-6xl mb-6">
             Simple, Transparent Pricing
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -121,7 +121,7 @@ export default function PricingPage() {
 
                 <div className="p-8">
                   <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                    <h3 className="headline-platform text-2xl !font-bold mb-2">{plan.name}</h3>
                     <div className="flex items-baseline justify-center gap-1 mb-2">
                       <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
                       <span className="text-gray-600">/{plan.period}</span>
@@ -158,7 +158,7 @@ export default function PricingPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               Frequently Asked Questions
             </h2>
             <p className="text-lg text-gray-600">
@@ -169,7 +169,7 @@ export default function PricingPage() {
           <div className="space-y-6">
             {faqs.map((faq, index) => (
               <div key={index} className="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="headline-platform text-lg !font-semibold mb-2">
                   {faq.question}
                 </h3>
                 <p className="text-gray-600">{faq.answer}</p>
@@ -183,7 +183,7 @@ export default function PricingPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 sm:p-10 shadow-xl">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="headline-platform-dark text-3xl sm:text-4xl mb-4">
             Ready to Get Started?
           </h2>
           <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">

@@ -42,7 +42,7 @@ export default function DemoPage() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-4xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Book a Free Demo</h1>
+        <h1 className="headline-platform text-3xl sm:text-4xl">Book a Free Demo</h1>
         <p className="mt-3 text-lg text-slate-600">
           Send us your details and we will receive the request on email and get back to you for a live walkthrough.
         </p>

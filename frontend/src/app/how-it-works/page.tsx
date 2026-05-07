@@ -15,7 +15,7 @@ export default function HowItWorksPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="headline-platform text-4xl sm:text-5xl lg:text-6xl mb-6">
             How OptioHire Works for HR Teams
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -73,7 +73,7 @@ export default function HowItWorksPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               The OptioHire Process
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -88,7 +88,7 @@ export default function HowItWorksPage() {
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
                 <span className="text-2xl font-bold text-white">1</span>
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h3 className="headline-platform text-2xl !font-semibold mb-4">
                 Create Job + Collect Applications
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
@@ -117,7 +117,7 @@ export default function HowItWorksPage() {
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
                 <span className="text-2xl font-bold text-white">2</span>
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h3 className="headline-platform text-2xl !font-semibold mb-4">
                 AI Screening + Fair Ranking
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
@@ -146,7 +146,7 @@ export default function HowItWorksPage() {
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
                 <span className="text-2xl font-bold text-white">3</span>
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h3 className="headline-platform text-2xl !font-semibold mb-4">
                 Candidate Updates + Interview Scheduling
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
@@ -177,7 +177,7 @@ export default function HowItWorksPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               What Teams See
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -189,7 +189,7 @@ export default function HowItWorksPage() {
             <div className="bg-white/95 p-8 rounded-2xl shadow-sm border border-slate-200">
               <div className="flex items-center gap-3 mb-4">
                 <Users className="w-6 h-6 text-blue-600" />
-                <h3 className="text-xl font-semibold text-gray-900">Candidate Overview</h3>
+                <h3 className="headline-platform text-xl !font-semibold">Candidate Overview</h3>
               </div>
               <p className="text-gray-600 mb-4">
                 View all candidates per job with status, score, and reasoning in one list. Quickly identify who to
@@ -206,7 +206,7 @@ export default function HowItWorksPage() {
             <div className="bg-white/95 p-8 rounded-2xl shadow-sm border border-slate-200">
               <div className="flex items-center gap-3 mb-4">
                 <Target className="w-6 h-6 text-blue-600" />
-                <h3 className="text-xl font-semibold text-gray-900">Decision Support</h3>
+                <h3 className="headline-platform text-xl !font-semibold">Decision Support</h3>
               </div>
               <p className="text-gray-600 mb-4">
                 Move faster with structured recommendations and direct actions. Schedule interviews from shortlisted
@@ -226,7 +226,7 @@ export default function HowItWorksPage() {
       {/* Candidate Experience */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8">
+          <h2 className="headline-platform text-3xl sm:text-4xl mb-8">
             What Candidates Experience
           </h2>
 
@@ -235,7 +235,7 @@ export default function HowItWorksPage() {
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Fair Assessment</h3>
+              <h3 className="headline-platform !font-semibold mb-2">Fair Assessment</h3>
               <p className="text-gray-600 text-sm">
                 Every candidate is evaluated using the same transparent criteria,
                 ensuring fair consideration regardless of background.
@@ -246,7 +246,7 @@ export default function HowItWorksPage() {
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Clear Communication</h3>
+              <h3 className="headline-platform !font-semibold mb-2">Clear Communication</h3>
               <p className="text-gray-600 text-sm">
                 Candidates receive clear outcome communication (shortlisted or not selected) instead of waiting
                 without feedback.
@@ -257,7 +257,7 @@ export default function HowItWorksPage() {
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Respectful Process</h3>
+              <h3 className="headline-platform !font-semibold mb-2">Respectful Process</h3>
               <p className="text-gray-600 text-sm">
                 We handle all candidate data with care and respect,
                 maintaining privacy and professional standards throughout.
@@ -270,7 +270,7 @@ export default function HowItWorksPage() {
       {/* Results Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8">
+          <h2 className="headline-platform text-3xl sm:text-4xl mb-8">
             Real Results, Real Teams
           </h2>
 
@@ -304,7 +304,7 @@ export default function HowItWorksPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 sm:p-10 shadow-xl">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="headline-platform-dark text-3xl sm:text-4xl mb-4">
             Ready to Experience Better Hiring?
           </h2>
           <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">

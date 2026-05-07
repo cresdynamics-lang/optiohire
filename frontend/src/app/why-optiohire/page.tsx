@@ -13,7 +13,7 @@ export default function WhyOptioHirePage() {
       {/* Hero Section */}
       <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="headline-platform text-4xl sm:text-5xl lg:text-6xl mb-6">
             Why OptioHire?
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -27,7 +27,7 @@ export default function WhyOptioHirePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               The Reality of Modern Hiring
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -38,7 +38,7 @@ export default function WhyOptioHirePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-6">
               <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              <h3 className="headline-platform text-xl !font-semibold mb-3">
                 Slow & Inefficient
               </h3>
               <p className="text-gray-600">
@@ -49,7 +49,7 @@ export default function WhyOptioHirePage() {
 
             <div className="text-center p-6">
               <TrendingDown className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              <h3 className="headline-platform text-xl !font-semibold mb-3">
                 Biased & Unfair
               </h3>
               <p className="text-gray-600">
@@ -60,7 +60,7 @@ export default function WhyOptioHirePage() {
 
             <div className="text-center p-6">
               <Target className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              <h3 className="headline-platform text-xl !font-semibold mb-3">
                 High Risk Decisions
               </h3>
               <p className="text-gray-600">
@@ -76,7 +76,7 @@ export default function WhyOptioHirePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               Why Traditional Methods Fall Short
             </h2>
             <p className="text-lg text-gray-600">
@@ -86,7 +86,7 @@ export default function WhyOptioHirePage() {
 
           <div className="space-y-8">
             <div className="bg-white/95 p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              <h3 className="headline-platform text-xl !font-semibold mb-4">
                 Resumes Don't Show Real Readiness
               </h3>
               <p className="text-gray-600 leading-relaxed">
@@ -97,7 +97,7 @@ export default function WhyOptioHirePage() {
             </div>
 
             <div className="bg-white/95 p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              <h3 className="headline-platform text-xl !font-semibold mb-4">
                 ATS Systems Create False Matches
               </h3>
               <p className="text-gray-600 leading-relaxed">
@@ -108,7 +108,7 @@ export default function WhyOptioHirePage() {
             </div>
 
             <div className="bg-white/95 p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              <h3 className="headline-platform text-xl !font-semibold mb-4">
                 Manual Review is Inconsistent
               </h3>
               <p className="text-gray-600 leading-relaxed">
@@ -125,7 +125,7 @@ export default function WhyOptioHirePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               The OptioHire Philosophy
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -140,7 +140,7 @@ export default function WhyOptioHirePage() {
                 <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
                   <Target className="w-6 h-6 text-teal-600" />
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900">Focus on Readiness</h3>
+                <h3 className="headline-platform text-2xl !font-semibold">Focus on Readiness</h3>
               </div>
               <p className="text-gray-600 leading-relaxed mb-6">
                 We evaluate what candidates can contribute today, not just what they've
@@ -158,7 +158,7 @@ export default function WhyOptioHirePage() {
                 <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
                   <Shield className="w-6 h-6 text-teal-600" />
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900">Built for Fairness</h3>
+                <h3 className="headline-platform text-2xl !font-semibold">Built for Fairness</h3>
               </div>
               <p className="text-gray-600 leading-relaxed mb-6">
                 Every candidate deserves fair consideration. We design our system to
@@ -176,7 +176,7 @@ export default function WhyOptioHirePage() {
                 <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
                   <Users className="w-6 h-6 text-teal-600" />
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900">Designed for Teams</h3>
+                <h3 className="headline-platform text-2xl !font-semibold">Designed for Teams</h3>
               </div>
               <p className="text-gray-600 leading-relaxed mb-6">
                 We work with real hiring teams facing real challenges. Every feature
@@ -194,7 +194,7 @@ export default function WhyOptioHirePage() {
                 <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
                   <TrendingDown className="w-6 h-6 text-teal-600" />
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900">Fast-Market Ready</h3>
+                <h3 className="headline-platform text-2xl !font-semibold">Fast-Market Ready</h3>
               </div>
               <p className="text-gray-600 leading-relaxed mb-6">
                 Built for markets like Nairobi where speed matters. We help teams
@@ -214,7 +214,7 @@ export default function WhyOptioHirePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               Not Just Another AI Tool
             </h2>
             <p className="text-lg text-gray-600">
@@ -224,7 +224,7 @@ export default function WhyOptioHirePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white/95 p-6 rounded-2xl border border-slate-200">
-              <h3 className="font-semibold text-gray-900 mb-3">What We Are</h3>
+              <h3 className="headline-platform !font-semibold mb-3">What We Are</h3>
               <ul className="space-y-2 text-gray-600">
                 <li>✓ Focused on hiring outcomes</li>
                 <li>✓ Designed for fairness and ethics</li>
@@ -234,7 +234,7 @@ export default function WhyOptioHirePage() {
             </div>
 
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-              <h3 className="font-semibold text-gray-900 mb-3">What We're Not</h3>
+              <h3 className="headline-platform !font-semibold mb-3">What We're Not</h3>
               <ul className="space-y-2 text-gray-500">
                 <li>✗ Generic AI resume filtering</li>
                 <li>✗ Black-box algorithms</li>
@@ -250,7 +250,7 @@ export default function WhyOptioHirePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 sm:p-10 shadow-xl">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="headline-platform-dark text-3xl sm:text-4xl mb-4">
             Ready to Hire with Confidence?
           </h2>
           <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">

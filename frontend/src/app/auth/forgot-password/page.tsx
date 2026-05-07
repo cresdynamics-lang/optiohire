@@ -157,7 +157,7 @@ export default function ForgotPasswordPage() {
             {step === 'email' ? (
               <>
                 <div className="mb-6">
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-extralight font-figtree leading-[1.05] tracking-tight text-gray-900 mb-2">
+                  <h1 className="headline-platform text-4xl sm:text-5xl md:text-6xl leading-[1.05] mb-2 !font-extralight">
                     Forgot Password?
                   </h1>
                   <p className="text-gray-600 font-figtree">
@@ -169,7 +169,7 @@ export default function ForgotPasswordPage() {
                   <div className="space-y-6">
                     <div className="flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-xl">
                       <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
-                      <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">Check Your Email</h2>
+                      <h2 className="headline-platform text-xl !font-semibold mb-2">Check Your Email</h2>
                       <p className="text-sm text-gray-600 text-center font-figtree">
                         We've sent a 6-digit reset code to your email address. Please check your inbox.
                       </p>
@@ -225,7 +225,7 @@ export default function ForgotPasswordPage() {
             ) : (
               <>
                 <div className="mb-6">
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-extralight font-figtree leading-[1.05] tracking-tight text-gray-900 mb-2">
+                  <h1 className="headline-platform text-4xl sm:text-5xl md:text-6xl leading-[1.05] mb-2 !font-extralight">
                     Enter Reset Code
                   </h1>
                   <p className="text-gray-600 font-figtree">

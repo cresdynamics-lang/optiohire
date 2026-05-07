@@ -190,7 +190,7 @@ export default function CompanySetupPage() {
           transition={{ duration: 0.6 }}
         >
           <div className="text-center mb-8 relative z-10">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-figtree font-extralight mb-4 text-white drop-shadow-lg">
+            <h1 className="headline-platform-dark text-5xl sm:text-6xl md:text-7xl mb-4 !font-extralight drop-shadow-lg">
               Company Setup
             </h1>
             <p className="text-xl font-figtree font-light text-gray-300">

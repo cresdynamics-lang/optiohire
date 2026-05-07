@@ -28,7 +28,7 @@ export default function PrivacyPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#3ca2fa]/20 mb-6">
               <ShieldCheck className="w-8 h-8 text-[#3ca2fa]" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-extralight font-figtree mb-4">
+            <h1 className="headline-platform-dark text-4xl md:text-5xl mb-4">
               Privacy Policy
             </h1>
             <p className="text-gray-400 font-figtree">
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <FileText className="w-6 h-6 text-[#3ca2fa]" />
-                <h2 className="text-2xl font-light">Information We Collect</h2>
+                <h2 className="headline-platform-dark text-2xl !font-light">Information We Collect</h2>
               </div>
               <div className="bg-white/5 rounded-lg p-6 space-y-4">
                 <div>
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <Eye className="w-6 h-6 text-[#3ca2fa]" />
-                <h2 className="text-2xl font-light">How We Use Your Information</h2>
+                <h2 className="headline-platform-dark text-2xl !font-light">How We Use Your Information</h2>
               </div>
               <div className="bg-white/5 rounded-lg p-6">
                 <ul className="list-disc list-inside space-y-2 text-gray-300 ml-4">
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <Lock className="w-6 h-6 text-[#3ca2fa]" />
-                <h2 className="text-2xl font-light">Data Security</h2>
+                <h2 className="headline-platform-dark text-2xl !font-light">Data Security</h2>
               </div>
               <div className="bg-white/5 rounded-lg p-6">
                 <p className="text-gray-300 leading-relaxed mb-4">
@@ -114,7 +114,7 @@ export default function PrivacyPage() {
 
             {/* Data Sharing */}
             <section>
-              <h2 className="text-2xl font-light mb-4">Data Sharing and Disclosure</h2>
+              <h2 className="headline-platform-dark text-2xl !font-light mb-4">Data Sharing and Disclosure</h2>
               <div className="bg-white/5 rounded-lg p-6">
                 <p className="text-gray-300 leading-relaxed mb-4">
                   We do not sell your personal information. We may share your information only in the following circumstances:
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
 
             {/* Your Rights */}
             <section>
-              <h2 className="text-2xl font-light mb-4">Your Privacy Rights</h2>
+              <h2 className="headline-platform-dark text-2xl !font-light mb-4">Your Privacy Rights</h2>
               <div className="bg-white/5 rounded-lg p-6">
                 <p className="text-gray-300 leading-relaxed mb-4">
                   You have the following rights regarding your personal information:
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
 
             {/* Cookies */}
             <section>
-              <h2 className="text-2xl font-light mb-4">Cookies and Tracking Technologies</h2>
+              <h2 className="headline-platform-dark text-2xl !font-light mb-4">Cookies and Tracking Technologies</h2>
               <div className="bg-white/5 rounded-lg p-6">
                 <p className="text-gray-300 leading-relaxed">
                   We use cookies and similar tracking technologies to enhance your experience, analyze usage patterns, 
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
 
             {/* Contact */}
             <section>
-              <h2 className="text-2xl font-light mb-4">Contact Us</h2>
+              <h2 className="headline-platform-dark text-2xl !font-light mb-4">Contact Us</h2>
               <div className="bg-white/5 rounded-lg p-6">
                 <p className="text-gray-300 leading-relaxed mb-4">
                   If you have questions about this Privacy Policy or wish to exercise your privacy rights, please contact us:
@@ -178,7 +178,7 @@ export default function PrivacyPage() {
 
             {/* Updates */}
             <section>
-              <h2 className="text-2xl font-light mb-4">Updates to This Policy</h2>
+              <h2 className="headline-platform-dark text-2xl !font-light mb-4">Updates to This Policy</h2>
               <div className="bg-white/5 rounded-lg p-6">
                 <p className="text-gray-300 leading-relaxed">
                   We may update this Privacy Policy from time to time. We will notify you of any material changes by 

@@ -115,7 +115,7 @@ function VerifyEmailContent() {
           className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center"
         >
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Email confirmed</h2>
+          <h2 className="headline-platform text-xl !font-semibold mb-2">Email confirmed</h2>
           <p className="text-gray-600 mb-4">
             Verification successful. You are being redirected to your dashboard now.
           </p>
@@ -144,7 +144,7 @@ function VerifyEmailContent() {
         >
           <div className="p-8">
             <div className="mb-6">
-              <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2 font-figtree">
+              <h1 className="headline-platform text-2xl sm:text-3xl mb-2 !font-semibold">
                 Confirm your email
               </h1>
               <p className="text-gray-600 font-figtree text-sm">

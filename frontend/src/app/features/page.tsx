@@ -154,10 +154,10 @@ export default function FeaturesPage() {
               <Sparkles className="w-4 h-4 text-white" />
               <span className="text-sm font-medium text-white/80">Comprehensive Feature Set</span>
             </div>
-            <h1 className="text-[27px] sm:text-[57px] md:text-[69px] font-extralight font-figtree leading-[1.05] tracking-tight mb-4 text-white">
+            <h1 className="headline-platform-dark text-[27px] sm:text-[57px] md:text-[69px] leading-[1.05] mb-4">
               Powerful Features for
               <br />
-              <span className="text-white">Modern Recruitment</span>
+              Modern Recruitment
             </h1>
             <p className="text-base sm:text-xl font-figtree font-light text-gray-300 max-w-3xl mx-auto">
               Discover how our AI-powered platform transforms your hiring process with intelligent automation, 
@@ -217,7 +217,7 @@ export default function FeaturesPage() {
               <Brain className="w-4 h-4 text-white" />
               <span className="text-sm font-medium text-white/80">Core Capabilities</span>
             </div>
-            <h2 className="text-[27px] sm:text-[57px] md:text-[69px] font-extralight font-figtree leading-[1.05] tracking-tight mb-4 text-white">
+            <h2 className="headline-platform-dark text-[27px] sm:text-[57px] md:text-[69px] leading-[1.05] mb-4">
               Core Features
             </h2>
             <p className="text-base sm:text-xl font-figtree font-light text-gray-300 max-w-3xl mx-auto">
@@ -293,7 +293,7 @@ export default function FeaturesPage() {
               <Award className="w-4 h-4 text-yellow-500" />
               <span className="text-sm font-medium text-white/80">Why Choose Us</span>
             </div>
-            <h2 className="text-[27px] sm:text-[57px] md:text-[69px] font-extralight font-figtree leading-[1.05] tracking-tight mb-4 text-white">
+            <h2 className="headline-platform-dark text-[27px] sm:text-[57px] md:text-[69px] leading-[1.05] mb-4">
               Key Benefits
             </h2>
             <p className="text-base sm:text-xl font-figtree font-light text-gray-300 max-w-3xl mx-auto">
@@ -359,7 +359,7 @@ export default function FeaturesPage() {
             className="text-center"
           >
             <Card className="bg-gradient-to-br from-neutral-900/90 to-neutral-800/90 backdrop-blur-xl border border-white/10 p-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extralight font-figtree leading-tight mb-4 text-white">
+              <h2 className="headline-platform-dark text-3xl sm:text-4xl md:text-5xl leading-tight mb-4">
                 Ready to Transform Your Hiring Process?
               </h2>
               <p className="text-lg font-figtree font-light text-gray-300 mb-8 max-w-2xl mx-auto">

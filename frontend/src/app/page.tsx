@@ -25,7 +25,7 @@ export default function HomePage() {
           />
           <div className="relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
             <div>
-              <h1 className="text-balance text-4xl font-bold leading-tight text-slate-900 sm:text-5xl md:text-6xl">
+              <h1 className="headline-platform text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
                 The hiring command center for HR teams.
               </h1>
               <p className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-slate-600 sm:text-xl">

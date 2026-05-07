@@ -87,7 +87,7 @@ export default function TrustSecurityPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="headline-platform text-4xl sm:text-5xl lg:text-6xl mb-6">
             Trust & Security
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -101,7 +101,7 @@ export default function TrustSecurityPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               Our Trust Principles
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -117,7 +117,7 @@ export default function TrustSecurityPage() {
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <principle.icon className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-2xl font-semibold text-gray-900">{principle.title}</h3>
+                  <h3 className="headline-platform text-2xl !font-semibold">{principle.title}</h3>
                 </div>
 
                 <p className="text-gray-600 leading-relaxed mb-6">
@@ -142,7 +142,7 @@ export default function TrustSecurityPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               Security & Compliance
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -158,7 +158,7 @@ export default function TrustSecurityPage() {
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                     <feature.icon className="w-5 h-5 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
+                  <h3 className="headline-platform text-lg !font-semibold">{feature.title}</h3>
                 </div>
                 <p className="text-gray-600">{feature.description}</p>
               </div>
@@ -171,7 +171,7 @@ export default function TrustSecurityPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               Protecting Candidates
             </h2>
             <p className="text-lg text-gray-600">
@@ -184,7 +184,7 @@ export default function TrustSecurityPage() {
               <div className="flex gap-4">
                 <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Data Privacy Rights</h3>
+                  <h3 className="headline-platform !font-semibold mb-2">Data Privacy Rights</h3>
                   <p className="text-gray-600 text-sm">
                     Candidates can request access to their data, corrections, or complete deletion at any time.
                   </p>
@@ -194,7 +194,7 @@ export default function TrustSecurityPage() {
               <div className="flex gap-4">
                 <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Bias Prevention</h3>
+                  <h3 className="headline-platform !font-semibold mb-2">Bias Prevention</h3>
                   <p className="text-gray-600 text-sm">
                     Our algorithms are continuously monitored and updated to prevent discriminatory outcomes.
                   </p>
@@ -204,7 +204,7 @@ export default function TrustSecurityPage() {
               <div className="flex gap-4">
                 <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Transparent Scoring</h3>
+                  <h3 className="headline-platform !font-semibold mb-2">Transparent Scoring</h3>
                   <p className="text-gray-600 text-sm">
                     Candidates receive clear explanations of how their applications are evaluated.
                   </p>
@@ -216,7 +216,7 @@ export default function TrustSecurityPage() {
               <div className="flex gap-4">
                 <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Feedback Opportunities</h3>
+                  <h3 className="headline-platform !font-semibold mb-2">Feedback Opportunities</h3>
                   <p className="text-gray-600 text-sm">
                     Candidates can provide feedback on their experience to help us improve.
                   </p>
@@ -226,7 +226,7 @@ export default function TrustSecurityPage() {
               <div className="flex gap-4">
                 <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Secure Data Handling</h3>
+                  <h3 className="headline-platform !font-semibold mb-2">Secure Data Handling</h3>
                   <p className="text-gray-600 text-sm">
                     All candidate information is encrypted and stored securely with access controls.
                   </p>
@@ -236,7 +236,7 @@ export default function TrustSecurityPage() {
               <div className="flex gap-4">
                 <CheckCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Ethical AI Use</h3>
+                  <h3 className="headline-platform !font-semibold mb-2">Ethical AI Use</h3>
                   <p className="text-gray-600 text-sm">
                     Our AI enhances human decision-making without replacing human judgment.
                   </p>
@@ -251,7 +251,7 @@ export default function TrustSecurityPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
               Certifications & Compliance
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -268,7 +268,7 @@ export default function TrustSecurityPage() {
             ].map((cert) => (
               <div key={cert.name} className="text-center">
                 <div className="bg-white/95 rounded-2xl p-6 shadow-sm border border-slate-200">
-                  <h3 className="font-semibold text-gray-900 mb-2">{cert.name}</h3>
+                  <h3 className="headline-platform !font-semibold mb-2">{cert.name}</h3>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                     cert.status === 'Implemented' ? 'bg-green-100 text-green-800' :
                     cert.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
@@ -286,7 +286,7 @@ export default function TrustSecurityPage() {
       {/* Contact Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="headline-platform text-3xl sm:text-4xl mb-4">
             Questions About Trust & Security?
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
@@ -297,7 +297,7 @@ export default function TrustSecurityPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="bg-white/95 p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h3 className="font-semibold text-gray-900 mb-2">Data Protection</h3>
+              <h3 className="headline-platform !font-semibold mb-2">Data Protection</h3>
               <p className="text-gray-600 text-sm mb-3">
                 Questions about GDPR, data privacy, or security practices.
               </p>
@@ -307,7 +307,7 @@ export default function TrustSecurityPage() {
             </div>
 
             <div className="bg-white/95 p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h3 className="font-semibold text-gray-900 mb-2">Ethical AI</h3>
+              <h3 className="headline-platform !font-semibold mb-2">Ethical AI</h3>
               <p className="text-gray-600 text-sm mb-3">
                 Questions about bias reduction, fairness, or AI ethics.
               </p>

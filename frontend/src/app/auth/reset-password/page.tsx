@@ -137,7 +137,7 @@ function ResetPasswordContent() {
           >
             <div className="flex flex-col items-center justify-center">
               <XCircle className="w-16 h-16 text-red-500 mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">Invalid Reset Code</h2>
+              <h2 className="headline-platform text-xl !font-semibold mb-2">Invalid Reset Code</h2>
               <p className="text-sm text-gray-600 text-center mb-6 font-figtree">
                 {error || 'This password reset code is invalid or has expired. Please request a new one.'}
               </p>
@@ -179,7 +179,7 @@ function ResetPasswordContent() {
               <div className="space-y-6">
                 <div className="flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-xl">
                   <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2 font-figtree">Password Reset Successful</h2>
+                  <h2 className="headline-platform text-xl !font-semibold mb-2">Password Reset Successful</h2>
                   <p className="text-sm text-gray-600 text-center font-figtree">
                     Your password has been successfully reset. Redirecting you to sign in...
                   </p>
@@ -194,7 +194,7 @@ function ResetPasswordContent() {
             ) : (
               <>
                 <div className="mb-6">
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-extralight font-figtree leading-[1.05] tracking-tight text-gray-900 mb-2">
+                  <h1 className="headline-platform text-4xl sm:text-5xl md:text-6xl leading-[1.05] mb-2 !font-extralight">
                     Reset Password
                   </h1>
                   <p className="text-gray-600 font-figtree">

@@ -42,7 +42,7 @@ export default function AboutPage() {
           }}
         >
           <div className="p-8 md:p-10 max-w-4xl">
-            <h1 className="text-4xl md:text-5xl font-figtree font-semibold mb-4">Our Story</h1>
+            <h1 className="headline-platform-dark text-4xl md:text-5xl mb-4">Our Story</h1>
             <p className="text-neutral-200 leading-relaxed text-base md:text-lg">
               OptioHire is an AI-powered recruitment platform built by Cres Dynamics, a Nairobi-based
               company. We help companies move beyond manual CV screening and hire based on actual
@@ -53,7 +53,7 @@ export default function AboutPage() {
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-            <h2 className="text-2xl font-semibold mb-4">What We Deliver</h2>
+            <h2 className="headline-platform-dark text-2xl mb-4">What We Deliver</h2>
             <ul className="space-y-2 text-neutral-300">
               <li>3x faster hiring (75% less time)</li>
               <li>40% better quality hires with higher retention</li>
@@ -62,7 +62,7 @@ export default function AboutPage() {
             </ul>
           </div>
           <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-            <h2 className="text-2xl font-semibold mb-4">Who It Is For</h2>
+            <h2 className="headline-platform-dark text-2xl mb-4">Who It Is For</h2>
             <ul className="space-y-2 text-neutral-300">
               {audience.map((item) => (
                 <li key={item}>{item}</li>
@@ -72,7 +72,7 @@ export default function AboutPage() {
         </section>
 
         <section>
-          <h2 className="text-2xl md:text-3xl font-semibold mb-4">Gallery</h2>
+          <h2 className="headline-platform-dark text-2xl md:text-3xl mb-4">Gallery</h2>
           <p className="text-neutral-400 mb-5">
             Background imagery with layered text that explains each stage of the OptioHire process.
           </p>
@@ -88,7 +88,7 @@ export default function AboutPage() {
                 }}
               >
                 <div className="p-5">
-                  <h3 className="text-lg font-semibold mb-1">{item.title}</h3>
+                  <h3 className="headline-platform-dark text-lg mb-1 !font-semibold">{item.title}</h3>
                   <p className="text-sm text-neutral-200">{item.text}</p>
                 </div>
               </article>
@@ -97,7 +97,7 @@ export default function AboutPage() {
         </section>
 
         <section className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-          <h2 className="text-2xl font-semibold mb-3">Trust, Security, and Compliance</h2>
+          <h2 className="headline-platform-dark text-2xl mb-3">Trust, Security, and Compliance</h2>
           <p className="text-neutral-300 leading-relaxed">
             OptioHire includes GDPR-compliant data handling, end-to-end encryption, bias-reduction
             algorithms, and transparent AI so hiring teams can understand how recommendations are made.

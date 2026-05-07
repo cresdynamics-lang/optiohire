@@ -93,7 +93,7 @@ export default function SignInPage() {
           {/* Sign In Form Card */}
           <div className="p-8 flex flex-col justify-center">
           <div className="mb-6">
-            <h1 className="text-4xl sm:text-5xl font-semibold font-figtree leading-[1.05] tracking-tight text-slate-900 mb-2">Welcome Back</h1>
+            <h1 className="headline-platform text-4xl sm:text-5xl leading-[1.05] mb-2 !font-semibold">Welcome Back</h1>
             <p className="text-slate-600 font-figtree">
               Don't have an account?{' '}
               <Link href="/auth/signup" className="text-primary hover:text-blue-700 font-medium">

@@ -64,7 +64,7 @@ export function Navbar() {
               className="h-[34px] w-[34px] rounded-md object-contain"
               priority
             />
-            <span className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
+            <span className="headline-platform text-xl tracking-tight md:text-2xl !font-semibold">
               OptioHire
             </span>
           </Link>

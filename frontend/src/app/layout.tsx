@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { DM_Sans, Syne } from 'next/font/google'
+import { DM_Sans, Playfair_Display, Syne } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/hooks/use-auth'
 import { ConditionalLayout } from '@/components/layout/conditional-layout'
@@ -27,6 +27,17 @@ const syne = Syne({
   preload: true,
   adjustFontFallback: true,
   fallback: ['Poppins', 'system-ui', 'arial'],
+})
+
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  style: ['italic'],
+  variable: '--font-playfair-display',
+  display: 'swap',
+  preload: true,
+  adjustFontFallback: true,
+  fallback: ['Georgia', 'Times New Roman', 'serif'],
 })
 
 // Get metadata base URL - prioritize NEXT_PUBLIC_APP_URL, then VERCEL_URL, fallback to localhost
@@ -85,7 +96,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${syne.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`${dmSans.variable} ${syne.variable} ${playfairDisplay.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         {/* Favicon */}
         <link rel="icon" href="/assets/logo/logo.png" type="image/png" />

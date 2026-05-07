@@ -266,7 +266,7 @@ const FeatureCard = memo(({ children, step }: { children: React.ReactNode; step:
                   {steps[step].name}
               </motion.div>
               <motion.h2
-                className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white font-figtree"
+                className="headline-platform-dark text-xl sm:text-2xl md:text-3xl !font-bold tracking-tight"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.3, ease: [0.22, 1, 0.36, 1]}}

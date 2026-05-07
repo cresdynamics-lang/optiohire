@@ -147,7 +147,7 @@ export default function ContactPage() {
           </motion.span>
           <motion.h1
             {...fadeUp(1, disableMotion)}
-            className="text-[32px] sm:text-[48px] md:text-[64px] font-figtree font-extralight leading-[1.05] tracking-tight"
+            className="headline-platform-dark text-[32px] sm:text-[48px] md:text-[64px] leading-[1.05]"
           >
             Contact our AI hiring specialists
           </motion.h1>
@@ -195,7 +195,7 @@ export default function ContactPage() {
                       <method.icon className="h-6 w-6 text-white" />
                     </div>
                     <div className="space-y-2">
-                      <h2 className="text-xl font-figtree font-medium text-white">{method.title}</h2>
+                      <h2 className="headline-platform-dark text-xl !font-medium">{method.title}</h2>
                       <p className="text-sm font-figtree font-light text-gray-300 leading-relaxed">
                         {method.description}
                       </p>
@@ -330,7 +330,7 @@ export default function ContactPage() {
             {...fadeUp(1, disableMotion)}
             className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 backdrop-blur-xl"
           >
-            <h2 className="text-[27px] sm:text-[36px] font-figtree font-extralight leading-tight">
+            <h2 className="headline-platform-dark text-[27px] sm:text-[36px] leading-tight">
               Always-on human + AI assistance
             </h2>
             <p className="text-sm sm:text-base font-figtree font-light text-gray-300">
@@ -405,7 +405,7 @@ export default function ContactPage() {
           >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#2D2DDD22,transparent_75%)]" aria-hidden="true" />
             <div className="relative z-10 space-y-5">
-              <h2 className="text-[28px] sm:text-[40px] font-figtree font-extralight leading-tight">
+              <h2 className="headline-platform-dark text-[28px] sm:text-[40px] leading-tight">
                 Schedule a live product walkthrough
               </h2>
               <p className="mx-auto max-w-2xl text-sm sm:text-lg font-figtree font-light text-gray-100">

@@ -12,20 +12,20 @@ export default function UseCasesPage() {
     {
       icon: Rocket,
       title: 'High-growth startups',
-      description: 'Hiring your first 20 employees? Do not let a bad process cost you.',
+      description:
+        'Hiring your first 20 employees? Do not let a weak process cost you.',
       pain: 'Lean teams cannot spend days manually screening CVs',
       solution: 'Fast shortlist generation with structured, role-fit scoring',
       outcomes: ['3x faster shortlist cycles', 'Higher confidence in final interviews', 'Cleaner hiring records'],
-      color: 'from-blue-500 to-cyan-600'
     },
     {
       icon: Building2,
       title: 'Scaling SMEs',
-      description: 'Your team is in Nairobi, Mombasa, and Kisumu — keep hiring consistent.',
+      description:
+        'Your team is in Nairobi, Mombasa, and Kisumu — keep hiring consistent.',
       pain: 'Different teams use different hiring standards',
       solution: 'One shared scorecard and process for every vacancy',
       outcomes: ['Consistent candidate quality', 'Aligned interviewer feedback', 'Faster hiring decisions'],
-      color: 'from-green-500 to-emerald-600'
     },
     {
       icon: Users,
@@ -34,72 +34,78 @@ export default function UseCasesPage() {
       pain: 'Large organizations struggle with fragmented recruiter workflows',
       solution: 'Centralized review, reporting, and final recommendation tracking',
       outcomes: ['Cross-department consistency', 'Auditable decision history', 'Lower process risk'],
-      color: 'from-purple-500 to-pink-600'
     },
     {
       icon: Briefcase,
       title: 'NGOs & development orgs',
-      description: 'Donor-funded roles need fair, documented selection. We make that easy.',
+      description:
+        'Donor-funded roles need fair, documented selection. We make that easy.',
       pain: 'Funding stakeholders require traceable and fair hiring decisions',
       solution: 'Bias-aware scoring with full audit trails for every candidate',
       outcomes: ['Documented fairness', 'Compliance-ready reporting', 'Faster panel alignment'],
-      color: 'from-orange-500 to-red-600'
-    }
+    },
   ]
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.12),transparent_42%),linear-gradient(180deg,#f8fbff_0%,#f8fafc_55%,#f1f5f9_100%)]">
+    <div className="min-h-screen bg-[#eef0f3] text-slate-900">
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
+      <section className="border-b border-slate-200/80 bg-gradient-to-b from-white to-[#f0f2f5] pt-32 pb-14 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="headline-platform text-4xl sm:text-5xl lg:text-6xl mb-6">
             Use Cases
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
             From startups to high-volume HR teams, OptioHire adapts to your hiring scenario
             with skills-first assessments, fair evaluations, and faster confident decisions.
           </p>
         </div>
       </section>
 
-      {/* Use Cases Grid */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* Use Cases Grid — 2 columns from smallest screens up */}
+      <section className="py-12 sm:py-16 px-3 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:gap-6">
             {useCases.map((useCase, index) => (
-              <div
+              <article
                 key={useCase.title}
-                className="rounded-2xl border border-slate-200 bg-white/95 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
+                className="group min-w-0 flex flex-col rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-6 lg:p-8 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-all duration-300 hover:border-slate-300 hover:shadow-[0_8px_30px_rgba(15,23,42,0.08)]"
               >
-                <div className={`w-14 h-14 bg-gradient-to-r ${useCase.color} rounded-lg flex items-center justify-center mb-6`}>
-                  <useCase.icon className="w-7 h-7 text-white" />
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-2 sm:mb-3">
+                  USE CASE {index + 1}
+                </p>
+
+                <div className="mb-3 sm:mb-5 flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition-colors group-hover:border-[#2D2DDD]/25 group-hover:bg-[#2D2DDD]/[0.06]">
+                  <useCase.icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
                 </div>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                <h3 className="headline-platform text-base sm:text-xl lg:text-2xl !font-semibold mb-2 sm:mb-3 leading-snug">
                   {useCase.title}
                 </h3>
 
-                <p className="text-gray-600 mb-6 leading-relaxed">
+                <p className="text-xs sm:text-sm lg:text-base text-slate-600 mb-4 sm:mb-6 leading-relaxed">
                   {useCase.description}
                 </p>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4 flex-1 text-xs sm:text-sm">
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">The Challenge</h4>
-                    <p className="text-sm text-gray-600">{useCase.pain}</p>
+                    <h4 className="font-semibold text-slate-800 mb-1">The challenge</h4>
+                    <p className="text-slate-600 leading-relaxed">{useCase.pain}</p>
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">How OptioHire Helps</h4>
-                    <p className="text-sm text-gray-600">{useCase.solution}</p>
+                    <h4 className="font-semibold text-slate-800 mb-1">How OptioHire helps</h4>
+                    <p className="text-slate-600 leading-relaxed">{useCase.solution}</p>
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Results</h4>
+                    <h4 className="font-semibold text-slate-800 mb-1">Results</h4>
                     <ul className="space-y-1">
                       {useCase.outcomes.map((outcome, i) => (
-                        <li key={i} className="text-sm text-blue-700 flex items-center">
-                          <span className="mr-2 h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+                        <li key={i} className="flex items-start gap-2 text-slate-600">
+                          <span
+                            className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#2D2DDD]"
+                            aria-hidden
+                          />
                           {outcome}
                         </li>
                       ))}
@@ -107,31 +113,34 @@ export default function UseCasesPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-gray-100">
-                  <button className="flex w-full items-center justify-center rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-700 transition-colors duration-200 hover:bg-blue-100">
-                    Learn More
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                <div className="mt-4 sm:mt-6 pt-3 sm:pt-5 border-t border-slate-100">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 sm:px-4 sm:py-2.5 text-[11px] sm:text-sm font-medium text-slate-800 transition-colors duration-200 hover:border-[#2D2DDD]/40 hover:bg-[#2D2DDD]/[0.06] hover:text-[#2D2DDD]"
+                  >
+                    Learn more
+                    <ArrowRight className="ml-1.5 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
       {/* Industries Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <section className="py-14 sm:py-16 px-4 sm:px-6 lg:px-8 bg-white border-y border-slate-200/80">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Industry-Specific Solutions
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="headline-platform text-2xl sm:text-3xl lg:text-4xl mb-3 sm:mb-4">
+              Industry-specific solutions
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
               Tailored approaches for different industries and organizational contexts.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {[
               { name: 'Technology', count: '500+ hires' },
               { name: 'Finance', count: '300+ hires' },
@@ -140,10 +149,12 @@ export default function UseCasesPage() {
               { name: 'Manufacturing', count: '150+ hires' },
               { name: 'Education', count: '100+ hires' },
             ].map((industry) => (
-              <div key={industry.name} className="text-center">
-                <div className="rounded-xl border border-slate-200 bg-white/95 p-4 shadow-sm transition-shadow duration-200 hover:shadow-md">
-                  <h3 className="font-semibold text-gray-900 mb-1">{industry.name}</h3>
-                  <p className="text-sm text-blue-700">{industry.count}</p>
+              <div key={industry.name} className="text-center min-w-0">
+                <div className="rounded-xl border border-slate-200 bg-[#f7f8fa] p-3 sm:p-4 transition-shadow duration-200 hover:border-slate-300 hover:bg-white hover:shadow-sm">
+                  <h3 className="headline-platform text-sm sm:text-base !font-semibold mb-1 truncate">
+                    {industry.name}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600">{industry.count}</p>
                 </div>
               </div>
             ))}
@@ -152,52 +163,52 @@ export default function UseCasesPage() {
       </section>
 
       {/* Company Size Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <section className="py-14 sm:py-16 px-4 sm:px-6 lg:px-8 bg-[#e8eaee]">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              For Every Company Size
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="headline-platform text-2xl sm:text-3xl lg:text-4xl mb-3 sm:mb-4">
+              For every company size
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Whether you're a startup hiring your first 10 people or an enterprise managing
+            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
+              Whether you&apos;re a startup hiring your first 10 people or an enterprise managing
               complex global recruitment, we have solutions that scale with your needs.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-8 bg-white/95 rounded-2xl shadow-sm border border-slate-200">
-              <div className="text-4xl font-bold text-blue-600 mb-2">1-50</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Early Stage</h3>
-              <p className="text-gray-600 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+            <div className="text-center p-6 sm:p-8 bg-white rounded-2xl border border-slate-200/90 shadow-sm">
+              <div className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">1–50</div>
+              <h3 className="headline-platform text-lg sm:text-xl !font-semibold mb-3">Early stage</h3>
+              <p className="text-slate-600 mb-4 text-sm sm:text-base">
                 Startups and small teams focused on quality hires that drive growth.
               </p>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <ul className="text-sm text-slate-600 space-y-1 text-left max-w-xs mx-auto">
                 <li>• Fast, focused hiring</li>
                 <li>• Cultural fit assessment</li>
                 <li>• Growth potential evaluation</li>
               </ul>
             </div>
 
-            <div className="text-center p-8 bg-white/95 rounded-2xl shadow-sm border border-slate-200">
-              <div className="text-4xl font-bold text-blue-600 mb-2">51-500</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Growing Companies</h3>
-              <p className="text-gray-600 mb-4">
+            <div className="text-center p-6 sm:p-8 bg-white rounded-2xl border border-slate-200/90 shadow-sm">
+              <div className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">51–500</div>
+              <h3 className="headline-platform text-lg sm:text-xl !font-semibold mb-3">Growing companies</h3>
+              <p className="text-slate-600 mb-4 text-sm sm:text-base">
                 Scaling businesses needing efficient processes for multiple roles.
               </p>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <ul className="text-sm text-slate-600 space-y-1 text-left max-w-xs mx-auto">
                 <li>• Volume hiring support</li>
                 <li>• Team collaboration tools</li>
                 <li>• Process standardization</li>
               </ul>
             </div>
 
-            <div className="text-center p-8 bg-white/95 rounded-2xl shadow-sm border border-slate-200">
-              <div className="text-4xl font-bold text-blue-600 mb-2">500+</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Enterprise</h3>
-              <p className="text-gray-600 mb-4">
+            <div className="text-center p-6 sm:p-8 bg-white rounded-2xl border border-slate-200/90 shadow-sm">
+              <div className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">500+</div>
+              <h3 className="headline-platform text-lg sm:text-xl !font-semibold mb-3">Enterprise</h3>
+              <p className="text-slate-600 mb-4 text-sm sm:text-base">
                 Large organizations with complex hiring needs and compliance requirements.
               </p>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <ul className="text-sm text-slate-600 space-y-1 text-left max-w-xs mx-auto">
                 <li>• Advanced analytics</li>
                 <li>• Compliance automation</li>
                 <li>• Multi-team coordination</li>
@@ -208,20 +219,23 @@ export default function UseCasesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <section className="py-14 sm:py-16 px-4 sm:px-6 lg:px-8 bg-[#1a1d24]">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 sm:p-10 shadow-xl">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Find Your Use Case
-          </h2>
-          <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
-            Every hiring scenario is different. Let's discuss how OptioHire can
-            be tailored to your specific needs and challenges.
-          </p>
-          <button className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-blue-700">
-            Request a Demo
-            <ArrowRight className="ml-2 w-5 h-5" />
-          </button>
+          <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-[#22262e] p-8 sm:p-10 shadow-xl">
+            <h2 className="headline-platform-dark text-2xl sm:text-3xl lg:text-4xl mb-4">
+              Find your use case
+            </h2>
+            <p className="text-base sm:text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Every hiring scenario is different. Let&apos;s discuss how OptioHire can
+              be tailored to your specific needs and challenges.
+            </p>
+            <button
+              type="button"
+              className="inline-flex items-center rounded-xl bg-[#2D2DDD] px-6 sm:px-8 py-3 text-sm sm:text-base font-semibold text-white transition-colors duration-200 hover:bg-[#2525c5]"
+            >
+              Request a demo
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
           </div>
         </div>
       </section>
