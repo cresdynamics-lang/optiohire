@@ -217,6 +217,17 @@ export async function scoreApplication(req: Request, res: Response) {
             companyDomain: (company.company_domain as string) ?? undefined
           })
           logger.info(`✅ Rejection email sent successfully to ${app.email}`)
+        } else if (dbStatus === 'FLAG') {
+          logger.info(`📧 Sending flag review email to ${app.email} for application ${application_id}`)
+          await emailService.sendFlagReviewEmail({
+            candidateEmail: app.email,
+            candidateName: app.candidate_name || 'Candidate',
+            jobTitle: job.job_title,
+            companyName: (company.company_name as string) || '',
+            companyEmail: (company.company_email as string) ?? undefined,
+            companyDomain: (company.company_domain as string) ?? undefined
+          })
+          logger.info(`✅ Flag review email sent successfully to ${app.email}`)
         }
       }
     } catch (emailError: any) {

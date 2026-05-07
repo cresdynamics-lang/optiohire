@@ -19,7 +19,7 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
     const emailService = new EmailService()
     const companyRepo = new CompanyRepository()
 
-    // 1. Get all applications with SHORTLIST or REJECT status
+    // 1. Get all applications with SHORTLIST, REJECT, or FLAG status
     const { rows: applications } = await query<{
       application_id: string
       email: string
@@ -50,11 +50,11 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
       FROM applications a
       JOIN job_postings jp ON a.job_posting_id = jp.job_posting_id
       JOIN companies c ON jp.company_id = c.company_id
-      WHERE a.ai_status IN ('SHORTLIST', 'REJECT')
+      WHERE a.ai_status IN ('SHORTLIST', 'REJECT', 'FLAG')
       ORDER BY a.created_at DESC`
     )
 
-    logger.info(`📊 [ADMIN] Found ${applications.length} application(s) with SHORTLIST or REJECT status`)
+    logger.info(`📊 [ADMIN] Found ${applications.length} application(s) with SHORTLIST, REJECT, or FLAG status`)
 
     const results = {
       totalApplications: applications.length,
@@ -69,7 +69,12 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
     for (const app of applications) {
       results.checked++
 
-      const emailType = app.ai_status === 'SHORTLIST' ? 'shortlist' : 'rejection'
+      const emailType =
+        app.ai_status === 'SHORTLIST'
+          ? 'shortlist'
+          : app.ai_status === 'REJECT'
+            ? 'rejection'
+            : 'flag_review'
 
       // Check if email was already sent
       const { rows: emailLogs } = await query<{
@@ -123,6 +128,17 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
           })
           results.sent++
           logger.info(`✅ [ADMIN] Rejection email sent successfully to ${app.email}`)
+        } else if (app.ai_status === 'FLAG') {
+          await emailService.sendFlagReviewEmail({
+            candidateEmail: app.email,
+            candidateName: app.candidate_name || 'Candidate',
+            jobTitle: app.job_title,
+            companyName: companyData?.company_name || app.company_name,
+            companyEmail: companyData?.company_email || app.company_email,
+            companyDomain: companyData?.company_domain || app.company_domain
+          })
+          results.sent++
+          logger.info(`✅ [ADMIN] Flag review email sent successfully to ${app.email}`)
         }
       } catch (err: any) {
         results.failed++

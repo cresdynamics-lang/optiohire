@@ -100,14 +100,14 @@ export async function scoreCandidate(
   let score = Math.round((skillCoverage * 0.62 + overlapBoost + expWeight + thinPenalty) * 100)
   score = Math.max(0, Math.min(100, score))
 
-  // Thin applications: avoid harsh reject if any plausible signal
-  if (thin && score >= 38 && score < 50 && (overlap >= 3 || skillCoverage >= 0.25)) {
-    score = 50
+  // Thin applications: nudge borderline cases into FLAG band (51–79) for human review
+  if (thin && score >= 38 && score < 51 && (overlap >= 3 || skillCoverage >= 0.25)) {
+    score = 51
   }
 
   let status: 'SHORTLIST' | 'FLAG' | 'REJECT'
   if (score >= 80) status = 'SHORTLIST'
-  else if (score >= 50) status = 'FLAG'
+  else if (score >= 51) status = 'FLAG'
   else status = 'REJECT'
 
   const strong = required.filter((s) => skillMatchStrength(haystack, s) >= 0.85).length

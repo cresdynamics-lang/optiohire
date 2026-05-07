@@ -240,7 +240,7 @@ export class EmailReader {
     const imapUser = process.env.IMAP_USER
     const imapPass = process.env.IMAP_PASS
     const imapSecure = process.env.IMAP_SECURE !== 'false' // Default to true
-    const imapPollMs = parseInt(process.env.IMAP_POLL_MS || '1000', 10) // Default 1 second for real-time processing
+    const imapPollMs = parseInt(process.env.IMAP_POLL_MS || '10000', 10) // Default 10s — override e.g. 1000 for dev
 
     if (!imapHost || !imapUser || !imapPass) {
       const missing = [
@@ -1326,11 +1326,12 @@ export class EmailReader {
         // Determine email type based on scoring result status (before DB mapping)
         const shouldSendShortlist = scoringResult.status === 'SHORTLIST'
         const shouldSendReject = scoringResult.status === 'REJECTED'
+        const shouldSendFlagReview = scoringResult.status === 'FLAGGED'
         
-        logger.info(`📊 Email sending decision for application ${applicationId}: status="${scoringResult.status}", score=${scoringResult.score}, shouldSendShortlist=${shouldSendShortlist}, shouldSendReject=${shouldSendReject}`)
+        logger.info(`📊 Email sending decision for application ${applicationId}: status="${scoringResult.status}", score=${scoringResult.score}, shouldSendShortlist=${shouldSendShortlist}, shouldSendReject=${shouldSendReject}, shouldSendFlagReview=${shouldSendFlagReview}`)
         
         // Send email immediately (no delay) for instant feedback
-        if (shouldSendShortlist || shouldSendReject) {
+        if (shouldSendShortlist || shouldSendReject || shouldSendFlagReview) {
           logger.info(`📧 [EMAIL WATCHER] Sending feedback email immediately for application ${applicationId} (${application.email})`)
           
           // Use setImmediate to send asynchronously without blocking, but immediately
@@ -1359,6 +1360,17 @@ export class EmailReader {
                   companyDomain: companyData?.company_domain || company.company_domain
                 })
                 logger.info(`✅ [EMAIL WATCHER] Rejection email sent successfully to ${application.email} for application ${applicationId}`)
+              } else if (shouldSendFlagReview) {
+                logger.info(`📧 [EMAIL WATCHER] Sending under-review (flag) email to ${application.email} for application ${applicationId} (Job: ${job.job_title} at ${company.company_name})`)
+                await this.emailService.sendFlagReviewEmail({
+                  candidateEmail: application.email,
+                  candidateName: application.candidate_name || 'Candidate',
+                  jobTitle: job.job_title,
+                  companyName: companyData?.company_name || company.company_name,
+                  companyEmail: companyData?.company_email || company.company_email,
+                  companyDomain: companyData?.company_domain || company.company_domain
+                })
+                logger.info(`✅ [EMAIL WATCHER] Flag review email sent successfully to ${application.email} for application ${applicationId}`)
               }
             } catch (emailError: any) {
               // SMTP/network issues should NOT block analysis, but log extensively
@@ -1373,7 +1385,8 @@ export class EmailReader {
                 status: scoringResult.status,
                 score: scoringResult.score,
                 shouldSendShortlist,
-                shouldSendReject
+                shouldSendReject,
+                shouldSendFlagReview
               })
               logger.error(`   Full error object:`, emailError)
               
@@ -1387,7 +1400,7 @@ export class EmailReader {
             }
           })
         } else {
-          logger.info(`ℹ️ [EMAIL WATCHER] No email sent for application ${applicationId} - status is "${scoringResult.status}" (FLAG status requires manual review)`)
+          logger.info(`ℹ️ [EMAIL WATCHER] No candidate feedback email for application ${applicationId} - status is "${scoringResult.status}"`)
         }
 
         if (shouldSendShortlist) {

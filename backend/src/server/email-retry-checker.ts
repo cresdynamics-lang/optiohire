@@ -1,6 +1,6 @@
 /**
- * Background checker for unsent feedback emails
- * Runs every 10 seconds to find and send any missed emails immediately
+ * Background checker for unsent feedback emails (shortlist, rejection, flag review).
+ * Runs on a fixed interval to find and send any missed emails immediately.
  */
 
 import { query } from '../db/index.js'
@@ -27,9 +27,9 @@ export class EmailRetryChecker {
     }
 
     this.isRunning = true
-    logger.info('🔄 Email retry checker started - checking for unsent emails every 10 seconds')
+    logger.info(`🔄 Email retry checker started - checking for unsent emails every ${this.CHECK_INTERVAL_MS / 1000}s`)
 
-    // Run immediately on start, then every 10 seconds
+    // Run immediately on start, then on interval
     this.checkAndSendMissingEmails()
     this.checkInterval = setInterval(() => {
       this.checkAndSendMissingEmails()
@@ -49,7 +49,7 @@ export class EmailRetryChecker {
     try {
       await this.retryFailedEmailLogs()
 
-      // Find applications with SHORTLIST or REJECT status that don't have sent emails
+      // Find applications with SHORTLIST, REJECT, or FLAG that don't have sent feedback emails
       // Check applications from last 1 hour
       const { rows: missingEmails } = await query<{
         application_id: string
@@ -80,12 +80,16 @@ export class EmailRetryChecker {
         JOIN job_postings jp ON a.job_posting_id = jp.job_posting_id
         JOIN companies c ON jp.company_id = c.company_id
         WHERE a.created_at >= NOW() - INTERVAL '1 hour'
-          AND a.ai_status IN ('SHORTLIST', 'REJECT')
+          AND a.ai_status IN ('SHORTLIST', 'REJECT', 'FLAG')
           AND NOT EXISTS (
             SELECT 1 
             FROM email_logs el
             WHERE el.recipient_email = a.email
-              AND el.email_type IN ('shortlist', 'rejection')
+              AND (
+                (a.ai_status = 'SHORTLIST' AND el.email_type = 'shortlist')
+                OR (a.ai_status = 'REJECT' AND el.email_type = 'rejection')
+                OR (a.ai_status = 'FLAG' AND el.email_type = 'flag_review')
+              )
               AND el.created_at >= a.created_at - INTERVAL '10 minutes'
               AND el.created_at <= NOW()
               AND el.status = 'sent'
@@ -101,8 +105,13 @@ export class EmailRetryChecker {
       logger.info(`🔍 [EMAIL RETRY CHECKER] Found ${missingEmails.length} application(s) with missing feedback emails`)
 
       for (const app of missingEmails) {
-        const emailType = app.ai_status === 'SHORTLIST' ? 'shortlist' : 'rejection'
-        
+        const emailType =
+          app.ai_status === 'SHORTLIST'
+            ? 'shortlist'
+            : app.ai_status === 'REJECT'
+              ? 'rejection'
+              : 'flag_review'
+
         logger.info(`📧 [EMAIL RETRY CHECKER] Sending ${emailType} email immediately to ${app.email} (Application: ${app.application_id})`)
 
         try {
@@ -128,6 +137,16 @@ export class EmailRetryChecker {
               companyDomain: companyData?.company_domain || app.company_domain
             })
             logger.info(`✅ [EMAIL RETRY CHECKER] Rejection email sent successfully to ${app.email}`)
+          } else if (app.ai_status === 'FLAG') {
+            await this.emailService.sendFlagReviewEmail({
+              candidateEmail: app.email,
+              candidateName: app.candidate_name || 'Candidate',
+              jobTitle: app.job_title,
+              companyName: companyData?.company_name || app.company_name,
+              companyEmail: companyData?.company_email || app.company_email,
+              companyDomain: companyData?.company_domain || app.company_domain
+            })
+            logger.info(`✅ [EMAIL RETRY CHECKER] Flag review email sent successfully to ${app.email}`)
           }
         } catch (err: any) {
           const errorMsg = err?.message || String(err)

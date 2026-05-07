@@ -164,14 +164,14 @@ export default function ShortlistedPage() {
     fetchCandidates()
   }, [jobId, user?.id, user?.role, fetchCandidates])
 
-  // Light polling while tab is visible (reduces load vs 10s interval)
+  // Polling while tab is visible (~10s) so new email-screened candidates appear quickly after processing
   useEffect(() => {
     if (!jobId || !user || user.role === 'admin') return
     const tick = () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
       fetchCandidates()
     }
-    const interval = setInterval(tick, 60000)
+    const interval = setInterval(tick, 10000)
     return () => clearInterval(interval)
   }, [jobId, user?.id, user?.role, fetchCandidates])
 

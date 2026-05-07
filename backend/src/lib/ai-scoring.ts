@@ -253,12 +253,12 @@ export class AIScoringEngine {
 
   private deriveStatus(
     calibrated: number,
-    rawModelScore: number,
-    thinEvidence: boolean
+    _rawModelScore: number,
+    _thinEvidence: boolean
   ): 'SHORTLIST' | 'FLAGGED' | 'REJECTED' {
+    // Product bands: REJECT 0–50, FLAG 51–79, SHORTLIST 80–100 (calibrated score)
     if (calibrated >= 80) return 'SHORTLIST'
-    if (calibrated >= 50) return 'FLAGGED'
-    if (thinEvidence && rawModelScore >= 52 && calibrated >= 42) return 'FLAGGED'
+    if (calibrated >= 51) return 'FLAGGED'
     return 'REJECTED'
   }
 
@@ -398,8 +398,8 @@ SCORING FRAMEWORK (0-100 Points):
 
 CATEGORIZATION:
 - SHORTLIST (80-100): Meets 100% of must-haves, ≥50% nice-to-haves, clear progression, strong communication
-- FLAGGED (50-79): Meets ≥79% of must-haves with compensating strengths, transferable skills, addressable gaps, borderline scores
-- REJECTED (0-49): Missing multiple critical must-haves, significant misalignment, lacks foundational skills, irrelevant application
+- FLAGGED (51-79): Meets ≥79% of must-haves with compensating strengths, transferable skills, addressable gaps, borderline scores
+- REJECTED (0-50): Missing multiple critical must-haves, significant misalignment, lacks foundational skills, irrelevant application
 
 FAIRNESS & BIAS MITIGATION:
 - Focus exclusively on job-relevant qualifications (ignore name, age indicators, education prestige, location, pictures)

@@ -82,7 +82,7 @@ export async function getEmailReaderStatus(req: Request, res: Response) {
         imapPass: imapPass ? 'configured' : 'not set',
         imapPort: process.env.IMAP_PORT || '993',
         imapSecure: process.env.IMAP_SECURE !== 'false',
-        pollInterval: process.env.IMAP_POLL_MS || '1000'
+            pollInterval: process.env.IMAP_POLL_MS || '10000'
       },
       recommendations: {
         ...(emailReaderStatus.disabledReason ? { 

@@ -409,6 +409,71 @@ Company Email: ${hrEmail}`
     })
   }
 
+  /**
+   * FLAG band (51–79): candidate is not rejected or shortlisted yet — HR review in progress.
+   */
+  async sendFlagReviewEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    jobTitle: string
+    companyName: string
+    companyEmail?: string | null
+    companyDomain?: string | null
+  }) {
+    const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const companyName = data.companyName || '[Company Name]'
+    const jobTitle = data.jobTitle || '[Job Title]'
+
+    const subject = `Your application for ${jobTitle} at ${companyName} is under review`
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Dear ${candidateName},</p>
+    <p>Thank you for applying for the <strong>${jobTitle}</strong> role at <strong>${companyName}</strong>.</p>
+    <p>Your CV has been received and assessed. Your profile is <strong>still under review</strong> by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.</p>
+    <p>We will contact you again if we move forward with your application. If you have questions, please reach us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
+    <p>Kind regards,<br>
+    <strong>${companyName}</strong><br>
+    <strong>HR contact:</strong> ${hrEmail}</p>
+  </div>
+</body>
+</html>
+    `
+
+    const text = `Dear ${candidateName},
+
+Thank you for applying for the ${jobTitle} role at ${companyName}.
+
+Your CV has been received and assessed. Your profile is still under review by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.
+
+We will contact you again if we move forward with your application. If you have questions, please reach us at ${hrEmail}.
+
+Kind regards,
+${companyName}
+HR contact: ${hrEmail}`
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+
+    await this.sendEmail({
+      to: data.candidateEmail,
+      from: fromEmail,
+      subject,
+      text,
+      html,
+      emailType: 'flag_review',
+    })
+  }
+
   async sendInboundForwardEmail(data: {
     recipients: string[]
     candidateName: string
