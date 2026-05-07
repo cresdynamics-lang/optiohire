@@ -43,8 +43,8 @@ export function Footer() {
   const contactInfo = [
     {
       icon: <Mail size={16} className="text-gray-400" />,
-      text: "support@optiohire.com",
-      href: "mailto:support@optiohire.com",
+      text: "developer@optiohire.com",
+      href: "mailto:developer@optiohire.com",
     },
     {
       icon: <MapPin size={16} className="text-gray-400" />,
@@ -180,9 +180,20 @@ export function Footer() {
 
         {/* Footer bottom: copyright + separate admin entry (icon only) */}
         <div className="flex flex-col items-center gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-center text-xs text-slate-400 sm:text-left">
-            &copy; 2026 OptioHire. All rights reserved.
-          </p>
+          <div className="text-center text-xs text-slate-400 sm:text-left">
+            <p>&copy; 2026 OptioHire. All rights reserved.</p>
+            <p className="mt-1">
+              Built by{' '}
+              <a
+                href="https://cresdynamics.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-300 underline underline-offset-2 transition-colors hover:text-white"
+              >
+                Cres Dynamics
+              </a>
+            </p>
+          </div>
           <Link
             href="/admin/login"
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-400 transition-all duration-200 hover:border-slate-500/50 hover:bg-white/10 hover:text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"

@@ -20,6 +20,8 @@ interface CreateJobModalProps {
   onSubmit: (jobData: JobPostingFormData) => Promise<{ job: any, company: any }>
 }
 
+const APPLICATION_INBOX_EMAIL = 'applicationsoptiohire@gmail.com'
+
 export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProps) {
   const { user } = useAuth()
   const [formData, setFormData] = useState<JobPostingFormData>({
@@ -264,6 +266,10 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                         className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
                         required
                       />
+                      <p className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
+                        Candidate application email: <strong>{APPLICATION_INBOX_EMAIL}</strong>. Ask candidates to use
+                        subject format <strong>{formData.job_title || 'Job Title'} at {formData.company_name || 'Company Name'}</strong> so AI can route applications to the correct company and job.
+                      </p>
                     </div>
                     
                     <div className="space-y-2">
@@ -445,7 +451,10 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                 The job posting <strong className="font-semibold text-gray-900 dark:text-white">"{createdJobInfo?.jobTitle}"</strong> has been successfully created for <strong className="font-semibold text-gray-900 dark:text-white">{createdJobInfo?.companyName}</strong>.
               </span>
               <span className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
-                The job is now listed in your dashboard for progress tracking. You can monitor applications, review candidates, and track recruitment analytics.
+                A confirmation email with next steps has been sent to HR/company recipients. You can now receive applications at <strong>{APPLICATION_INBOX_EMAIL}</strong> (or forward from your HR inbox), and instruct candidates to use subject <strong>{createdJobInfo?.jobTitle || 'Job Title'} at {createdJobInfo?.companyName || 'Company Name'}</strong>.
+              </span>
+              <span className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
+                If you need setup help, contact <strong>developer@optiohire.com</strong>. The job is listed in your dashboard for tracking, screening, and candidate updates.
               </span>
             </DialogDescription>
           </DialogHeader>
