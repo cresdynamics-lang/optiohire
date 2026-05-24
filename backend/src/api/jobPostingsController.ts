@@ -563,4 +563,114 @@ export async function sendJobPostingCreatedNotification(req: Request, res: Respo
   }
 }
 
+/**
+ * Get all active public job postings
+ * GET /api/job-postings/public
+ */
+export async function getPublicJobPostings(req: Request, res: Response) {
+  try {
+    const { rows: jobs } = await query(
+      `SELECT 
+        jp.job_posting_id,
+        jp.company_id,
+        jp.job_title,
+        jp.job_description,
+        jp.skills_required,
+        jp.application_deadline,
+        jp.status,
+        jp.created_at,
+        c.company_name,
+        c.company_logo_url
+      FROM job_postings jp
+      JOIN companies c ON jp.company_id = c.company_id
+      WHERE jp.status = 'ACTIVE'
+      ORDER BY jp.created_at DESC`
+    )
+    return res.json({ jobs })
+  } catch (err) {
+    logger.error('Error fetching public job postings:', err)
+    return res.json({ jobs: [] })
+  }
+}
+
+/**
+ * Get a single public job posting by ID
+ * GET /api/job-postings/public/:id
+ */
+export async function getPublicJobPostingById(req: Request, res: Response) {
+  try {
+    const { id } = req.params
+    const { rows: jobs } = await query(
+      `SELECT 
+        jp.job_posting_id,
+        jp.company_id,
+        jp.job_title,
+        jp.job_description,
+        jp.responsibilities,
+        jp.skills_required,
+        jp.application_deadline,
+        jp.status,
+        jp.created_at,
+        c.company_name,
+        c.company_logo_url,
+        c.company_domain
+      FROM job_postings jp
+      JOIN companies c ON jp.company_id = c.company_id
+      WHERE jp.job_posting_id = $1 AND jp.status = 'ACTIVE'
+      LIMIT 1`,
+      [id]
+    )
+
+    if (jobs.length === 0) {
+      return res.status(404).json({ error: 'Job posting not found' })
+    }
+
+    return res.json({ job: jobs[0] })
+  } catch (err) {
+    logger.error('Error fetching public job posting by id:', err)
+    return res.status(404).json({ error: 'Job posting not found' })
+  }
+}
+
+/**
+ * Get all active job postings for a specific company
+ * GET /api/job-postings/public/company/:companyId
+ */
+export async function getPublicCompanyJobPostings(req: Request, res: Response) {
+  try {
+    const { companyId } = req.params
+    const { rows: jobs } = await query(
+      `SELECT 
+        jp.job_posting_id,
+        jp.company_id,
+        jp.job_title,
+        jp.job_description,
+        jp.skills_required,
+        jp.application_deadline,
+        jp.status,
+        jp.created_at,
+        c.company_name,
+        c.company_logo_url
+      FROM job_postings jp
+      JOIN companies c ON jp.company_id = c.company_id
+      WHERE jp.company_id = $1 AND jp.status = 'ACTIVE'
+      ORDER BY jp.created_at DESC`,
+      [companyId]
+    )
+
+    const { rows: companyRows } = await query(
+      `SELECT company_name, company_logo_url FROM companies WHERE company_id = $1 LIMIT 1`,
+      [companyId]
+    )
+
+    return res.json({ 
+      jobs,
+      company: companyRows[0] || null
+    })
+  } catch (err) {
+    logger.error('Error fetching public company job postings:', err)
+    return res.json({ jobs: [], company: null })
+  }
+}
+
 

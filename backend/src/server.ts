@@ -136,9 +136,13 @@ app.get('/health', async (_req, res) => {
   health.emailReader = emailReaderStatus
   if (emailReaderStatus.enabled && !emailReaderStatus.running) {
     health.status = 'degraded'
+    health.message = 'Email reader is down but API is functional'
   }
 
-  const statusCode = health.status === 'ok' ? 200 : 503
+  // Determine status code - only return 503 if database is disconnected
+  // A 'degraded' status due to email reader should still return 200 to keep the container 'healthy' in Docker/K8s
+  const isCriticalFailure = health.database.status === 'disconnected'
+  const statusCode = isCriticalFailure ? 503 : 200
   res.status(statusCode).json(health)
 })
 
