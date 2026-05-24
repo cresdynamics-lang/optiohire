@@ -17,10 +17,8 @@ import {
   RefreshCw,
   ArrowUpRight,
 } from 'lucide-react'
-import { CreateJobModal } from '../create-job-modal'
 import { JobDetailsModal } from '../job-details-modal'
-import { EditJobModal } from '../edit-job-modal'
-import { JobPosting, JobPostingFormData } from '@/types'
+import { JobPosting } from '@/types'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/use-auth'
 import { useJobsRealtime, useApplicantsRealtime, useAnalyticsRealtime } from '@/hooks/use-realtime-data'
@@ -43,9 +41,7 @@ interface JobWithApplicants extends JobPosting {
 export function JobsSection() {
   const { user } = useAuth()
   const router = useRouter()
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(null)
   const [jobs, setJobs] = useState<JobWithApplicants[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -273,125 +269,6 @@ export function JobsSection() {
     }
   }
 
-  const handleCreateJob = async (jobData: JobPostingFormData) => {
-    if (!user) {
-      setError('You must be logged in to create jobs')
-      throw new Error('You must be logged in to create jobs')
-    }
-    
-    try {
-      setError(null)
-      const token = localStorage.getItem('token')
-      if (!token) {
-        setError('Not authenticated')
-        throw new Error('Not authenticated')
-      }
-      
-      // Use frontend API route (works without backend server)
-      const resp = await fetch('/api/job-postings', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          company_name: jobData.company_name,
-          company_email: jobData.company_email,
-          hr_email: jobData.hr_email,
-          job_title: jobData.job_title,
-          job_description: jobData.job_description,
-          required_skills: jobData.required_skills,
-          application_deadline: jobData.application_deadline,
-          meeting_link: jobData.interview_meeting_link || undefined
-        })
-      })
-      const data = await resp.json().catch(() => ({}))
-      if (!resp.ok || !data?.success) {
-        // Extract detailed error message
-        let errorMsg = 'Backend rejected the request'
-        if (data?.error) {
-          if (typeof data.error === 'string') {
-            errorMsg = data.error
-          } else if (data.error.message) {
-            errorMsg = data.error.message
-            if (data.error.details) {
-              errorMsg += `: ${data.error.details}`
-            }
-          } else if (data.error.fieldErrors) {
-            // Zod validation errors
-            const fieldErrors = Object.entries(data.error.fieldErrors)
-              .map(([field, errors]: [string, any]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-              .join('; ')
-            errorMsg = `Validation failed: ${fieldErrors}`
-          }
-        }
-        console.error('Job creation error:', data)
-        throw new Error(errorMsg)
-      }
-      
-      const jobPostingId: string = data.job_posting_id
-      const companyId: string = data.company_id
-      
-      // Store company_id in localStorage for future queries
-      if (companyId) {
-        localStorage.setItem('user_company_id', companyId)
-      }
-      
-      // Compose local job object for immediate UI feedback
-      const composedJob: JobWithApplicants = {
-        id: jobPostingId,
-        created_at: new Date().toISOString(),
-        company_id: companyId,
-          company_name: jobData.company_name,
-          company_email: jobData.company_email,
-          hr_email: jobData.hr_email,
-          job_title: jobData.job_title,
-          job_description: jobData.job_description,
-          required_skills: jobData.required_skills,
-          interview_meeting_link: jobData.interview_meeting_link || null,
-          interview_start_time: null,
-          application_deadline: jobData.application_deadline || null,
-          status: 'active',
-        n8n_webhook_sent: false,
-        applicantStats: {
-          total: 0,
-          shortlisted: 0,
-          flagged: 0,
-          rejected: 0,
-          pending: 0
-        },
-        analytics: null,
-        processingStatus: 'processing'
-      }
-      
-      // Optimistic UI update: show the new job immediately for a snappy UX.
-      setJobs((prev) => [composedJob, ...prev])
-      // Refresh in the background to sync counters/derived fields without blocking.
-      setTimeout(() => {
-        void refreshJobs()
-      }, 50)
-      
-      // Show success guidance: tell HR to check email for forwarding/subject instructions
-      try {
-        const { toast } = await import('@/hooks/use-toast').then((m) => ({ toast: m.toast }))
-        toast({
-          title: 'Job created successfully',
-          description:
-            'Please check your email for step-by-step instructions on forwarding and the exact subject line to use before sharing this job with candidates.',
-          variant: 'success'
-        })
-      } catch (e) {
-        console.log('Toast not available in this context, skipping:', e)
-      }
-
-      return { job: composedJob, company: { id: companyId } }
-    } catch (err) {
-      console.error('Error creating job:', err)
-      setError(err instanceof Error ? err.message : 'Failed to create job posting')
-      throw err
-    }
-  }
-
   const handleViewDetails = (jobId: string) => {
     const job = jobs.find(j => j.id === jobId)
     if (job) {
@@ -401,11 +278,7 @@ export function JobsSection() {
   }
 
   const handleEditJob = (jobId: string) => {
-    const job = jobs.find(j => j.id === jobId)
-    if (job) {
-      setSelectedJob(job)
-      setIsEditModalOpen(true)
-    }
+    router.push(`/dashboard/jobs/${jobId}/edit`)
   }
 
   const handleSaveJob = async (jobId: string, updatedData: Partial<JobPosting>) => {
@@ -558,15 +431,14 @@ export function JobsSection() {
           </Button>
           <Button 
             variant="default" 
-            size="sm"
+            size="sm" 
             type="button"
             className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-slate-900 text-white shadow-sm shadow-slate-500/20 hover:bg-slate-800 sm:min-h-9 sm:w-auto dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => router.push('/dashboard/jobs/new')}
           >
             <Plus className="w-4 h-4 mr-2" />
             Create new job
-          </Button>
-        </div>
+          </Button>        </div>
         </div>
       </motion.div>
 
@@ -614,7 +486,7 @@ export function JobsSection() {
               </p>
               <Button 
                 type="button"
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={() => router.push('/dashboard/jobs/new')}
                 className="min-h-[44px] touch-manipulation rounded-xl bg-blue-600 px-6 text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 sm:min-h-10"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -732,12 +604,6 @@ export function JobsSection() {
       )}
 
       {/* Modals */}
-      <CreateJobModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateJob}
-      />
-
       <JobDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => {
@@ -748,19 +614,9 @@ export function JobsSection() {
         onEdit={handleEditJob}
       />
 
-      <EditJobModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false)
-          setSelectedJob(null)
-        }}
-        jobPosting={selectedJob}
-        onSave={handleSaveJob}
-      />
-
       {/* Delete Confirmation Dialog */}
       {jobToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}

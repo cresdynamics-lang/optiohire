@@ -338,12 +338,74 @@ const LazyProfileSection = dynamic(
   }
 )
 
+const LazyCreateJobSection = dynamic(
+  () => {
+    return import('./sections/create-job-section')
+      .then((mod: any) => {
+        if (!mod || typeof mod !== 'object') {
+          throw new Error('CreateJobSection module not found')
+        }
+        const CreateJobSectionExport = mod.CreateJobSection
+        if (!CreateJobSectionExport || typeof CreateJobSectionExport !== 'function') {
+          throw new Error('CreateJobSection not found in module')
+        }
+        return { default: CreateJobSectionExport }
+      })
+      .catch((err: any) => {
+        console.error('Error loading CreateJobSection:', err)
+        return {
+          default: function CreateJobSectionErrorFallback() {
+            return <SectionLoader sectionName="new-job" />
+          }
+        }
+      })
+  },
+  { 
+    loading: () => <SectionLoader sectionName="new-job" />,
+    ssr: false 
+  }
+)
+
+const LazyEditJobSection = dynamic(
+  () => {
+    return import('./sections/edit-job-section')
+      .then((mod: any) => {
+        if (!mod || typeof mod !== 'object') {
+          throw new Error('EditJobSection module not found')
+        }
+        const EditJobSectionExport = mod.EditJobSection
+        if (!EditJobSectionExport || typeof EditJobSectionExport !== 'function') {
+          throw new Error('EditJobSection not found in module')
+        }
+        return { default: EditJobSectionExport }
+      })
+      .catch((err: any) => {
+        console.error('Error loading EditJobSection:', err)
+        return {
+          default: function EditJobSectionErrorFallback() {
+            return <SectionLoader sectionName="edit-job" />
+          }
+        }
+      })
+  },
+  { 
+    loading: () => <SectionLoader sectionName="edit-job" />,
+    ssr: false 
+  }
+)
+
 function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
   const p = pathname || ''
   if (p.startsWith('/dashboard/profile')) {
     return isJobSeeker
       ? { eyebrow: 'Candidate', title: 'My profile' }
       : { eyebrow: 'Workspace', title: 'Profile & company' }
+  }
+  if (p.startsWith('/dashboard/jobs/new')) {
+    return { eyebrow: 'Hiring', title: 'Create new job' }
+  }
+  if (p.includes('/edit') && p.startsWith('/dashboard/jobs/')) {
+    return { eyebrow: 'Hiring', title: 'Edit job posting' }
   }
   if (p.startsWith('/dashboard/jobs')) {
     return isJobSeeker
@@ -429,6 +491,14 @@ function DashboardContent() {
       setActiveSection('profile')
       return
     }
+    if (pathname === '/dashboard/jobs/new') {
+      setActiveSection('create-job')
+      return
+    }
+    if (pathname?.includes('/edit') && pathname?.startsWith('/dashboard/jobs/')) {
+      setActiveSection('edit-job')
+      return
+    }
     if (pathname === '/dashboard/jobs' || pathname?.startsWith('/dashboard/jobs/')) {
       setActiveSection('jobs')
       return
@@ -454,6 +524,10 @@ function DashboardContent() {
           return isJobSeeker ? <LazyJobSeekerOverviewSection /> : <LazyOverviewSection />
         case 'jobs':
           return isJobSeeker ? <LazyJobSeekerJobsSection /> : <LazyJobsSection />
+        case 'create-job':
+          return <LazyCreateJobSection />
+        case 'edit-job':
+          return <LazyEditJobSection />
         case 'reports':
           return <LazyReportsSection />
         case 'interviews':
@@ -488,6 +562,7 @@ function DashboardContent() {
     const t = window.setTimeout(() => {
       try {
         void router.prefetch('/dashboard/jobs')
+        void router.prefetch('/dashboard/jobs/new')
       } catch {
         /* ignore */
       }
@@ -509,6 +584,8 @@ function DashboardContent() {
       : {
           overview: '/dashboard',
           jobs: '/dashboard/jobs',
+          'create-job': '/dashboard/jobs/new',
+          'edit-job': pathname || '/dashboard/jobs',
           reports: '/dashboard/reports',
           interviews: '/dashboard/interviews',
           profile: '/dashboard/profile',
@@ -614,7 +691,7 @@ function DashboardContent() {
                     size="sm"
                     className="hidden h-9 rounded-lg bg-[#2D2DDD] px-3 text-xs font-semibold text-white shadow-none hover:bg-[#2525c4] sm:inline-flex md:h-10 md:px-4 md:text-sm"
                   >
-                    <Link href="/dashboard/jobs" prefetch={false}>
+                    <Link href="/dashboard/jobs/new" prefetch={false}>
                       <Briefcase className="mr-1.5 h-3.5 w-3.5 md:h-4 md:w-4" aria-hidden />
                       Post a role
                     </Link>
@@ -730,11 +807,11 @@ function DashboardContent() {
             </div>
           </div>
         </div>
-        <div className="mx-auto w-full max-w-[1440px] px-3 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:p-8 lg:px-10 lg:pb-12">
+        <div className="relative z-20 mx-auto w-full max-w-[1440px] px-3 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:p-8 lg:px-10 lg:pb-12">
           <ErrorBoundary fallback={<SectionLoader sectionName={activeSection} />}>
             <div
               className={
-                isJobSeeker
+                isJobSeeker || activeSection === 'create-job' || activeSection === 'edit-job'
                   ? ''
                   : 'rounded-2xl border-2 border-slate-200/90 bg-white p-4 shadow-lg shadow-slate-900/[0.07] ring-1 ring-[#2D2DDD]/15 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-950/60 dark:ring-[#2D2DDD]/25 sm:p-6 md:p-8'
               }
