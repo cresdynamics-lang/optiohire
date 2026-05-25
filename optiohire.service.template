@@ -11,11 +11,13 @@ Environment=NODE_ENV=production
 Environment=PORT=3000
 EnvironmentFile=-{{WORKING_DIR}}/.env
 EnvironmentFile=-{{WORKING_DIR}}/backend/.env
-# Direct execution for better process management by systemd
+# Native direct execution
 ExecStart={{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently -n "backend,frontend" -c "blue,green" "node backend/dist/server.js" "node frontend/.next/standalone/server.js"
 Restart=always
 RestartSec=5
 KillMode=control-group
+KillSignal=SIGTERM
+TimeoutStopSec=30
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=optiohire
