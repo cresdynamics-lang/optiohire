@@ -79,7 +79,7 @@ export async function sendInterviewScheduledEmails(params: InterviewEmailParams)
         interviewDate: formattedDate,
         meetingLink: params.meetingLink,
       })
-    : `Hi ${params.candidate.name},\n\nYou have been scheduled for an interview for ${params.job.title} at ${params.job.companyName}.\n\nDate: ${formattedDate}\nMeeting Link: ${params.meetingLink}\n\nBest regards,\n${params.job.companyName}`
+    : `Hi ${params.candidate.name},\n\nYou have been scheduled for an interview for ${params.job.title} - ${params.job.companyName}.\n\nDate: ${formattedDate}\nMeeting Link: ${params.meetingLink}\n\nBest regards,\n${params.job.companyName}`
 
   const candidateText = candidateTextTemplate
     ? renderTemplate(candidateTextTemplate, {
@@ -94,7 +94,7 @@ export async function sendInterviewScheduledEmails(params: InterviewEmailParams)
   await transporter.sendMail({
     from,
     to: params.candidate.email,
-    subject: `Interview Scheduled: ${params.job.title} at ${params.job.companyName}`,
+    subject: `Interview Scheduled: ${params.job.title} - ${params.job.companyName}`,
     text: candidateText,
     html: candidateHtml,
   })

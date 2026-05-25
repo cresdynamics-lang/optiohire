@@ -39,17 +39,17 @@ All systems are configured and active. You can now send applications!
 ### Step 1: Prepare Your Email
 ```
 To: applicationsoptiohire@gmail.com
-Subject: [Job Title] at [Company Name]
+Subject: [Job Title] - [Company Name]
 Body: [Any text - optional]
 Attachment: CV.pdf or CV.docx (REQUIRED)
 ```
 
 ### Step 2: Subject Format Examples
-- ✅ "Sales Role at Cres Dynamics"
-- ✅ "Software Engineer at Tech Corp"
-- ✅ "Marketing Manager at ABC Company"
+- ✅ "Sales Role - Cres Dynamics"
+- ✅ "Software Engineer - Tech Corp"
+- ✅ "Marketing Manager - ABC Company"
 
-**Important:** Subject must match an **active job posting** format: `"[Job Title] at [Company Name]"`
+**Important:** Subject must match an **active job posting** format: `"[Job Title] - [Company Name]"`
 
 ### Step 3: Attach CV
 - **Format:** PDF or DOCX

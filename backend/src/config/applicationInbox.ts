@@ -6,5 +6,5 @@ export const APPLICATION_INBOX_EMAIL =
 export function getRecommendedApplicationSubject(jobTitle: string, companyName: string): string {
   const cleanTitle = String(jobTitle || '').trim()
   const cleanCompany = String(companyName || '').trim()
-  return `${cleanTitle} at ${cleanCompany}`.replace(/\s+/g, ' ').trim()
+  return `${cleanTitle} - ${cleanCompany}`.replace(/\s+/g, ' ').trim()
 }
