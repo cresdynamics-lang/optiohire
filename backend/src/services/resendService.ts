@@ -28,7 +28,7 @@ export class ResendService {
     
     this.fromEmail = process.env.RESEND_FROM_EMAIL || (process.env.RESEND_DOMAIN 
       ? `noreply@${process.env.RESEND_DOMAIN}` 
-      : 'applicationsoptiohire@gmail.com')
+      : 'noreply@optiohire.com')
     this.fromName = process.env.RESEND_FROM_NAME || 'OptioHire'
 
     // Initialize Resend clients

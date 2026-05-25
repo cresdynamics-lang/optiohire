@@ -596,6 +596,7 @@ HireBit System
 
     await this.sendEmail({
       to: data.hrEmail,
+      from: DEFAULT_FROM_EMAIL,
       subject: `New Applicant Received for ${data.jobTitle}`,
       html,
       text,
@@ -728,6 +729,7 @@ OptioHire`
 
     await this.sendEmail({
       to,
+      from: DEFAULT_FROM_EMAIL,
       subject: `Job posted – ${cleanedJobTitle} - ${companyName}`,
       html,
       text,
@@ -1044,6 +1046,7 @@ The OptioHire Team
 
     await this.sendEmail({
       to: email,
+      from: DEFAULT_FROM_EMAIL,
       subject: 'Your OptioHire Password Reset Code',
       html,
       text,
@@ -1087,6 +1090,7 @@ The OptioHire Team
     const text = `Confirm Your Email\n\nHello ${name || 'User'},\n\nThanks for creating your OptioHire account. Your verification code is: ${code}\n\nEnter this code on the verification page. This code expires in 24 hours.\n\nBest regards,\nThe OptioHire Team`
     await this.sendEmail({
       to: email,
+      from: DEFAULT_FROM_EMAIL,
       subject: 'Confirm your OptioHire account – verification code',
       html,
       text,
@@ -1133,6 +1137,7 @@ The OptioHire Team
     const text = `Welcome to OptioHire\n\nHello ${name || 'User'},\n\nYour email is confirmed. You're all set to use OptioHire to post jobs, screen candidates, and hire with confidence.\n\nOpen your dashboard here:\n${dashboardUrl}\n\nBest regards,\nThe OptioHire Team`
     await this.sendEmail({
       to: email,
+      from: DEFAULT_FROM_EMAIL,
       subject: 'Welcome to OptioHire – your account is ready',
       html,
       text,
@@ -1193,6 +1198,7 @@ The OptioHire Team
 
     await this.sendEmail({
       to: email,
+      from: DEFAULT_FROM_EMAIL,
       subject: 'Reset Your OptioHire Password',
       html,
       text,
@@ -1563,6 +1569,7 @@ The OptioHire Team
       try {
         await this.sendEmail({
           to,
+          from: DEFAULT_FROM_EMAIL,
           subject,
           html,
           text,
