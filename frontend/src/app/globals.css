@@ -235,6 +235,21 @@
     animation: float-slower 14s ease-in-out infinite;
   }
 
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+
   .border-focus-thin:focus,
   .border-focus-thin:focus-visible {
     border-width: 1px !important;

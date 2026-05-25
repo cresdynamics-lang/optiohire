@@ -175,3 +175,53 @@ export async function uploadCandidateDocument(req: Request, res: Response) {
     })
   }
 }
+
+/**
+ * Upload candidate document publicly (no auth required)
+ * POST /api/upload/public-candidate-document
+ */
+export async function uploadPublicCandidateDocument(req: Request, res: Response) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' })
+    }
+
+    const file = req.file
+    if (file.size > 10 * 1024 * 1024) {
+      return res.status(400).json({ error: 'File size exceeds 10MB limit' })
+    }
+
+    const safeExt = path.extname(file.originalname).toLowerCase() || '.pdf'
+    const uniqueId = crypto.randomBytes(16).toString('hex')
+    const filename = `candidate-documents/public/${uniqueId}${safeExt}`
+
+    const fileUrl = await saveFile(filename, file.buffer)
+
+    logger.info('Public candidate document uploaded successfully', {
+      filename,
+      size: file.size,
+      mimetype: file.mimetype,
+      originalname: file.originalname,
+    })
+
+    const publicUrl = fileUrl.startsWith('http')
+      ? fileUrl
+      : `${process.env.PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/storage/${filename}`
+
+    return res.json({
+      success: true,
+      url: publicUrl,
+      filename,
+      originalName: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    })
+  } catch (error: any) {
+    logger.error('Error uploading public candidate document:', error)
+    return res.status(500).json({
+      error: 'Failed to upload candidate document',
+      details: error.message,
+    })
+  }
+}
+

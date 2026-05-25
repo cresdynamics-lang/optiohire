@@ -4,6 +4,7 @@ import {
   upload,
   uploadCandidateDocument,
   uploadCandidateDocumentMiddleware,
+  uploadPublicCandidateDocument,
 } from '../api/uploadController.js'
 import { authenticate } from '../middleware/auth.js'
 
@@ -17,3 +18,9 @@ router.post(
   uploadCandidateDocumentMiddleware.single('document'),
   uploadCandidateDocument
 )
+router.post(
+  '/public-candidate-document',
+  uploadCandidateDocumentMiddleware.single('document'),
+  uploadPublicCandidateDocument
+)
+

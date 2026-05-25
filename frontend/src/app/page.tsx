@@ -23,7 +23,7 @@ export default function HomePage() {
             className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-slate-900/10 blur-3xl"
             aria-hidden
           />
-          <div className="relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <div className="animate-fade-in-up relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
             <div>
               <h1 className="headline-platform text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
                 The hiring command center for HR teams.

@@ -66,4 +66,49 @@ export async function getApplicantsByJob(req: Request, res: Response) {
   }
 }
 
+// GET all public active job postings
+export async function getPublicJobs(req: Request, res: Response) {
+  try {
+    const { rows } = await query(
+      `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
+              jp.responsibilities, jp.skills_required, jp.application_deadline, 
+              jp.status, jp.created_at, c.company_name, c.company_email, c.company_logo_url
+       FROM job_postings jp
+       JOIN companies c ON jp.company_id = c.company_id
+       WHERE jp.status = 'ACTIVE'
+       ORDER BY jp.created_at DESC`
+    )
+    return res.status(200).json({ jobs: rows })
+  } catch (err) {
+    console.error('Failed to get public jobs:', err)
+    return res.status(500).json({ error: 'Failed to fetch jobs' })
+  }
+}
+
+// GET single public job posting by ID
+export async function getPublicJobById(req: Request, res: Response) {
+  try {
+    const { id } = req.params
+    const { rows } = await query(
+      `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
+              jp.responsibilities, jp.skills_required, jp.application_deadline, 
+              jp.status, jp.created_at, c.company_name, c.company_email, c.company_logo_url
+       FROM job_postings jp
+       JOIN companies c ON jp.company_id = c.company_id
+       WHERE jp.job_posting_id = $1 AND jp.status = 'ACTIVE'`,
+      [id]
+    )
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found or inactive' })
+    }
+    
+    return res.status(200).json({ job: rows[0] })
+  } catch (err) {
+    console.error('Failed to get public job details:', err)
+    return res.status(500).json({ error: 'Failed to fetch job details' })
+  }
+}
+
+
 

@@ -242,4 +242,75 @@ export async function scoreApplication(req: Request, res: Response) {
   }
 }
 
+// Submit a direct candidate application from the web portal
+export async function submitWebApplication(req: Request, res: Response) {
+  try {
+    const { job_posting_id, candidate_name, email, phone, resume_url } = req.body || {}
+    
+    if (!job_posting_id || !email || !candidate_name) {
+      return res.status(400).json({ error: 'Job ID, name, and email are required' })
+    }
+
+    // Get company_id from job_postings
+    const { rows: jobs } = await query<{ company_id: string; job_title: string }>(
+      `SELECT company_id, job_title FROM job_postings WHERE job_posting_id = $1`,
+      [job_posting_id]
+    )
+
+    if (jobs.length === 0) {
+      return res.status(404).json({ error: 'Job posting not found' })
+    }
+
+    const { company_id } = jobs[0]
+
+    // Create candidate application row
+    const { rows: ins } = await query<{ application_id: string }>(
+      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING application_id`,
+      [job_posting_id, company_id, candidate_name, email.toLowerCase(), phone || null, resume_url || null]
+    )
+
+    const applicationId = ins[0].application_id
+
+    // Asynchronously trigger AI scoring and notification emails
+    setTimeout(async () => {
+      try {
+        console.log(`[Background AI Scoring] Starting scoring for application ${applicationId}...`)
+        // Create a mock req and res to reuse the existing scoreApplication logic
+        const mockReq = {
+          body: {
+            application_id: applicationId,
+            job_posting_id: job_posting_id
+          }
+        } as Request;
+        const mockRes = {
+          status: () => ({
+            json: (data: any) => {
+              console.log(`[Background AI Scoring] Completed for ${applicationId}:`, data)
+            }
+          }),
+          json: (data: any) => {
+            console.log(`[Background AI Scoring] Completed for ${applicationId}:`, data)
+          }
+        } as unknown as Response;
+
+        await scoreApplication(mockReq, mockRes)
+      } catch (err) {
+        console.error(`[Background AI Scoring] Error scoring application ${applicationId}:`, err)
+      }
+    }, 1000)
+
+    return res.status(201).json({
+      success: true,
+      message: 'Application submitted successfully',
+      application_id: applicationId
+    })
+  } catch (err: any) {
+    console.error('Failed to submit application:', err)
+    return res.status(500).json({ error: 'Failed to submit application', details: err?.message })
+  }
+}
+
+
 

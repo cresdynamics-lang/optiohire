@@ -3,7 +3,8 @@
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { Building2, Clock, Briefcase, ArrowRight } from 'lucide-react'
 
 type InteractiveCardProps = {
   title: string
@@ -42,6 +43,25 @@ const InteractiveScrollCard = ({ title, subtitle, description, index }: Interact
       <p className="mt-3 leading-relaxed text-slate-600">{description}</p>
     </motion.div>
   )
+}
+
+interface Job {
+  id: string
+  job_posting_id: string
+  job_title: string
+  job_description: string
+  company_name: string
+  company_logo_url: string | null
+  created_at: string
+}
+
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const days = Math.floor(diff / 86400000)
+  if (days === 0) return 'Today'
+  if (days === 1) return '1 day ago'
+  if (days < 7) return `${days} days ago`
+  return `${Math.floor(days / 7)}w ago`
 }
 
 export default function HomePageContent() {
@@ -83,9 +103,35 @@ export default function HomePageContent() {
     },
   ]
 
+  const [featuredJobs, setFeaturedJobs] = useState<Job[]>([])
+  const [loadingJobs, setLoadingJobs] = useState(true)
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const res = await fetch('/api/jobs')
+        const data = await res.json()
+        if (res.ok && data.jobs) {
+          setFeaturedJobs(data.jobs.slice(0, 4))
+        }
+      } catch (err) {
+        console.error('Failed to load featured jobs', err)
+      } finally {
+        setLoadingJobs(false)
+      }
+    }
+    fetchJobs()
+  }, [])
+
   return (
     <div className="pb-20">
-      <section className="px-4 pb-8 sm:px-6">
+      <motion.section 
+        initial={{ opacity: 0, y: 20 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true, margin: "-50px" }} 
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="px-4 pb-8 sm:px-6"
+      >
         <div className="mx-auto grid max-w-6xl gap-4 rounded-3xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_25px_80px_-50px_rgba(15,23,42,0.5)] backdrop-blur md:grid-cols-3 md:p-7">
           <div>
             <p className="text-sm font-semibold text-blue-700">Trusted hiring infrastructure</p>
@@ -102,7 +148,7 @@ export default function HomePageContent() {
             <p className="mt-1 text-base font-semibold text-slate-900">Clear scorecards and audit trail</p>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       <section className="px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-6xl">
@@ -136,7 +182,13 @@ export default function HomePageContent() {
         </div>
       </section>
 
-      <section className="px-4 pb-4 sm:px-6">
+      <motion.section 
+        initial={{ opacity: 0, y: 20 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true, margin: "-50px" }} 
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="px-4 pb-4 sm:px-6"
+      >
         <div className="brand-dominant-surface mx-auto grid max-w-6xl gap-4 rounded-3xl border p-6 md:grid-cols-2">
           <div>
             <h3 className="headline-platform text-2xl sm:text-3xl md:text-4xl">Sound familiar?</h3>
@@ -156,7 +208,7 @@ export default function HomePageContent() {
             </p>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       <section className="px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-6xl rounded-3xl border border-slate-200/80 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-8 text-white shadow-xl sm:p-10">
@@ -228,7 +280,125 @@ export default function HomePageContent() {
         </div>
       </section>
 
-      <section className="px-4 py-16 sm:px-6">
+      {/* Featured Jobs Section */}
+      <motion.section 
+        initial={{ opacity: 0, y: 15 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true, margin: "-20px" }} 
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="px-4 py-16 sm:px-6 bg-white overflow-hidden"
+      >
+        <div className="mx-auto max-w-[1400px]">
+          <div className="mb-10 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">OPEN ROLES</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0F172A]">
+                Companies are actively hiring
+              </h2>
+            </div>
+            <div className="hidden sm:flex gap-3">
+              <button className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              </button>
+              <button className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          {loadingJobs ? (
+            <div className="flex gap-6 overflow-x-auto pb-8 snap-x">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="min-w-[320px] w-[340px] h-[400px] shrink-0 animate-pulse rounded-[32px] bg-slate-100 snap-center" />
+              ))}
+            </div>
+          ) : featuredJobs.length > 0 ? (
+            <div className="flex gap-6 overflow-x-auto pb-8 snap-x scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+              {featuredJobs.map((job, index) => {
+                const colors = [
+                  'bg-[#E0F2FE]', // Blue
+                  'bg-[#FFEDD5]', // Orange
+                  'bg-[#DCFCE7]', // Green
+                  'bg-[#F3E8FF]', // Purple
+                ]
+                const bgColor = colors[index % colors.length]
+                const dateText = new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+                return (
+                  <div
+                    key={job.job_posting_id}
+                    onClick={() => router.push(`/jobs/${job.job_posting_id}`)}
+                    className={`${bgColor} min-w-[300px] w-[340px] shrink-0 cursor-pointer snap-center rounded-[32px] p-6 sm:p-8 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-lg`}
+                    style={{ minHeight: '400px' }}
+                  >
+                    {/* Top Date Pill */}
+                    <div className="mb-8 self-start rounded-full bg-white/70 px-4 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-sm">
+                      {dateText}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1">
+                      <p className="mb-2 text-sm font-medium text-slate-600">{job.company_name}</p>
+                      <h3 className="mb-5 text-2xl font-bold leading-tight text-slate-900 line-clamp-3">
+                        {job.job_title}
+                      </h3>
+                      
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 backdrop-blur-sm">
+                          Full time
+                        </span>
+                        <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 backdrop-blur-sm">
+                          Mid
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bottom Footer Area */}
+                    <div className="mt-8 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0F172A] text-xs font-bold text-white">
+                          {job.company_name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-slate-900">{job.company_name}</p>
+                          <p className="truncate text-xs text-slate-600">Nairobi, Kenya</p>
+                        </div>
+                      </div>
+                      <button className="shrink-0 rounded-full bg-[#0F172A] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
+                        Details
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="rounded-[32px] border border-dashed border-slate-300 bg-slate-50 py-16 text-center">
+              <Briefcase className="mx-auto h-8 w-8 text-slate-400" />
+              <p className="mt-3 text-sm font-medium text-slate-600">No open roles right now</p>
+            </div>
+          )}
+
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={() => router.push('/jobs')}
+              className="flex items-center gap-2 rounded-full bg-[#0F172A] px-8 py-4 text-sm font-bold text-white transition-colors hover:bg-slate-800"
+            >
+              View all open roles
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      </motion.section>
+
+      <motion.section 
+        initial={{ opacity: 0, y: 20 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true, margin: "-50px" }} 
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="px-4 py-16 sm:px-6"
+      >
         <div className="mx-auto max-w-6xl rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
             <div>
@@ -259,7 +429,7 @@ export default function HomePageContent() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
     </div>
   )
 }
