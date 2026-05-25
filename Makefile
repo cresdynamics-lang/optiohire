@@ -70,7 +70,7 @@ stop:
 	@echo "✅ Service stopped."
 
 logs:
-	@tail -f $(LOG_DIR)/optiohire.log
+	@journalctl -u $(SERVICE_NAME) -f
 
 status:
 	@systemctl status $(SERVICE_NAME)

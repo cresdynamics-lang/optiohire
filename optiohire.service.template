@@ -8,12 +8,13 @@ User={{USER}}
 Group={{USER}}
 WorkingDirectory={{WORKING_DIR}}
 Environment=NODE_ENV=production
-EnvironmentFile={{WORKING_DIR}}/.env
-ExecStart={{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently "npm run start --prefix backend" "npm run start --prefix frontend"
+EnvironmentFile=-{{WORKING_DIR}}/.env
+EnvironmentFile=-{{WORKING_DIR}}/backend/.env
+ExecStart={{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently -n "backend,frontend" -c "blue,green" "npm run start --prefix backend" "npm run start --prefix frontend"
 Restart=always
-RestartSec=10
-StandardOutput=append:/var/log/optiohire/optiohire.log
-StandardError=inherit
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
 SyslogIdentifier=optiohire
 
 [Install]
