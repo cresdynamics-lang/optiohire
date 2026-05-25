@@ -8,7 +8,7 @@ APP_DIR=$(shell pwd)
 USER=$(shell whoami)
 NODE_PATH=$(shell which node)
 
-.PHONY: all up install uninstall build reload restart stop logs status clean help
+.PHONY: all up install uninstall build reload restart stop logs status clean help kill-ghosts
 
 # Default target: Make then kaboooooom!
 all: up
@@ -16,16 +16,25 @@ all: up
 up: install
 	@echo "🚀 KABOOOOOOM! Server is up and running."
 
+kill-ghosts:
+	@echo "👻 Killing lingering processes on ports 3000 and 3001..."
+	-sudo fuser -k 3000/tcp 3001/tcp || true
+	-sudo pkill -f "next-server" || true
+	-sudo pkill -f "node dist/server.js" || true
+
 build:
 	@echo "🏗️ Building Monorepo..."
 	npm install
 	@echo "📦 Building Backend..."
 	cd backend && npm install && npm run build
-	@echo "📦 Building Frontend..."
+	@echo "📦 Building Frontend (Standalone)..."
 	cd frontend && npm install && npm run build
+	@echo "🎨 Preparing Standalone Assets..."
+	cp -r frontend/public frontend/.next/standalone/frontend/ 2>/dev/null || true
+	cp -r frontend/.next/static frontend/.next/standalone/frontend/.next/ 2>/dev/null || true
 	@echo "✅ Build complete."
 
-install: build
+install: build kill-ghosts
 	@echo "🛠️ Installing systemd service..."
 	@sed "s|{{WORKING_DIR}}|$(APP_DIR)|g; s|{{USER}}|$(USER)|g; s|{{NODE_PATH}}|$(NODE_PATH)|g" $(SERVICE_NAME).service.template > $(SERVICE_FILE)
 	sudo cp $(SERVICE_FILE) $(INSTALL_PATH)
@@ -40,10 +49,10 @@ install: build
 	
 	sudo systemctl daemon-reload
 	sudo systemctl enable $(SERVICE_NAME)
-	sudo systemctl start $(SERVICE_NAME)
-	@echo "✅ Service installed and started."
+	sudo systemctl restart $(SERVICE_NAME)
+	@echo "✅ Service installed and updated."
 
-uninstall:
+uninstall: kill-ghosts
 	@echo "⚠️ Uninstalling systemd service..."
 	sudo systemctl stop $(SERVICE_NAME) || true
 	sudo systemctl disable $(SERVICE_NAME) || true
@@ -54,10 +63,11 @@ uninstall:
 	sudo systemctl daemon-reload
 	@echo "✅ Service removed."
 
-reload: build
+reload: build kill-ghosts
 	@echo "🔄 Reloading service (Build + Restart)..."
 	sudo systemctl restart $(SERVICE_NAME)
 	@echo "✅ Service reloaded."
+
 
 restart:
 	@echo "🔄 Restarting systemd service..."
