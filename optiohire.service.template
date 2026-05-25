@@ -9,10 +9,11 @@ Group={{USER}}
 WorkingDirectory={{WORKING_DIR}}
 Environment=NODE_ENV=production
 Environment=PORT=3000
+Environment=BACKEND_URL=http://localhost:3001
 EnvironmentFile=-{{WORKING_DIR}}/.env
 EnvironmentFile=-{{WORKING_DIR}}/backend/.env
 # Native direct execution
-ExecStart={{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently -n "backend,frontend" -c "blue,green" "node backend/dist/server.js" "node frontend/.next/standalone/server.js"
+ExecStart={{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently -n "backend,frontend" -c "blue,green" "node backend/dist/server.js" "PORT=3000 node frontend/.next/standalone/server.js"
 Restart=always
 RestartSec=5
 KillMode=control-group
