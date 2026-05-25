@@ -268,7 +268,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                       />
                       <p className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
                         Candidate application email: <strong>{APPLICATION_INBOX_EMAIL}</strong>. Ask candidates to use
-                        subject format <strong>{formData.job_title || 'Job Title'} at {formData.company_name || 'Company Name'}</strong> so AI can route applications to the correct company and job.
+                        subject format <strong>{formData.job_title || 'Job Title'} - {formData.company_name || 'Company Name'}</strong> so AI can route applications to the correct company and job.
                       </p>
                     </div>
                     
@@ -451,7 +451,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                 The job posting <strong className="font-semibold text-gray-900 dark:text-white">"{createdJobInfo?.jobTitle}"</strong> has been successfully created for <strong className="font-semibold text-gray-900 dark:text-white">{createdJobInfo?.companyName}</strong>.
               </span>
               <span className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
-                A confirmation email with next steps has been sent to HR/company recipients. You can now receive applications at <strong>{APPLICATION_INBOX_EMAIL}</strong> (or forward from your HR inbox), and instruct candidates to use subject <strong>{createdJobInfo?.jobTitle || 'Job Title'} at {createdJobInfo?.companyName || 'Company Name'}</strong>.
+                A confirmation email with next steps has been sent to HR/company recipients. You can now receive applications at <strong>{APPLICATION_INBOX_EMAIL}</strong> (or forward from your HR inbox), and instruct candidates to use subject <strong>{createdJobInfo?.jobTitle || 'Job Title'} - {createdJobInfo?.companyName || 'Company Name'}</strong>.
               </span>
               <span className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
                 If you need setup help, contact <strong>developer@optiohire.com</strong>. The job is listed in your dashboard for tracking, screening, and candidate updates.

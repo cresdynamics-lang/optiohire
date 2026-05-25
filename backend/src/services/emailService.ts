@@ -245,7 +245,7 @@ ${data.companyName || 'Hiring Team'}
     const companyName = data.companyName || '[Company Name]'
     const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
 
-    const subject = `You've been shortlisted – ${cleanedJobTitle} at ${companyName}`
+    const subject = `You've been shortlisted – ${cleanedJobTitle} - ${companyName}`
     const hasInterviewDetails = !!(data.interviewLink || data.interviewDate || data.interviewTime)
 
     const html = `
@@ -261,7 +261,7 @@ ${data.companyName || 'Hiring Team'}
   <div class="container">
     <p>Dear ${candidateName},</p>
     
-    <p>Congratulations! After reviewing your application for the <strong>${cleanedJobTitle}</strong> position at <strong>${companyName}</strong>, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.</p>
+    <p>Congratulations! After reviewing your application for the <strong>${cleanedJobTitle}</strong> position - <strong>${companyName}</strong>, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.</p>
     
     ${hasInterviewDetails ? `
     <p>Your final interview has been scheduled as follows:</p>
@@ -291,7 +291,7 @@ ${data.companyName || 'Hiring Team'}
     const text = hasInterviewDetails
       ? `Dear ${candidateName},
 
-Congratulations! After reviewing your application for the ${cleanedJobTitle} position at ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
+Congratulations! After reviewing your application for the ${cleanedJobTitle} position - ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
 
 Your final interview has been scheduled as follows:
 
@@ -308,7 +308,7 @@ ${companyName}
 Company Email: ${hrEmail}`
       : `Dear ${candidateName},
 
-Congratulations! After reviewing your application for the ${cleanedJobTitle} position at ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
+Congratulations! After reviewing your application for the ${cleanedJobTitle} position - ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
 
 Our HR team will send you the interview date, time, and meeting link once your interview has been scheduled. You do not need to take any action at this time.
 
@@ -346,7 +346,7 @@ Company Email: ${hrEmail}`
     const companyName = data.companyName || '[Company Name]'
     const jobTitle = data.jobTitle || '[Job Title]'
 
-    const subject = `Update on Your Application for the ${jobTitle} Position at ${companyName}`
+    const subject = `Update on Your Application for the ${jobTitle} Position - ${companyName}`
     
     const html = `
 <!DOCTYPE html>
@@ -361,7 +361,7 @@ Company Email: ${hrEmail}`
   <div class="container">
     <p>Dear ${candidateName},</p>
     
-    <p>Thank you for taking the time to apply for the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong> and for your interest in joining our team. We truly appreciate the effort you put into your application and the time you invested in the selection process.</p>
+    <p>Thank you for taking the time to apply for the <strong>${jobTitle}</strong> position - <strong>${companyName}</strong> and for your interest in joining our team. We truly appreciate the effort you put into your application and the time you invested in the selection process.</p>
     
     <p>After careful consideration and review of all candidates, we regret to inform you that we will not be moving forward with your application at this time. This decision was not easy, as we received a high number of strong applications, including yours.</p>
     
@@ -381,7 +381,7 @@ Company Email: ${hrEmail}`
 
     const text = `Dear ${candidateName},
 
-Thank you for taking the time to apply for the ${jobTitle} position at ${companyName} and for your interest in joining our team. We truly appreciate the effort you put into your application and the time you invested in the selection process.
+Thank you for taking the time to apply for the ${jobTitle} position - ${companyName} and for your interest in joining our team. We truly appreciate the effort you put into your application and the time you invested in the selection process.
 
 After careful consideration and review of all candidates, we regret to inform you that we will not be moving forward with your application at this time. This decision was not easy, as we received a high number of strong applications, including yours.
 
@@ -425,7 +425,7 @@ Company Email: ${hrEmail}`
     const companyName = data.companyName || '[Company Name]'
     const jobTitle = data.jobTitle || '[Job Title]'
 
-    const subject = `Your application for ${jobTitle} at ${companyName} is under review`
+    const subject = `Your application for ${jobTitle} - ${companyName} is under review`
 
     const html = `
 <!DOCTYPE html>
@@ -452,7 +452,7 @@ Company Email: ${hrEmail}`
 
     const text = `Dear ${candidateName},
 
-Thank you for applying for the ${jobTitle} role at ${companyName}.
+Thank you for applying for the ${jobTitle} role - ${companyName}.
 
 Your CV has been received and assessed. Your profile is still under review by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.
 
@@ -554,7 +554,7 @@ Resume: ${data.resumeUrl || 'No attachment found'}
     </div>
     <div class="content">
       <p>Hi,</p>
-      <p>A new application has been received for <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong>.</p>
+      <p>A new application has been received for <strong>${cleanedJobTitle}</strong> - <strong>${companyName}</strong>.</p>
       <p><strong>Candidate:</strong> ${data.candidateName}</p>
       <p><strong>Email:</strong> ${data.candidateEmail}</p>
       ${data.score !== null && data.score !== undefined ? `<p><strong>Score:</strong> ${data.score}/100</p>` : ''}
@@ -574,7 +574,7 @@ Resume: ${data.resumeUrl || 'No attachment found'}
     const text = `
 New Applicant Received
 
-A new application has been received for ${cleanedJobTitle} at ${companyName}.
+A new application has been received for ${cleanedJobTitle} - ${companyName}.
 
 Candidate: ${data.candidateName}
 Email: ${data.candidateEmail}
@@ -596,6 +596,7 @@ HireBit System
 
     await this.sendEmail({
       to: data.hrEmail,
+      from: DEFAULT_FROM_EMAIL,
       subject: `New Applicant Received for ${data.jobTitle}`,
       html,
       text,
@@ -620,7 +621,7 @@ HireBit System
     const companyName = data.companyName || '[Company Name]'
     const deadline = new Date(data.applicationDeadline)
     const deadlineText = isNaN(deadline.getTime()) ? data.applicationDeadline : deadline.toLocaleString()
-    const recommendedSubject = `${cleanedJobTitle} at ${companyName}`
+    const recommendedSubject = `${cleanedJobTitle} - ${companyName}`
 
     const html = `
 <!DOCTYPE html>
@@ -728,7 +729,8 @@ OptioHire`
 
     await this.sendEmail({
       to,
-      subject: `Job posted – ${cleanedJobTitle} at ${companyName}`,
+      from: DEFAULT_FROM_EMAIL,
+      subject: `Job posted – ${cleanedJobTitle} - ${companyName}`,
       html,
       text,
       emailType: 'notification',
@@ -770,7 +772,7 @@ OptioHire`
     </div>
     <div class="content">
       <p>Hi,</p>
-      <p>Your job posting <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong> has reached <strong>${total}</strong> applications.</p>
+      <p>Your job posting <strong>${cleanedJobTitle}</strong> - <strong>${companyName}</strong> has reached <strong>${total}</strong> applications.</p>
       <p>This is a good time to review and shortlist candidates so far, or to adjust the job ad if needed.</p>
       <p>Best regards,<br>OptioHire</p>
     </div>
@@ -1044,6 +1046,7 @@ The OptioHire Team
 
     await this.sendEmail({
       to: email,
+      from: DEFAULT_FROM_EMAIL,
       subject: 'Your OptioHire Password Reset Code',
       html,
       text,
@@ -1087,6 +1090,7 @@ The OptioHire Team
     const text = `Confirm Your Email\n\nHello ${name || 'User'},\n\nThanks for creating your OptioHire account. Your verification code is: ${code}\n\nEnter this code on the verification page. This code expires in 24 hours.\n\nBest regards,\nThe OptioHire Team`
     await this.sendEmail({
       to: email,
+      from: DEFAULT_FROM_EMAIL,
       subject: 'Confirm your OptioHire account – verification code',
       html,
       text,
@@ -1133,6 +1137,7 @@ The OptioHire Team
     const text = `Welcome to OptioHire\n\nHello ${name || 'User'},\n\nYour email is confirmed. You're all set to use OptioHire to post jobs, screen candidates, and hire with confidence.\n\nOpen your dashboard here:\n${dashboardUrl}\n\nBest regards,\nThe OptioHire Team`
     await this.sendEmail({
       to: email,
+      from: DEFAULT_FROM_EMAIL,
       subject: 'Welcome to OptioHire – your account is ready',
       html,
       text,
@@ -1193,6 +1198,7 @@ The OptioHire Team
 
     await this.sendEmail({
       to: email,
+      from: DEFAULT_FROM_EMAIL,
       subject: 'Reset Your OptioHire Password',
       html,
       text,
@@ -1563,6 +1569,7 @@ The OptioHire Team
       try {
         await this.sendEmail({
           to,
+          from: DEFAULT_FROM_EMAIL,
           subject,
           html,
           text,

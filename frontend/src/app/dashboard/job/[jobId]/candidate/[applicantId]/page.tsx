@@ -303,12 +303,55 @@ export default function CandidateDetailPage() {
       {/* AI Reasoning */}
       <Card>
         <CardHeader>
-          <CardTitle>AI Reasoning</CardTitle>
+          <CardTitle>AI Reasoning & Profiling</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="whitespace-pre-wrap text-sm">
-            {candidate.reasoning || 'No reasoning provided'}
-          </div>
+          {(() => {
+            if (!candidate.reasoning) return <p className="text-gray-500 italic">No reasoning provided</p>
+            
+            try {
+              const parsed = JSON.parse(candidate.reasoning)
+              return (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-2">Overview</h4>
+                    <p className="text-sm leading-relaxed">{parsed.overview}</p>
+                  </div>
+                  
+                  {parsed.strengths?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-green-600 dark:text-green-400 mb-2">Key Strengths</h4>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {parsed.strengths.map((s: string, i: number) => (
+                          <li key={i} className="text-sm">{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {parsed.weaknesses?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-2">Gaps & Concerns</h4>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {parsed.weaknesses.map((w: string, i: number) => (
+                          <li key={i} className="text-sm">{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {parsed.recommendation && (
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-lg">
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300 mb-1">Recommendation</h4>
+                      <p className="text-sm italic">{parsed.recommendation}</p>
+                    </div>
+                  )}
+                </div>
+              )
+            } catch (e) {
+              return <div className="whitespace-pre-wrap text-sm">{candidate.reasoning}</div>
+            }
+          })()}
         </CardContent>
       </Card>
 

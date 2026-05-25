@@ -4,9 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { X, Calendar, Users, Briefcase, Edit, ExternalLink, Clock } from 'lucide-react'
+import { X, Calendar, Users, Briefcase, Edit, ExternalLink, Clock, Link as LinkIcon, Check } from 'lucide-react'
 import { JobPosting } from '@/types'
 import { formatDate, formatDateTime } from '@/lib/utils'
+import { useState } from 'react'
+import { useToast } from '@/hooks/use-toast'
+import { useRouter } from 'next/navigation'
 
 interface JobDetailsModalProps {
   isOpen: boolean
@@ -16,12 +19,32 @@ interface JobDetailsModalProps {
 }
 
 export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDetailsModalProps) {
+  const { toast } = useToast()
+  const router = useRouter()
+  const [isCopying, setIsCopying] = useState(false)
+
   if (!jobPosting) return null
+
+  const copyApplicationLink = () => {
+    setIsCopying(true)
+    const baseUrl = window.location.origin
+    const applicationUrl = `${baseUrl}/jobs/${jobPosting.id}`
+    
+    navigator.clipboard.writeText(applicationUrl).then(() => {
+      toast({
+        title: "Link Copied!",
+        description: "Application link copied to clipboard.",
+      })
+      setTimeout(() => setIsCopying(false), 2000)
+    }).catch(() => {
+      setIsCopying(false)
+    })
+  }
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -77,7 +100,18 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => onEdit(jobPosting.id)}
+                      onClick={copyApplicationLink}
+                      className="flex items-center gap-2"
+                    >
+                      {isCopying ? <Check className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
+                      {isCopying ? 'Copied Link' : 'Copy Link'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        onClose()
+                        router.push(`/dashboard/jobs/${jobPosting.id}/edit`)
+                      }}
                       className="flex items-center gap-2 border-slate-900 bg-slate-900 text-white hover:border-slate-800 hover:bg-slate-800 dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 shadow-none hover:shadow-none"
                     >
                       <Edit className="w-4 h-4" />

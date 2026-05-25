@@ -226,10 +226,35 @@ export default function ShortlistedPage() {
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
   }, [statusMap])
 
-  const truncateReasoning = useCallback((reasoning: string | null | undefined, maxLength: number = 100) => {
+  const renderReasoning = useCallback((reasoning: string | null | undefined) => {
     if (!reasoning) return 'No reasoning provided'
-    if (reasoning.length <= maxLength) return reasoning
-    return reasoning.substring(0, maxLength) + '...'
+    
+    try {
+      const parsed = JSON.parse(reasoning)
+      if (typeof parsed === 'object' && parsed !== null) {
+        return (
+          <div className="space-y-1">
+            <p className="font-medium text-gray-900 dark:text-white line-clamp-1">{parsed.overview}</p>
+            <div className="flex gap-2 text-[10px]">
+              {parsed.strengths?.length > 0 && (
+                <span className="text-green-600 dark:text-green-400 font-semibold">
+                  {parsed.strengths.length} Strengths
+                </span>
+              )}
+              {parsed.weaknesses?.length > 0 && (
+                <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                  {parsed.weaknesses.length} Gaps
+                </span>
+              )}
+            </div>
+          </div>
+        )
+      }
+    } catch (e) {
+      // Fallback to plain text if not JSON
+    }
+    
+    return reasoning.length > 100 ? reasoning.substring(0, 100) + '...' : reasoning
   }, [])
 
   if (error) {
@@ -380,9 +405,7 @@ export default function ShortlistedPage() {
                         {getStatusBadge(candidate.status)}
                       </TableCell>
                       <TableCell className="text-sm text-gray-600 dark:text-gray-400">
-                        <p className="line-clamp-2" title={candidate.reasoning || ''}>
-                          {truncateReasoning(candidate.reasoning)}
-                        </p>
+                        {renderReasoning(candidate.reasoning)}
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         {(candidate.status === 'SHORTLIST' || candidate.status === 'SHORTLISTED') && (

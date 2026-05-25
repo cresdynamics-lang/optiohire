@@ -7,11 +7,12 @@ const getBackendUrl = () =>
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const backendUrl = getBackendUrl()
-    const res = await fetch(`${backendUrl}/jobs/${params.id}`, {
+    const resolvedParams = await params
+    const res = await fetch(`${backendUrl}/jobs/${resolvedParams.id}`, {
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(10000),
     })

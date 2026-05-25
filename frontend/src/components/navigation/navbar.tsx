@@ -8,6 +8,7 @@ import { Menu, X, Briefcase, ChevronRight } from 'lucide-react'
 
 const hrNavigation = [
   { name: 'Home', href: '/' },
+  { name: 'Jobs', href: '/jobs' },
   { name: 'How It Works', href: '/how-it-works' },
   { name: 'Use Cases', href: '/use-cases' },
   { name: 'About', href: '/about' },

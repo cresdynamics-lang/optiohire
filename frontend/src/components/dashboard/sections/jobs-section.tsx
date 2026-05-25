@@ -1,26 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
-  Briefcase, 
-  Plus, 
-  Calendar,
-  Users,
-  UserCheck,
-  ExternalLink,
-  Edit,
-  Trash2,
-  RefreshCw,
-  ArrowUpRight,
+  Briefcase, Plus, Calendar, Users, UserCheck, ExternalLink, Edit, Trash2, RefreshCw, ArrowUpRight, 
+  LayoutGrid, Table as TableIcon, ChevronLeft, ChevronRight, MoreVertical 
 } from 'lucide-react'
-import { CreateJobModal } from '../create-job-modal'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { JobDetailsModal } from '../job-details-modal'
-import { EditJobModal } from '../edit-job-modal'
-import { JobPosting, JobPostingFormData } from '@/types'
+import { JobPosting } from '@/types'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/use-auth'
 import { useJobsRealtime, useApplicantsRealtime, useAnalyticsRealtime } from '@/hooks/use-realtime-data'
@@ -37,786 +29,272 @@ interface JobWithApplicants extends JobPosting {
     pending: number
   }
   analytics?: string | null
-  processingStatus?: 'processing' | 'in_progress' | 'finished'
 }
 
 export function JobsSection() {
   const { user } = useAuth()
   const router = useRouter()
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
+
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(null)
   const [jobs, setJobs] = useState<JobWithApplicants[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [jobToDelete, setJobToDelete] = useState<JobPosting | null>(null)
 
-  // Real-time updates for jobs and applicants
-  useJobsRealtime(() => {
-    console.log('Real-time job update detected, refreshing jobs...')
-    refreshJobs()
-  })
- 
-  useApplicantsRealtime(() => {
-    console.log('Real-time applicant update detected, refreshing jobs...')
-    refreshJobs()
-  })
- 
-  useAnalyticsRealtime(() => {
-    console.log('Real-time analytics update detected, refreshing jobs...')
-    refreshJobs()
-  })
-
-  // Load jobs from database on component mount
-  useEffect(() => {
-    const loadJobs = async () => {
-      if (!user) {
-        setIsLoading(false)
-        return
-      }
-      
-      try {
-        setIsLoading(true)
-        setError(null)
-        
-        console.log('Loading jobs for user:', user.id)
-        
-        // Use frontend API route to fetch jobs
-        const token = localStorage.getItem('token')
-        if (!token) {
-          setError('Not authenticated')
-          setIsLoading(false)
-          return
-        }
-
-        const response = await fetch('/api/job-postings', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            // No jobs found - this is okay, just show empty state
-            setJobs([])
-            setError(null)
-            setIsLoading(false)
-            return
-          } else if (response.status === 401 || response.status === 403) {
-            setError(
-              response.status === 403
-                ? 'Your account does not yet have employer access to manage job postings.'
-                : 'Unable to verify your session for job postings right now. Please retry.'
-            )
-          } else {
-            const errorData = await response.json().catch(() => ({}))
-            // If it's a permission error, show helpful message
-            if (errorData.error?.includes('Company profile required') || errorData.error?.includes('Access denied')) {
-              setError('Your account needs a company profile. Please contact support.')
-            } else {
-              setError(errorData.error || 'Failed to load job postings')
-            }
-          }
-          setIsLoading(false)
-          return
-        }
-
-        const data = await response.json()
-        const jobPostings = data.jobs || []
-        
-        console.log('Found job postings:', jobPostings.length, jobPostings)
-        
-        // Backend API already returns jobs with applicant stats
-        const jobsWithApplicants: JobWithApplicants[] = jobPostings.map((job: any) => {
-          const jobId = job.job_posting_id || job.id
-          return {
-            ...job,
-            id: jobId,
-            job_posting_id: jobId,
-            job_title: job.job_title || 'Untitled Job',
-            job_description: job.job_description || '',
-            required_skills: Array.isArray(job.required_skills) ? job.required_skills : (job.skills_required ? (Array.isArray(job.skills_required) ? job.skills_required : [job.skills_required]) : []),
-            meeting_link: job.meeting_link || job.interview_meeting_link || null,
-            interview_meeting_link: job.interview_meeting_link || job.meeting_link || null,
-            application_deadline: job.application_deadline || null,
-            status: job.status || 'ACTIVE',
-            created_at: job.created_at || new Date().toISOString(),
-            applicantStats: {
-              total: Number(job.applicant_count || 0),
-              shortlisted: Number(job.shortlisted_count || 0),
-              rejected: Number(job.rejected_count || 0),
-              flagged: Number(job.flagged_count || 0),
-              pending: Math.max(0, Number(job.applicant_count || 0) - 
-                Number(job.shortlisted_count || 0) - 
-                Number(job.rejected_count || 0) - 
-                Number(job.flagged_count || 0)),
-            }
-          }
-        })
-        
-        console.log('Processed jobs with applicants:', jobsWithApplicants.length)
-        setJobs(jobsWithApplicants)
-      } catch (err: any) {
-        console.error('Error loading jobs:', err)
-        const errorMessage = err?.message || 'An error occurred while loading jobs'
-        setError(errorMessage)
-        // Don't show error if it's just no jobs found
-        if (errorMessage.includes('No company found') || errorMessage.includes('404')) {
-          setJobs([])
-          setError(null)
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    
-    loadJobs()
-  }, [user?.id, user?.email])
-
-  // Add a refresh function that can be called externally
-  const refreshJobs = async () => {
-    console.log('Manual refresh triggered')
+  const loadJobs = useCallback(async () => {
     if (!user) return
-    
     try {
       setIsLoading(true)
-      setError(null)
-      
-      // Use frontend API route to fetch jobs
       const token = localStorage.getItem('token')
-      if (!token) {
-        setError('Not authenticated')
-        setIsLoading(false)
-        return
-      }
+      if (!token) throw new Error('Not authenticated')
 
       const response = await fetch('/api/job-postings', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       })
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          // No jobs found - this is okay, just show empty state
-          setJobs([])
-          setError(null)
-          setIsLoading(false)
-          return
-        } else if (response.status === 401 || response.status === 403) {
-          setError(
-            response.status === 403
-              ? 'Your account does not yet have employer access to manage job postings.'
-              : 'Unable to verify your session for job postings right now. Please retry.'
-          )
-        } else {
-          const errorData = await response.json().catch(() => ({}))
-          // If it's a permission error, show helpful message
-          if (errorData.error?.includes('Company profile required') || errorData.error?.includes('Access denied')) {
-            setError('Your account needs a company profile. Please contact support.')
-          } else {
-            setError(errorData.error || 'Failed to load job postings')
-          }
-        }
-        setIsLoading(false)
-        return
-      }
+      if (!response.ok) throw new Error('Failed to load job postings')
 
       const data = await response.json()
       const jobPostings = data.jobs || []
       
-      console.log('Refreshed job postings:', jobPostings.length)
-      
-      // Backend API already returns jobs with applicant stats
-      const jobsWithApplicants: JobWithApplicants[] = jobPostings.map((job: any) => {
-        const jobId = job.job_posting_id || job.id
-        return {
-          ...job,
-          id: jobId,
-          job_posting_id: jobId,
-          job_title: job.job_title || 'Untitled Job',
-          job_description: job.job_description || '',
-          required_skills: Array.isArray(job.required_skills) ? job.required_skills : (job.skills_required ? (Array.isArray(job.skills_required) ? job.skills_required : [job.skills_required]) : []),
-          meeting_link: job.meeting_link || job.interview_meeting_link || null,
-          interview_meeting_link: job.interview_meeting_link || job.meeting_link || null,
-          application_deadline: job.application_deadline || null,
-          status: job.status || 'ACTIVE',
-          created_at: job.created_at || new Date().toISOString(),
-          applicantStats: {
-            total: Number(job.applicant_count || 0),
-            shortlisted: Number(job.shortlisted_count || 0),
-            rejected: Number(job.rejected_count || 0),
-            flagged: Number(job.flagged_count || 0),
-            pending: Math.max(0, Number(job.applicant_count || 0) - 
-              Number(job.shortlisted_count || 0) - 
-              Number(job.rejected_count || 0) - 
-              Number(job.flagged_count || 0)),
-          }
+      setJobs(jobPostings.map((job: any) => ({
+        ...job,
+        id: job.job_posting_id || job.id,
+        applicantStats: {
+          total: Number(job.applicant_count || 0),
+          shortlisted: Number(job.shortlisted_count || 0),
+          rejected: Number(job.rejected_count || 0),
+          flagged: Number(job.flagged_count || 0),
+          pending: Math.max(0, Number(job.applicant_count || 0) - Number(job.shortlisted_count || 0) - Number(job.rejected_count || 0) - Number(job.flagged_count || 0)),
         }
-      })
-      
-      setJobs(jobsWithApplicants)
+      })))
     } catch (err: any) {
-        console.error('Error refreshing jobs:', err)
-      const errorMessage = err?.message || 'An error occurred while refreshing jobs'
-      setError(errorMessage)
-      // Don't show error if it's just no jobs found
-      if (errorMessage.includes('No company found') || errorMessage.includes('404')) {
-        setJobs([])
-        setError(null)
-      }
+      setError(err.message)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user])
 
-  const handleCreateJob = async (jobData: JobPostingFormData) => {
-    if (!user) {
-      setError('You must be logged in to create jobs')
-      throw new Error('You must be logged in to create jobs')
-    }
-    
-    try {
-      setError(null)
-      const token = localStorage.getItem('token')
-      if (!token) {
-        setError('Not authenticated')
-        throw new Error('Not authenticated')
-      }
-      
-      // Use frontend API route (works without backend server)
-      const resp = await fetch('/api/job-postings', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          company_name: jobData.company_name,
-          company_email: jobData.company_email,
-          hr_email: jobData.hr_email,
-          job_title: jobData.job_title,
-          job_description: jobData.job_description,
-          required_skills: jobData.required_skills,
-          application_deadline: jobData.application_deadline,
-          meeting_link: jobData.interview_meeting_link || undefined
-        })
-      })
-      const data = await resp.json().catch(() => ({}))
-      if (!resp.ok || !data?.success) {
-        // Extract detailed error message
-        let errorMsg = 'Backend rejected the request'
-        if (data?.error) {
-          if (typeof data.error === 'string') {
-            errorMsg = data.error
-          } else if (data.error.message) {
-            errorMsg = data.error.message
-            if (data.error.details) {
-              errorMsg += `: ${data.error.details}`
-            }
-          } else if (data.error.fieldErrors) {
-            // Zod validation errors
-            const fieldErrors = Object.entries(data.error.fieldErrors)
-              .map(([field, errors]: [string, any]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-              .join('; ')
-            errorMsg = `Validation failed: ${fieldErrors}`
-          }
-        }
-        console.error('Job creation error:', data)
-        throw new Error(errorMsg)
-      }
-      
-      const jobPostingId: string = data.job_posting_id
-      const companyId: string = data.company_id
-      
-      // Store company_id in localStorage for future queries
-      if (companyId) {
-        localStorage.setItem('user_company_id', companyId)
-      }
-      
-      // Compose local job object for immediate UI feedback
-      const composedJob: JobWithApplicants = {
-        id: jobPostingId,
-        created_at: new Date().toISOString(),
-        company_id: companyId,
-          company_name: jobData.company_name,
-          company_email: jobData.company_email,
-          hr_email: jobData.hr_email,
-          job_title: jobData.job_title,
-          job_description: jobData.job_description,
-          required_skills: jobData.required_skills,
-          interview_meeting_link: jobData.interview_meeting_link || null,
-          interview_start_time: null,
-          application_deadline: jobData.application_deadline || null,
-          status: 'active',
-        n8n_webhook_sent: false,
-        applicantStats: {
-          total: 0,
-          shortlisted: 0,
-          flagged: 0,
-          rejected: 0,
-          pending: 0
-        },
-        analytics: null,
-        processingStatus: 'processing'
-      }
-      
-      // Optimistic UI update: show the new job immediately for a snappy UX.
-      setJobs((prev) => [composedJob, ...prev])
-      // Refresh in the background to sync counters/derived fields without blocking.
-      setTimeout(() => {
-        void refreshJobs()
-      }, 50)
-      
-      // Show success guidance: tell HR to check email for forwarding/subject instructions
-      try {
-        const { toast } = await import('@/hooks/use-toast').then((m) => ({ toast: m.toast }))
-        toast({
-          title: 'Job created successfully',
-          description:
-            'Please check your email for step-by-step instructions on forwarding and the exact subject line to use before sharing this job with candidates.',
-          variant: 'success'
-        })
-      } catch (e) {
-        console.log('Toast not available in this context, skipping:', e)
-      }
+  useEffect(() => { loadJobs() }, [loadJobs])
+  useJobsRealtime(loadJobs)
+  useApplicantsRealtime(loadJobs)
+  useAnalyticsRealtime(loadJobs)
 
-      return { job: composedJob, company: { id: companyId } }
-    } catch (err) {
-      console.error('Error creating job:', err)
-      setError(err instanceof Error ? err.message : 'Failed to create job posting')
-      throw err
-    }
-  }
+  const totalPages = Math.ceil(jobs.length / itemsPerPage)
+  const paginatedJobs = useMemo(() => jobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage), [jobs, currentPage])
 
   const handleViewDetails = (jobId: string) => {
     const job = jobs.find(j => j.id === jobId)
-    if (job) {
-      setSelectedJob(job)
-      setIsDetailsModalOpen(true)
-    }
+    if (job) { setSelectedJob(job); setIsDetailsModalOpen(true); }
   }
 
-  const handleEditJob = (jobId: string) => {
-    const job = jobs.find(j => j.id === jobId)
-    if (job) {
-      setSelectedJob(job)
-      setIsEditModalOpen(true)
-    }
-  }
-
-  const handleSaveJob = async (jobId: string, updatedData: Partial<JobPosting>) => {
-    try {
-      setError(null)
-      
-      const { error } = await supabase
-        .from('job_postings')
-        .update(updatedData)
-        .eq('id', jobId)
-      
-      if (error) {
-        throw error
-      }
-      
-      // Update local state
-      setJobs(prev => prev.map(job => 
-        job.id === jobId ? { ...job, ...updatedData } : job
-      ))
-      console.log('Job updated in database:', updatedData)
-    } catch (err) {
-      console.error('Error updating job:', err)
-      setError('Failed to update job posting')
-    }
-  }
+  const handleEditJob = (jobId: string) => router.push(`/dashboard/jobs/${jobId}/edit`)
 
   const handleDeleteJob = async (jobId: string) => {
     try {
-      setError(null)
-      console.log('Attempting to delete job:', jobId)
-      
-      // First, verify the job exists and belongs to the user's company
-      if (!user) {
-        throw new Error('User not authenticated')
-      }
-      
-      const { data: company } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
-      
-      if (!company) {
-        throw new Error('Company not found for user')
-      }
-      
-      // Check if job exists and belongs to user's company
-      const { data: existingJob, error: fetchError } = await supabase
-        .from('job_postings')
-        .select('id, company_id')
-        .eq('id', jobId)
-        .eq('company_id', company.id)
-        .single()
-      
-      if (fetchError || !existingJob) {
-        console.warn('Job not found or does not belong to user:', jobId)
-        // Still update UI in case it was already deleted
-        setJobs(prev => prev.filter(job => job.id !== jobId))
-        return
-      }
-      
-      // Now attempt to delete
-      const { data, error } = await supabase
-        .from('job_postings')
-        .delete()
-        .eq('id', jobId)
-        .eq('company_id', company.id) // Extra security check
-        .select()
-      
-      console.log('Delete result:', { data, error })
-      
-      if (error) {
-        console.error('Supabase delete error:', error)
-        throw error
-      }
-      
-      if (!data || data.length === 0) {
-        console.warn('No rows were deleted - job might not exist or already deleted')
-        // Still update UI in case it was already deleted
-        setJobs(prev => prev.filter(job => job.id !== jobId))
-        return
-      }
-      
-      // Update local state
-      setJobs(prev => prev.filter(job => job.id !== jobId))
-      console.log('Job successfully deleted from database:', jobId)
-      
-      // Refresh jobs from database to ensure consistency
-      setTimeout(async () => {
-        try {
-          if (!user) return
-          
-          const { data: company } = await supabase
-            .from('companies')
-            .select('id')
-            .eq('user_id', user.id)
-            .single()
-          
-          if (company) {
-            const { data: jobPostings } = await supabase
-              .from('job_postings')
-              .select('*')
-              .eq('company_id', company.id)
-              .order('created_at', { ascending: false })
-            
-            setJobs(jobPostings || [])
-            console.log('Jobs refreshed after deletion')
-          }
-        } catch (refreshErr) {
-          console.error('Error refreshing jobs after deletion:', refreshErr)
-        }
-      }, 1000)
+      const { error } = await supabase.from('job_postings').delete().eq('id', jobId)
+      if (error) throw error
+      setJobs(prev => prev.filter(j => j.id !== jobId))
     } catch (err) {
-      console.error('Error deleting job:', err)
-      setError(`Failed to delete job posting: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      setError('Failed to delete job')
     }
+  }
+
+  const Pagination = () => {
+    if (totalPages <= 1) return null
+    return (
+      <div className="flex items-center justify-center gap-4 mt-8">
+        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+          <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+        </Button>
+        <span className="text-sm font-medium">Page {currentPage} of {totalPages}</span>
+        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+          Next <ChevronRight className="w-4 h-4 ml-1" />
+        </Button>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8 dark:border-gray-800 dark:bg-gray-900"
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent dark:from-slate-800/50" aria-hidden />
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">Hiring</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
-            Job postings
-          </h1>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base dark:text-gray-400">
-            Create roles, share them with candidates, and track your pipeline in one place.
-          </p>
-        </div>
-        <div className="flex w-full flex-row gap-2 sm:w-auto sm:gap-3">
-          <Button 
-            variant="outline" 
-            onClick={refreshJobs}
-            disabled={isLoading}
-            size="sm"
-            type="button"
-            className="min-h-[44px] flex-1 touch-manipulation rounded-xl border-slate-200 bg-white text-slate-800 shadow-sm hover:bg-slate-50 sm:min-h-9 dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:w-auto"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin-smooth' : ''}`} />
-            Refresh
-          </Button>
-          <Button 
-            variant="default" 
-            size="sm"
-            type="button"
-            className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-slate-900 text-white shadow-sm shadow-slate-500/20 hover:bg-slate-800 sm:min-h-9 sm:w-auto dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create new job
-          </Button>
-        </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Hiring</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Job postings</h1>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="outline" onClick={loadJobs} disabled={isLoading} size="sm" className="rounded-xl"><RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} /> Refresh</Button>
+            <Button variant="default" size="sm" className="rounded-xl bg-[#2D2DDD] hover:bg-[#2D2DDD]/90 text-white" onClick={() => router.push('/dashboard/jobs/new')}><Plus className="w-4 h-4 mr-2" /> New Job</Button>
+          </div>
         </div>
       </motion.div>
 
-      {/* Error Message */}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
-        >
-          {error}
-        </motion.div>
-      )}
-
-
-      {/* Loading State */}
-      {isLoading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center justify-center py-12"
-        >
-          <div className="text-center">
-            <div className="animate-spin-smooth rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading job postings...</p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Jobs List */}
-      {!isLoading && (
-        <div className="grid gap-6">
-          {jobs.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16"
+      {/* View Toggle Row */}
+      {!isLoading && jobs.length > 0 && (
+        <div className="flex justify-end mb-[-12px]">
+          <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setViewMode('card')} 
+              className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'card' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
+              title="Card View"
             >
-              <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-6">
-                <Briefcase className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">No job postings yet</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Get started by creating your first job posting. You'll be able to manage applicants and track your recruitment pipeline.
-              </p>
-              <Button 
-                type="button"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="min-h-[44px] touch-manipulation rounded-xl bg-blue-600 px-6 text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 sm:min-h-10"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Job
-              </Button>
-            </motion.div>
-          ) : (
-            jobs.map((job: JobWithApplicants, index) => (
-          <motion.div
-            key={job.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
-          >
-                        <Card className="border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                          <CardContent className="p-4 sm:p-6">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="mb-2 flex flex-wrap items-center gap-2 gap-y-2">
-                      <h3 className="text-xl font-semibold font-figtree">{job.job_title}</h3>
-                      <Badge 
-                        variant={
-                          job.status?.toUpperCase() === 'ACTIVE' ? 'active' :
-                          job.status?.toUpperCase() === 'DRAFT' ? 'draft' :
-                          job.status?.toUpperCase() === 'CLOSED' ? 'closed' :
-                          'default'
-                        }
-                      >
-                        {job.status?.toUpperCase() || 'ACTIVE'}
-                      </Badge>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-400 font-figtree font-light mb-4 line-clamp-2">
-                      {job.job_description?.substring(0, 150)}{job.job_description && job.job_description.length > 150 ? '...' : ''}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        <span className="font-medium">{job.applicantStats?.total || 0} applicants</span>
-                      </div>
-                      {job.applicantStats?.shortlisted > 0 && (
-                        <div className="flex items-center gap-2">
-                          <UserCheck className="w-4 h-4 text-green-600" />
-                          <span className="text-green-600 font-medium">{job.applicantStats.shortlisted} shortlisted</span>
-                        </div>
-                      )}
-                      {job.application_deadline && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span>Deadline: {new Date(job.application_deadline).toLocaleDateString()}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2 mt-4 sm:mt-0 sm:min-w-[140px]">
-                    <Link
-                      href={`/dashboard/job/${String(job.id || job.job_posting_id || '')}/shortlisted`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                      }}
-                      className="w-full"
-                    >
-                      <Button 
-                        type="button"
-                        variant="default" 
-                        size="sm"
-                      className="min-h-[44px] w-full touch-manipulation rounded-xl bg-slate-900 text-white hover:bg-slate-800 sm:min-h-9 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      View Candidates
-                      <ArrowUpRight className="ml-auto h-4 w-4" />
-                    </Button>
-                    </Link>
-                    <div className="flex flex-row gap-2">
-                      <Button 
-                        type="button"
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditJob(job.id)}
-                        className="min-h-[44px] flex-1 touch-manipulation border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 sm:min-h-9 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button 
-                        type="button"
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewDetails(job.id)}
-                        className="min-h-[44px] flex-1 touch-manipulation rounded-xl bg-slate-100 text-slate-900 shadow-sm hover:bg-slate-200 sm:min-h-9 sm:w-auto dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-1" />
-                        View Details
-                      </Button>
-                    </div>
-                    <div className="flex justify-center">
-                      <Button 
-                        type="button"
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setJobToDelete(job)}
-                        className="min-h-[44px] w-full touch-manipulation text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 sm:min-h-9 sm:w-auto dark:text-red-400 dark:hover:text-red-300 dark:border-red-800 dark:hover:bg-red-900/20"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-            ))
-          )}
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setViewMode('table')} 
+              className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
+              title="Table View"
+            >
+              <TableIcon className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* Modals */}
-      <CreateJobModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateJob}
-      />
+      {isLoading ? (
+        <div className="flex justify-center py-12"><RefreshCw className="w-8 h-8 animate-spin text-[#2D2DDD]" /></div>
+      ) : jobs.length === 0 ? (
+        <div className="text-center py-16"><Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" /><h3 className="text-xl font-medium">No jobs posted</h3></div>
+      ) : viewMode === 'card' ? (
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4">
+            {paginatedJobs.map((job, index) => (
+              <motion.div 
+                key={job.id} 
+                initial={{ opacity: 0, x: -10 }} 
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.03 }}
+                className="group relative"
+              >
+                <Card 
+                  className="cursor-pointer border-slate-200 bg-white transition-all hover:border-[#2D2DDD]/30 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 overflow-hidden"
+                  onClick={() => handleViewDetails(job.id)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-bold text-xl text-slate-900 dark:text-white group-hover:text-[#2D2DDD] transition-colors">
+                          {job.job_title}
+                        </h3>
+                        <Badge variant={job.status?.toLowerCase() as any} className="text-[10px] px-2 py-0">
+                          {job.status}
+                        </Badge>
+                      </div>
+                      
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                              <MoreVertical className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                            <DropdownMenuItem onClick={() => handleEditJob(job.id)} className="cursor-pointer">
+                              <Edit className="w-4 h-4 mr-2" /> Edit Posting
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setJobToDelete(job)} 
+                              className="text-red-600 focus:text-red-600 cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" /> Delete Job
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
 
-      <JobDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={() => {
-          setIsDetailsModalOpen(false)
-          setSelectedJob(null)
-        }}
-        jobPosting={selectedJob}
-        onEdit={handleEditJob}
-      />
+                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-6 max-w-3xl leading-relaxed">
+                      {job.job_description || 'No description provided for this position.'}
+                    </p>
 
-      <EditJobModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false)
-          setSelectedJob(null)
-        }}
-        jobPosting={selectedJob}
-        onSave={handleSaveJob}
-      />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+                      <div className="flex flex-wrap items-center gap-6 text-slate-400">
+                        <div className="flex items-center gap-2" title="Total Applicants">
+                          <Users className="w-4 h-4" />
+                          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                            {job.applicantStats.total} applicants
+                          </span>
+                        </div>
+                        {job.application_deadline && (
+                          <div className="flex items-center gap-2" title="Deadline">
+                            <Calendar className="w-4 h-4" />
+                            <span className="text-xs font-medium">
+                              Deadline: {new Date(job.application_deadline).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-[10px] font-medium text-slate-300 uppercase tracking-widest hidden md:inline">
+                          Ref: {String(job.id).slice(0, 8)}
+                        </span>
+                      </div>
 
-      {/* Delete Confirmation Dialog */}
+                      <Link href={`/dashboard/job/${job.id}/shortlisted`} onClick={(e) => e.stopPropagation()}>
+                        <Button 
+                          className="w-full sm:w-auto rounded-lg bg-slate-900 text-white hover:bg-[#2D2DDD] dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition-all shadow-sm group/btn"
+                        >
+                          View Candidates
+                          <ArrowUpRight className="ml-2 w-4 h-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+          <Pagination />
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden dark:border-slate-800 dark:bg-slate-900">
+          <Table>
+            <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+              <TableRow>
+                <TableHead className="font-bold">Job Title</TableHead>
+                <TableHead className="text-center font-bold">Applicants</TableHead>
+                <TableHead className="text-center font-bold">Shortlisted</TableHead>
+                <TableHead className="font-bold">Status</TableHead>
+                <TableHead className="text-right font-bold">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedJobs.map((job) => (
+                <TableRow key={job.id}>
+                  <TableCell className="font-semibold">{job.job_title}</TableCell>
+                  <TableCell className="text-center">{job.applicantStats.total}</TableCell>
+                  <TableCell className="text-center text-green-600 font-bold">{job.applicantStats.shortlisted}</TableCell>
+                  <TableCell><Badge variant={job.status?.toLowerCase() as any}>{job.status}</Badge></TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/job/${job.id}/shortlisted`)}><ArrowUpRight className="w-4 h-4" /></Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <div className="p-4 border-t"><Pagination /></div>
+        </div>
+      )}
+
+      <JobDetailsModal isOpen={isDetailsModalOpen} onClose={() => { setIsDetailsModalOpen(false); setSelectedJob(null); }} jobPosting={selectedJob} onEdit={handleEditJob} />
+      
       {jobToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setJobToDelete(null)}
-          />
-          
-          {/* Dialog */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Delete Job Posting</h3>
-                <p className="text-sm text-gray-600">This action cannot be undone</p>
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <p className="text-gray-700 mb-2">
-                Are you sure you want to delete the job posting for:
-              </p>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <h4 className="font-semibold text-gray-900">{jobToDelete.job_title}</h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  {jobToDelete.job_description.substring(0, 100)}...
-                </p>
-              </div>
-            </div>
-            
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setJobToDelete(null)} />
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-xl font-bold mb-2 text-red-600">Delete Job Posting?</h3>
+            <p className="text-slate-500 mb-6">Are you sure you want to delete <strong>{jobToDelete.job_title}</strong>? This action cannot be undone.</p>
             <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setJobToDelete(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  handleDeleteJob(jobToDelete.id)
-                  setJobToDelete(null)
-                }}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Job
-              </Button>
+              <Button variant="outline" onClick={() => setJobToDelete(null)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => { handleDeleteJob(jobToDelete.id); setJobToDelete(null); }}>Delete Permanently</Button>
             </div>
           </motion.div>
         </div>

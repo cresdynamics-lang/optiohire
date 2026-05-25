@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { StatusIndicator } from './status-indicator'
-import { Calendar, Users, MapPin, ExternalLink } from 'lucide-react'
+import { Calendar, Users, MapPin, ExternalLink, Link as LinkIcon, Check } from 'lucide-react'
 import { formatDate, formatDateTime } from '@/lib/utils'
 import { JobPosting } from '@/types'
+import { useState } from 'react'
+import { useToast } from '@/hooks/use-toast'
 
 interface JobPostingCardProps {
   jobPosting: JobPosting & {
@@ -24,6 +26,26 @@ interface JobPostingCardProps {
 
 export function JobPostingCard({ jobPosting, onViewDetails, delay = 0 }: JobPostingCardProps) {
   const analytics = jobPosting.analytics
+  const { toast } = useToast()
+  const [isCopying, setIsCopying] = useState(false)
+
+  const copyApplicationLink = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsCopying(true)
+    
+    const baseUrl = window.location.origin
+    const applicationUrl = `${baseUrl}/jobs/${jobPosting.id}`
+    
+    navigator.clipboard.writeText(applicationUrl).then(() => {
+      toast({
+        title: "Link Copied!",
+        description: "Application link copied to clipboard.",
+      })
+      setTimeout(() => setIsCopying(false), 2000)
+    }).catch(() => {
+      setIsCopying(false)
+    })
+  }
 
   return (
     <motion.div
@@ -111,24 +133,36 @@ export function JobPostingCard({ jobPosting, onViewDetails, delay = 0 }: JobPost
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-4 border-t">
+            <div className="flex items-center justify-between pt-4 border-t gap-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Users className="w-3 h-3" />
                 <span>Created {formatDate(new Date(jobPosting.created_at))}</span>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="min-h-[44px] touch-manipulation text-primary hover:text-primary/80 sm:min-h-9"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onViewDetails(jobPosting.id)
-                }}
-              >
-                View Details
-                <ExternalLink className="w-3 h-3 ml-1" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="min-h-[44px] touch-manipulation sm:min-h-9 text-xs"
+                  onClick={copyApplicationLink}
+                >
+                  {isCopying ? <Check className="w-3 h-3 mr-1" /> : <LinkIcon className="w-3 h-3 mr-1" />}
+                  {isCopying ? 'Copied' : 'Link'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="min-h-[44px] touch-manipulation text-primary hover:text-primary/80 sm:min-h-9"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onViewDetails(jobPosting.id)
+                  }}
+                >
+                  View Details
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
