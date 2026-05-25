@@ -130,12 +130,27 @@ export class EmailReader {
 
     const lock = await this.client!.getMailboxLock('INBOX')
     try {
-      const { rows: jobs } = await query("SELECT DISTINCT job_title FROM job_postings WHERE status = 'ACTIVE' OR status IS NULL OR status = ''")
+      const { rows: jobs } = await query<{ job_title: string; created_at: Date; application_deadline: Date }>(
+        "SELECT DISTINCT job_title, created_at, application_deadline FROM job_postings WHERE status = 'ACTIVE' OR status IS NULL OR status = ''"
+      )
       if (jobs.length === 0) return
 
       const seen = new Set<number>()
       for (const job of jobs) {
-        for await (const msg of this.client!.fetch({ seen: false, subject: job.job_title }, { envelope: true })) {
+        const criteria: any = { seen: false, subject: job.job_title }
+        
+        if (job.created_at) {
+          criteria.since = new Date(job.created_at)
+        }
+        
+        if (job.application_deadline) {
+          // IMAP BEFORE is exclusive, so add 1 day to include the deadline day
+          const before = new Date(job.application_deadline)
+          before.setDate(before.getDate() + 1)
+          criteria.before = before
+        }
+
+        for await (const msg of this.client!.fetch(criteria, { envelope: true })) {
           if (seen.has(msg.seq)) continue
           seen.add(msg.seq)
 
