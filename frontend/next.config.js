@@ -74,15 +74,6 @@ const nextConfig = {
         ],
       },
       {
-        source: '/api/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=300, s-maxage=600, stale-while-revalidate=86400',
-          },
-        ],
-      },
-      {
         source: '/_next/static/(.*)',
         headers: [
           {

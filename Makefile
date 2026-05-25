@@ -35,8 +35,10 @@ build:
 	@echo "📦 Building Frontend (Standalone)..."
 	cd frontend && npm install && npm run build
 	@echo "🎨 Preparing Standalone Assets..."
-	cp -r frontend/public frontend/.next/standalone/frontend/ 2>/dev/null || true
-	cp -r frontend/.next/static frontend/.next/standalone/frontend/.next/ 2>/dev/null || true
+	mkdir -p frontend/.next/standalone/public
+	mkdir -p frontend/.next/standalone/.next/static
+	cp -r frontend/public/* frontend/.next/standalone/public/ 2>/dev/null || true
+	cp -r frontend/.next/static/* frontend/.next/standalone/.next/static/ 2>/dev/null || true
 	@echo "✅ Build complete."
 
 install: build kill-ghosts
