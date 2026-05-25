@@ -1,0 +1,20 @@
+[Unit]
+Description=OptioHire Bare-Metal Service
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=simple
+User={{USER}}
+Group={{USER}}
+WorkingDirectory={{WORKING_DIR}}
+Environment=NODE_ENV=production
+EnvironmentFile={{WORKING_DIR}}/.env
+ExecStart={{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently "npm run start --prefix backend" "npm run start --prefix frontend"
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/optiohire/optiohire.log
+StandardError=inherit
+SyslogIdentifier=optiohire
+
+[Install]
+WantedBy=multi-user.target
