@@ -26,17 +26,16 @@ import { router as uploadRouter } from './routes/upload.js'
 import { ensureStorageDir } from './utils/storage.js'
 import { logger } from './utils/logger.js'
 import path from 'path'
-import { startReportScheduler } from './cron/reportScheduler.js'
-import { startDeadlineStatusScheduler } from './cron/scheduler.js'
-// Email reader enabled - monitors inbox for job applications
-import { emailReaderStatus, startEmailReader } from './server/email-reader.js'
+import { emailReaderStatus } from './server/email-reader.js'
 import { APPLICATION_INBOX_EMAIL } from './config/applicationInbox.js'
-import { emailRetryChecker } from './server/email-retry-checker.js'
 import { apiLimiter } from './middleware/rateLimiter.js'
 import { initRedis } from './utils/redis.js'
 import { errorHandler } from './utils/errorHandler.js'
 import { performanceMonitor } from './middleware/performance.js'
 import { ResendService } from './services/resendService.js'
+import { AIWorker } from './workers/aiWorker.js'
+import { setupMaintenanceJobs } from './queues/maintenanceQueue.js'
+import { MaintenanceWorker } from './workers/maintenanceWorker.js'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
@@ -48,23 +47,18 @@ const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 
   .map((origin) => origin.trim())
   .filter(Boolean)
 
-// Performance optimizations
 app.use(compression({
-  level: 6, // Good balance between compression and speed
-  threshold: 1024, // Only compress responses larger than 1KB
+  level: 6,
+  threshold: 1024,
   filter: (req, res) => {
-    if (req.headers['x-no-compression']) {
-      return false
-    }
+    if (req.headers['x-no-compression']) return false
     return compression.filter(req, res)
   }
 }))
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow server-to-server calls and tools without Origin header.
-    if (!origin) return callback(null, true)
-    if (allowedOrigins.includes(origin)) return callback(null, true)
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
     return callback(new Error(`CORS blocked origin: ${origin}`))
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -73,221 +67,90 @@ app.use(cors({
 app.use(express.json({ limit: '2mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan('dev'))
-
-// Performance monitoring
 app.use(performanceMonitor)
-
-// Apply rate limiting globally (can be overridden per route)
 app.use('/api', apiLimiter)
 
-// Enhanced Health Checks
 app.get('/health', async (_req, res) => {
   const health: any = {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
-    version: process.env.npm_package_version || '1.0.0'
+    environment: process.env.NODE_ENV || 'development'
   }
 
-  // Check database
   try {
     const { query } = await import('./db/index.js')
-    const startTime = Date.now()
     await query('SELECT 1')
-    const dbLatency = Date.now() - startTime
-    health.database = {
-      status: 'connected',
-      latency: `${dbLatency}ms`
-    }
+    health.database = 'connected'
   } catch (error: any) {
-    health.database = {
-      status: 'disconnected',
-      error: error.message
-    }
+    health.database = 'disconnected'
     health.status = 'degraded'
   }
 
-  // Check Redis cache
-  try {
-    const { getRedis } = await import('./utils/redis.js')
-    const redis = getRedis()
-    if (redis) {
-      const startTime = Date.now()
-      await redis.ping()
-      const redisLatency = Date.now() - startTime
-      health.cache = {
-        status: 'connected',
-        latency: `${redisLatency}ms`
-      }
-    } else {
-      health.cache = {
-        status: 'not_configured'
-      }
-    }
-  } catch (error: any) {
-    health.cache = {
-      status: 'disconnected',
-      error: error.message
-    }
-  }
-
-  // Check email reader
-  health.emailReader = emailReaderStatus
-  if (emailReaderStatus.enabled && !emailReaderStatus.running) {
-    health.status = 'degraded'
-    health.message = 'Email reader is down but API is functional'
-  }
-
-  // Determine status code - only return 503 if database is disconnected
-  // A 'degraded' status due to email reader should still return 200 to keep the container 'healthy' in Docker/K8s
-  const isCriticalFailure = health.database.status === 'disconnected'
-  const statusCode = isCriticalFailure ? 503 : 200
-  res.status(statusCode).json(health)
+  res.json(health)
 })
 
-// Email reader health check (IMAP ingestion + applicant analysis)
 app.get('/health/email-reader', (_req, res) => {
-  const status = !emailReaderStatus.enabled
-    ? 'disabled'
-    : emailReaderStatus.running
-      ? 'ok'
-      : 'degraded'
-
   res.json({
-    status,
+    status: emailReaderStatus.running ? 'ok' : 'degraded',
     emailReader: emailReaderStatus,
     timestamp: new Date().toISOString()
   })
 })
 
-// Database health check
-app.get('/health/db', async (_req, res) => {
-  try {
-    const { query } = await import('./db/index.js')
-    const startTime = Date.now()
-    const result = await query('SELECT NOW() as time, version() as version')
-    const latency = Date.now() - startTime
-    
-    res.json({ 
-      status: 'ok', 
-      database: 'connected',
-      latency: `${latency}ms`,
-      time: result.rows[0]?.time,
-      version: result.rows[0]?.version?.split(' ')[0] + ' ' + result.rows[0]?.version?.split(' ')[1]
-    })
-  } catch (error: any) {
-    res.status(500).json({ 
-      status: 'error', 
-      database: 'disconnected',
-      error: error.message 
-    })
-  }
-})
-
-// Routes
 app.use('/companies', companiesRouter)
 app.use('/jobs', jobsRouter)
-app.use('/api/job', jobRouter) // POST /api/job/create
+app.use('/api/job', jobRouter)
 app.use('/api/job-postings', jobPostingsRouter)
 app.use('/inbound/applications', inboundApplicationsRouter)
 app.use('/applications', applicationsRouter)
-app.use('/companies', reportsRouter) // GET /companies/:id/report
-app.use('/api/hr/reports', hrReportsRouter) // HR report endpoints
-app.use('/api/hr', hrCandidatesRouter) // HR candidate endpoints
-app.use('/api/system/reports', reportsRouter) // System/cron endpoints
-app.use('/api', scheduleRouter) // POST /api/schedule-interview
+app.use('/companies', reportsRouter)
+app.use('/api/hr/reports', hrReportsRouter)
+app.use('/api/hr', hrCandidatesRouter)
+app.use('/api/system/reports', reportsRouter)
+app.use('/api', scheduleRouter)
 app.use('/contact', contactRouter)
 app.use('/auth', authRouter)
-app.use('/api/admin', adminRouter) // Admin endpoints
-app.use('/api/user', userRouter) // User profile endpoints
+app.use('/api/admin', adminRouter)
+app.use('/api/user', userRouter)
 app.use('/api/user/preferences', userPreferencesRouter)
-app.use('/api/upload', uploadRouter) // File upload endpoints
+app.use('/api/upload', uploadRouter)
 
-// Serve uploaded files statically
 const storageDir = process.env.FILE_STORAGE_DIR || './storage'
 app.use('/storage', express.static(path.resolve(storageDir), {
-  maxAge: '1y', // Cache for 1 year
+  maxAge: '1y',
   etag: true,
   setHeaders: (res, filePath) => {
-    // Prevent content-type sniffing and force download behavior for CV/document files.
     res.setHeader('X-Content-Type-Options', 'nosniff')
-
     const ext = path.extname(filePath).toLowerCase()
-    const isDownloadableDocument = new Set([
-      '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
-    ]).has(ext)
-
-    if (isDownloadableDocument) {
-      const filename = path.basename(filePath)
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    if (new Set(['.pdf', '.doc', '.docx', '.txt']).has(ext)) {
+      res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`)
     }
   },
-})) // User preferences endpoints
-app.use('/api/analytics', analyticsRouter) // Analytics tracking endpoints
-app.use('/api/resend', resendRouter) // Resend email API endpoints
-
-// Error handling middleware (must be last)
+}))
+app.use('/api/analytics', analyticsRouter)
+app.use('/api/resend', resendRouter)
 app.use(errorHandler)
 
-// Start
 async function start() {
   await ensureStorageDir()
-
-  if (process.env.NODE_ENV !== 'test' && process.env.ENABLE_EMAIL_READER !== 'false') {
-    await startEmailReader()
-    if (emailReaderStatus.running) {
-      logger.info(
-        `📧 Application watcher active → inbox ${emailReaderStatus.inboxAddress || APPLICATION_INBOX_EMAIL} (aligned with APPLICATION_INBOX_EMAIL=${APPLICATION_INBOX_EMAIL}). Pipeline: parse → JSON → AI → emails.`
-      )
-    } else if (emailReaderStatus.disabledReason) {
-      logger.warn(`📧 Application watcher not running: ${emailReaderStatus.disabledReason}`)
-    } else {
-      logger.warn(
-        `📧 Application watcher degraded (IMAP not connected). Check IMAP_* in .env and GET /health/email-reader`
-      )
-    }
-  }
 
   if (process.env.USE_RESEND === 'true' || process.env.RESEND_API_KEY) {
     try {
       const resendService = new ResendService()
-      const diagnostics = await resendService.getDiagnostics()
-      if (diagnostics.atLeastOneWorking && !diagnostics.hasVerifiedDomain) {
-        logger.warn('Resend is enabled but no verified domains were found. Outbound email may fail in production until a domain is verified at https://resend.com/domains')
-      }
-    } catch (err: any) {
-      logger.warn(`Failed to run Resend startup diagnostics: ${err?.message || String(err)}`)
-    }
+      await resendService.getDiagnostics()
+    } catch (err) {}
   }
   
-  // Initialize Redis cache (optional - falls back gracefully if unavailable)
   const redisEnabled = String(process.env.REDIS_ENABLED || '').toLowerCase() === 'true'
-  if (redisEnabled && (process.env.REDIS_URL || process.env.REDIS_HOST)) {
-    initRedis()
-  } else {
-    logger.info('Redis disabled or not configured - caching disabled')
-  }
-  
-  // Start deadline status scheduler
-  startDeadlineStatusScheduler().catch((err) => {
-    logger.error('Failed to start deadline status scheduler:', err)
-  })
-  
-  // Start report scheduler (for automatic report generation)
-  if (process.env.NODE_ENV !== 'test' && !process.env.DISABLE_REPORT_SCHEDULER) {
-    startReportScheduler().catch((err) => {
-      logger.error('Failed to start report scheduler:', err)
-    })
-  } else {
-    logger.info('Report scheduler disabled (NODE_ENV=test or DISABLE_REPORT_SCHEDULER is set)')
-  }
-  
-  // Start email retry checker (sends missing feedback emails immediately)
-  if (process.env.NODE_ENV !== 'test' && process.env.ENABLE_EMAIL_READER !== 'false') {
-    emailRetryChecker.start()
-    logger.info('Email retry checker started - checking for unsent emails every 10 seconds')
-  }
+  if (redisEnabled) initRedis()
+
+  new AIWorker()
+  logger.info('🤖 BullMQ AI Worker started')
+
+  await setupMaintenanceJobs()
+  new MaintenanceWorker()
+  logger.info('⚙️ BullMQ Maintenance Worker started')
   
   app.listen(port, () => {
     logger.info(`Backend listening on http://localhost:${port}`)
@@ -298,5 +161,3 @@ start().catch((err) => {
   logger.error('Failed to start server', { err })
   process.exit(1)
 })
-
-
