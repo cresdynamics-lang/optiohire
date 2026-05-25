@@ -1,8 +1,10 @@
 SERVICE_NAME=optiohire
 SERVICE_FILE=$(SERVICE_NAME).service
 LOGROTATE_FILE=$(SERVICE_NAME).logrotate
+RSYSLOG_FILE=$(SERVICE_NAME).conf
 INSTALL_PATH=/etc/systemd/system/$(SERVICE_FILE)
 LOGROTATE_PATH=/etc/logrotate.d/$(SERVICE_NAME)
+RSYSLOG_PATH=/etc/rsyslog.d/$(RSYSLOG_FILE)
 LOG_DIR=/var/log/$(SERVICE_NAME)
 APP_DIR=$(shell pwd)
 USER=$(shell whoami)
@@ -17,10 +19,13 @@ up: install
 	@echo "🚀 KABOOOOOOM! Server is up and running."
 
 kill-ghosts:
-	@echo "👻 Killing lingering processes on ports 3000 and 3001..."
-	-sudo fuser -k 3000/tcp 3001/tcp || true
-	-sudo pkill -f "next-server" || true
-	-sudo pkill -f "node dist/server.js" || true
+	@echo "🛑 Attempting graceful shutdown of $(SERVICE_NAME)..."
+	-sudo systemctl stop $(SERVICE_NAME) 2>/dev/null || true
+	@echo "🔍 Checking for lingering processes on ports 3000 and 3001..."
+	-sudo lsof -t -i:3000 -i:3001 | xargs -r sudo kill -15 2>/dev/null || true
+	@sleep 1
+	@echo "🔪 Removing zombies..."
+	-sudo lsof -t -i:3000 -i:3001 | xargs -r sudo kill -9 2>/dev/null || true
 
 build:
 	@echo "🏗️ Building Monorepo..."
@@ -43,6 +48,10 @@ install: build kill-ghosts
 	sudo mkdir -p $(LOG_DIR)
 	sudo chown $(USER):$(USER) $(LOG_DIR)
 	
+	@echo "🔄 Installing RSYSLog filter..."
+	sudo cp $(SERVICE_NAME).rsyslog.template $(RSYSLOG_PATH)
+	sudo systemctl restart rsyslog
+	
 	@echo "🔄 Installing logrotate config..."
 	@sed "s|{{USER}}|$(USER)|g" $(SERVICE_NAME).logrotate.template > $(LOGROTATE_FILE)
 	sudo cp $(LOGROTATE_FILE) $(LOGROTATE_PATH)
@@ -53,15 +62,18 @@ install: build kill-ghosts
 	@echo "✅ Service installed and updated."
 
 uninstall: kill-ghosts
-	@echo "⚠️ Uninstalling systemd service..."
+	@echo "⚠️ Uninstalling everything..."
 	sudo systemctl stop $(SERVICE_NAME) || true
 	sudo systemctl disable $(SERVICE_NAME) || true
 	sudo rm -f $(INSTALL_PATH)
 	sudo rm -f $(SERVICE_FILE)
 	sudo rm -f $(LOGROTATE_PATH)
 	sudo rm -f $(LOGROTATE_FILE)
+	sudo rm -f $(RSYSLOG_PATH)
 	sudo systemctl daemon-reload
-	@echo "✅ Service removed."
+	sudo systemctl restart rsyslog
+	@echo "✅ Service and logging configs removed."
+
 
 reload: build kill-ghosts
 	@echo "🔄 Reloading service (Build + Restart)..."
