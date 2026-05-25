@@ -70,8 +70,12 @@ services:
       PORT: 3000
       BACKEND_URL: http://backend:3001
       NEXT_PUBLIC_BACKEND_URL: http://localhost:3001
+      DATABASE_URL: postgresql://optiohire_user:optiohire_pass_2024@postgres:5432/optiohire
+      DB_SSL: "false"
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend/.env:/app/.env:ro
     depends_on:
       backend:
         condition: service_healthy
