@@ -397,13 +397,6 @@ export async function createJobPosting(req: Request, res: Response) {
       [jobPostingId, webhookUrl, secret]
     )
 
-    // 4) Schedule deadline job
-    await client.query(
-      `insert into job_schedules (job_posting_id, type, run_at, payload)
-       values ($1, 'deadline', $2, $3::jsonb)`,
-      [jobPostingId, applicationDeadline.toISOString(), JSON.stringify({ hr_email: payload.hr_email })]
-    )
-
     // 5) Audit log
     await client.query(
       `insert into audit_logs (action, company_id, job_posting_id, metadata)
@@ -468,7 +461,7 @@ export async function createJobPosting(req: Request, res: Response) {
       success: true,
       job_posting_id: jobPostingId,
       company_id: companyId,
-      message: 'Job posted and workflows scheduled',
+      message: 'Job posted successfully',
       applicationInboxEmail: APPLICATION_INBOX_EMAIL,
       recommendedApplicationSubject: getRecommendedApplicationSubject(payload.job_title, payload.company_name),
       emailSent,
