@@ -10,6 +10,8 @@ WorkingDirectory={{WORKING_DIR}}
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=BACKEND_URL=http://localhost:3001
+Environment=FRONTEND_URL=https://optiohire.com
+Environment=CORS_ORIGINS=https://optiohire.com,https://www.optiohire.com
 EnvironmentFile=-{{WORKING_DIR}}/.env
 EnvironmentFile=-{{WORKING_DIR}}/backend/.env
 # Native direct execution
