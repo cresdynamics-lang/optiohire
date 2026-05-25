@@ -10,11 +10,12 @@ WorkingDirectory={{WORKING_DIR}}
 Environment=NODE_ENV=production
 EnvironmentFile=-{{WORKING_DIR}}/.env
 EnvironmentFile=-{{WORKING_DIR}}/backend/.env
-ExecStart={{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently -n "backend,frontend" -c "blue,green" "npm run start --prefix backend" "npm run start --prefix frontend"
+# Using bash redirection to support file logging on older systemd versions without 'resources' errors
+ExecStart=/usr/bin/bash -c '{{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently -n "backend,frontend" -c "blue,green" "npm run start --prefix backend" "npm run start --prefix frontend" >> /var/log/optiohire/optiohire.log 2>&1'
 Restart=always
 RestartSec=5
-StandardOutput=syslog
-StandardError=syslog
+StandardOutput=null
+StandardError=inherit
 SyslogIdentifier=optiohire
 
 [Install]
