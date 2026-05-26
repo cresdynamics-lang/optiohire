@@ -23,6 +23,7 @@ import { router as userRouter } from './routes/user.js'
 import { router as analyticsRouter } from './routes/analytics.js'
 import { router as resendRouter } from './routes/resend.js'
 import { router as uploadRouter } from './routes/upload.js'
+import { router as webhooksRouter } from './routes/webhooks.js'
 import { ensureStorageDir } from './utils/storage.js'
 import { logger } from './utils/logger.js'
 import path from 'path'
@@ -107,6 +108,7 @@ app.use('/applications', applicationsRouter)
 app.use('/companies', reportsRouter)
 app.use('/api/hr/reports', hrReportsRouter)
 app.use('/api/hr', hrCandidatesRouter)
+app.use('/api/webhooks', webhooksRouter)
 app.use('/api/system/reports', reportsRouter)
 app.use('/api', scheduleRouter)
 app.use('/contact', contactRouter)
@@ -142,7 +144,7 @@ async function start() {
     } catch (err) {}
   }
   
-  const redisEnabled = String(process.env.REDIS_ENABLED || '').toLowerCase() === 'true'
+  const redisEnabled = String(process.env.REDIS_ENABLED || '').trim().toLowerCase() === 'true'
   if (redisEnabled) {
     initRedis()
     new AIWorker()

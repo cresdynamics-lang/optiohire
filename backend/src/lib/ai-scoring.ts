@@ -29,6 +29,7 @@ export interface ScoringResult {
   score: number 
   status: 'SHORTLIST' | 'FLAGGED' | 'REJECTED'
   reasoning: string 
+  embedding?: number[]
   audit?: {
     modelProvider: 'groq' | 'gemini' | 'fallback'
     blindReviewApplied: boolean
@@ -279,7 +280,19 @@ CV: ${input.cvText.substring(0, 40000)}`
         const m = this.geminiClient.getGenerativeModel({ model, systemInstruction: this.buildSystemInstruction(input) })
         const res = await m.generateContent(this.buildScoringPrompt(input))
         const json = JSON.parse(res.response.text().replace(/```json|```/g, '')) as AiScoringJson
-        return this.finalizeFromModelJson(json, input, blind.redactionSummary, 'gemini')
+        
+        let embedding: number[] | undefined;
+        try {
+          const embModel = this.geminiClient.getGenerativeModel({ model: "text-embedding-004" });
+          const embRes = await embModel.embedContent(blind.text);
+          embedding = embRes.embedding.values;
+        } catch (embErr) {
+          logger.warn('Failed to generate embedding with Gemini:', embErr);
+        }
+
+        const result = this.finalizeFromModelJson(json, input, blind.redactionSummary, 'gemini')
+        if (embedding) result.embedding = embedding;
+        return result;
       } catch (e) {
         return this.fallbackScoring(input)
       }

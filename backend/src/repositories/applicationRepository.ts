@@ -57,16 +57,25 @@ export class ApplicationRepository {
     ai_status: 'SHORTLIST' | 'FLAG' | 'REJECT'
     reasoning: string
     parsed_resume_json?: any
+    embedding?: number[]
   }): Promise<Application> {
     const { rows } = await query<Application>(
       `UPDATE applications
        SET ai_score = $1, ai_status = $2, reasoning = $3,
            parsed_resume_json = COALESCE($4::jsonb, parsed_resume_json)
+           ${data.embedding ? ', embedding = $6::vector' : ''}
        WHERE application_id = $5
        RETURNING application_id, job_posting_id, company_id, candidate_name, email, phone,
                  resume_url, parsed_resume_json, ai_score, ai_status, reasoning,
                  interview_time, interview_link, interview_status, created_at`,
-      [
+      data.embedding ? [
+        data.ai_score,
+        data.ai_status,
+        data.reasoning,
+        data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
+        data.application_id,
+        JSON.stringify(data.embedding)
+      ] : [
         data.ai_score,
         data.ai_status,
         data.reasoning,
