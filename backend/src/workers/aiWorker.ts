@@ -103,7 +103,8 @@ export class AIWorker {
       ai_score: aiResult.score,
       ai_status: status as any,
       reasoning: aiResult.reasoning,
-      parsed_resume_json: parsedJson
+      parsed_resume_json: parsedJson,
+      embedding: aiResult.embedding
     })
 
     logger.info(`📧 Sending outcome emails for application: ${applicationId}`)
