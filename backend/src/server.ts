@@ -143,14 +143,17 @@ async function start() {
   }
   
   const redisEnabled = String(process.env.REDIS_ENABLED || '').toLowerCase() === 'true'
-  if (redisEnabled) initRedis()
+  if (redisEnabled) {
+    initRedis()
+    new AIWorker()
+    logger.info('🤖 BullMQ AI Worker started')
 
-  new AIWorker()
-  logger.info('🤖 BullMQ AI Worker started')
-
-  await setupMaintenanceJobs()
-  new MaintenanceWorker()
-  logger.info('⚙️ BullMQ Maintenance Worker started')
+    await setupMaintenanceJobs()
+    new MaintenanceWorker()
+    logger.info('⚙️ BullMQ Maintenance Worker started')
+  } else {
+    logger.info('⚠️ Redis is disabled. BullMQ workers will NOT be started.');
+  }
   
   app.listen(port, () => {
     logger.info(`Backend listening on http://localhost:${port}`)
