@@ -264,5 +264,48 @@ export class ResendService {
       throw error
     }
   }
+
+  /**
+   * Get email details by ID (Inbound Receiving API)
+   */
+  async getEmail(emailId: string): Promise<any> {
+    const client = this.resendPrimary || this.resendSecondary || this.resendFallback
+    if (!client) {
+      throw new Error('No Resend API keys configured')
+    }
+
+    try {
+      // Use the receiving API for inbound emails
+      const result = await (client.emails as any).receiving.get(emailId)
+      if (result.error) {
+        throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
+      }
+      return result.data
+    } catch (error: any) {
+      logger.error(`Failed to get inbound email ${emailId}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * Get email attachments (Inbound Receiving API)
+   */
+  async getAttachments(emailId: string): Promise<any[]> {
+    const client = this.resendPrimary || this.resendSecondary || this.resendFallback
+    if (!client) {
+      throw new Error('No Resend API keys configured')
+    }
+
+    try {
+      const result = await (client.emails as any).receiving.attachments.list({ emailId })
+      if (result.error) {
+        throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
+      }
+      return result.data || []
+    } catch (error: any) {
+      logger.error(`Failed to list attachments for email ${emailId}:`, error)
+      throw error
+    }
+  }
 }
 

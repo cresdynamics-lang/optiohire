@@ -5,24 +5,41 @@ import { ApplicationRepository } from '../repositories/applicationRepository.js'
 import { aiQueue } from '../queues/aiQueue.js';
 import { saveFile } from '../utils/storage.js';
 import { randomUUID } from 'crypto';
-import fetch from 'node-fetch';
+import { ResendService } from '../services/resendService.js';
 
 export const router = Router();
 const applicationRepo = new ApplicationRepository();
+const resendService = new ResendService();
 
 router.post('/resend', async (req: Request, res: Response) => {
   try {
     const payload = req.body;
 
-    // Verify it's an email.received event
+    // Guard: Verify it's an email.received event
     if (payload.type !== 'email.received') {
+      logger.info(`[WEBHOOK] Received non-email.received event: ${payload.type}`);
       return res.status(200).json({ received: true });
     }
 
-    const emailData = payload.data;
-    const subject = emailData.subject;
+    const emailId = payload.data.email_id;
+    if (!emailId) {
+      logger.error('[WEBHOOK] No email_id found in payload data');
+      return res.status(400).json({ error: 'No email_id in payload' });
+    }
+
+    logger.info(`[WEBHOOK] Processing received email: ${emailId}`);
+
+    // Fetch full email content and attachments
+    const emailData = await resendService.getEmail(emailId);
+    if (!emailData) {
+      logger.error(`[WEBHOOK] Could not fetch email data for ID: ${emailId}`);
+      return res.status(404).json({ error: 'Email data not found' });
+    }
+
+    const subject = emailData.subject || 'No Subject';
     const from = emailData.from; // "Sender Name <sender@domain.com>"
-    const attachments = emailData.attachments || [];
+    const htmlContent = emailData.html;
+    const textContent = emailData.text;
 
     logger.info(`[WEBHOOK] Received email from ${from} with subject: ${subject}`);
 
@@ -31,50 +48,98 @@ router.post('/resend', async (req: Request, res: Response) => {
     const candidateEmail = emailMatch ? emailMatch[1] : from;
     const candidateName = from.split('<')[0].trim();
 
-    // Fuzzy match the subject to a job posting
+    // Guard: Strict literal match the subject to a job posting
     const jobId = await emailParserService.matchSubjectToJob(subject);
-
     if (!jobId) {
       logger.warn(`[WEBHOOK] No job matched for subject: ${subject}`);
-      // Send fallback rejection or ignore
       return res.status(200).json({ received: true, ignored: 'no_job_match' });
     }
 
-    // Process attachments
-    let resumeUrl = null;
-    if (attachments.length > 0) {
-      // Find a PDF or DOCX
-      const resumeFile = attachments.find((att: any) => 
-        att.filename.toLowerCase().endsWith('.pdf') || 
-        att.filename.toLowerCase().endsWith('.docx')
-      );
+    // Download/Save message contents
+    let emailContentUrl = null;
+    const content = htmlContent || textContent;
+    if (content) {
+      const contentBuffer = Buffer.from(content);
+      const contentFileName = `emails/${emailId}.${htmlContent ? 'html' : 'txt'}`;
+      emailContentUrl = await saveFile(contentFileName, contentBuffer);
+      logger.info(`[WEBHOOK] Saved email content to: ${emailContentUrl}`);
+    }
 
-      if (resumeFile) {
-        logger.info(`[WEBHOOK] Found attachment: ${resumeFile.filename}`);
-        
-        // Attachment could be an S3 URL provided by Resend, or base64
-        // Usually, Resend webhook provides a URL to download it or raw base64.
-        // Assuming base64 for 'content' field per Resend API docs.
-        if (resumeFile.content) {
-            const buffer = Buffer.from(resumeFile.content, 'base64');
-            const fileExt = resumeFile.filename.split('.').pop();
-            const fileName = `cvs/${randomUUID()}.${fileExt}`;
-            await saveFile(fileName, buffer);
-            resumeUrl = fileName;
-        } else {
-            logger.warn(`[WEBHOOK] Attachment ${resumeFile.filename} had no content field.`);
+    // Process attachments using the Receiving API
+    let resumeUrl = null;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+
+    try {
+      const attachments = await resendService.getAttachments(emailId);
+      logger.info(`[WEBHOOK] Found ${attachments.length} attachments for email ${emailId}`);
+
+      for (const attachment of attachments) {
+        const filename = (attachment.filename || `attachment-${randomUUID()}`).toLowerCase();
+        const downloadUrl = attachment.download_url;
+
+        // Guard: Check file type
+        if (!ALLOWED_EXTENSIONS.some(ext => filename.endsWith(ext))) {
+          logger.info(`[WEBHOOK] Skipping attachment ${filename}: Not a PDF or Word document.`);
+          continue;
+        }
+
+        // Guard: Check download URL
+        if (!downloadUrl) {
+          logger.warn(`[WEBHOOK] Attachment ${filename} had no download_url.`);
+          continue;
+        }
+
+        try {
+          // Guard: Check size before downloading (HEAD request)
+          const fileSize = await getRemoteFileSize(downloadUrl);
+          if (fileSize > MAX_FILE_SIZE) {
+            logger.warn(`[WEBHOOK] Skipping attachment ${filename}: Size (${(fileSize / 1024 / 1024).toFixed(2)}MB) exceeds 5MB limit.`);
+            continue;
+          }
+
+          const response = await fetch(downloadUrl);
+          if (!response.ok) {
+            logger.error(`[WEBHOOK] Failed to download attachment ${filename} from ${downloadUrl}`);
+            continue;
+          }
+
+          const buffer = Buffer.from(await response.arrayBuffer());
+          
+          // Guard: Check actual buffer size
+          if (buffer.length > MAX_FILE_SIZE) {
+            logger.warn(`[WEBHOOK] Skipping attachment ${filename}: Actual buffer size exceeds 5MB limit.`);
+            continue;
+          }
+
+          const fileExt = filename.split('.').pop();
+          const storageFileName = `attachments/${emailId}/${randomUUID()}.${fileExt}`;
+          const savedUrl = await saveFile(storageFileName, buffer);
+
+          // Link first valid attachment as the primary resume
+          if (!resumeUrl) {
+            resumeUrl = savedUrl;
+            logger.info(`[WEBHOOK] Saved resume: ${filename} -> ${resumeUrl}`);
+          } else {
+            logger.info(`[WEBHOOK] Saved extra attachment: ${filename} -> ${savedUrl}`);
+          }
+        } catch (downloadError) {
+          logger.error(`[WEBHOOK] Error downloading attachment ${filename}:`, downloadError);
         }
       }
+    } catch (attachmentError) {
+      logger.error(`[WEBHOOK] Error listing attachments for email ${emailId}:`, attachmentError);
     }
 
     // Create the application in the database
-    // Note: We need company_id. In a real system, we might query job_postings to get company_id first.
     const { query } = await import('../db/index.js');
     const { rows: jobs } = await query('SELECT company_id FROM job_postings WHERE job_posting_id = $1', [jobId]);
     const companyId = jobs[0]?.company_id;
 
+    // Guard: Verify company exists
     if (!companyId) {
-        return res.status(404).json({ error: 'Company not found for matched job.' });
+      logger.error(`[WEBHOOK] Company not found for matched job ID: ${jobId}`);
+      return res.status(404).json({ error: 'Company not found for matched job.' });
     }
 
     const application = await applicationRepo.create({
@@ -93,7 +158,9 @@ router.post('/resend', async (req: Request, res: Response) => {
       jobPostingId: jobId,
       candidateName: candidateName,
       email: candidateEmail,
-      resumeUrl: resumeUrl
+      resumeUrl: resumeUrl,
+      emailId: emailId,
+      emailContentUrl: emailContentUrl
     });
 
     return res.status(200).json({ success: true, application_id: application.application_id });
@@ -103,3 +170,16 @@ router.post('/resend', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+/**
+ * Helper to get the size of a remote file via HEAD request
+ */
+async function getRemoteFileSize(url: string): Promise<number> {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    const contentLength = response.headers.get('content-length');
+    return contentLength ? parseInt(contentLength, 10) : 0;
+  } catch (err) {
+    return 0;
+  }
+}
