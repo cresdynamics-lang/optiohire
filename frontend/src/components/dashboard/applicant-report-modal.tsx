@@ -10,6 +10,8 @@ import { Applicant, JobPosting } from '@/types'
 import { cleanCandidateName } from '@/lib/utils'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { AuditLogModal } from './audit-log-modal'
+import { BrainCircuit } from 'lucide-react'
 
 interface ApplicantReportModalProps {
   isOpen: boolean
@@ -22,6 +24,7 @@ export function ApplicantReportModal({ isOpen, onClose, jobPosting }: ApplicantR
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [selectedAuditId, setSelectedAuditId] = useState<string | null>(null)
 
   const loadApplicants = useCallback(async () => {
     if (!jobPosting) return
@@ -167,6 +170,7 @@ export function ApplicantReportModal({ isOpen, onClose, jobPosting }: ApplicantR
   if (!jobPosting) return null
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -276,6 +280,9 @@ export function ApplicantReportModal({ isOpen, onClose, jobPosting }: ApplicantR
                           <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-gray-900 dark:text-white uppercase tracking-wider">
                             STATUS
                           </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-gray-900 dark:text-white uppercase tracking-wider">
+                            ACTIONS
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -319,6 +326,17 @@ export function ApplicantReportModal({ isOpen, onClose, jobPosting }: ApplicantR
                                 {applicant.status.toUpperCase()}
                               </Badge>
                             </td>
+                            <td className="px-4 py-3 text-sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedAuditId(applicant.id)}
+                                className="text-xs flex items-center gap-1 border-[#2D2DDD]/20 text-[#2D2DDD] hover:bg-[#2D2DDD]/10"
+                              >
+                                <BrainCircuit className="w-3 h-3" />
+                                AI Log
+                              </Button>
+                            </td>
                           </motion.tr>
                         ))}
                       </tbody>
@@ -331,6 +349,12 @@ export function ApplicantReportModal({ isOpen, onClose, jobPosting }: ApplicantR
         </div>
       )}
     </AnimatePresence>
+    <AuditLogModal
+      isOpen={!!selectedAuditId}
+      onClose={() => setSelectedAuditId(null)}
+      applicationId={selectedAuditId}
+    />
+    </>
   )
 }
 

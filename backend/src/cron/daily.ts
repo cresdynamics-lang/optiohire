@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { query } from '../db/index.js'
 import { scoreCandidate } from '../services/ai/screening.js'
+import { runNightlyTalentPoolScan } from './talentPoolScanner.js'
 
 export async function runDailyScoring(): Promise<void> {
   // Score any applications without ai_status
@@ -29,6 +30,9 @@ export async function runDailyScoring(): Promise<void> {
       [score, status, reasoning, row.application_id]
     )
   }
+
+  // Run the AI talent pool scan
+  await runNightlyTalentPoolScan()
 }
 
 // If executed directly: node dist/cron/daily.js

@@ -12,6 +12,7 @@ export interface Application {
   ai_score: number | null
   ai_status: 'SHORTLIST' | 'FLAG' | 'REJECT' | null
   reasoning: string | null
+  ai_audit_log: any | null
   interview_time: string | null
   interview_link: string | null
   interview_status: string | null
@@ -58,21 +59,24 @@ export class ApplicationRepository {
     reasoning: string
     parsed_resume_json?: any
     embedding?: number[]
+    ai_audit_log?: any
   }): Promise<Application> {
     const { rows } = await query<Application>(
       `UPDATE applications
        SET ai_score = $1, ai_status = $2, reasoning = $3,
-           parsed_resume_json = COALESCE($4::jsonb, parsed_resume_json)
-           ${data.embedding ? ', embedding = $6::vector' : ''}
-       WHERE application_id = $5
+           parsed_resume_json = COALESCE($4::jsonb, parsed_resume_json),
+           ai_audit_log = COALESCE($5::jsonb, ai_audit_log)
+           ${data.embedding ? ', embedding = $7::vector' : ''}
+       WHERE application_id = $6
        RETURNING application_id, job_posting_id, company_id, candidate_name, email, phone,
-                 resume_url, parsed_resume_json, ai_score, ai_status, reasoning,
+                 resume_url, parsed_resume_json, ai_score, ai_status, reasoning, ai_audit_log,
                  interview_time, interview_link, interview_status, created_at`,
       data.embedding ? [
         data.ai_score,
         data.ai_status,
         data.reasoning,
         data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
+        data.ai_audit_log ? JSON.stringify(data.ai_audit_log) : null,
         data.application_id,
         JSON.stringify(data.embedding)
       ] : [
@@ -80,6 +84,7 @@ export class ApplicationRepository {
         data.ai_status,
         data.reasoning,
         data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
+        data.ai_audit_log ? JSON.stringify(data.ai_audit_log) : null,
         data.application_id
       ]
     )
@@ -105,7 +110,7 @@ export class ApplicationRepository {
   async findById(applicationId: string): Promise<Application | null> {
     const { rows } = await query<Application>(
       `SELECT application_id, job_posting_id, company_id, candidate_name, email, phone,
-              resume_url, parsed_resume_json, ai_score, ai_status, reasoning,
+              resume_url, parsed_resume_json, ai_score, ai_status, reasoning, ai_audit_log,
               interview_time, interview_link, interview_status, created_at
        FROM applications
        WHERE application_id = $1

@@ -150,6 +150,71 @@ export async function submitWebApplication(req: Request, res: Response) {
   }
 }
 
+export async function getApplicationAudit(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'Missing application ID' });
 
+    const { rows } = await query(
+      `SELECT 
+         a.candidate_name, 
+         j.job_title, 
+         a.ai_score as final_score, 
+         a.ai_audit_log
+       FROM applications a
+       JOIN job_postings j ON a.job_posting_id = j.job_posting_id
+       WHERE a.application_id = $1`,
+      [id]
+    );
 
+    if (rows.length === 0) return res.status(404).json({ error: 'Application not found' });
 
+    const app = rows[0];
+    const audit = app.ai_audit_log;
+
+    if (!audit) {
+      return res.status(404).json({ error: 'No audit log available for this application' });
+    }
+
+    const breakdown = [
+      {
+        label: "Skill Match",
+        score: audit.skill_match?.score || 0,
+        detail: `Found: ${audit.skill_match?.found?.join(', ') || 'None'} | Missing: ${audit.skill_match?.missing?.join(', ') || 'None'}`
+      },
+      {
+        label: "Experience",
+        score: audit.experience?.score || 0,
+        detail: `Found: ${audit.experience?.years_found || 0} years | Required: ${audit.experience?.years_required || 0} years`
+      },
+      {
+        label: "Education",
+        score: audit.education?.score || 0,
+        detail: audit.education?.found || "Unknown",
+        waived: audit.education?.waived,
+        waiver_reason: audit.education?.waiver_reason
+      },
+      {
+        label: "Vector Similarity",
+        score: audit.vector_similarity?.score || 0,
+        detail: "Semantic resume match via pgvector"
+      }
+    ];
+
+    const displayData = {
+      candidate_name: app.candidate_name,
+      job_title: app.job_title,
+      final_score: app.final_score,
+      tier: audit.tier,
+      final_reasoning: audit.final_reasoning,
+      breakdown,
+      scored_at: audit.scored_at,
+      model_used: audit.model_used
+    };
+
+    return res.status(200).json(displayData);
+  } catch (err) {
+    logger.error('Error fetching application audit:', err);
+    return res.status(500).json({ error: 'Failed to fetch audit log' });
+  }
+}
