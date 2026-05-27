@@ -33,6 +33,9 @@ export function ScheduleInterviewModal({
   onSuccess,
 }: ScheduleInterviewModalProps) {
   const [interviewTime, setInterviewTime] = useState<string>('')
+  const [interviewType, setInterviewType] = useState<'online' | 'in-person'>('online')
+  const [location, setLocation] = useState('')
+  const [customLink, setCustomLink] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -41,6 +44,11 @@ export function ScheduleInterviewModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!candidate || !interviewTime) return
+
+    if (interviewType === 'in-person' && !location.trim()) {
+      setError('Please enter a location for the in-person interview.')
+      return
+    }
 
     setError(null)
     setIsLoading(true)
@@ -65,6 +73,9 @@ export function ScheduleInterviewModal({
         body: JSON.stringify({
           applicantId: candidate.id,
           interviewTime: isoString,
+          interviewType,
+          location: interviewType === 'in-person' ? location : undefined,
+          customLink: interviewType === 'online' && customLink ? customLink : undefined,
         }),
       })
 
@@ -95,6 +106,9 @@ export function ScheduleInterviewModal({
         onSuccess()
         onClose()
         setInterviewTime('')
+        setInterviewType('online')
+        setLocation('')
+        setCustomLink('')
       }, 2000)
     } catch (err: any) {
       console.error('Schedule interview error:', err)
@@ -136,7 +150,9 @@ export function ScheduleInterviewModal({
                 Interview Scheduled Successfully!
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                The interview has been scheduled for {candidate ? cleanCandidateName(candidate.candidate_name) : 'candidate'}
+                {interviewType === 'in-person'
+                  ? `An in-person interview has been scheduled. The candidate will receive the location via email.`
+                  : `The interview has been scheduled for ${candidate ? cleanCandidateName(candidate.candidate_name) : 'candidate'}`}
               </p>
             </div>
           </div>
@@ -151,47 +167,99 @@ export function ScheduleInterviewModal({
                   minDateTime={minDateTime}
                   placeholder="Select date and time"
                 />
-                {error && (
-                  <p className="text-sm text-red-500">{error}</p>
-                )}
               </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="meeting-link">Meeting Link</Label>
-              <Input
-                id="meeting-link"
-                value={meetingLink}
-                readOnly
-                className="bg-gray-50 dark:bg-gray-800"
-              />
-              <p className="text-xs text-gray-500">
-                This is the shared meeting link for this job posting
-              </p>
-            </div>
-          </div>
+              {/* Interview Type Toggle */}
+              <div className="space-y-2">
+                <Label>Interview Type</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={interviewType === 'online' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setInterviewType('online')}
+                    className={interviewType === 'online'
+                      ? 'bg-[#2D2DDD] hover:bg-[#2525BB] text-white flex-1'
+                      : 'border-slate-300 text-slate-700 hover:bg-slate-100 flex-1'}
+                  >
+                    🎥 Online
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={interviewType === 'in-person' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setInterviewType('in-person')}
+                    className={interviewType === 'in-person'
+                      ? 'bg-[#2D2DDD] hover:bg-[#2525BB] text-white flex-1'
+                      : 'border-slate-300 text-slate-700 hover:bg-slate-100 flex-1'}
+                  >
+                    📍 In-Person
+                  </Button>
+                </div>
+              </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isLoading}
-              className="bg-white text-[#2D2DDD] border-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white shadow-none hover:shadow-none"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isLoading || !interviewTime}
-              className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
-            >
-              {isLoading ? 'Scheduling...' : 'Schedule Interview'}
-            </Button>
-          </DialogFooter>
-        </form>
+              {/* Online: Meeting Link */}
+              {interviewType === 'online' && (
+                <div className="space-y-2">
+                  <Label htmlFor="meeting-link">Meeting Link</Label>
+                  <Input
+                    id="meeting-link"
+                    value={customLink}
+                    onChange={(e) => setCustomLink(e.target.value)}
+                    placeholder={meetingLink || 'Enter custom Zoom/Teams/Meet link'}
+                    className="bg-gray-50 dark:bg-gray-800"
+                  />
+                  <p className="text-xs text-gray-500">
+                    {meetingLink
+                      ? 'Leave blank to use the default job posting meeting link, or enter a custom one.'
+                      : 'Enter a meeting link (Zoom, Teams, Google Meet, etc.)'}
+                  </p>
+                </div>
+              )}
+
+              {/* In-Person: Location */}
+              {interviewType === 'in-person' && (
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location / Address</Label>
+                  <Input
+                    id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="e.g. Westlands, Nairobi, Building X, Floor 3"
+                    className="bg-gray-50 dark:bg-gray-800"
+                  />
+                  <p className="text-xs text-gray-500">
+                    The candidate will receive a Google Maps link to this address in their email.
+                  </p>
+                </div>
+              )}
+
+              {error && (
+                <p className="text-sm text-red-500">{error}</p>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isLoading}
+                className="bg-white text-[#2D2DDD] border-[#2D2DDD] hover:bg-[#2D2DDD] hover:text-white shadow-none hover:shadow-none"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading || !interviewTime}
+                className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
+              >
+                {isLoading ? 'Scheduling...' : 'Schedule Interview'}
+              </Button>
+            </DialogFooter>
+          </form>
         )}
       </DialogContent>
     </Dialog>
   )
 }
-

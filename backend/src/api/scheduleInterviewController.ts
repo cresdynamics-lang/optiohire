@@ -16,7 +16,10 @@ const scheduleSchema = z.object({
     return !isNaN(date.getTime())
   }, {
     message: 'Invalid date format. Expected ISO datetime string.'
-  })
+  }),
+  interviewType: z.enum(['online', 'in-person']).optional().default('online'),
+  location: z.string().optional(),
+  customLink: z.string().optional()
 })
 
 export async function scheduleInterview(req: Request, res: Response) {
@@ -32,8 +35,8 @@ export async function scheduleInterview(req: Request, res: Response) {
       })
     }
 
-    const { applicantId, interviewTime } = validation.data
-    logger.info('Processing interview schedule:', { applicantId, interviewTime })
+    const { applicantId, interviewTime, interviewType, location, customLink } = validation.data
+    logger.info('Processing interview schedule:', { applicantId, interviewTime, interviewType, location })
 
     const applicationRepo = new ApplicationRepository()
     const jobPostingRepo = new JobPostingRepository()
@@ -68,43 +71,55 @@ export async function scheduleInterview(req: Request, res: Response) {
     }
 
     let meetingLink = job.meeting_link
-    if (!meetingLink) {
-      const calendarService = new GoogleCalendarService()
-      if (calendarService.isEnabled()) {
-        const interviewStart = new Date(interviewTime)
-        const interviewEnd = new Date(interviewStart.getTime() + 60 * 60 * 1000)
-        try {
-          const attendees = [
-            application.email,
-            company.hr_email,
-            company.hiring_manager_email
-          ].filter(Boolean) as string[]
+    if (interviewType === 'online') {
+      if (customLink) {
+        meetingLink = customLink
+      } else if (!meetingLink) {
+        const calendarService = new GoogleCalendarService()
+        if (calendarService.isEnabled()) {
+          const interviewStart = new Date(interviewTime)
+          const interviewEnd = new Date(interviewStart.getTime() + 60 * 60 * 1000)
+          try {
+            const attendees = [
+              application.email,
+              company.hr_email,
+              company.hiring_manager_email
+            ].filter(Boolean) as string[]
 
-          const created = await calendarService.createMeetEvent({
-            summary: `${company.company_name || 'Interview'} interview with ${application.candidate_name || application.email}`,
-            description: `Interview for ${job.job_title} at ${company.company_name || 'your company'}`,
-            start: interviewStart.toISOString(),
-            end: interviewEnd.toISOString(),
-            attendees
-          })
+            const created = await calendarService.createMeetEvent({
+              summary: `${company.company_name || 'Interview'} interview with ${application.candidate_name || application.email}`,
+              description: `Interview for ${job.job_title} at ${company.company_name || 'your company'}`,
+              start: interviewStart.toISOString(),
+              end: interviewEnd.toISOString(),
+              attendees
+            })
 
-          meetingLink = created.meetingLink
-          logger.info('Created Google Meet event for interview', { applicantId, meetingLink })
-        } catch (googleErr: any) {
-          logger.error('Google Meet event creation failed:', googleErr)
+            meetingLink = created.meetingLink
+            logger.info('Created Google Meet event for interview', { applicantId, meetingLink })
+          } catch (googleErr: any) {
+            logger.error('Google Meet event creation failed:', googleErr)
+          }
         }
+      }
+
+      if (!meetingLink) {
+        return res.status(400).json({ error: 'Meeting link not set for this job posting and automated Google Meet scheduling is unavailable' })
       }
     }
 
-    if (!meetingLink) {
-      return res.status(400).json({ error: 'Meeting link not set for this job posting and automated Google Meet scheduling is unavailable' })
+    let dbInterviewLink = ''
+    if (interviewType === 'in-person' && location) {
+      dbInterviewLink = `IN-PERSON|${location}`
+      meetingLink = undefined // no link for email
+    } else {
+      dbInterviewLink = meetingLink || ''
     }
 
     // Schedule interview
     const updated = await applicationRepo.scheduleInterview({
       application_id: applicantId,
       interview_time: interviewTime,
-      interview_link: meetingLink
+      interview_link: dbInterviewLink
     })
 
     // Return response immediately for fast UX
@@ -150,103 +165,30 @@ export async function scheduleInterview(req: Request, res: Response) {
         const companyName = company.company_name || '[Company Name]'
         
         // Email candidate - Final Interview Invitation
-        await emailService.sendEmail({
-          to: application.email,
-          from: companyEmail,
-          subject: `Final Interview Invitation – ${cleanedJobTitle} at ${companyName}`,
-          html: `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <p>Dear ${candidateName},</p>
-    
-    <p>Congratulations! After reviewing your application for the <strong>${cleanedJobTitle}</strong> position at <strong>${companyName}</strong>, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.</p>
-    
-    <p>Your final interview has been scheduled as follows:</p>
-    
-    <p><strong>Interview Details:</strong></p>
-    <p><strong>Position:</strong> ${cleanedJobTitle}</p>
-    <p><strong>Company:</strong> ${companyName}</p>
-    <p><strong>Date:</strong> ${interviewDate}</p>
-    <p><strong>Time:</strong> ${interviewTimeFormatted}</p>
-    <p><strong>Meeting Link:</strong> <a href="${resolvedMeetingLink}">${resolvedMeetingLink}</a></p>
-    
-    <p>During this session, we will discuss your experience, your fit for the role, and the value you can bring to our team.</p>
-    
-    <p>If you have any questions before the interview or need to make changes, feel free to contact our HR team at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
-    
-    <p>We look forward to meeting you and learning more about how you can contribute to our team. Thank you!</p>
-    
-    <p>Kind regards,<br>
-    <strong>Company Name:</strong> ${companyName}<br>
-    <strong>Company Email:</strong> ${hrEmail}</p>
-  </div>
-</body>
-</html>
-          `,
-          text: `Dear ${candidateName},
-
-Congratulations! After reviewing your application for the ${cleanedJobTitle} position at ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
-
-Your final interview has been scheduled as follows:
-
-Interview Details:
-
-Position: ${cleanedJobTitle}
-
-Company: ${companyName}
-
-Date: ${interviewDate}
-
-Time: ${interviewTimeFormatted}
-
-Meeting Link: ${resolvedMeetingLink}
-
-During this session, we will discuss your experience, your fit for the role, and the value you can bring to our team.
-
-If you have any questions before the interview or need to make changes, feel free to contact our HR team at ${hrEmail}.
-
-We look forward to meeting you and learning more about how you can contribute to our team. Thank you!
-
-Kind regards,
-
-Company Name: ${companyName}
-
-Company Email: ${hrEmail}`
-        }).catch((err) => {
-          logger.error(`Failed to send interview email to candidate ${application.email}:`, err)
+        await emailService.sendInterviewSchedule({
+          candidate_email: application.email,
+          jobTitle: cleanedJobTitle,
+          meeting_time: interviewTime,
+          meetingLink: meetingLink,
+          location: location,
+          interviewType: interviewType,
+          candidateName: candidateName,
+          companyName: companyName
         })
 
         // Email HR
-        await emailService.sendEmail({
-          to: company.hr_email,
-          from: companyEmail,
-          subject: `Interview Scheduled - ${application.candidate_name} for ${job.job_title}`,
-          html: `
-            <h2>Interview Scheduled</h2>
-            <p>An interview has been scheduled:</p>
-            <p><strong>Candidate:</strong> ${application.candidate_name} (${application.email})</p>
-            <p><strong>Job:</strong> ${job.job_title}</p>
-            <p><strong>Date & Time:</strong> ${interviewDate}</p>
-            <p><strong>Meeting Link:</strong> <a href="${resolvedMeetingLink}">${resolvedMeetingLink}</a></p>
-          `,
-          text: `
-Interview Scheduled
-
-Candidate: ${application.candidate_name} (${application.email})
-Job: ${job.job_title}
-Date & Time: ${interviewDate}
-Meeting Link: ${resolvedMeetingLink}
-          `
-        }).catch((err) => {
-          logger.error(`Failed to send interview email to HR ${company.hr_email}:`, err)
+        await emailService.sendHRInterviewConfirmation({
+          hr_email: company.hr_email || hrEmail,
+          candidate: {
+            name: candidateName,
+            email: application.email
+          },
+          time: interviewTime,
+          jobTitle: job.job_title,
+          meetingLink: meetingLink,
+          location: location,
+          interviewType: interviewType,
+          companyName: companyName
         })
 
         logger.info(`Interview confirmation emails sent for application ${applicantId}`)
