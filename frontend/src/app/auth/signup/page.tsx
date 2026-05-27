@@ -234,7 +234,7 @@ export default function SignUpPage() {
               <div className="space-y-6">
                 <div className="text-center">
                   <h2 className="headline-platform text-xl !font-semibold mb-2">What brings you here?</h2>
-                  <p className="text-gray-600 font-figtree text-sm">Select your account type to get started</p>
+                  <p className="text-gray-600 font-figtree text-sm">This platform is for HR and hiring managers only</p>
                 </div>
 
                 <div className="space-y-4">

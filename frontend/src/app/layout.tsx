@@ -58,9 +58,9 @@ const baseMetadata: Metadata = {
   keywords: ['AI recruitment', 'automated hiring', 'candidate screening', 'HR technology', 'recruitment software', 'hiring automation', 'talent acquisition', 'AI-powered HR'],
   authors: [{ name: 'OptioHire Team' }],
   icons: {
-    icon: '/assets/logo/logo.png',
-    shortcut: '/assets/logo/logo.png',
-    apple: '/assets/logo/logo.png',
+    icon: '/assets/logo/logo-removebg-preview.png',
+    shortcut: '/assets/logo/logo-removebg-preview.png',
+    apple: '/assets/logo/logo-removebg-preview.png',
   },
   openGraph: {
     title: 'AI-Powered Recruitment Platform | OptioHire',
@@ -99,8 +99,8 @@ export default function RootLayout({
     <html lang="en" className={`${dmSans.variable} ${syne.variable} ${playfairDisplay.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         {/* Favicon */}
-        <link rel="icon" href="/assets/logo/logo.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/assets/logo/logo.png" />
+        <link rel="icon" href="/assets/logo/logo-removebg-preview.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/assets/logo/logo-removebg-preview.png" />
         <link rel="manifest" href="/manifest.json" />
 
         {/* Preconnect to external domains for faster resource loading */}
@@ -115,7 +115,7 @@ export default function RootLayout({
           </>
         )}
         {/* Prefetch logo instead of preload to avoid unused resource warning */}
-        <link rel="prefetch" href="/assets/logo/logo.png" as="image" type="image/png" />
+        <link rel="prefetch" href="/assets/logo/logo-removebg-preview.png" as="image" type="image/png" />
         {/* Performance hints */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>

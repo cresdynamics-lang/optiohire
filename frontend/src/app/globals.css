@@ -332,6 +332,35 @@
   animation: fade-spin 1.2s linear infinite;
 }
 
+/* ── Typing Animation ── */
+@keyframes oh-typewriter {
+  0% { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+}
+
+.oh-typing {
+  position: relative;
+  display: inline-block;
+  animation: oh-typewriter 2.5s steps(50, end) forwards;
+  clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+}
+
+.oh-typing::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 10%;
+  height: 80%;
+  width: 2px;
+  background-color: currentColor;
+  animation: blink 0.75s step-end infinite;
+}
+
+@keyframes blink {
+  from, to { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    HERO DASHBOARD ANIMATIONS
    All animations use transform/opacity only (GPU-composited, zero layout

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 /* ─── tiny sub-components ──────────────────────────────────────────────── */
 
@@ -208,9 +208,18 @@ function StudentPanel() {
 /* ─── Main card ─────────────────────────────────────────────────────────── */
 export default function HeroDashboard() {
   const [tab, setTab] = useState<'hr' | 'student'>('hr')
+  const [animKey, setAnimKey] = useState(0)
+
+  // Loop animations continuously every 6 seconds (includes a short pause)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimKey((prev) => prev + 1)
+    }, 6000)
+    return () => clearInterval(timer)
+  }, [])
 
   return (
-    <div className="oh-dashboard-card w-full rounded-[14px] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,.07)]">
+    <div key={animKey} className="oh-dashboard-card w-full rounded-[14px] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,.07)]">
       {/* Header */}
       <div className="mb-3 flex items-center gap-2.5">
         <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#3b3bba] text-[11px] font-bold text-white">

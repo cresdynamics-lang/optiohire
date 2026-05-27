@@ -30,31 +30,28 @@ export default function HomePage() {
           <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-2">
             {/* ── LEFT ── */}
             <div>
-              <h1
-                className="font-serif italic font-bold leading-[1.13] text-[#2a2a7a]"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(2rem, 4vw, 2.6rem)' }}
-              >
-                The hiring<br />command center<br />for HR teams.
+              <h1 className="headline-platform text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#2a2a7a]">
+                The hiring command center for HR teams.
               </h1>
 
-              <p className="mt-4 max-w-md text-[13.5px] leading-[1.65] text-[#555]">
+              <p className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-slate-600 sm:text-xl">
                 Post roles, receive applications, auto-screen candidates, and move to interviews with full
                 transparency. OptioHire gives your team a faster, fairer, and more professional recruitment workflow.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-2.5">
-                <Button asChild className="rounded-[8px] bg-[#1a1a2e] px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-black">
-                  <Link href="/auth/signup">Get Started <ArrowRight className="ml-1 inline h-3.5 w-3.5" /></Link>
+              <div className="mt-10 flex flex-wrap items-center gap-3">
+                <Button asChild size="lg" className="gap-2 rounded-2xl bg-slate-900 px-7 py-6 text-base font-semibold text-white hover:bg-black">
+                  <Link href="/auth/signup">Get Started <ArrowRight className="ml-1 inline h-5 w-5" /></Link>
                 </Button>
-                <Button asChild variant="outline" className="rounded-[8px] border-[#ccc] bg-white px-5 py-2.5 text-[13px] font-medium text-[#1a1a2e] hover:bg-slate-50">
+                <Button asChild variant="outline" size="lg" className="rounded-2xl border-slate-300 bg-white/90 px-7 py-6 text-base font-medium text-slate-700 hover:bg-slate-50">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
               </div>
 
-              <p className="mt-5 text-[11.5px] text-[#888]">Built for HR managers and hiring managers</p>
+              <p className="mt-8 text-sm font-medium text-slate-500">Built for HR managers and hiring managers</p>
 
               {/* Animated feature list */}
-              <ul className="mt-3 flex flex-col gap-2">
+              <ul className="mt-4 flex flex-col gap-3">
                 {[
                   'One place for jobs, applications, and interview decisions',
                   'Consistent candidate scoring with transparent reasoning',
@@ -62,12 +59,12 @@ export default function HomePage() {
                 ].map((text, i) => (
                   <li
                     key={text}
-                    className="oh-feat flex items-center gap-2.5 text-[12.5px] text-[#444]"
+                    className="oh-feat flex items-center gap-3 text-base text-slate-600"
                     style={{ animationDelay: `${0.3 + i * 0.25}s` }}
                   >
-                    <span className="oh-tick-wrap relative flex h-[18px] w-[18px] shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#15a36b]">
+                    <span className="oh-tick-wrap relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#15a36b]">
                       <span className="oh-tick-fill absolute inset-0 rounded-full bg-[#15a36b]" style={{ animationDelay: `${0.3 + i * 0.25}s` }} />
-                      <svg viewBox="0 0 9 9" className="relative z-10 h-[9px] w-[9px]">
+                      <svg viewBox="0 0 9 9" className="relative z-10 h-3 w-3">
                         <path
                           d="M1.5 4.5L3.8 7 7.5 2.5"
                           fill="none"

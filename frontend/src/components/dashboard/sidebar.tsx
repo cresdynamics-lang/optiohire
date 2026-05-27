@@ -91,7 +91,7 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
 
   const logoSrc = (user?.companyLogoUrl && user.companyLogoUrl.trim())
     ? user.companyLogoUrl.trim()
-    : '/assets/logo/logo.png'
+    : '/assets/logo/logo-removebg-preview.png'
 
   const orgName =
     user?.companyName ||

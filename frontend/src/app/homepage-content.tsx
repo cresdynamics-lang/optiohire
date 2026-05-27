@@ -200,8 +200,8 @@ export default function HomePageContent() {
             </ul>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
-            <h4 className="headline-platform text-lg sm:text-xl md:text-2xl !text-[#2D2DDD]">
-              OptioHire fixes this — with structure, not just software.
+            <h4 className="headline-platform text-lg sm:text-xl md:text-2xl text-red-600">
+              <span className="oh-typing inline-block">OptioHire fixes this — with structure, not just software.</span>
             </h4>
             <p className="mt-3 text-slate-600">
               Standardized scoring, transparent evidence, and a full decision trail from first pass to final interview.
