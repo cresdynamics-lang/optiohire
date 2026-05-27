@@ -8,7 +8,7 @@ import { ResendService } from './resendService.js'
 import { APPLICATION_INBOX_EMAIL, getRecommendedApplicationSubject } from '../config/applicationInbox.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
-const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'jobs@optiohire.com'
 const MAX_EMAIL_RETRY_ATTEMPTS = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
 const EMAIL_RETRY_BASE_DELAY_SEC = Number(process.env.EMAIL_RETRY_BASE_DELAY_SEC || 30)
 

@@ -145,7 +145,7 @@ export async function scheduleInterview(req: Request, res: Response) {
           company.company_name
         )
         
-        const hrEmail = company.company_email || company.hr_email || 'applicationsoptiohire@gmail.com'
+        const hrEmail = company.company_email || company.hr_email || 'jobs@optiohire.com'
         const candidateName = application.candidate_name || '[Candidate\'s Full Name]'
         const companyName = company.company_name || '[Company Name]'
         

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus, Calendar, Briefcase, MapPin, Users, Loader2, CheckCircle, AlertCircle, Clock, Video, ExternalLink } from 'lucide-react'
+import { X, Plus, Calendar, Briefcase, MapPin, Users, Loader2, CheckCircle, AlertCircle, Clock, Video, ExternalLink, Copy, Check } from 'lucide-react'
 import { JobPostingFormData } from '@/types'
 import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -20,7 +20,7 @@ interface CreateJobModalProps {
   onSubmit: (jobData: JobPostingFormData) => Promise<{ job: any, company: any }>
 }
 
-const APPLICATION_INBOX_EMAIL = 'applicationsoptiohire@gmail.com'
+const APPLICATION_INBOX_EMAIL = 'jobs@optiohire.com'
 
 export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProps) {
   const { user } = useAuth()
@@ -54,7 +54,9 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
     message: string
   }>({ status: 'idle', message: '' })
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
-  const [createdJobInfo, setCreatedJobInfo] = useState<{ jobTitle: string; companyName: string } | null>(null)
+  const [createdJobInfo, setCreatedJobInfo] = useState<{ jobTitle: string; companyName: string; jobId?: string } | null>(null)
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedEmail, setCopiedEmail] = useState(false)
 
   const handleInputChange = (field: keyof JobPostingFormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -75,6 +77,21 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
       ...prev,
       required_skills: prev.required_skills.filter(skill => skill !== skillToRemove)
     }))
+  }
+
+  const copyToClipboard = async (text: string, type: 'link' | 'email') => {
+    try {
+      await navigator.clipboard.writeText(text)
+      if (type === 'link') {
+        setCopiedLink(true)
+        setTimeout(() => setCopiedLink(false), 2000)
+      } else {
+        setCopiedEmail(true)
+        setTimeout(() => setCopiedEmail(false), 2000)
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -135,7 +152,8 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
         // Store job info for success dialog
         setCreatedJobInfo({
           jobTitle: formData.job_title,
-          companyName: formData.company_name
+          companyName: formData.company_name,
+          jobId: result.job.job_posting_id
         })
         
         // Show success message with job details
@@ -450,15 +468,52 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
               <span className="mb-2 block text-gray-900 dark:text-gray-100">
                 The job posting <strong className="font-semibold text-gray-900 dark:text-white">"{createdJobInfo?.jobTitle}"</strong> has been successfully created for <strong className="font-semibold text-gray-900 dark:text-white">{createdJobInfo?.companyName}</strong>.
               </span>
-              <span className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
-                A confirmation email with next steps has been sent to HR/company recipients. You can now receive applications at <strong>{APPLICATION_INBOX_EMAIL}</strong> (or forward from your HR inbox), and instruct candidates to use subject <strong>{createdJobInfo?.jobTitle || 'Job Title'} - {createdJobInfo?.companyName || 'Company Name'}</strong>.
-              </span>
-              <span className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
-                If you need setup help, contact <strong>developer@optiohire.com</strong>. The job is listed in your dashboard for tracking, screening, and candidate updates.
+              
+              {/* Copy Actions */}
+              <div className="mt-6 flex flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Share Link</span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 truncate rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/apply/${createdJobInfo?.jobId}` : ''}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 h-9 rounded-lg border-slate-200 hover:bg-slate-50"
+                      onClick={() => copyToClipboard(`${window.location.origin}/apply/${createdJobInfo?.jobId}`, 'link')}
+                    >
+                      {copiedLink ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span className="ml-1.5">{copiedLink ? 'Copied' : 'Copy'}</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Application Email</span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 truncate rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300">
+                      {APPLICATION_INBOX_EMAIL}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 h-9 rounded-lg border-slate-200 hover:bg-slate-50"
+                      onClick={() => copyToClipboard(APPLICATION_INBOX_EMAIL, 'email')}
+                    >
+                      {copiedEmail ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span className="ml-1.5">{copiedEmail ? 'Copied' : 'Copy'}</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <span className="mt-6 block text-sm text-gray-600 dark:text-gray-300 border-t border-slate-100 dark:border-slate-800 pt-4">
+                A confirmation email with next steps has been sent. Candidates should use subject format: <strong>{createdJobInfo?.jobTitle || 'Job Title'} - {createdJobInfo?.companyName || 'Company Name'}</strong>.
               </span>
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button
               onClick={() => {
                 setShowSuccessDialog(false)
