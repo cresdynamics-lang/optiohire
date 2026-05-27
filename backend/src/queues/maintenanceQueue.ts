@@ -18,6 +18,13 @@ export const maintenanceQueue = new Queue(MAINTENANCE_QUEUE_NAME, {
 })
 
 export async function setupMaintenanceJobs() {
+  // Clear existing repeatable jobs to ensure interval updates are applied
+  const repeatableJobs = await maintenanceQueue.getRepeatableJobs();
+  for (const job of repeatableJobs) {
+    await maintenanceQueue.removeRepeatableByKey(job.key);
+  }
+  
+  // 1. Schedule repeatable jobs
   await maintenanceQueue.add('check-deadlines', {}, {
     repeat: { every: 15 * 60 * 1000 } // 15 minutes
   })
@@ -31,12 +38,18 @@ export async function setupMaintenanceJobs() {
   })
 
   await maintenanceQueue.add('poll-emails', {}, {
-    repeat: { every: 10 * 1000 } // 10 seconds
+    repeat: { every: 5 * 60 * 1000 } // 5 minutes
   })
 
   await maintenanceQueue.add('recover-stuck-jobs', {}, {
     repeat: { every: 5 * 60 * 1000 } // 5 minutes
   })
 
-  logger.info('🚀 BullMQ Maintenance Jobs scheduled')
+  // 2. Trigger once immediately on startup for health visibility
+  await maintenanceQueue.add('check-deadlines', {}, { jobId: 'startup-check-deadlines' })
+  await maintenanceQueue.add('poll-emails', {}, { jobId: 'startup-poll-emails' })
+  await maintenanceQueue.add('retry-emails', {}, { jobId: 'startup-retry-emails' })
+  await maintenanceQueue.add('recover-stuck-jobs', {}, { jobId: 'startup-recover-stuck-jobs' })
+
+  logger.info('🚀 BullMQ Maintenance Jobs scheduled and triggered for startup')
 }

@@ -266,6 +266,28 @@ export class ResendService {
   }
 
   /**
+   * List all received emails (Inbound Receiving API)
+   */
+  async listReceivedEmails(): Promise<any[]> {
+    const client = this.resendPrimary || this.resendSecondary || this.resendFallback
+    if (!client) {
+      throw new Error('No Resend API keys configured')
+    }
+
+    try {
+      const result = await (client.emails as any).receiving.list()
+      if (result.error) {
+        throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
+      }
+      // The Resend API returns { data: [...], total_count: ... }
+      return result.data?.data || []
+    } catch (error: any) {
+      logger.error('Failed to list received emails:', error)
+      throw error
+    }
+  }
+
+  /**
    * Get email details by ID (Inbound Receiving API)
    */
   async getEmail(emailId: string): Promise<any> {

@@ -8,6 +8,7 @@ import { CVParser } from '../lib/cv-parser.js'
 import { AIScoringEngine } from '../lib/ai-scoring.js'
 import { EmailService } from '../services/emailService.js'
 import { saveFile } from '../utils/storage.js'
+import { healthMonitor } from '../utils/healthMonitor.js'
 import path from 'path'
 
 const applicationRepo = new ApplicationRepository()
@@ -22,11 +23,15 @@ export class AIWorker {
     this.worker = new Worker(
       AI_QUEUE_NAME,
       async (job: Job) => {
-        logger.info(`🤖 [AI-WORKER] Picking up job: ${job.name} for Application: ${job.data.applicationId}`)
+        const taskKey = `worker.ai.${job.name.replace(/-/g, '.')}`;
+        logger.info(`🤖 [AI-WORKER] Picking up job: ${job.name} (${taskKey}) for Application: ${job.data.applicationId}`)
         try {
+          await healthMonitor.updateStatus(taskKey, 'running', null, { lastJobId: job.id });
           await this.processJob(job)
-        } catch (error) {
+          await healthMonitor.updateStatus(taskKey, 'idle', null, { lastCompletedJobId: job.id });
+        } catch (error: any) {
           logger.error(`❌ Worker Job Failed (#${job.id}):`, error)
+          await healthMonitor.updateStatus(taskKey, 'error', error.message, { lastFailedJobId: job.id });
           throw error // Let BullMQ handle retries
         }
       },
@@ -36,12 +41,10 @@ export class AIWorker {
       }
     )
 
-    this.worker.on('completed', (job) => {
-      logger.info(`✅ Job #${job.id} completed successfully`)
-    })
-
-    this.worker.on('failed', (job, err) => {
+    this.worker.on('failed', async (job, err) => {
+      const taskKey = job ? `worker.ai.${job.name.replace(/-/g, '.')}` : 'worker.ai.unknown';
       logger.error(`❌ Job #${job?.id} failed:`, { message: err.message })
+      await healthMonitor.updateStatus(taskKey, 'error', err.message, { lastFailedJobId: job?.id });
     })
   }
 

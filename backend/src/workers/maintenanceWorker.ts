@@ -6,7 +6,8 @@ import { logger } from '../utils/logger.js'
 import { generatePostDeadlineReport } from '../services/reports/reportService.js'
 import { EmailService } from '../services/emailService.js'
 import { CompanyRepository } from '../repositories/companyRepository.js'
-import { startEmailReader } from '../server/email-reader.js'
+import { resendWebhookPoller } from '../services/resendWebhookPoller.js'
+import { healthMonitor } from '../utils/healthMonitor.js'
 
 const emailService = new EmailService()
 const companyRepo = new CompanyRepository()
@@ -18,20 +19,30 @@ export class MaintenanceWorker {
     this.worker = new Worker(
       MAINTENANCE_QUEUE_NAME,
       async (job: Job) => {
-        logger.info(`🛠️ [MAINTENANCE] Picking up job: ${job.name}`)
-        if (job.name === 'check-deadlines') return this.checkDeadlines()
-        if (job.name === 'generate-reports') return this.generateReports()
-        if (job.name === 'retry-emails') return this.retryEmails()
-        if (job.name === 'poll-emails') return this.pollEmails()
-        if (job.name === 'recover-stuck-jobs') return this.recoverStuckJobs()
+        const taskKey = `worker.maintenance.${job.name.replace(/-/g, '.')}`;
+        logger.info(`🛠️ [MAINTENANCE] Picking up job: ${job.name} (${taskKey})`)
+        try {
+          await healthMonitor.updateStatus(taskKey, 'running', null, { jobId: job.id });
+          
+          if (job.name === 'check-deadlines') await this.checkDeadlines()
+          else if (job.name === 'generate-reports') await this.generateReports()
+          else if (job.name === 'retry-emails') await this.retryEmails()
+          else if (job.name === 'poll-emails') await this.pollEmails()
+          else if (job.name === 'recover-stuck-jobs') await this.recoverStuckJobs()
+          
+          await healthMonitor.updateStatus(taskKey, 'idle', null, { lastCompletedJobId: job.id });
+        } catch (error: any) {
+          logger.error(`❌ Maintenance Job Failed (#${job.id}):`, error)
+          await healthMonitor.updateStatus(taskKey, 'error', error.message, { lastFailedJobId: job.id });
+          throw error
+        }
       },
       { connection: redisConnection, concurrency: 1 }
     )
   }
 
   private async pollEmails() {
-    const r = await startEmailReader()
-    if (r) await r.processNewEmails()
+    await resendWebhookPoller.poll()
   }
 
   private async recoverStuckJobs() {
