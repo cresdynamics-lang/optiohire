@@ -834,15 +834,18 @@ OptioHire`
     return DEFAULT_FROM_EMAIL
   }
 
+
+
   /**
    * Interview Scheduled Email
-   * sendInterviewSchedule(candidate_email, jobTitle, meeting_time, meetingLink)
    */
   async sendInterviewSchedule(data: {
     candidate_email: string
     jobTitle: string
     meeting_time: string
-    meetingLink: string
+    meetingLink?: string
+    location?: string
+    interviewType?: 'online' | 'in-person'
     candidateName?: string
     companyName?: string
   }) {
@@ -855,6 +858,21 @@ OptioHire`
       minute: '2-digit',
       timeZoneName: 'short'
     })
+
+    let locationHtml = ''
+    let locationText = ''
+
+    if (data.interviewType === 'in-person' && data.location) {
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.location)}`
+      locationHtml = `
+        <p><strong>Location:</strong> ${data.location}</p>
+        <p><a href="${mapsUrl}" class="button" style="background:#10b981; display:inline-block; padding:10px; color:white; text-decoration:none; border-radius:5px;">View Location on Google Maps</a></p>
+      `
+      locationText = `Location: ${data.location}\nGoogle Maps: ${mapsUrl}\n`
+    } else if (data.meetingLink) {
+      locationHtml = `<p><strong>Meeting Link:</strong> <a href="${data.meetingLink}" class="button">Join Interview</a></p>`
+      locationText = `Meeting Link: ${data.meetingLink}\n`
+    }
 
     const html = `
 <!DOCTYPE html>
@@ -879,7 +897,7 @@ OptioHire`
       <p>Your interview for <strong>${data.jobTitle}</strong> has been scheduled.</p>
       <div class="info-box">
         <p><strong>Date & Time:</strong> ${meetingDate}</p>
-        <p><strong>Meeting Link:</strong> <a href="${data.meetingLink}" class="button">Join Interview</a></p>
+        ${locationHtml}
       </div>
       <p>Please arrive 5 minutes early and have your documents ready.</p>
       <p>Best regards,<br>${data.companyName || 'Hiring Team'}</p>
@@ -897,8 +915,7 @@ Hi ${data.candidateName || 'Candidate'},
 Your interview for ${data.jobTitle} has been scheduled.
 
 Date & Time: ${meetingDate}
-Meeting Link: ${data.meetingLink}
-
+${locationText}
 Please arrive 5 minutes early and have your documents ready.
 
 Best regards,
@@ -915,7 +932,6 @@ ${data.companyName || 'Hiring Team'}
 
   /**
    * HR Interview Confirmation Email
-   * sendHRInterviewConfirmation(hr_email, candidate, time)
    */
   async sendHRInterviewConfirmation(data: {
     hr_email: string
@@ -925,7 +941,9 @@ ${data.companyName || 'Hiring Team'}
     }
     time: string
     jobTitle: string
-    meetingLink: string
+    meetingLink?: string
+    location?: string
+    interviewType?: 'online' | 'in-person'
     companyName?: string
   }) {
     const meetingDate = new Date(data.time).toLocaleString('en-US', {
@@ -937,6 +955,17 @@ ${data.companyName || 'Hiring Team'}
       minute: '2-digit',
       timeZoneName: 'short'
     })
+
+    let locationHtml = ''
+    let locationText = ''
+
+    if (data.interviewType === 'in-person' && data.location) {
+      locationHtml = `<p><strong>Location:</strong> ${data.location}</p>`
+      locationText = `Location: ${data.location}\n`
+    } else if (data.meetingLink) {
+      locationHtml = `<p><strong>Meeting Link:</strong> <a href="${data.meetingLink}">${data.meetingLink}</a></p>`
+      locationText = `Meeting Link: ${data.meetingLink}\n`
+    }
 
     const html = `
 <!DOCTYPE html>
@@ -962,7 +991,7 @@ ${data.companyName || 'Hiring Team'}
         <p><strong>Candidate:</strong> ${data.candidate.name} (${data.candidate.email})</p>
         <p><strong>Job:</strong> ${data.jobTitle}</p>
         <p><strong>Date & Time:</strong> ${meetingDate}</p>
-        <p><strong>Meeting Link:</strong> <a href="${data.meetingLink}">${data.meetingLink}</a></p>
+        ${locationHtml}
       </div>
       <p>Best regards,<br>HireBit System</p>
     </div>
@@ -979,8 +1008,7 @@ An interview has been scheduled:
 Candidate: ${data.candidate.name} (${data.candidate.email})
 Job: ${data.jobTitle}
 Date & Time: ${meetingDate}
-Meeting Link: ${data.meetingLink}
-
+${locationText}
 Best regards,
 HireBit System
     `
@@ -1460,6 +1488,67 @@ The OptioHire Team
   }
 
   /**
+   * Bulk or single custom message from HR to candidate(s).
+   */
+  async sendCustomCandidateMessage(data: {
+    candidateEmail: string
+    candidateName: string
+    jobTitle: string
+    companyName: string
+    companyEmail: string
+    messageBody: string
+  }) {
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const companyName = data.companyName || '[Company Name]'
+    const jobTitle = data.jobTitle || '[Job Title]'
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .content { padding: 20px; background: #f9f9f9; border-left: 4px solid #2D2DDD; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Dear ${candidateName},</p>
+    <p>Regarding your application for <strong>${jobTitle}</strong> at <strong>${companyName}</strong>, we have a message for you:</p>
+    <div class="content">
+      <p>${escapeHtml(data.messageBody).replace(/\\n/g, '<br>')}</p>
+    </div>
+    <p>Best regards,<br>
+    <strong>${companyName} Hiring Team</strong><br>
+    <a href="mailto:${data.companyEmail}">${data.companyEmail}</a></p>
+  </div>
+</body>
+</html>
+    `
+
+    const text = `Dear ${candidateName},
+
+Regarding your application for ${jobTitle} at ${companyName}, we have a message for you:
+
+${data.messageBody}
+
+Best regards,
+${companyName} Hiring Team
+${data.companyEmail}`
+
+    await this.sendEmail({
+      to: data.candidateEmail,
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com',
+      replyTo: data.companyEmail,
+      subject: `Message regarding your application: ${jobTitle}`,
+      html,
+      text,
+      emailType: 'custom_message'
+    })
+  }
+
+  /**
    * After the email watcher screens a CV: send a pipeline digest to the internal watcher address
    * (default developer@optiohire.com) and the employer so both see AI ranking, “best pick” logic, and next steps.
    */
@@ -1580,6 +1669,42 @@ The OptioHire Team
         logger.warn(`sendWatcherPipelineDigest failed for ${to}:`, e)
       }
     }
+  }
+
+  /**
+   * Send a soft-rejection / talent pool notification email to a candidate
+   */
+  async sendTalentPoolNotification(data: {
+    candidateEmail: string
+    candidateName: string
+    companyName: string
+    jobTitle: string
+  }): Promise<void> {
+    const { candidateEmail, candidateName, companyName, jobTitle } = data
+    
+    const subject = `Update on your application for ${jobTitle} at ${companyName}`
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <p>Hi ${escapeHtml(candidateName)},</p>
+        <p>Thank you for taking the time to apply for the <strong>${escapeHtml(jobTitle)}</strong> position at <strong>${escapeHtml(companyName)}</strong>.</p>
+        <p>We received many strong applications for this role, and while we are moving forward with other candidates at this time, we were impressed by your background.</p>
+        <p>We have added your profile to our talent pool. If a suitable match is found in the future, we will reach out to you directly.</p>
+        <p>Thank you again for your interest, and we wish you the best in your job search.</p>
+        <br/>
+        <p>Best regards,</p>
+        <p>The team at ${escapeHtml(companyName)}</p>
+      </div>
+    `
+    const text = `Hi ${candidateName},\n\nThank you for taking the time to apply for the ${jobTitle} position at ${companyName}.\n\nWe received many strong applications for this role, and while we are moving forward with other candidates at this time, we were impressed by your background.\n\nWe have added your profile to our talent pool. If a suitable match is found in the future, we will reach out to you directly.\n\nThank you again for your interest, and we wish you the best in your job search.\n\nBest regards,\nThe team at ${companyName}`
+
+    return this.sendEmail({
+      to: candidateEmail,
+      from: DEFAULT_FROM_EMAIL,
+      subject,
+      html,
+      text,
+      emailType: 'talent_pool_notification',
+    })
   }
 }
 

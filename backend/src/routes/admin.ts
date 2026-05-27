@@ -23,6 +23,7 @@ import {
 import {
   getQueueHealth
 } from '../api/queueMonitoringController.js'
+import { getCandidateDecisions } from '../api/adminCandidatesController.js'
 import {
   checkAndSendMissingEmails,
   getEmailCheckStats
@@ -91,6 +92,7 @@ router.delete('/job-postings/:jobId', deleteJobPosting)
 // Applications Management
 router.get('/applications', getAllApplications)
 router.delete('/applications/:applicationId', deleteApplication)
+router.get('/candidate-decisions', getCandidateDecisions)
 
 // Signup Queue Management
 router.get('/users/pending', getPendingSignups)

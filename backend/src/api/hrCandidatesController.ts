@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
 import { authenticate } from '../middleware/auth.js'
-
+import { EmailService } from '../services/emailService.js'
+import { logger } from '../utils/logger.js'
 // GET /api/hr/candidates?jobId=...
 export async function getCandidatesByJob(req: Request, res: Response) {
   try {
@@ -134,4 +135,67 @@ export async function getCandidateById(req: Request, res: Response) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+// PATCH /api/hr/candidates/:id/status
+export async function updateCandidateStatus(req: Request, res: Response) {
+  try {
+    const candidateId = req.params.id
+    const { status, reason } = req.body
+
+    if (!['HIRED', 'REJECTED'].includes(status)) {
+      return res.status(400).json({ error: "status must be 'HIRED' or 'REJECTED'" })
+    }
+
+    // Get current candidate details for the email and logging
+    const { rows } = await query<{
+      application_id: string
+      candidate_name: string | null
+      email: string
+      job_title: string
+      company_name: string
+      reasoning: string | null
+    }>(
+      `SELECT a.application_id, a.candidate_name, a.email, a.reasoning,
+              j.job_title, c.company_name
+       FROM applications a
+       JOIN job_postings j ON a.job_posting_id = j.job_posting_id
+       JOIN companies c ON j.company_id = c.company_id
+       WHERE a.application_id = $1`,
+      [candidateId]
+    )
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Candidate not found' })
+    }
+
+    const candidate = rows[0]
+    let newReasoning = candidate.reasoning || ''
+
+    if (status === 'REJECTED' && reason) {
+      // Append the HR reason
+      newReasoning = newReasoning ? `${newReasoning}\n\n[HR Rejected]: ${reason}` : `[HR Rejected]: ${reason}`
+    }
+
+    await query(
+      `UPDATE applications SET ai_status = $1, reasoning = $2, updated_at = NOW() WHERE application_id = $3`,
+      [status, newReasoning, candidateId]
+    )
+
+    if (status === 'REJECTED') {
+      const emailService = new EmailService()
+      await emailService.sendTalentPoolNotification({
+        candidateEmail: candidate.email,
+        candidateName: candidate.candidate_name || 'Candidate',
+        jobTitle: candidate.job_title,
+        companyName: candidate.company_name
+      }).catch(err => logger.error('Failed to send talent pool email:', err))
+    }
+
+    return res.json({ success: true, status, reasoning: newReasoning })
+  } catch (error: any) {
+    logger.error('Error updating candidate status:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
 
