@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
-import { Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, AlertCircle, Shield } from 'lucide-react'
 
 type UserRole = 'employer' | null
 
@@ -151,6 +151,10 @@ export default function SignUpPage() {
     setError(null)
   }
 
+  const handleAdminSelect = () => {
+    router.push('/admin/login')
+  }
+
   const nextStep = () => {
     setStep((prev) => Math.min(prev + 1, 4))
     setError(null)
@@ -230,7 +234,7 @@ export default function SignUpPage() {
               <div className="space-y-6">
                 <div className="text-center">
                   <h2 className="headline-platform text-xl !font-semibold mb-2">What brings you here?</h2>
-                  <p className="text-gray-600 font-figtree text-sm">This platform is for HR and hiring managers only</p>
+                  <p className="text-gray-600 font-figtree text-sm">Select your account type to get started</p>
                 </div>
 
                 <div className="space-y-4">
@@ -249,6 +253,21 @@ export default function SignUpPage() {
                     </div>
                   </button>
 
+                  <button
+                    type="button"
+                    onClick={handleAdminSelect}
+                    className="w-full p-4 border-2 border-slate-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="headline-platform !font-semibold">I'm an Admin</h3>
+                        <p className="text-sm text-gray-600 font-figtree">Manage the platform and users</p>
+                      </div>
+                    </div>
+                  </button>
                 </div>
               </div>
             )}
