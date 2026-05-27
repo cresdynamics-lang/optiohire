@@ -27,7 +27,6 @@ import { router as webhooksRouter } from './routes/webhooks.js'
 import { ensureStorageDir } from './utils/storage.js'
 import { logger } from './utils/logger.js'
 import path from 'path'
-import { emailReaderStatus } from './server/email-reader.js'
 import { APPLICATION_INBOX_EMAIL } from './config/applicationInbox.js'
 import { apiLimiter } from './middleware/rateLimiter.js'
 import { initRedis } from './utils/redis.js'
@@ -37,6 +36,7 @@ import { ResendService } from './services/resendService.js'
 import { AIWorker } from './workers/aiWorker.js'
 import { setupMaintenanceJobs } from './queues/maintenanceQueue.js'
 import { MaintenanceWorker } from './workers/maintenanceWorker.js'
+import { resendWebhookPoller } from './services/resendWebhookPoller.js'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
@@ -89,14 +89,6 @@ app.get('/health', async (_req, res) => {
   }
 
   res.json(health)
-})
-
-app.get('/health/email-reader', (_req, res) => {
-  res.json({
-    status: emailReaderStatus.running ? 'ok' : 'degraded',
-    emailReader: emailReaderStatus,
-    timestamp: new Date().toISOString()
-  })
 })
 
 app.use('/companies', companiesRouter)

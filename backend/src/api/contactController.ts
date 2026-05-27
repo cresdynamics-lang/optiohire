@@ -14,7 +14,7 @@ export async function createContact(req: Request, res: Response) {
       [JSON.stringify({ fullName, email, company, role, topic, message })]
     )
 
-    const inbox = (process.env.CONTACT_RECEIVER_EMAIL || process.env.APPLICATION_INBOX_EMAIL || process.env.IMAP_USER || 'applicationsoptiohire@gmail.com')
+    const inbox = (process.env.CONTACT_RECEIVER_EMAIL || process.env.APPLICATION_INBOX_EMAIL || process.env.IMAP_USER || 'jobs@optiohire.com')
       .toLowerCase()
       .trim()
     const emailService = new EmailService()

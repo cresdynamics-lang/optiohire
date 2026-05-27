@@ -20,7 +20,9 @@ import {
   Clock, 
   Video, 
   ChevronLeft,
-  Info
+  Info,
+  Copy,
+  Check
 } from 'lucide-react'
 import { JobPostingFormData } from '@/types'
 import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
@@ -28,7 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useAuth } from '@/hooks/use-auth'
 import Link from 'next/link'
 
-const APPLICATION_INBOX_EMAIL = 'applicationsoptiohire@gmail.com'
+const APPLICATION_INBOX_EMAIL = 'jobs@optiohire.com'
 
 export function CreateJobSection() {
   const { user, loading } = useAuth()
@@ -52,6 +54,9 @@ export function CreateJobSection() {
     message: string
   }>({ status: 'idle', message: '' })
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [createdJobInfo, setCreatedJobInfo] = useState<{ jobTitle: string; companyName: string; jobId?: string } | null>(null)
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedEmail, setCopiedEmail] = useState(false)
 
   // Pre-fill company info from user
   useEffect(() => {
@@ -84,6 +89,21 @@ export function CreateJobSection() {
       ...prev,
       required_skills: prev.required_skills.filter(skill => skill !== skillToRemove)
     }))
+  }
+
+  const copyToClipboard = async (text: string, type: 'link' | 'email') => {
+    try {
+      await navigator.clipboard.writeText(text)
+      if (type === 'link') {
+        setCopiedLink(true)
+        setTimeout(() => setCopiedLink(false), 2000)
+      } else {
+        setCopiedEmail(true)
+        setTimeout(() => setCopiedEmail(false), 2000)
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -137,6 +157,11 @@ export function CreateJobSection() {
       const data = await resp.json().catch(() => ({}))
       
       if (resp.ok && data.success) {
+        setCreatedJobInfo({
+          jobTitle: formData.job_title,
+          companyName: formData.company_name,
+          jobId: data.job_posting_id
+        })
         setShowSuccessDialog(true)
         setStatus({ status: 'success', message: 'Job created successfully!' })
       } else {
@@ -409,24 +434,50 @@ export function CreateJobSection() {
           </div>
           
           <div className="p-8 space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
-                  <Link href="/jobs" className="text-indigo-600"><Briefcase className="h-4 w-4" /></Link>
+            <div className="space-y-6">
+              {/* Share Link */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">Public Apply Link</h4>
+                  {copiedLink && <span className="text-[10px] font-bold text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> Copied!</span>}
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm text-slate-900">Share with candidates</h4>
-                  <p className="text-xs text-slate-500 mt-1">Copy the link from your dashboard to post on social media or job boards.</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 truncate rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 text-sm font-mono text-slate-600">
+                    {typeof window !== 'undefined' ? `${window.location.origin}/apply/${createdJobInfo?.jobId}` : ''}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-11 w-11 rounded-xl shrink-0 border-slate-200 hover:bg-slate-50"
+                    onClick={() => copyToClipboard(`${window.location.origin}/apply/${createdJobInfo?.jobId}`, 'link')}
+                  >
+                    <Copy className="h-4 w-4 text-slate-600" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+
+              {/* Application Email */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">Application Email</h4>
+                  {copiedEmail && <span className="text-[10px] font-bold text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> Copied!</span>}
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm text-slate-900">AI Screening Active</h4>
-                  <p className="text-xs text-slate-500 mt-1">Applicants will be automatically ranked against your requirements.</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 truncate rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 text-sm font-mono text-slate-600">
+                    {APPLICATION_INBOX_EMAIL}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-11 w-11 rounded-xl shrink-0 border-slate-200 hover:bg-slate-50"
+                    onClick={() => copyToClipboard(APPLICATION_INBOX_EMAIL, 'email')}
+                  >
+                    <Copy className="h-4 w-4 text-slate-600" />
+                  </Button>
                 </div>
+                <p className="text-[10px] text-slate-400 italic">
+                  Candidates should use subject: <strong>{createdJobInfo?.jobTitle} - {createdJobInfo?.companyName}</strong>
+                </p>
               </div>
             </div>
 
@@ -435,7 +486,7 @@ export function CreateJobSection() {
                 setShowSuccessDialog(false)
                 router.push('/dashboard/jobs')
               }}
-              className="w-full bg-slate-900 text-white h-12 rounded-xl"
+              className="w-full bg-slate-900 text-white h-12 rounded-xl mt-4"
             >
               Return to Dashboard
             </Button>

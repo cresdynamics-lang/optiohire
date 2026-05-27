@@ -18,6 +18,7 @@ RUN npm ci --omit=dev --no-audit --no-fund
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/src ./src
+COPY --from=build /app/migrations ./migrations
 EXPOSE 3001
 CMD ["npm", "run", "start"]
 

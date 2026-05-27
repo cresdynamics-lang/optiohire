@@ -130,7 +130,7 @@ function AdminDashboardContent() {
     setAdminName(name)
   }, [])
 
-  const isSeniorAdmin = currentUser?.email === 'applicationsoptiohire@gmail.com'
+  const isSeniorAdmin = currentUser?.email === 'jobs@optiohire.com'
 
   requestCtxRef.current = {
     adminEmail,

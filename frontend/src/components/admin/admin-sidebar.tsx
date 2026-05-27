@@ -43,6 +43,7 @@ const navigation: Array<{
   { name: 'Emails', href: '/admin/emails', icon: Mail },
   { name: 'Dead-letter Emails', href: '/admin/emails/dead-letter', icon: AlertTriangle },
   { name: 'Check & Send Emails', href: '/admin/check-emails', icon: Send },
+  { name: 'System Status', href: '/admin/status', icon: Activity },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
   { name: 'Login Activity', href: '/admin/logins', icon: Key },
   { name: 'Activity', href: '/admin/activity', icon: Activity },

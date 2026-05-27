@@ -1,5 +1,5 @@
 export const APPLICATION_INBOX_EMAIL =
-  (process.env.APPLICATION_INBOX_EMAIL || process.env.IMAP_USER || 'applicationsoptiohire@gmail.com')
+  (process.env.APPLICATION_INBOX_EMAIL || process.env.IMAP_USER || 'jobs@optiohire.com')
     .toLowerCase()
     .trim()
 

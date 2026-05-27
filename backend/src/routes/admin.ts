@@ -21,10 +21,8 @@ import {
   getAIAuditTrail
 } from '../api/adminController.js'
 import {
-  checkEmailService,
-  testEmailSend,
-  getEmailReaderStatus
-} from '../api/emailDiagnosticsController.js'
+  getQueueHealth
+} from '../api/queueMonitoringController.js'
 import {
   checkAndSendMissingEmails,
   getEmailCheckStats
@@ -67,6 +65,9 @@ router.use(trackApiActivity) // Track all admin API calls
 router.get('/stats', getSystemStats)
 router.get('/ai-audit', getAIAuditTrail)
 
+// Queue Monitoring
+router.get('/queues/health', getQueueHealth)
+
 // Users Management
 router.get('/users', getAllUsers)
 router.get('/users/:userId', getUserById)
@@ -106,11 +107,6 @@ router.get('/emails/dead-letter', getDeadLetterEmails)
 router.post('/emails/:emailId/requeue', requeueDeadLetterEmail)
 router.post('/emails/requeue-bulk', bulkRequeueDeadLetterEmails)
 router.post('/emails/requeue-all', requeueAllDeadLetterEmails)
-
-// Email Diagnostics
-router.get('/email-service/check', checkEmailService)
-router.post('/email-service/test', testEmailSend)
-router.get('/email-reader/status', getEmailReaderStatus)
 
 // Email Checker & Sender
 router.get('/email-check/stats', getEmailCheckStats)
