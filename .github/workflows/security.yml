@@ -1,0 +1,69 @@
+name: Security Scans
+
+on:
+  push:
+    branches: [ "main", "fearture/eml-tmpl" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 0 * * 1' # Weekly scan
+  workflow_dispatch: # Lets you trigger this manually from the Actions tab
+
+jobs:
+  gitleaks-full-scan:
+    name: Gitleaks Full Repo Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Force Gitleaks Full Repo Scan
+        run: |
+          wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz
+          tar -xzf gitleaks_8.18.2_linux_x64.tar.gz
+          ./gitleaks detect --source . -v # "detect" scans everything, "protect" only scans commits
+
+  trivy-full-fs-scan:
+    name: Trivy Full Filesystem Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout entire repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # CRITICAL: '0' fetches the whole repo.
+
+      - name: Run Trivy Full Filesystem Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'     # forces a full filesystem scan.
+          scan-ref: '.'       # Starts at the root directory
+          scanners: 'vuln,secret,config' # Scans dependencies, hardcoded keys, and bad configs
+          severity: 'HIGH,CRITICAL'
+          format: 'table'
+
+  trivy-image-scan:
+    name: Trivy Image Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Backend image
+        run: docker build ./backend --file backend/Dockerfile --tag optiohire-backend:latest
+
+      - name: Build Frontend image
+        run: docker build ./frontend --file frontend/Dockerfile --tag optiohire-frontend:latest
+
+      - name: Run Trivy scan (Backend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'optiohire-backend:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy scan (Frontend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'optiohire-frontend:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
