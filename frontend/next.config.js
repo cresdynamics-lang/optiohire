@@ -38,11 +38,11 @@ const nextConfig = {
 
   // Experimental features for better performance
   experimental: {
-    optimizeCss: false, // Disabled due to critters dependency issue
+    // optimizeCss: false, // Disabled due to critters dependency issue
     scrollRestoration: true,
     webVitalsAttribution: ['CLS', 'LCP'],
     optimizePackageImports: ['lucide-react', '@heroicons/react'],
-    webpackMemoryOptimizations: true, // Lower peak memory during build (small droplets)
+    // webpackMemoryOptimizations: true, // Lower peak memory during build (small droplets)
   },
 
   // Performance optimizations
