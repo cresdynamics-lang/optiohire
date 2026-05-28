@@ -1,0 +1,20 @@
+# Ignore dummy tokens and placeholder values in git history
+# These were accidentally committed in old example files (like .env.example) 
+# and are not real production secrets, but they fail the GitHub Actions TruffleHog / Gitleaks scans.
+
+[allowlist]
+description = "Ignore dummy tokens in .env.example and old commits"
+regexes = [
+  '''(?i)(eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+)''',
+  '''(?i)(qijibjotmwbikzwtkcut)''',
+  '''(?i)(your_supabase_anon_key)'''
+]
+paths = [
+  '''frontend/\.env\.example''',
+  '''backend/\.env\.example''',
+  '''\.env\.example''',
+  '''complete-env-file\.txt'''
+]
+commits = [
+  "9fabf967ff40337891dc87e0fa7ebc059826ecb2"
+]

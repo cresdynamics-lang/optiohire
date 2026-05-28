@@ -39,6 +39,10 @@ jobs:
             cd /root/optiohire/frontend
             npm ci --legacy-peer-deps
             npm run build
+            
+            # Fix standalone missing CSS/Assets
+            cp -r public .next/standalone/ 2>/dev/null || true
+            cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
 
             echo "=== Restarting services ==="
             pm2 delete optiohire-backend 2>/dev/null || true
