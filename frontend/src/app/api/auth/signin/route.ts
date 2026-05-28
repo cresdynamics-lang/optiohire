@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'User-Agent': 'OptioHire-Frontend-Proxy/1.0'
+        'User-Agent': 'OptioHire-Frontend-Proxy/1.0',
+        'X-Forwarded-For': request.headers.get('x-forwarded-for') || request.ip || '127.0.0.1',
+        'X-Real-IP': request.headers.get('x-real-ip') || request.ip || '127.0.0.1',
       },
       body: bodyText,
       signal: AbortSignal.timeout(15000),

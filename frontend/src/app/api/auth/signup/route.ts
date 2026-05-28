@@ -14,7 +14,11 @@ export async function POST(request: NextRequest) {
 
     const res = await fetch(`${backendUrl.replace(/\/$/, '')}/auth/signup`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Forwarded-For': request.headers.get('x-forwarded-for') || request.ip || '127.0.0.1',
+        'X-Real-IP': request.headers.get('x-real-ip') || request.ip || '127.0.0.1',
+      },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(15000),
     })

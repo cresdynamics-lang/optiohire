@@ -42,7 +42,17 @@ import { resendWebhookPoller } from './services/resendWebhookPoller.js'
 const app = express()
 const port = Number(process.env.PORT || 3001)
 const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS || 1)
-app.set('trust proxy', trustProxyHops)
+app.set('trust proxy', 1)
+
+// Temporarily add to app.ts or any router — remove after testing
+app.get('/debug/ip', (req, res) => {
+  res.json({
+    'req.ip':                    req.ip,
+    'x-forwarded-for header':    req.headers['x-forwarded-for'],
+    'x-real-ip header':          req.headers['x-real-ip'],
+    'trust proxy setting':       app.get('trust proxy'),
+  });
+});
 
 const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')
