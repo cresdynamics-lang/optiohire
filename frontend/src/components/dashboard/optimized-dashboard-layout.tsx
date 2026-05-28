@@ -366,6 +366,34 @@ const LazyCreateJobSection = dynamic(
   }
 )
 
+const LazyTemplatesSection = dynamic(
+  () => {
+    return import('./sections/templates-section')
+      .then((mod: any) => {
+        if (!mod || typeof mod !== 'object') {
+          throw new Error('TemplatesSection module not found')
+        }
+        const TemplatesSectionExport = mod.TemplatesSection
+        if (!TemplatesSectionExport || typeof TemplatesSectionExport !== 'function') {
+          throw new Error('TemplatesSection not found in module')
+        }
+        return { default: TemplatesSectionExport }
+      })
+      .catch((err: any) => {
+        console.error('Error loading TemplatesSection:', err)
+        return {
+          default: function TemplatesSectionErrorFallback() {
+            return <SectionLoader sectionName="templates" />
+          }
+        }
+      })
+  },
+  { 
+    loading: () => <SectionLoader sectionName="templates" />,
+    ssr: false 
+  }
+)
+
 const LazyEditJobSection = dynamic(
   () => {
     return import('./sections/edit-job-section')
@@ -413,6 +441,7 @@ function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
       : { eyebrow: 'Hiring', title: 'Job postings' }
   }
   if (p.startsWith('/dashboard/reports')) return { eyebrow: 'Hiring', title: 'Reports & analytics' }
+  if (p.startsWith('/dashboard/templates')) return { eyebrow: 'Workspace', title: 'Email Templates' }
   if (p.startsWith('/dashboard/interviews')) {
     return isJobSeeker
       ? { eyebrow: 'Candidate workspace', title: 'Interviews' }
@@ -509,6 +538,10 @@ function DashboardContent() {
     }
     if (!isJobSeeker && (pathname === '/dashboard/reports' || pathname?.startsWith('/dashboard/reports/'))) {
       setActiveSection('reports')
+      return
+    }
+    if (!isJobSeeker && (pathname === '/dashboard/templates' || pathname?.startsWith('/dashboard/templates/'))) {
+      setActiveSection('templates')
     }
   }, [pathname, isJobSeeker])
 
@@ -530,6 +563,8 @@ function DashboardContent() {
           return <LazyEditJobSection />
         case 'reports':
           return <LazyReportsSection />
+        case 'templates':
+          return <LazyTemplatesSection />
         case 'interviews':
           return isJobSeeker ? <LazyJobSeekerInterviewsSection /> : <LazyInterviewsSection />
         case 'profile':

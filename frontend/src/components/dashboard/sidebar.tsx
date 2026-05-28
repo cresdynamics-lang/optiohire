@@ -10,7 +10,8 @@ import {
   Settings, 
   ChevronRight,
   Calendar,
-  Shield
+  Shield,
+  Mail
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, usePathname } from 'next/navigation'
@@ -45,6 +46,12 @@ const sidebarItems = [
     label: 'Profile',
     icon: Settings,
     href: '/dashboard/profile',
+  },
+  {
+    id: 'templates',
+    label: 'Email Templates',
+    icon: Mail,
+    href: '/dashboard/templates',
   },
 ]
 
