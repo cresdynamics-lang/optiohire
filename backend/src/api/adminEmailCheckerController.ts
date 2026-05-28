@@ -112,6 +112,7 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
             candidateName: app.candidate_name || 'Candidate',
             jobTitle: app.job_title,
             companyName: companyData?.company_name || app.company_name,
+            companyId: app.company_id,
             companyEmail: companyData?.company_email || app.company_email,
             companyDomain: companyData?.company_domain || app.company_domain
           })
@@ -123,6 +124,7 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
             candidateName: app.candidate_name || 'Candidate',
             jobTitle: app.job_title,
             companyName: companyData?.company_name || app.company_name,
+            companyId: app.company_id,
             companyEmail: companyData?.company_email || app.company_email,
             companyDomain: companyData?.company_domain || app.company_domain
           })

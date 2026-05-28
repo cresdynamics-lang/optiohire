@@ -200,6 +200,7 @@ export class AIWorker {
       candidateName: app.candidate_name,
       jobTitle: job.job_title,
       companyName: company.company_name,
+      companyId: company.company_id,
       companyEmail: company.company_email,
       companyDomain: company.company_domain
     }

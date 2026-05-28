@@ -6,6 +6,8 @@ import { cleanJobTitle } from '../utils/jobTitle.js'
 import { SendGridService } from './sendGridService.js'
 import { ResendService } from './resendService.js'
 import { APPLICATION_INBOX_EMAIL, getRecommendedApplicationSubject } from '../config/applicationInbox.js'
+import { query } from '../db/index.js'
+import { parseTemplate } from '../utils/templateParser.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
 const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'jobs@optiohire.com'
@@ -162,6 +164,20 @@ export class EmailService {
     }
   }
 
+  private async getCustomTemplate(companyId: string | null | undefined, type: 'SHORTLIST' | 'REJECT' | 'INTERVIEW') {
+    if (!companyId) return null
+    try {
+      const { rows } = await query(
+        `SELECT subject, body_html, body_text FROM company_email_templates WHERE company_id = $1 AND template_type = $2`,
+        [companyId, type]
+      )
+      return rows[0] || null
+    } catch (error) {
+      logger.error('Error fetching custom email template:', error)
+      return null
+    }
+  }
+
   /**
    * Candidate Acknowledgment Email (SHORTLISTED)
    * sendAcknowledgement(email, jobTitle, meetingLink)
@@ -234,6 +250,7 @@ ${data.companyName || 'Hiring Team'}
     candidateName: string
     jobTitle: string
     companyName: string
+    companyId?: string | null
     companyEmail?: string | null
     companyDomain?: string | null
     interviewLink?: string | null
@@ -245,10 +262,29 @@ ${data.companyName || 'Hiring Team'}
     const companyName = data.companyName || '[Company Name]'
     const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
 
-    const subject = `You've been shortlisted – ${cleanedJobTitle} - ${companyName}`
+    const customTemplate = await this.getCustomTemplate(data.companyId, 'SHORTLIST')
+
+    let subject = `You've been shortlisted – ${cleanedJobTitle} - ${companyName}`
     const hasInterviewDetails = !!(data.interviewLink || data.interviewDate || data.interviewTime)
 
-    const html = `
+    let html = ''
+    let text = ''
+
+    if (customTemplate) {
+      const vars = {
+        candidate_name: candidateName,
+        job_title: cleanedJobTitle,
+        company_name: companyName,
+        hr_email: hrEmail,
+        interview_link: data.interviewLink,
+        interview_date: data.interviewDate,
+        interview_time: data.interviewTime
+      }
+      subject = parseTemplate(customTemplate.subject, vars)
+      html = parseTemplate(customTemplate.body_html, vars)
+      text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+    } else {
+      html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -288,8 +324,8 @@ ${data.companyName || 'Hiring Team'}
 </html>
     `
 
-    const text = hasInterviewDetails
-      ? `Dear ${candidateName},
+      text = hasInterviewDetails
+        ? `Dear ${candidateName},
 
 Congratulations! After reviewing your application for the ${cleanedJobTitle} position - ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
 
@@ -306,7 +342,7 @@ If you have any questions, feel free to contact our HR team at ${hrEmail}.
 Kind regards,
 ${companyName}
 Company Email: ${hrEmail}`
-      : `Dear ${candidateName},
+        : `Dear ${candidateName},
 
 Congratulations! After reviewing your application for the ${cleanedJobTitle} position - ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
 
@@ -319,6 +355,7 @@ We look forward to meeting you. Thank you!
 Kind regards,
 ${companyName}
 Company Email: ${hrEmail}`
+    }
 
     // Use noreply@optiohire.com for all candidate emails
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
@@ -338,6 +375,7 @@ Company Email: ${hrEmail}`
     candidateName: string
     jobTitle: string
     companyName: string
+    companyId?: string | null
     companyEmail?: string | null
     companyDomain?: string | null
   }) {
@@ -346,9 +384,24 @@ Company Email: ${hrEmail}`
     const companyName = data.companyName || '[Company Name]'
     const jobTitle = data.jobTitle || '[Job Title]'
 
-    const subject = `Update on Your Application for the ${jobTitle} Position - ${companyName}`
-    
-    const html = `
+    const customTemplate = await this.getCustomTemplate(data.companyId, 'REJECT')
+
+    let subject = `Update on Your Application for the ${jobTitle} Position - ${companyName}`
+    let html = ''
+    let text = ''
+
+    if (customTemplate) {
+      const vars = {
+        candidate_name: candidateName,
+        job_title: jobTitle,
+        company_name: companyName,
+        hr_email: hrEmail
+      }
+      subject = parseTemplate(customTemplate.subject, vars)
+      html = parseTemplate(customTemplate.body_html, vars)
+      text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+    } else {
+      html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -379,7 +432,7 @@ Company Email: ${hrEmail}`
 </html>
     `
 
-    const text = `Dear ${candidateName},
+      text = `Dear ${candidateName},
 
 Thank you for taking the time to apply for the ${jobTitle} position - ${companyName} and for your interest in joining our team. We truly appreciate the effort you put into your application and the time you invested in the selection process.
 
@@ -395,6 +448,7 @@ Kind regards,
 
 Company Name: ${companyName}
 Company Email: ${hrEmail}`
+    }
 
     // Use noreply@optiohire.com for all candidate emails
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
@@ -843,13 +897,15 @@ OptioHire`
     candidate_email: string
     jobTitle: string
     meeting_time: string
+    companyId?: string | null
     meetingLink?: string
     location?: string
     interviewType?: 'online' | 'in-person'
     candidateName?: string
     companyName?: string
   }) {
-    const meetingDate = new Date(data.meeting_time).toLocaleString('en-US', {
+    const meetingDateObj = new Date(data.meeting_time)
+    const meetingDate = meetingDateObj.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -859,22 +915,41 @@ OptioHire`
       timeZoneName: 'short'
     })
 
-    let locationHtml = ''
-    let locationText = ''
+    const customTemplate = await this.getCustomTemplate(data.companyId, 'INTERVIEW')
 
-    if (data.interviewType === 'in-person' && data.location) {
-      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.location)}`
-      locationHtml = `
-        <p><strong>Location:</strong> ${data.location}</p>
-        <p><a href="${mapsUrl}" class="button" style="background:#10b981; display:inline-block; padding:10px; color:white; text-decoration:none; border-radius:5px;">View Location on Google Maps</a></p>
-      `
-      locationText = `Location: ${data.location}\nGoogle Maps: ${mapsUrl}\n`
-    } else if (data.meetingLink) {
-      locationHtml = `<p><strong>Meeting Link:</strong> <a href="${data.meetingLink}" class="button">Join Interview</a></p>`
-      locationText = `Meeting Link: ${data.meetingLink}\n`
-    }
+    let subject = `Interview Scheduled - ${data.jobTitle}`
+    let html = ''
+    let text = ''
 
-    const html = `
+    if (customTemplate) {
+      const vars = {
+        candidate_name: data.candidateName || 'Candidate',
+        job_title: data.jobTitle,
+        company_name: data.companyName || 'Hiring Team',
+        interview_link: data.meetingLink,
+        interview_date: meetingDateObj.toLocaleDateString(),
+        interview_time: meetingDateObj.toLocaleTimeString()
+      }
+      subject = parseTemplate(customTemplate.subject, vars)
+      html = parseTemplate(customTemplate.body_html, vars)
+      text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+    } else {
+      let locationHtml = ''
+      let locationText = ''
+
+      if (data.interviewType === 'in-person' && data.location) {
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.location)}`
+        locationHtml = `
+          <p><strong>Location:</strong> ${data.location}</p>
+          <p><a href="${mapsUrl}" class="button" style="background:#10b981; display:inline-block; padding:10px; color:white; text-decoration:none; border-radius:5px;">View Location on Google Maps</a></p>
+        `
+        locationText = `Location: ${data.location}\nGoogle Maps: ${mapsUrl}\n`
+      } else if (data.meetingLink) {
+        locationHtml = `<p><strong>Meeting Link:</strong> <a href="${data.meetingLink}" class="button">Join Interview</a></p>`
+        locationText = `Meeting Link: ${data.meetingLink}\n`
+      }
+
+      html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -907,7 +982,7 @@ OptioHire`
 </html>
     `
 
-    const text = `
+      text = `
 Interview Scheduled
 
 Hi ${data.candidateName || 'Candidate'},
@@ -921,10 +996,11 @@ Please arrive 5 minutes early and have your documents ready.
 Best regards,
 ${data.companyName || 'Hiring Team'}
     `
+    }
 
     await this.sendEmail({
       to: data.candidate_email,
-      subject: `Interview Scheduled - ${data.jobTitle}`,
+      subject,
       html,
       text
     })
