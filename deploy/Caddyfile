@@ -1,8 +1,0 @@
-{$DOMAIN} {
-  encode gzip zstd
-
-  reverse_proxy /api/* backend:3001
-  reverse_proxy /health backend:3001
-  reverse_proxy frontend:3000
-}
-
