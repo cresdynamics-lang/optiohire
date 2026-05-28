@@ -143,7 +143,7 @@ pm2 logs optiohire-backend --lines 100
 
 4. **CV Parsed:**
    ```
-   Parsed CV for application xxx: textContent length: 5000, linkedin: https://linkedin.com/..., github: https://github.com/...
+   Parsed CV for application xxx: textContent length: 5000, linkedin: https://linkedin.com/..., github: https://GIT_HOST/...
    ```
 
 5. **AI Scoring:**

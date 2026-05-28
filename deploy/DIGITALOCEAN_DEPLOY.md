@@ -71,7 +71,7 @@ fi
 ```bash
 sudo mkdir -p /var/www
 cd /var/www
-sudo git clone https://github.com/cresdynamics-lang/optiohire.git
+sudo git clone YOUR_GIT_REPO_URL
 cd /var/www/optiohire
 ```
 
@@ -314,7 +314,7 @@ The script will:
 
 - Install **Node 20** (required for Next.js 16 and backend)
 - Install **PostgreSQL**, create DB `optiohire` and user `optiohire_user` (default password in script; change in production)
-- **Clone** from GitHub: https://github.com/cresdynamics-lang/optiohire.git
+- **Clone** from GitHub: YOUR_GIT_REPO_URL
 - Create **backend/.env** and **frontend/.env.production** / **frontend/.env.local** with production URLs
 - **Build** backend and frontend
 - Start **PM2**: `optiohire-backend` (port 3001), `optiohire-frontend` (port 3000)

@@ -10,7 +10,7 @@ LOCATION="eastus"
 DB_NAME="optiohire-db"
 DB_ADMIN="optiohire_admin"
 # IMPORTANT: Change this password!
-DB_PASSWORD="ChangeThisSecurePassword123!"
+DB_PASSWORD="YOUR_SECURE_PASSWORD_HERE"
 FRONTEND_APP="optiohire-frontend"
 BACKEND_APP="optiohire-backend"
 

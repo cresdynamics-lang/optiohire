@@ -132,7 +132,7 @@ export class CVParser {
         if (!linkedin) {
           linkedin = url.replace(/\/$/, '') // Remove trailing slash, keep first match
         }
-      } else if (lowerUrl.includes('github.com')) {
+      } else if (lowerUrl.includes('GIT_HOST')) {
         if (!github) {
           github = url.replace(/\/$/, '') // Remove trailing slash, keep first match
         }
