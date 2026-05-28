@@ -93,3 +93,8 @@ __tests__/
 *.spec.ts
 *.test.js
 *.spec.js
+
+# Ignore all shell scripts and deployment directories to prevent credential leaks
+*.sh
+deploy/
+scripts/
