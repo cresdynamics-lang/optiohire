@@ -703,6 +703,21 @@ HireBit System
         <li><strong>Role:</strong> ${cleanedJobTitle}</li>
         <li><strong>Application deadline:</strong> ${deadlineText}</li>
       </ul>
+
+      <p><strong>📣 Shareable Template for your Community</strong></p>
+      <p>Copy and paste the message below to share on external job boards, LinkedIn, or community groups:</p>
+      <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <p>We are hiring for a <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong>!</p>
+        <p>To apply, please send an email to <strong>${APPLICATION_INBOX_EMAIL}</strong>.</p>
+        <p><strong>Important Instructions:</strong></p>
+        <ul style="margin-top: 8px;">
+          <li>Your email Subject Line MUST exactly be: <strong>${recommendedSubject}</strong></li>
+          <li>In the body of the email, include a brief cover letter explaining why you are a great fit for this role.</li>
+          <li>Attach your latest CV/Resume as a PDF.</li>
+        </ul>
+        <p>We look forward to receiving your application!</p>
+      </div>
+
       <div class="highlight">
         <p><strong>What to do next:</strong> You have two options to send candidate applications to OptioHire for AI screening and ranking:</p>
         <ol style="margin-top: 12px; padding-left: 20px;">
@@ -710,9 +725,6 @@ HireBit System
           <li><strong>Option 2:</strong> Have candidates email directly to <strong>${APPLICATION_INBOX_EMAIL}</strong></li>
         </ol>
       </div>
-      <p><strong>Step 1 – Subject line for email applications</strong></p>
-      <p style="margin-top: 8px; padding: 10px; background: #fff; border-radius: 6px; border: 1px dashed #ccc;"><code>${recommendedSubject}</code></p>
-      <p>Use this exact subject in your job advert and tell candidates to use it when emailing their CVs. This lets OptioHire route applications to the correct job and company.</p>
       <p><strong>Option 1: Set up email forwarding (Gmail example)</strong></p>
       <p>Forward application emails from your inbox to OptioHire:</p>
       <ol>
@@ -750,16 +762,25 @@ Company: ${companyName}
 Role: ${cleanedJobTitle}
 Application deadline: ${deadlineText}
 
+📣 SHAREABLE TEMPLATE FOR YOUR COMMUNITY
+Copy and paste the message below to share on external job boards, LinkedIn, or community groups:
+
+---
+We are hiring for a ${cleanedJobTitle} at ${companyName}!
+To apply, please send an email to ${APPLICATION_INBOX_EMAIL}.
+
+Important Instructions:
+- Your email Subject Line MUST exactly be: ${recommendedSubject}
+- In the body of the email, include a brief cover letter explaining why you are a great fit for this role.
+- Attach your latest CV/Resume as a PDF.
+
+We look forward to receiving your application!
+---
+
 WHAT TO DO NEXT: You have two options to send candidate applications to OptioHire for AI screening and ranking:
 
   Option 1: Set up email forwarding rules (recommended for high volume)
   Option 2: Have candidates email directly to ${APPLICATION_INBOX_EMAIL}
-
-Step 1 – Subject line for email applications:
-
-  ${recommendedSubject}
-
-Use this exact subject in your job advert and tell candidates to use it when emailing their CVs.
 
 OPTION 1: Set up email forwarding (Gmail example):
 Forward application emails from your inbox to OptioHire:
