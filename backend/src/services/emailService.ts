@@ -667,6 +667,11 @@ HireBit System
     jobTitle: string
     companyName: string
     applicationDeadline: string
+    hrName?: string
+    hrEmail?: string
+    department?: string
+    jobLocation?: string
+    employmentType?: string
   }) {
     const to = Array.from(new Set(data.recipients.filter(Boolean))).join(',')
     if (!to) return
@@ -674,8 +679,225 @@ HireBit System
     const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
     const companyName = data.companyName || '[Company Name]'
     const deadline = new Date(data.applicationDeadline)
-    const deadlineText = isNaN(deadline.getTime()) ? data.applicationDeadline : deadline.toLocaleString()
+    const deadlineText = isNaN(deadline.getTime()) ? data.applicationDeadline : deadline.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     const recommendedSubject = `${cleanedJobTitle} - ${companyName}`
+
+    // Derive HR name from email if not provided (e.g. john.doe@co.com → John)
+    const hrEmailAddr = data.hrEmail || data.recipients[0] || ''
+    const hrName = data.hrName
+      ? data.hrName
+      : (hrEmailAddr.split('@')[0] || 'HR Team')
+          .replace(/[._]/g, ' ')
+          .replace(/\b\w/g, (c: string) => c.toUpperCase())
+
+    const department = data.department || ''
+    const jobLocation = data.jobLocation || ''
+    const employmentType = data.employmentType || ''
+
+    // Build meta items — only show non-empty ones
+    const metaItems = [companyName, department, jobLocation, employmentType].filter(Boolean)
+    const metaHtml = metaItems.map((item, i) =>
+      i === 0
+        ? `<span>${item}</span>`
+        : `<span class="meta-dot"></span><span>${item}</span>`
+    ).join('')
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Your Job Is Live – OptioHire</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #f0f4f8; font-family: 'DM Sans', Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 620px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .hdr { background: #0f1c2e; padding: 24px 36px; display: flex; align-items: center; justify-content: space-between; }
+    .hdr-badge { background: #1a3a5c; color: #60aaf0; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; border: 1px solid #2a5280; }
+    .status-bar { background: #0d7a4e; padding: 13px 36px; display: flex; align-items: center; gap: 10px; }
+    .status-dot { width: 8px; height: 8px; background: #5DCAA5; border-radius: 50%; flex-shrink: 0; }
+    .status-bar p { font-size: 13px; font-weight: 600; color: #c0f0dc; letter-spacing: 0.01em; }
+    .body { padding: 36px; }
+    .greeting { font-size: 15px; color: #334155; line-height: 1.75; margin-bottom: 28px; }
+    .greeting strong { color: #0f1c2e; }
+    .job-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 22px; margin-bottom: 28px; }
+    .job-card-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #94a3b8; margin-bottom: 10px; }
+    .job-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .job-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: #0f1c2e; line-height: 1.2; }
+    .job-live-badge { background: #e1f5ee; color: #0d7a4e; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; white-space: nowrap; border: 1px solid #9fe1cb; flex-shrink: 0; }
+    .job-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .job-meta span { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 5px; }
+    .meta-dot { width: 3px; height: 3px; background: #cbd5e1; border-radius: 50%; }
+    .ai-notice { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 16px 18px; margin-bottom: 28px; display: flex; gap: 14px; align-items: flex-start; }
+    .ai-icon { width: 34px; height: 34px; background: #185fa5; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ai-icon svg { width: 18px; height: 18px; fill: none; stroke: #93c5fd; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .ai-notice p { font-size: 13px; color: #1e40af; line-height: 1.6; }
+    .ai-notice strong { color: #1e3a8a; }
+    .div-label { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .div-label hr { flex: 1; border: none; border-top: 1px solid #e2e8f0; }
+    .div-label span { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #94a3b8; white-space: nowrap; }
+    .share-intro { font-size: 14px; color: #475569; line-height: 1.7; margin-bottom: 18px; }
+    .share-box { background: #fafaf9; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 22px 24px; margin-bottom: 10px; position: relative; }
+    .share-box-tag { position: absolute; top: -11px; left: 18px; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; }
+    .share-text { font-size: 13.5px; color: #334155; line-height: 1.8; }
+    .share-text p { margin-bottom: 12px; }
+    .share-text p:last-child { margin-bottom: 0; }
+    .share-text strong { color: #0f1c2e; font-weight: 600; }
+    .subject-pill { display: inline-block; background: #eff6ff; color: #185fa5; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px; border: 1px solid #bfdbfe; font-family: 'Courier New', monospace; word-break: break-all; }
+    .share-steps { margin: 12px 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .share-steps li { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: #334155; line-height: 1.6; }
+    .sli-num { width: 20px; height: 20px; background: #0f1c2e; color: #93c5fd; font-size: 10px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .copy-hint { font-size: 12px; color: #94a3b8; text-align: right; margin-bottom: 28px; }
+    .cta-row { background: #0f1c2e; border-radius: 12px; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+    .cta-text p:first-child { font-size: 14px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
+    .cta-text p:last-child { font-size: 12px; color: #64748b; }
+    .cta-btn { display: inline-block; background: #185fa5; color: #ffffff; font-family: 'DM Sans', Arial, sans-serif; font-size: 13px; font-weight: 600; text-decoration: none; padding: 10px 20px; border-radius: 8px; white-space: nowrap; }
+    .foot { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 36px; text-align: center; }
+    .foot p { font-size: 11px; color: #94a3b8; line-height: 1.8; }
+    .foot a { color: #185fa5; text-decoration: none; }
+    @media (max-width: 640px) {
+      .wrap { margin: 0; border-radius: 0; }
+      .hdr, .status-bar, .body, .foot { padding-left: 20px; padding-right: 20px; }
+      .cta-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div style="display:flex;align-items:center;gap:9px"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="#1e3a5c"/><circle cx="16" cy="13" r="5" stroke="#60aaf0" stroke-width="2" fill="none"/><path d="M9 26c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="16" cy="13" r="2" fill="#60aaf0"/></svg><span style="font-family:DM Sans,Arial,sans-serif;font-size:16px;font-weight:600;color:#d4e8ff;letter-spacing:-0.02em">OptioHire</span></div>
+    <span class="hdr-badge">Job Confirmation</span>
+  </div>
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <p>Your job posting is live and AI shortlisting is now active</p>
+  </div>
+  <div class="body">
+    <p class="greeting">
+      Hi <strong>${hrName}</strong>,<br /><br />
+      Great news — your job posting has been successfully created on OptioHire.
+      The system is now actively receiving and shortlisting applications on your behalf.
+      Below is a summary of your posting and everything you need to start sourcing candidates.
+    </p>
+    <div class="job-card">
+      <p class="job-card-label">Your job posting</p>
+      <div class="job-title-row">
+        <span class="job-title">${cleanedJobTitle}</span>
+        <span class="job-live-badge">Live</span>
+      </div>
+      <div class="job-meta">
+        ${metaHtml}
+      </div>
+    </div>
+    <div class="ai-notice">
+      <div class="ai-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+      </div>
+      <p>
+        <strong>AI shortlisting is active.</strong> Every application — whether submitted through the OptioHire platform or via email — will be automatically scored and ranked based on your job requirements. You will see all candidates in your dashboard. Application deadline: <strong>${deadlineText}</strong>.
+      </p>
+    </div>
+    <div class="div-label">
+      <hr />
+      <span>Shareable message for external candidates</span>
+      <hr />
+    </div>
+    <p class="share-intro">
+      Want to reach candidates outside the platform — through LinkedIn, WhatsApp groups, or your own network?
+      Copy and share the message below exactly as written. It includes all the instructions applicants need to apply correctly so the system can process their submissions automatically.
+    </p>
+    <div class="share-box">
+      <span class="share-box-tag">Copy &amp; share this</span>
+      <div class="share-text">
+        <p>We are hiring for a <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong>!</p>
+        <p>To apply, send an email to <strong>${APPLICATION_INBOX_EMAIL}</strong> and follow these exact steps:</p>
+        <ul class="share-steps">
+          <li>
+            <span class="sli-num">1</span>
+            <span>Your email subject line must be exactly:<br /><span class="subject-pill">${recommendedSubject}</span></span>
+          </li>
+          <li>
+            <span class="sli-num">2</span>
+            <span>In the body of the email, write a short cover letter explaining why you are a great fit for this role.</span>
+          </li>
+          <li>
+            <span class="sli-num">3</span>
+            <span>Attach your latest CV or résumé as a <strong>PDF file</strong>.</span>
+          </li>
+        </ul>
+        <p>We look forward to receiving your application!</p>
+      </div>
+    </div>
+    <p class="copy-hint">&#128274; The subject line above is unique to this job posting — it must not be changed.</p>
+    <div class="cta-row">
+      <div class="cta-text">
+        <p>View your applications dashboard</p>
+        <p>Track candidates, review shortlists &amp; schedule interviews</p>
+      </div>
+      <a href="https://optiohire.com/dashboard" class="cta-btn">Open Dashboard →</a>
+    </div>
+    <p style="font-size:12px; color:#94a3b8; line-height:1.7; text-align:center;">
+      If you have any questions or need to update your posting, log in to your HR dashboard at any time.
+    </p>
+  </div>
+  <div class="foot">
+    <div style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:12px;"><svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="#1e3a5c"/><circle cx="16" cy="13" r="5" stroke="#60aaf0" stroke-width="2" fill="none"/><path d="M9 26c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="16" cy="13" r="2" fill="#60aaf0"/></svg><span style="font-family:DM Sans,Arial,sans-serif;font-size:15px;font-weight:600;color:#334155;letter-spacing:-0.02em">OptioHire</span></div>
+    <p>
+      This notification was sent to <strong>${hrEmailAddr}</strong> by OptioHire.<br />
+      <a href="https://optiohire.com">optiohire.com</a>
+      &nbsp;·&nbsp;
+      <a href="https://optiohire.com/unsubscribe">Unsubscribe</a>
+    </p>
+  </div>
+</div>
+</body>
+</html>`
+
+    const text = `Your Job Is Live – OptioHire
+
+Hi ${hrName},
+
+Your job posting has been successfully created on OptioHire. The system is now actively receiving and shortlisting applications on your behalf.
+
+POSTING DETAILS
+Role:     ${cleanedJobTitle}
+Company:  ${companyName}
+${department ? `Dept:     ${department}\n` : ''}${jobLocation ? `Location: ${jobLocation}\n` : ''}${employmentType ? `Type:     ${employmentType}\n` : ''}Deadline: ${deadlineText}
+
+SHAREABLE MESSAGE FOR EXTERNAL CANDIDATES
+Copy and paste this to LinkedIn, WhatsApp, or your network:
+
+---
+We are hiring for a ${cleanedJobTitle} at ${companyName}!
+
+To apply, send an email to ${APPLICATION_INBOX_EMAIL} and follow these steps:
+
+1. Your email subject MUST be exactly: ${recommendedSubject}
+2. In the body, write a short cover letter explaining why you are a great fit.
+3. Attach your latest CV/résumé as a PDF.
+
+We look forward to receiving your application!
+---
+
+The subject line above is unique to this posting — it must not be changed.
+
+View your dashboard: https://optiohire.com/dashboard
+
+OptioHire — AI-Powered Recruitment
+optiohire.com`
+
+    await this.sendEmail({
+      to,
+      from: DEFAULT_FROM_EMAIL,
+      subject: `Your job is live – ${cleanedJobTitle} at ${companyName}`,
+      html,
+      text,
+      emailType: 'notification',
+      useSecondaryKey: true
+    })
+  }
 
     const html = `
 <!DOCTYPE html>
@@ -904,16 +1126,6 @@ OptioHire`
         .substring(0, 20)
       return `noreply@${sanitized}.com`
     }
-    
-    // Final fallback - use configured default (applicationsoptiohire@gmail.com)
-    return DEFAULT_FROM_EMAIL
-  }
-
-
-
-  /**
-   * Interview Scheduled Email
-   */
   async sendInterviewSchedule(data: {
     candidate_email: string
     jobTitle: string
@@ -924,6 +1136,7 @@ OptioHire`
     interviewType?: 'online' | 'in-person'
     candidateName?: string
     companyName?: string
+    hrEmail?: string
   }) {
     const meetingDateObj = new Date(data.meeting_time)
     const meetingDate = meetingDateObj.toLocaleString('en-US', {
@@ -935,18 +1148,22 @@ OptioHire`
       minute: '2-digit',
       timeZoneName: 'short'
     })
+    const candidateName = data.candidateName || 'Candidate'
+    const companyName = data.companyName || 'Hiring Team'
+    const hrContact = data.hrEmail || DEFAULT_FROM_EMAIL
+    const cleanedJobTitle = cleanJobTitle(data.jobTitle)
 
     const customTemplate = await this.getCustomTemplate(data.companyId, 'INTERVIEW')
 
-    let subject = `Interview Scheduled - ${data.jobTitle}`
+    let subject = `Your Interview for ${cleanedJobTitle} at ${companyName} – ${meetingDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`
     let html = ''
     let text = ''
 
     if (customTemplate) {
       const vars = {
-        candidate_name: data.candidateName || 'Candidate',
-        job_title: data.jobTitle,
-        company_name: data.companyName || 'Hiring Team',
+        candidate_name: candidateName,
+        job_title: cleanedJobTitle,
+        company_name: companyName,
         interview_link: data.meetingLink,
         interview_date: meetingDateObj.toLocaleDateString(),
         interview_time: meetingDateObj.toLocaleTimeString()
@@ -955,68 +1172,104 @@ OptioHire`
       html = parseTemplate(customTemplate.body_html, vars)
       text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
     } else {
+      const isOnline = data.interviewType === 'online' || !!data.meetingLink
+      const isInPerson = data.interviewType === 'in-person' && !!data.location
+
       let locationHtml = ''
       let locationText = ''
 
-      if (data.interviewType === 'in-person' && data.location) {
+      if (isInPerson && data.location) {
         const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.location)}`
         locationHtml = `
-          <p><strong>Location:</strong> ${data.location}</p>
-          <p><a href="${mapsUrl}" class="button" style="background:#10b981; display:inline-block; padding:10px; color:white; text-decoration:none; border-radius:5px;">View Location on Google Maps</a></p>
+          <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:16px; margin:16px 0;">
+            <p style="margin:0 0 6px 0;"><strong>📍 Interview Venue</strong></p>
+            <p style="margin:0 0 12px 0; font-size:15px;">${data.location}</p>
+            <a href="${mapsUrl}" style="display:inline-block; padding:10px 20px; background:#16a34a; color:white; text-decoration:none; border-radius:6px; font-weight:bold;">📍 View on Google Maps</a>
+          </div>
         `
-        locationText = `Location: ${data.location}\nGoogle Maps: ${mapsUrl}\n`
-      } else if (data.meetingLink) {
-        locationHtml = `<p><strong>Meeting Link:</strong> <a href="${data.meetingLink}" class="button">Join Interview</a></p>`
-        locationText = `Meeting Link: ${data.meetingLink}\n`
+        locationText = `Venue: ${data.location}\nGoogle Maps: ${mapsUrl}\n`
+      } else if (isOnline && data.meetingLink) {
+        locationHtml = `
+          <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:8px; padding:16px; margin:16px 0;">
+            <p style="margin:0 0 6px 0;"><strong>🎥 Online Interview</strong></p>
+            <p style="margin:0 0 12px 0;">Your interview will take place via video call. Click the button below to join:</p>
+            <a href="${data.meetingLink}" style="display:inline-block; padding:12px 28px; background:#2D2DDD; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px;">🎥 Join Interview</a>
+            <p style="margin:12px 0 0 0; font-size:12px; color:#6b7280;">Link: <a href="${data.meetingLink}" style="color:#2D2DDD;">${data.meetingLink}</a></p>
+          </div>
+        `
+        locationText = `Video Interview Link: ${data.meetingLink}\n`
       }
 
       html = `
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #2D2DDD; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .button { display: inline-block; padding: 12px 24px; background: #2D2DDD; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-    .info-box { background: white; padding: 15px; border-left: 4px solid #2D2DDD; margin: 15px 0; }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Interview Scheduled</h1>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f3f4f6; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background: #2D2DDD; padding: 32px 24px; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 24px;">🎉 Interview Scheduled!</h1>
+      <p style="color: #c7d2fe; margin: 8px 0 0 0;">You have been selected for an interview</p>
     </div>
-    <div class="content">
-      <p>Hi ${data.candidateName || 'Candidate'},</p>
-      <p>Your interview for <strong>${data.jobTitle}</strong> has been scheduled.</p>
-      <div class="info-box">
-        <p><strong>Date & Time:</strong> ${meetingDate}</p>
-        ${locationHtml}
+    <div style="padding: 28px 28px;">
+      <p style="margin: 0 0 16px 0;">Dear <strong>${candidateName}</strong>,</p>
+      <p style="margin: 0 0 20px 0;">Congratulations! You have been shortlisted and your interview for the position below has been scheduled. Please review the details carefully and make sure you are prepared.</p>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 6px 0; color: #6b7280; width: 140px;">Position</td><td style="padding: 6px 0; font-weight: bold;">${cleanedJobTitle}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6b7280;">Company</td><td style="padding: 6px 0; font-weight: bold;">${companyName}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6b7280;">Date &amp; Time</td><td style="padding: 6px 0; font-weight: bold;">${meetingDate}</td></tr>
+          <tr><td style="padding: 6px 0; color: #6b7280;">Format</td><td style="padding: 6px 0; font-weight: bold;">${isInPerson ? 'In-Person' : 'Online (Video Call)'}</td></tr>
+        </table>
       </div>
-      <p>Please arrive 5 minutes early and have your documents ready.</p>
-      <p>Best regards,<br>${data.companyName || 'Hiring Team'}</p>
+
+      ${locationHtml}
+
+      <div style="background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 16px; margin: 20px 0;">
+        <p style="margin: 0 0 8px 0; font-weight: bold;">📋 How to Prepare</p>
+        <ul style="margin: 0; padding-left: 20px;">
+          <li>Review the job description and your application</li>
+          <li>Bring a printed copy of your CV</li>
+          <li>${isInPerson ? 'Arrive at least 5–10 minutes early' : 'Test your audio and video before the interview'}</li>
+          <li>Prepare questions to ask the interviewer</li>
+        </ul>
+      </div>
+
+      <p style="margin: 20px 0 8px 0;">If you have any questions or need to reschedule, please contact us at <a href="mailto:${hrContact}" style="color: #2D2DDD;">${hrContact}</a>.</p>
+      <p style="margin: 0;">We look forward to meeting you!</p>
+    </div>
+    <div style="background: #f8fafc; padding: 16px 28px; text-align: center; border-top: 1px solid #e2e8f0;">
+      <p style="margin: 0; font-size: 13px; color: #6b7280;">This email was sent by OptioHire on behalf of <strong>${companyName}</strong></p>
     </div>
   </div>
 </body>
-</html>
-    `
+</html>`
 
-      text = `
-Interview Scheduled
+      text = `Interview Scheduled – ${cleanedJobTitle} at ${companyName}
 
-Hi ${data.candidateName || 'Candidate'},
+Dear ${candidateName},
 
-Your interview for ${data.jobTitle} has been scheduled.
+Congratulations! Your interview has been scheduled. Please review the details below:
 
+Position:    ${cleanedJobTitle}
+Company:     ${companyName}
 Date & Time: ${meetingDate}
+Format:      ${isInPerson ? 'In-Person' : 'Online (Video Call)'}
 ${locationText}
-Please arrive 5 minutes early and have your documents ready.
+How to Prepare:
+- Review the job description and your application
+- Bring a printed copy of your CV
+- ${isInPerson ? 'Arrive at least 5–10 minutes early' : 'Test your audio and video before the interview'}
+- Prepare questions to ask the interviewer
 
-Best regards,
-${data.companyName || 'Hiring Team'}
-    `
+For questions or to reschedule, contact: ${hrContact}
+
+We look forward to meeting you!
+
+OptioHire on behalf of ${companyName}`
     }
 
     await this.sendEmail({
@@ -1027,9 +1280,6 @@ ${data.companyName || 'Hiring Team'}
     })
   }
 
-  /**
-   * HR Interview Confirmation Email
-   */
   async sendHRInterviewConfirmation(data: {
     hr_email: string
     candidate: {
@@ -1043,7 +1293,8 @@ ${data.companyName || 'Hiring Team'}
     interviewType?: 'online' | 'in-person'
     companyName?: string
   }) {
-    const meetingDate = new Date(data.time).toLocaleString('en-US', {
+    const meetingDateObj = new Date(data.time)
+    const meetingDate = meetingDateObj.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -1052,72 +1303,88 @@ ${data.companyName || 'Hiring Team'}
       minute: '2-digit',
       timeZoneName: 'short'
     })
+    const cleanedJobTitle = cleanJobTitle(data.jobTitle)
+    const companyName = data.companyName || 'Your Company'
+    const isInPerson = data.interviewType === 'in-person' && !!data.location
+    const isOnline = !isInPerson && !!data.meetingLink
 
     let locationHtml = ''
     let locationText = ''
 
-    if (data.interviewType === 'in-person' && data.location) {
-      locationHtml = `<p><strong>Location:</strong> ${data.location}</p>`
-      locationText = `Location: ${data.location}\n`
-    } else if (data.meetingLink) {
-      locationHtml = `<p><strong>Meeting Link:</strong> <a href="${data.meetingLink}">${data.meetingLink}</a></p>`
-      locationText = `Meeting Link: ${data.meetingLink}\n`
+    if (isInPerson && data.location) {
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.location)}`
+      locationHtml = `
+        <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:16px; margin:12px 0;">
+          <p style="margin:0 0 6px 0; font-weight:bold;">📍 Interview Venue</p>
+          <p style="margin:0 0 10px 0;">${data.location}</p>
+          <a href="${mapsUrl}" style="color:#16a34a;">View on Google Maps →</a>
+        </div>
+      `
+      locationText = `Venue: ${data.location}\nGoogle Maps: ${mapsUrl}\n`
+    } else if (isOnline && data.meetingLink) {
+      locationHtml = `
+        <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:8px; padding:16px; margin:12px 0;">
+          <p style="margin:0 0 6px 0; font-weight:bold;">🎥 Online Interview</p>
+          <p style="margin:0 0 10px 0;">Meeting Link: <a href="${data.meetingLink}" style="color:#2D2DDD;">${data.meetingLink}</a></p>
+        </div>
+      `
+      locationText = `Video Interview Link: ${data.meetingLink}\n`
     }
 
     const html = `
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #2D2DDD; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .info-box { background: white; padding: 15px; border-left: 4px solid #2D2DDD; margin: 15px 0; }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Interview Confirmed</h1>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f3f4f6; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background: #2D2DDD; padding: 28px 24px; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 22px;">✅ Interview Scheduled</h1>
+      <p style="color: #c7d2fe; margin: 6px 0 0 0; font-size: 14px;">OptioHire — Interview Confirmation</p>
     </div>
-    <div class="content">
-      <p>Hi,</p>
-      <p>An interview has been scheduled:</p>
-      <div class="info-box">
-        <p><strong>Candidate:</strong> ${data.candidate.name} (${data.candidate.email})</p>
-        <p><strong>Job:</strong> ${data.jobTitle}</p>
-        <p><strong>Date & Time:</strong> ${meetingDate}</p>
-        ${locationHtml}
+    <div style="padding: 28px;">
+      <p style="margin: 0 0 20px 0;">Hi, an interview has been successfully scheduled via OptioHire. Here are the full details:</p>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Candidate</p>
+        <p style="margin: 0 0 16px 0; font-size: 16px; font-weight: bold;">${data.candidate.name}</p>
+        <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280;">Email</p>
+        <p style="margin: 0 0 16px 0;"><a href="mailto:${data.candidate.email}" style="color: #2D2DDD;">${data.candidate.email}</a></p>
+        <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280;">Position</p>
+        <p style="margin: 0 0 16px 0; font-weight: bold;">${cleanedJobTitle}</p>
+        <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280;">Date &amp; Time</p>
+        <p style="margin: 0 0 16px 0; font-weight: bold;">${meetingDate}</p>
+        <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280;">Format</p>
+        <p style="margin: 0;">${isInPerson ? '🏢 In-Person' : '🎥 Online (Video Call)'}</p>
       </div>
-      <p>Best regards,<br>HireBit System</p>
+
+      ${locationHtml}
+
+      <p style="font-size: 13px; color: #6b7280; margin: 20px 0 0 0;">The candidate has been notified via email with the same details. No further action is required on your end unless you need to reschedule.</p>
+    </div>
+    <div style="background: #f8fafc; padding: 14px 28px; border-top: 1px solid #e2e8f0; text-align: center;">
+      <p style="margin: 0; font-size: 12px; color: #9ca3af;">OptioHire — AI-Powered Recruitment for ${companyName}</p>
     </div>
   </div>
 </body>
-</html>
-    `
+</html>`
 
-    const text = `
-Interview Confirmed
+    const text = `Interview Scheduled — OptioHire Confirmation
 
-An interview has been scheduled:
-
-Candidate: ${data.candidate.name} (${data.candidate.email})
-Job: ${data.jobTitle}
-Date & Time: ${meetingDate}
+Candidate: ${data.candidate.name}
+Email:     ${data.candidate.email}
+Position:  ${cleanedJobTitle}
+Date/Time: ${meetingDate}
+Format:    ${isInPerson ? 'In-Person' : 'Online (Video Call)'}
 ${locationText}
-Best regards,
-HireBit System
-    `
+The candidate has been notified via email with the same details.
+
+OptioHire — AI-Powered Recruitment for ${companyName}`
 
     await this.sendEmail({
       to: data.hr_email,
-      subject: `Interview Scheduled - ${data.candidate.name} for ${data.jobTitle}`,
-      html,
-      text
-    })
-  }
-
   async sendPasswordResetCode(email: string, name: string, resetCode: string) {
     const html = `
 <!DOCTYPE html>
