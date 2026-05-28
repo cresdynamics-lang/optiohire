@@ -1,8 +1,8 @@
 import { Client } from 'ssh2';
 
-const HOST = '67.205.164.114';
-const USER = 'root';
-const PASSWORD = 'Manage@1Optiohire';
+const HOST = process.env.SSH_HOST || 'YOUR_SERVER_IP';
+const USER = process.env.SSH_USER || 'root';
+const PASSWORD = process.env.SSH_PASSWORD;
 
 function runRemote(conn, command) {
   return new Promise((resolve, reject) => {
@@ -72,7 +72,7 @@ async function deploy() {
     if (appCheck.includes('NOT_FOUND')) {
       // Clone the repo
       console.log('\n📥 === CLONING REPO ===');
-      await runRemote(conn, 'cd /root && git clone https://github.com/cresdynamics-lang/optiohire.git');
+      await runRemote(conn, 'cd /root && git clone YOUR_GIT_REPO_URL optiohire');
     } else {
       // Pull latest
       console.log('\n⬇️  === PULLING LATEST CODE ===');

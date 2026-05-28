@@ -8,7 +8,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Digital Ocean server details
-REMOTE_HOST="root@143.244.162.13"
+REMOTE_HOST="root@YOUR_SERVER_IP"
 APP_DIR="/opt/optiohire"
 
 echo -e "${GREEN}🚀 Deploying OptioHire to Digital Ocean server...${NC}"

@@ -5,7 +5,7 @@
 
 set -e
 APP_DIR="/var/www/optiohire"
-REPO_URL="https://github.com/cresdynamics-lang/optiohire.git"
+REPO_URL="YOUR_GIT_REPO_URL"
 DOMAIN="optiohire.com"
 API_DOMAIN="api.optiohire.com"
 FRONTEND_PORT=3000
