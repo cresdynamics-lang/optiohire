@@ -15,7 +15,9 @@
     "install:all": "cd frontend && npm install && cd ../backend && npm install",
     "db:schema": "cd backend && npm run db:schema",
     "install:frontend": "cd frontend && npm install",
-    "install:backend": "cd backend && npm install"
+    "install:backend": "cd backend && npm install",
+    "test:talent-pool": "cd backend && npm run test:talent-pool",
+    "seed:talent-pool-fake": "cd backend && npm run seed:talent-pool-fake"
   },
   "description": "HireBit Recruitment System - Monorepo",
   "workspaces": [],
@@ -23,6 +25,7 @@
     "groq-sdk": "^0.37.0"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "ssh2": "^1.17.0"
   }
 }

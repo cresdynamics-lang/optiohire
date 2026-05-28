@@ -1,0 +1,58 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Build Backend
+        run: |
+          cd backend
+          npm ci
+          npm run build
+          
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Deploy Backend
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'optiohire-backend'
+          package: './backend'
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm ci --legacy-peer-deps
+          npm run build
+          
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Deploy Frontend
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'optiohire-frontend'
+          package: './frontend'

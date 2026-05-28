@@ -1706,6 +1706,94 @@ ${data.companyEmail}`
       emailType: 'talent_pool_notification',
     })
   }
+
+  async sendTalentPoolMatchNotification(data: {
+    candidateEmail: string
+    candidateName?: string | null
+    matches: Array<{
+      jobTitle: string
+      companyName: string
+      overview: string
+      requiredSkills: string[]
+    }>
+  }) {
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const matchCount = data.matches.length
+    const subject = matchCount === 1
+      ? `New job match found for you: ${data.matches[0].jobTitle} at ${data.matches[0].companyName}`
+      : `New job matches found for you`
+
+    const jobItemsHtml = data.matches.map((match, index) => `
+      <div style="margin-bottom: 20px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f9fafb;">
+        <p style="margin: 0 0 8px;"><strong>${index + 1}. ${escapeHtml(match.jobTitle)} at ${escapeHtml(match.companyName)}</strong></p>
+        <p style="margin: 0 0 10px;">${escapeHtml(match.overview)}</p>
+        ${match.requiredSkills.length > 0 ? `<p style="margin: 0 0 6px;"><strong>Key skills:</strong></p><ul style="margin: 0 0 0 18px; padding: 0;">${match.requiredSkills.slice(0, 6).map(skill => `<li>${escapeHtml(skill)}</li>`).join('')}</ul>` : ''}
+      </div>
+    `).join('')
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .highlight { background: #eff6ff; padding: 16px; border-radius: 10px; margin-top: 16px; }
+    .job-list { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Hi ${escapeHtml(candidateName)},</p>
+
+    <p>We found ${matchCount === 1 ? 'a new job match' : 'new job matches'} for you in the talent pool.</p>
+
+    <div class="highlight">
+      <p><strong>Why this matters:</strong></p>
+      <p>Top candidates are selected from the talent pool even when they are not currently applied to a specific job. We recommend updating your CV and reapplying so the system can score your new application against the exact job posting.</p>
+    </div>
+
+    <div class="job-list">
+      ${jobItemsHtml}
+    </div>
+
+    <p>Please update your application to highlight the skills and experience listed above, then reapply to the matching role(s).</p>
+    <p>If you do not reapply, we will continue using your current talent pool profile for future matches.</p>
+
+    <p>Best regards,<br />The team at OptioHire</p>
+  </div>
+</body>
+</html>
+    `
+
+    const textJobs = data.matches.map((match, index) => `
+${index + 1}. ${match.jobTitle} at ${match.companyName}
+${match.overview}
+${match.requiredSkills.length > 0 ? `Key skills: ${match.requiredSkills.slice(0, 6).join(', ')}` : ''}
+`).join('\n')
+
+    const text = `Hi ${candidateName},
+
+We found ${matchCount === 1 ? 'a new job match' : 'new job matches'} for you in the talent pool.
+
+${textJobs}
+Please update your application to highlight the skills and experience listed above, then reapply to the matching role${matchCount === 1 ? '' : 's'}.
+
+If you do not reapply, we will continue using your current talent pool profile for future matches.
+
+Best regards,
+The team at OptioHire`
+
+    return this.sendEmail({
+      to: data.candidateEmail,
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com',
+      subject,
+      html,
+      text,
+      emailType: 'talent_pool_match'
+    })
+  }
 }
 
 function escapeHtml(s: string): string {

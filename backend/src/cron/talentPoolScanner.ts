@@ -2,18 +2,35 @@ import { query } from '../db/index.js'
 import { logger } from '../utils/logger.js'
 import { AIScoringEngine } from '../lib/ai-scoring.js'
 import { DEFAULT_SCORING_WEIGHTS, ScoringWeights } from '../lib/scoringWeights.js'
+import { EmailService } from '../services/emailService.js'
 
 const aiScoring = new AIScoringEngine()
 
 export async function runNightlyTalentPoolScan() {
+  const emailService = new EmailService()
+
   logger.info('Starting Nightly Talent Pool Scan...')
   try {
     // 1. Get all active job postings
     const { rows: jobs } = await query(`
-      SELECT job_posting_id, company_id, job_title, job_description, responsibilities, required_skills, scoring_config
-      FROM job_postings 
-      WHERE status = 'ACTIVE'
+      SELECT j.job_posting_id, j.company_id, j.job_title, j.job_description, j.responsibilities, j.skills_required AS required_skills, j.scoring_config,
+             c.company_name
+      FROM job_postings j
+      JOIN companies c ON j.company_id = c.company_id
+      WHERE j.status = 'ACTIVE'
     `)
+
+    const notifyCandidates: Record<string, {
+      candidateId: string
+      candidateName: string | null
+      candidateEmail: string
+      matches: Array<{
+        jobTitle: string
+        companyName: string
+        overview: string
+        requiredSkills: string[]
+      }>
+    }> = {}
 
     for (const job of jobs) {
       logger.info(`Scanning talent pool for Job: ${job.job_title} (${job.job_posting_id})`)
@@ -25,7 +42,7 @@ export async function runNightlyTalentPoolScan() {
       // but exist in the company's talent pool
       // For simplicity, assuming talent_pool has a company_id link or is global. Let's assume global/company filtered.
       const { rows: candidates } = await query(`
-        SELECT t.talent_id, t.name, t.email, t.resume_text, t.skills, t.embedding
+        SELECT t.talent_id, t.candidate_name, t.email, t.parsed_resume_json, t.experience_summary, t.skills, NULL::real[] AS embedding
         FROM talent_pool t
         WHERE NOT EXISTS (
           SELECT 1 FROM applications a WHERE a.job_posting_id = $1 AND a.email = t.email
@@ -56,6 +73,10 @@ export async function runNightlyTalentPoolScan() {
           }
         }
 
+        const cvText = candidate.experience_summary
+          || (candidate.parsed_resume_json ? JSON.stringify(candidate.parsed_resume_json) : '')
+          || candidate.skills?.join(', ') || ''
+
         const scoringInput = {
           job: {
             title: job.job_title,
@@ -63,7 +84,7 @@ export async function runNightlyTalentPoolScan() {
             responsibilities: job.responsibilities,
             required_skills: job.required_skills || []
           },
-          cvText: candidate.resume_text || candidate.skills?.join(', ') || ''
+          cvText
         };
 
         const result = await aiScoring.scoreCandidate(scoringInput, vectorSimilarity, weights);
@@ -71,6 +92,15 @@ export async function runNightlyTalentPoolScan() {
         // If score is good or strong (e.g. >= 70), insert a match record
         if (result.score >= 70) {
           strongMatchesFound++;
+
+          const { rows: existingRows } = await query<{ final_score: string; tier: string }>(
+            `SELECT final_score, tier FROM talent_pool_matches WHERE job_id = $1 AND candidate_id = $2`,
+            [job.job_posting_id, candidate.talent_id]
+          )
+          const existingMatch = existingRows[0]
+          const matchTier = result.status === 'SHORTLIST' ? 'strong' : 'good'
+          const shouldNotify = !existingMatch || matchTier !== existingMatch.tier
+
           await query(`
             INSERT INTO talent_pool_matches 
               (job_id, candidate_id, final_score, tier, ai_audit_log)
@@ -85,9 +115,31 @@ export async function runNightlyTalentPoolScan() {
             job.job_posting_id,
             candidate.talent_id,
             result.score,
-            result.status === 'SHORTLIST' ? 'strong' : 'good',
+            matchTier,
             JSON.stringify(result.audit)
           ]);
+
+          if (shouldNotify) {
+            const overview = (job.job_description || job.responsibilities || '').trim().substring(0, 380) || 'This role looks like a strong fit based on your current talent pool profile.'
+            const requiredSkills = Array.isArray(job.required_skills) ? job.required_skills : []
+            const candidateKey = candidate.email.toLowerCase()
+
+            if (!notifyCandidates[candidateKey]) {
+              notifyCandidates[candidateKey] = {
+                candidateId: candidate.talent_id,
+                candidateName: candidate.candidate_name,
+                candidateEmail: candidate.email,
+                matches: []
+              }
+            }
+
+            notifyCandidates[candidateKey].matches.push({
+              jobTitle: job.job_title,
+              companyName: job.company_name || 'Company',
+              overview,
+              requiredSkills
+            })
+          }
         }
       }
 
@@ -100,7 +152,22 @@ export async function runNightlyTalentPoolScan() {
       logger.info(`Finished scanning for ${job.job_title}. Found ${strongMatchesFound} strong matches out of ${evaluatedCount} candidates.`);
     }
 
+    // Send candidate notification emails for new or upgraded talent pool matches
+    for (const candidateEmail of Object.keys(notifyCandidates)) {
+      const candidate = notifyCandidates[candidateEmail]
+      try {
+        await emailService.sendTalentPoolMatchNotification({
+          candidateEmail: candidate.candidateEmail,
+          candidateName: candidate.candidateName,
+          matches: candidate.matches
+        })
+      } catch (emailError) {
+        logger.error(`Failed to send talent pool match notification to ${candidate.candidateEmail}:`, emailError)
+      }
+    }
+
   } catch (error) {
     logger.error('Error during Nightly Talent Pool Scan:', error)
+    throw error
   }
 }

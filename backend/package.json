@@ -10,7 +10,9 @@
     "db:schema": "npm run migrate up",
     "check": "tsx scripts/check-env.ts",
     "ensure-admin": "tsx scripts/ensure-admin-user.ts",
-    "test:verification-email": "tsx scripts/send-test-verification-code.ts"
+    "test:verification-email": "tsx scripts/send-test-verification-code.ts",
+    "test:talent-pool": "tsx scripts/test-talent-pool-notification.ts",
+    "seed:talent-pool-fake": "tsx scripts/seed-talent-pool-fake-data.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.934.0",
