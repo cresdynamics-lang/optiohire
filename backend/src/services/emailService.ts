@@ -899,142 +899,6 @@ optiohire.com`
     })
   }
 
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #2D2DDD; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .highlight { background: #e8f4fc; padding: 12px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #2D2DDD; }
-    .help-box { background: #fff8e6; padding: 12px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #e6a800; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Job Created Successfully</h1>
-    </div>
-    <div class="content">
-      <p>Hi,</p>
-      <p><strong>Your job posting has been created successfully.</strong></p>
-      <ul>
-        <li><strong>Company:</strong> ${companyName}</li>
-        <li><strong>Role:</strong> ${cleanedJobTitle}</li>
-        <li><strong>Application deadline:</strong> ${deadlineText}</li>
-      </ul>
-
-      <p><strong>📣 Shareable Template for your Community</strong></p>
-      <p>Copy and paste the message below to share on external job boards, LinkedIn, or community groups:</p>
-      <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-        <p>We are hiring for a <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong>!</p>
-        <p>To apply, please send an email to <strong>${APPLICATION_INBOX_EMAIL}</strong>.</p>
-        <p><strong>Important Instructions:</strong></p>
-        <ul style="margin-top: 8px;">
-          <li>Your email Subject Line MUST exactly be: <strong>${recommendedSubject}</strong></li>
-          <li>In the body of the email, include a brief cover letter explaining why you are a great fit for this role.</li>
-          <li>Attach your latest CV/Resume as a PDF.</li>
-        </ul>
-        <p>We look forward to receiving your application!</p>
-      </div>
-
-      <div class="highlight">
-        <p><strong>What to do next:</strong> You have two options to send candidate applications to OptioHire for AI screening and ranking:</p>
-        <ol style="margin-top: 12px; padding-left: 20px;">
-          <li><strong>Option 1:</strong> Set up email forwarding rules (recommended for high volume)</li>
-          <li><strong>Option 2:</strong> Have candidates email directly to <strong>${APPLICATION_INBOX_EMAIL}</strong></li>
-        </ol>
-      </div>
-      <p><strong>Option 1: Set up email forwarding (Gmail example)</strong></p>
-      <p>Forward application emails from your inbox to OptioHire:</p>
-      <ol>
-        <li>Open Gmail logged in as the inbox where candidates will send applications (e.g. your HR email).</li>
-        <li>Click the gear icon → <strong>See all settings</strong> → <strong>Forwarding and POP/IMAP</strong>.</li>
-        <li>Under “Forwarding”, click <strong>Add a forwarding address</strong> and enter <strong>${APPLICATION_INBOX_EMAIL}</strong>.</li>
-        <li>Confirm the forwarding address using the verification link Google sends.</li>
-        <li>Add a filter (Settings → <strong>Filters and blocked addresses</strong>) with <strong>Subject</strong> contains <code>${recommendedSubject}</code> and choose “Forward” to <strong>${APPLICATION_INBOX_EMAIL}</strong>.</li>
-      </ol>
-      <p><strong>Other email providers (Outlook, work email, etc.)</strong></p>
-      <p>Create a rule/filter that forwards emails where the <strong>Subject</strong> contains <code>${recommendedSubject}</code> to <strong>${APPLICATION_INBOX_EMAIL}</strong>.</p>
-      
-      <p><strong>Option 2: Direct email to OptioHire</strong></p>
-      <p>Alternatively, you can have candidates email their applications directly to:</p>
-      <p style="margin-top: 8px; padding: 10px; background: #fff; border-radius: 6px; border: 1px dashed #ccc; font-weight: bold;">
-        <strong>${APPLICATION_INBOX_EMAIL}</strong>
-      </p>
-      <p>Make sure candidates use the subject line <code>${recommendedSubject}</code> so we can route their application to the correct job.</p>
-      
-      <div class="help-box">
-        <p><strong>Need help?</strong> If you need assistance setting up forwarding rules or have questions about either option, contact <a href="mailto:developer@optiohire.com">developer@optiohire.com</a> and we’ll guide you through it.</p>
-      </div>
-      <p>Best regards,<br>OptioHire</p>
-    </div>
-  </div>
-</body>
-</html>
-    `
-
-    const text = `Job Created Successfully
-
-Your job posting has been created successfully.
-
-Company: ${companyName}
-Role: ${cleanedJobTitle}
-Application deadline: ${deadlineText}
-
-📣 SHAREABLE TEMPLATE FOR YOUR COMMUNITY
-Copy and paste the message below to share on external job boards, LinkedIn, or community groups:
-
----
-We are hiring for a ${cleanedJobTitle} at ${companyName}!
-To apply, please send an email to ${APPLICATION_INBOX_EMAIL}.
-
-Important Instructions:
-- Your email Subject Line MUST exactly be: ${recommendedSubject}
-- In the body of the email, include a brief cover letter explaining why you are a great fit for this role.
-- Attach your latest CV/Resume as a PDF.
-
-We look forward to receiving your application!
----
-
-WHAT TO DO NEXT: You have two options to send candidate applications to OptioHire for AI screening and ranking:
-
-  Option 1: Set up email forwarding rules (recommended for high volume)
-  Option 2: Have candidates email directly to ${APPLICATION_INBOX_EMAIL}
-
-OPTION 1: Set up email forwarding (Gmail example):
-Forward application emails from your inbox to OptioHire:
-  1) Open Gmail logged in as the inbox where candidates will send applications (e.g. your HR email).
-  2) Go to Settings → See all settings → Forwarding and POP/IMAP.
-  3) Under “Forwarding”, click “Add a forwarding address” and enter "${APPLICATION_INBOX_EMAIL}".
-  4) Confirm the forwarding address using the verification link Google sends.
-  5) Add a filter where Subject contains "${recommendedSubject}" and choose to forward those emails to "${APPLICATION_INBOX_EMAIL}".
-
-Other email providers (Outlook, work email, etc.):
-Create a rule/filter that forwards emails where the Subject contains "${recommendedSubject}" to "${APPLICATION_INBOX_EMAIL}".
-
-OPTION 2: Direct email to OptioHire:
-Alternatively, you can have candidates email their applications directly to: ${APPLICATION_INBOX_EMAIL}
-Make sure candidates use the subject line "${recommendedSubject}" so we can route their application to the correct job.
-
-Need help? If you need assistance setting up forwarding rules or have questions about either option, contact developer@optiohire.com and we'll guide you through it.
-
-Best regards,
-OptioHire`
-
-    await this.sendEmail({
-      to,
-      from: DEFAULT_FROM_EMAIL,
-      subject: `Job posted – ${cleanedJobTitle} - ${companyName}`,
-      html,
-      text,
-      emailType: 'notification',
-      useSecondaryKey: true
-    })
-  }
-
   /**
    * Applicant milestone notification (e.g. 10, 50, 100 applications)
    */
@@ -1126,6 +990,11 @@ OptioHire`
         .substring(0, 20)
       return `noreply@${sanitized}.com`
     }
+    
+    // Default fallback
+    return DEFAULT_FROM_EMAIL
+  }
+
   async sendInterviewSchedule(data: {
     candidate_email: string
     jobTitle: string
@@ -1385,6 +1254,15 @@ OptioHire — AI-Powered Recruitment for ${companyName}`
 
     await this.sendEmail({
       to: data.hr_email,
+      from: DEFAULT_FROM_EMAIL,
+      subject: `Interview Scheduled: ${data.candidate.name} – ${cleanedJobTitle}`,
+      html,
+      text,
+      emailType: 'notification',
+      useSecondaryKey: true
+    })
+  }
+
   async sendPasswordResetCode(email: string, name: string, resetCode: string) {
     const html = `
 <!DOCTYPE html>
