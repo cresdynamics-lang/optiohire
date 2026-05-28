@@ -38,6 +38,7 @@ jobs:
             echo "=== Building frontend ==="
             cd /root/optiohire/frontend
             npm ci --legacy-peer-deps
+            rm -rf .next
             npm run build
             
             # Fix standalone missing CSS/Assets
