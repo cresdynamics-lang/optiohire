@@ -1,0 +1,281 @@
+[
+  {
+    "name": "HR Agent",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "new-application",
+          "options": {}
+        },
+        "id": "trigger-webhook",
+        "name": "Inbound",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [-400, 200]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 30
+              }
+            ]
+          }
+        },
+        "id": "trigger-cron",
+        "name": "Ticker",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [-400, 600]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT a.application_id, a.candidate_name, a.email as candidate_email, a.resume_url, j.job_title, j.job_description, j.skills_required, c.company_name, c.hr_email FROM applications a JOIN job_postings j ON a.job_posting_id = j.job_posting_id JOIN companies c ON j.company_id = c.company_id WHERE a.application_id = '{{ $json.application_id || $json.body.application_id }}';"
+        },
+        "id": "db-context",
+        "name": "Context",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2,
+        "position": [-100, 200]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT a.application_id, a.candidate_name, a.email as candidate_email, a.resume_url, j.job_title, j.job_description, j.skills_required, c.company_name, c.hr_email FROM applications a JOIN job_postings j ON a.job_posting_id = j.job_posting_id JOIN companies c ON j.company_id = c.company_id WHERE a.ai_status IS NULL ORDER BY a.created_at ASC LIMIT 10;"
+        },
+        "id": "db-batch",
+        "name": "Batch",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2,
+        "position": [-100, 600]
+      },
+      {
+        "parameters": {
+          "fileSelector": "={{ $json.resume_url }}"
+        },
+        "id": "fs-read",
+        "name": "Reader",
+        "type": "n8n-nodes-base.readBinaryFile",
+        "typeVersion": 1,
+        "position": [250, 400]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://openrouter.ai/api/v1/chat/completions",
+          "authentication": "headerAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer YOUR_OPENROUTER_KEY"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "model",
+                "value": "google/gemini-2.0-flash-001"
+              }
+            ]
+          },
+          "options": {},
+          "bodyContent": "={ \"model\": \"google/gemini-2.0-flash-001\", \"messages\": [ {\"role\": \"system\", \"content\": \"Extract CV data into JSON: skills, experience_years, education.\"}, {\"role\": \"user\", \"content\": \"CV: {{ $binary.data.data.substring(0, 5000) }}\"} ] }"
+        },
+        "id": "ai-parser",
+        "name": "Parser",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [500, 200]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://openrouter.ai/api/v1/chat/completions",
+          "authentication": "headerAuth",
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer YOUR_OPENROUTER_KEY"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyContent": "={ \"model\": \"google/gemini-2.0-flash-001\", \"messages\": [ {\"role\": \"system\", \"content\": \"Detect AI generation probability (0-100). Return JSON: {\\\"bot_probability\\\": 0}\"}, {\"role\": \"user\", \"content\": \"{{ $node[\\\"Parser\\\"].json.choices[0].message.content }}\"} ] }"
+        },
+        "id": "ai-checker",
+        "name": "Checker",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [750, 200]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://openrouter.ai/api/v1/chat/completions",
+          "authentication": "headerAuth",
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer YOUR_OPENROUTER_KEY"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyContent": "={ \"model\": \"google/gemini-2.0-flash-001\", \"messages\": [ {\"role\": \"system\", \"content\": \"Align CV to JD. Return JSON: {\\\"score\\\": 0, \\\"reasoning\\\": \\\"...\\\"}\"}, {\"role\": \"user\", \"content\": \"JD: {{ $node[\\\"Reader\\\"].json.job_description }}\\nCV: {{ $node[\\\"Parser\\\"].json.choices[0].message.content }}\"} ] }"
+        },
+        "id": "ai-aligner",
+        "name": "Aligner",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [1000, 200]
+      },
+      {
+        "parameters": {
+          "jsCode": "const alignment = JSON.parse($node[\"Aligner\"].json.choices[0].message.content);\nconst integrity = JSON.parse($node[\"Checker\"].json.choices[0].message.content);\nlet score = alignment.score;\nif (integrity.bot_probability > 75) score -= 30;\nscore = Math.max(0, Math.min(100, score));\nlet bucket = 'REJECT';\nif (score >= 92) bucket = 'ELITE';\nelse if (score >= 80) bucket = 'SHORTLIST';\nelse if (score >= 70) bucket = 'MANUAL';\nreturn { final_score: score, bucket: bucket, reasoning: alignment.reasoning };"
+        },
+        "id": "js-judge",
+        "name": "Judge",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [1250, 200]
+      },
+      {
+        "parameters": {
+          "dataType": "string",
+          "value1": "={{ $json.bucket }}",
+          "rules": {
+            "rules": [
+              { "value2": "ELITE" },
+              { "value2": "SHORTLIST", "output": 1 },
+              { "value2": "MANUAL", "output": 2 }
+            ]
+          },
+          "fallbackOutput": 3
+        },
+        "id": "flow-router",
+        "name": "Router",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 1,
+        "position": [1500, 400]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.resend.com/emails",
+          "authentication": "headerAuth",
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer YOUR_RESEND_KEY"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyContent": "={ \"from\": \"OptioHire <recruitment@optiohire.com>\", \"to\": \"{{ $node[\\\"Reader\\\"].json.candidate_email }}\", \"subject\": \"Elite Invitation\", \"html\": \"Hi {{ $node[\\\"Reader\\\"].json.candidate_name }}, you are an Elite Match!\" }"
+        },
+        "id": "mail-elite",
+        "name": "Elite",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [1800, 100]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.resend.com/emails",
+          "authentication": "headerAuth",
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer YOUR_RESEND_KEY"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyContent": "={ \"from\": \"OptioHire <recruitment@optiohire.com>\", \"to\": \"{{ $node[\\\"Reader\\\"].json.candidate_email }}\", \"subject\": \"Application Update\", \"html\": \"Hi {{ $node[\"Reader\"].json.candidate_name }}, you have passed the initial profiling.\" }"
+        },
+        "id": "mail-pass",
+        "name": "Pass",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [1800, 300]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.resend.com/emails",
+          "authentication": "headerAuth",
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer YOUR_RESEND_KEY"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyContent": "={ \"from\": \"OptioHire <system@optiohire.com>\", \"to\": \"{{ $node[\\\"Reader\\\"].json.hr_email }}\", \"subject\": \"Manual Review Needed\", \"html\": \"Candidate {{ $node[\\\"Reader\\\"].json.candidate_name }} needs review.\" }"
+        },
+        "id": "mail-flag",
+        "name": "Flag",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [1800, 500]
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "table": "applications",
+          "where": "application_id = {{ $node[\"Reader\"].json.application_id }}",
+          "values": {
+            "ai_score": "={{ $node[\"Judge\"].json.final_score }}",
+            "ai_status": "={{ $node[\"Judge\"].json.bucket === 'REJECT' ? 'REJECT' : 'SHORTLIST' }}",
+            "reasoning": "={{ $node[\"Judge\"].json.reasoning }}"
+          }
+        },
+        "id": "db-sync",
+        "name": "Sync",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2,
+        "position": [2100, 400]
+      }
+    ],
+    "connections": {
+      "Inbound": { "main": [[{ "node": "Context", "type": "main", "index": 0 }]] },
+      "Ticker": { "main": [[{ "node": "Batch", "type": "main", "index": 0 }]] },
+      "Context": { "main": [[{ "node": "Reader", "type": "main", "index": 0 }]] },
+      "Batch": { "main": [[{ "node": "Reader", "type": "main", "index": 0 }]] },
+      "Reader": { "main": [[{ "node": "Parser", "type": "main", "index": 0 }]] },
+      "Parser": { "main": [[{ "node": "Checker", "type": "main", "index": 0 }]] },
+      "Checker": { "main": [[{ "node": "Aligner", "type": "main", "index": 0 }]] },
+      "Aligner": { "main": [[{ "node": "Judge", "type": "main", "index": 0 }]] },
+      "Judge": { "main": [[{ "node": "Router", "type": "main", "index": 0 }]] },
+      "Router": {
+        "main": [
+          [{ "node": "Elite", "type": "main", "index": 0 }],
+          [{ "node": "Pass", "type": "main", "index": 0 }],
+          [{ "node": "Flag", "type": "main", "index": 0 }],
+          [{ "node": "Sync", "type": "main", "index": 0 }]
+        ]
+      },
+      "Elite": { "main": [[{ "node": "Sync", "type": "main", "index": 0 }]] },
+      "Pass": { "main": [[{ "node": "Sync", "type": "main", "index": 0 }]] },
+      "Flag": { "main": [[{ "node": "Sync", "type": "main", "index": 0 }]] }
+    },
+    "active": true,
+    "settings": {},
+    "id": "6"
+  }
+]
