@@ -14,10 +14,16 @@ export interface ParsedCV {
   github: string | null
   emails: string[]
   other_links: string[]
+  links: {
+    linkedinUrl: string | null
+    githubUrl: string | null
+    otherUrl: string | null
+    all_links: string[]
+  }
 }
 
 // Regex for extracting all hyperlinks (including hidden in formatting)
-const URL_REGEX = /https?:\/\/[^\s)]+/gi
+const URL_REGEX = /(https?:\/\/[^\s)]+)|(www\.[^\s)]+)|([a-z0-9.-]+\.(?:com|org|net|io|me|dev|github\.io|gitlab\.io)(?:\/[^\s)]*)?)/gi
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
 const MAILTO_REGEX = /mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi
 
@@ -107,8 +113,16 @@ export class CVParser {
       .replace(/[ \t]+/g, ' ') // collapse spaces/tabs within lines
       .trim()
 
-    // Extract all URLs using regex: /https?:\/\/[^\s)]+/gi
-    const allUrls = [...new Set((cleanedText.match(URL_REGEX) || []).map(url => url.trim()))]
+    // Extract all URLs using regex
+    const allUrls = [...new Set((cleanedText.match(URL_REGEX) || []).map(url => {
+      let trimmed = url.trim().replace(/[.,)]+$/, ''); // Remove trailing punctuation
+      if (trimmed.startsWith('www.')) trimmed = 'https://' + trimmed;
+      // If it looks like a domain without protocol, add https
+      if (!trimmed.startsWith('http') && /^[a-z0-9.-]+\.[a-z]{2,}/i.test(trimmed)) {
+        trimmed = 'https://' + trimmed;
+      }
+      return trimmed;
+    }))]
     
     // Extract emails from mailto: links
     const mailtoMatches = [...cleanedText.matchAll(MAILTO_REGEX)]
@@ -125,6 +139,8 @@ export class CVParser {
     let github: string | null = null
     const otherLinks: string[] = []
 
+    const gitHosts = ['github.com', 'gitlab.com', 'bitbucket.org', 'github.io', 'gitlab.io']
+
     for (const url of allUrls) {
       const lowerUrl = url.toLowerCase()
       
@@ -132,7 +148,7 @@ export class CVParser {
         if (!linkedin) {
           linkedin = url.replace(/\/$/, '') // Remove trailing slash, keep first match
         }
-      } else if (lowerUrl.includes('GIT_HOST')) {
+      } else if (gitHosts.some(host => lowerUrl.includes(host))) {
         if (!github) {
           github = url.replace(/\/$/, '') // Remove trailing slash, keep first match
         }
@@ -147,7 +163,13 @@ export class CVParser {
       linkedin,
       github,
       emails: allEmails,
-      other_links: otherLinks
+      other_links: otherLinks,
+      links: {
+        linkedinUrl: linkedin,
+        githubUrl: github,
+        otherUrl: otherLinks[0] || null,
+        all_links: allUrls
+      }
     }
   }
 

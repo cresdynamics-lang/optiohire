@@ -81,18 +81,42 @@ Education Required: ${input.job.education_required || 'None'}
 CANDIDATE CV (truncated):
 ${this.truncateToTokens(input.cvText, 1200)}
 
+TECHNICAL CONTRIBUTIONS (GitHub/Portfolio):
+${JSON.stringify(input.candidateEvidence?.link_insights || [], null, 2)}
+
 Return this exact JSON:
 {
+  "is_developer": boolean,
   "found_skills": [],
   "missing_skills": [],
   "partial_skills": [],
   "experience_years_found": 0,
   "education_found": "",
-  "education_meets_requirement": false
+  "education_meets_requirement": false,
+  "links": {
+    "linkedin": null,
+    "github": null,
+    "portfolio": null,
+    "other": []
+  },
+  "contribution_verification": {
+    "verified_skills": [],
+    "claimed_but_not_found": [],
+    "summary": "..."
+  }
 }`;
 
     const extractionSystemPrompt = `You are a recruiting analysis engine. Extract and score ONLY what is asked.
 Return ONLY valid JSON. No explanation outside the JSON object.
+
+DETERMINE IF DEVELOPER:
+Look at the CV and TECHNICAL CONTRIBUTIONS. Set "is_developer" to true if they have repos, code projects, or a clear dev background.
+
+VERIFY SKILLS:
+Compare the Required Skills with their TECHNICAL CONTRIBUTIONS. 
+- "verified_skills": Skills mentioned in the CV that you can actually see proof of in their GitHub repos or technical links.
+- "claimed_but_not_found": Skills mentioned in the CV as "expert" or "primary" but have zero evidence in their contributions.
+
 Skill taxonomy categories:
 ${getCompactSkillTaxonomy()}`;
 
@@ -113,7 +137,21 @@ ${getCompactSkillTaxonomy()}`;
       // Fallback dummy
       extracted = {
         found_skills: [], missing_skills: input.job.required_skills, partial_skills: [],
-        experience_years_found: 0, education_found: 'Unknown', education_meets_requirement: false
+        experience_years_found: 0, education_found: 'Unknown', education_meets_requirement: false,
+        links: { linkedin: null, github: null, portfolio: null, other: [] },
+        is_developer: false,
+        contribution_verification: { verified_skills: [], claimed_but_not_found: [], summary: 'Extraction failed' }
+      };
+    }
+
+    // Merge AI-extracted links with regex-extracted ones from candidateEvidence
+    if (extracted.links) {
+      input.candidateEvidence = {
+        ...input.candidateEvidence,
+        linkedin: input.candidateEvidence?.linkedin || extracted.links.linkedin,
+        github: input.candidateEvidence?.github || extracted.links.github,
+        portfolio: extracted.links.portfolio || (input.candidateEvidence?.other_links?.[0] || null),
+        other_links: [...new Set([...(input.candidateEvidence?.other_links || []), ...(extracted.links.other || [])])]
       };
     }
 
@@ -156,6 +194,10 @@ Return ONLY valid JSON: { "final_reasoning": "..." }`;
       scored_at: new Date().toISOString(),
       model_used: model,
       weights_used: weights,
+      developer_verification: {
+        is_developer: extracted.is_developer,
+        contribution_analysis: extracted.contribution_verification
+      },
       skill_match: {
         score: Math.round(scores.skill_score),
         found: extracted.found_skills,
@@ -182,7 +224,8 @@ Return ONLY valid JSON: { "final_reasoning": "..." }`;
       },
       final_score: Math.round(scores.final_score),
       tier: scores.tier,
-      final_reasoning: reasoningStr
+      final_reasoning: reasoningStr,
+      candidate_links: input.candidateEvidence
     };
 
     return {
