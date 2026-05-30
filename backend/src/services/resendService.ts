@@ -116,13 +116,9 @@ export class ResendService {
       try {
         logger.debug(`Attempting to send email via Resend ${clientName} key`)
         
-        const toArray = data.to.includes(',') 
-          ? data.to.split(',').map(e => e.trim()).filter(Boolean)
-          : data.to
-
         const result = await client.emails.send({
           from: `${fromName} <${fromEmail}>`,
-          to: toArray,
+          to: data.to,
           subject: data.subject,
           html: data.html,
           text: data.text,
