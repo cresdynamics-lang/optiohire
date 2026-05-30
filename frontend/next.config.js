@@ -123,15 +123,15 @@ const nextConfig = {
     return [
       {
         source: '/api/upload/:path*',
-        destination: 'http://localhost:3001/api/upload/:path*'
+        destination: 'http://127.0.0.1:3001/api/upload/:path*'
       },
       {
         source: '/api/applications/public-submit',
-        destination: 'http://localhost:3001/api/applications/public-submit'
+        destination: 'http://127.0.0.1:3001/api/applications/public-submit'
       },
       {
         source: '/api/job-postings/public/:path*',
-        destination: 'http://localhost:3001/api/job-postings/public/:path*'
+        destination: 'http://127.0.0.1:3001/api/job-postings/public/:path*'
       }
     ]
   },

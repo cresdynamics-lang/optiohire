@@ -67,6 +67,8 @@ jobs:
             pm2 delete optiohire-backend 2>/dev/null || true
             pm2 delete optiohire-frontend 2>/dev/null || true
             pm2 start /root/optiohire/backend/dist/server.js --name optiohire-backend --env production
+            echo "=== Copying env files for standalone Next.js ==="
+            cp /root/optiohire/frontend/.env.local /root/optiohire/frontend/.next/standalone/.env.local 2>/dev/null || true
             pm2 start "node /root/optiohire/frontend/.next/standalone/server.js" --name optiohire-frontend --env production
             pm2 save
 
