@@ -37,7 +37,7 @@ export class ContributionService {
       logger.info(`🔍 Fetching GitHub insights for: ${username}`)
       
       const token = process.env.GITHUB_TOKEN
-      const headers: HeadersInit = {
+      const headers: Record<string, string> = {
         'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'OptioHire-Bot'
       }
@@ -57,7 +57,7 @@ export class ContributionService {
         return null
       }
 
-      const repos: any[] = await response.json()
+      const repos = await response.json() as any[]
       
       if (!Array.isArray(repos)) return null
 
