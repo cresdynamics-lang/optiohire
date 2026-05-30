@@ -87,7 +87,7 @@ export async function uploadPublicResume(file: File) {
   const formData = new FormData()
   formData.append('resume', file)
 
-  const response = await fetch(`${getBaseUrl()}/api/upload/public-resume`, {
+  const response = await fetch(`${getBaseUrl()}/api/upload/public-candidate-document`, {
     method: 'POST',
     body: formData
   })
