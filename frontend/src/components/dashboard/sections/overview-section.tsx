@@ -919,49 +919,43 @@ export function OverviewSection() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
+        className="pt-4"
       >
-        <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_22px_60px_-44px_rgba(15,23,42,0.42)] dark:border-gray-800 dark:bg-gray-900">
-          <CardHeader>
-            <CardTitle className="text-lg font-figtree font-extralight flex items-center gap-3 text-gray-900 dark:text-white">
-              <BarChart3 className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-              Quick Actions
-            </CardTitle>
-            <CardDescription className="text-sm font-figtree font-light text-gray-600 dark:text-gray-400">
-              Common tasks and shortcuts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {quickActions.map((action) => {
-                const Icon = action.icon
-                return (
-                  <button
-                    key={action.key}
-                    onMouseEnter={action.onHover}
-                    onClick={action.onClick}
-                    className="group"
-                    type="button"
-                  >
-                    <Card className="h-full cursor-pointer border border-slate-200 bg-slate-50/70 transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-xl dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800">
-                      <CardContent className="p-5">
-                        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-300 bg-white shadow-sm transition-transform duration-300 group-hover:scale-105 dark:border-slate-600 dark:bg-slate-900">
-                          <Icon className="h-5 w-5 text-slate-700 dark:text-slate-200" />
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{action.title}</h3>
-                          <ArrowUpRight className="h-4 w-4 text-slate-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-slate-300" />
-                        </div>
-                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                          {action.description}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </button>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-6">
+          <h2 className="text-xl font-figtree font-semibold flex items-center gap-3 text-gray-900 dark:text-white">
+            <BarChart3 className="w-5 h-5 text-[#2D2DDD]" />
+            Quick Actions
+          </h2>
+          <p className="mt-1 text-sm font-figtree font-light text-gray-600 dark:text-gray-400">
+            Common tasks and shortcuts
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {quickActions.map((action) => {
+            const Icon = action.icon
+            return (
+              <button
+                key={action.key}
+                onMouseEnter={action.onHover}
+                onClick={action.onClick}
+                className="group relative flex flex-col items-start p-6 rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#2D2DDD]/30 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#2D2DDD]/50"
+                type="button"
+              >
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-white dark:border-gray-800 dark:bg-gray-800">
+                  <Icon className="h-6 w-6 text-[#2D2DDD]" />
+                </div>
+                <div className="flex w-full items-center justify-between gap-2">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">{action.title}</h3>
+                  <ArrowUpRight className="h-4 w-4 text-slate-400 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1 dark:text-slate-500" />
+                </div>
+                <p className="mt-2 text-sm text-left text-gray-500 dark:text-gray-400 line-clamp-2">
+                  {action.description}
+                </p>
+              </button>
+            )
+          })}
+        </div>
       </motion.div>
     </div>
   )

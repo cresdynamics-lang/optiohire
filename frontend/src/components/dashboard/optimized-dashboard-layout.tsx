@@ -844,13 +844,7 @@ function DashboardContent() {
         </div>
         <div className="relative z-20 mx-auto w-full max-w-[1440px] px-3 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:p-8 lg:px-10 lg:pb-12">
           <ErrorBoundary fallback={<SectionLoader sectionName={activeSection} />}>
-            <div
-              className={
-                isJobSeeker || activeSection === 'create-job' || activeSection === 'edit-job'
-                  ? ''
-                  : 'rounded-2xl border-2 border-slate-200/90 bg-white p-4 shadow-lg shadow-slate-900/[0.07] ring-1 ring-[#2D2DDD]/15 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-950/60 dark:ring-[#2D2DDD]/25 sm:p-6 md:p-8'
-              }
-            >
+            <div className="min-w-0">
               {renderSection()}
             </div>
           </ErrorBoundary>

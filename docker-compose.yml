@@ -80,7 +80,34 @@ services:
       backend:
         condition: service_healthy
 
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: optiohire-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE=optiohire
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=optiohire_user
+      - DB_POSTGRESDB_PASSWORD=optiohire_pass_2024
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8ndata:/home/node/.n8n
+      - ./backend/storage:/app/storage:ro
+      - ./n8n-agent.json:/etc/n8n/n8n-agent.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
   redisdata:
+  n8ndata:
 
