@@ -126,8 +126,8 @@ const nextConfig = {
         destination: 'http://127.0.0.1:3001/api/upload/:path*'
       },
       {
-        source: '/api/applications/public-submit',
-        destination: 'http://127.0.0.1:3001/api/applications/public-submit'
+        source: '/api/applications/:path*',
+        destination: 'http://127.0.0.1:3001/applications/:path*'
       },
       {
         source: '/api/job-postings/public/:path*',
