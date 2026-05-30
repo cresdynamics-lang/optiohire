@@ -170,7 +170,7 @@ async function registerAndLogin(email, role, name) {
     password: PASSWORD,
     name,
     role,
-    ...(role === 'HR' ? { companyName: 'Tech Corp Test', companyRole: 'HR Manager' } : {}),
+    ...(role === 'HR' ? { company_name: 'Tech Corp Test', company_role: 'hr' } : {}),
   };
   const res = await req(`${resolvedAuthBase}${resolvedSignupPath}`, {
     method: 'POST',
