@@ -7,7 +7,7 @@ import { ApplicationRepository } from '../repositories/applicationRepository.js'
 import { CVParser } from '../lib/cv-parser.js'
 import { AIScoringEngine } from '../lib/ai-scoring.js'
 import { EmailService } from '../services/emailService.js'
-import { saveFile } from '../utils/storage.js'
+import { ContributionService } from '../services/contributionService.js'
 import { healthMonitor } from '../utils/healthMonitor.js'
 import path from 'path'
 
@@ -15,6 +15,7 @@ const applicationRepo = new ApplicationRepository()
 const cvParser = new CVParser()
 const aiScoring = new AIScoringEngine()
 const emailService = new EmailService()
+const contributionService = new ContributionService()
 
 export class AIWorker {
   private worker: Worker
@@ -75,6 +76,7 @@ export class AIWorker {
 
     let cvText = ''
     let parsedJson = null
+    let technicalInsights: any[] = []
 
     if (application.resume_url) {
       logger.info(`📄 Parsing resume for application: ${applicationId}`)
@@ -82,9 +84,25 @@ export class AIWorker {
       if (cvResult) {
         cvText = cvResult.textContent
         parsedJson = cvResult
+        
+        // Scan discovered links for technical contributions (GitHub, etc.)
+        const allLinks = [
+          cvResult.linkedin,
+          cvResult.github,
+          ...(cvResult.other_links || [])
+        ].filter(Boolean) as string[]
+        
+        if (allLinks.length > 0) {
+          logger.info(`🔍 Scanning ${allLinks.length} links for technical insights for application: ${applicationId}`)
+          technicalInsights = await contributionService.scanLinks(allLinks)
+        }
+
         await applicationRepo.updateParsedResume({
           application_id: applicationId,
-          parsed_resume_json: cvResult
+          parsed_resume_json: {
+            ...cvResult,
+            technical_insights: technicalInsights
+          }
         })
       }
     } else {
@@ -92,7 +110,7 @@ export class AIWorker {
     }
 
     logger.info(`🧠 Scoring candidate for application: ${applicationId}`)
-    const aiResult = await this.scoreCandidate(cvText, jobPosting, company, parsedJson)
+    const aiResult = await this.scoreCandidate(cvText, jobPosting, company, parsedJson, technicalInsights)
     if (!aiResult) {
       logger.error(`❌ AI scoring returned no result for application: ${applicationId}`)
       return
@@ -157,7 +175,7 @@ export class AIWorker {
     }
   }
 
-  private async scoreCandidate(cvText: string, job: any, company: any, parsedResume: any) {
+  private async scoreCandidate(cvText: string, job: any, company: any, parsedResume: any, technicalInsights: any[] = []) {
     try {
       return await aiScoring.scoreCandidate({
         job: {
@@ -179,7 +197,7 @@ export class AIWorker {
           linkedin: parsedResume?.linkedin,
           github: parsedResume?.github,
           other_links: parsedResume?.other_links || [],
-          link_insights: [] // Optional link scanning could go here
+          link_insights: technicalInsights
         }
       })
     } catch (error) {

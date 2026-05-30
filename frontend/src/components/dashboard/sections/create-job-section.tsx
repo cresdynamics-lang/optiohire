@@ -486,8 +486,7 @@ export function CreateJobSection() {
                 setShowSuccessDialog(false)
                 router.push('/dashboard/jobs')
               }}
-              className="w-full bg-slate-900 text-white h-12 rounded-xl mt-4"
-            >
+              className="w-full bg-slate-900 text-white h-12 rounded-xl mt-4"            >
               Return to Dashboard
             </Button>
           </div>

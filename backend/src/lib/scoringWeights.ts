@@ -21,6 +21,18 @@ export interface ExtractedData {
   experience_years_found: number;
   education_found: string;
   education_meets_requirement: boolean;
+  is_developer?: boolean;
+  links?: {
+    linkedin?: string | null;
+    github?: string | null;
+    portfolio?: string | null;
+    other?: string[];
+  };
+  contribution_verification?: {
+    verified_skills: string[];
+    claimed_but_not_found: string[];
+    summary: string;
+  };
 }
 
 export interface ComputedScores {
