@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { logger } from '../utils/logger.js'
 import { groqService } from '../services/ai/groqService.js'
+import { openRouterService } from '../services/ai/openRouterService.js'
 import { getCompactSkillTaxonomy } from './skillTaxonomy.js'
 import { computeScores, ExtractedData, DEFAULT_SCORING_WEIGHTS, ScoringWeights } from './scoringWeights.js'
 
@@ -30,11 +31,15 @@ export class AIScoringEngine {
   private geminiClient: GoogleGenerativeAI | null = null
   private useGemini: boolean = false
   private useGroq: boolean = false
+  private useOpenRouter: boolean = false
 
   constructor() {
     const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase()
 
-    if (provider === 'groq' && groqService.isAvailable()) {
+    if (provider === 'openrouter' && openRouterService.isAvailable()) {
+      this.useOpenRouter = true
+      logger.info('OpenRouter API initialized successfully for AI scoring')
+    } else if (provider === 'groq' && groqService.isAvailable()) {
       this.useGroq = true
       logger.info('Groq API initialized successfully for AI scoring')
     }
@@ -43,9 +48,9 @@ export class AIScoringEngine {
     if (geminiKey) {
       this.geminiClient = new GoogleGenerativeAI(geminiKey)
       this.useGemini = true
-      logger.info('Gemini API initialized successfully for AI scoring')
-    } else if (!this.useGroq) {
-      logger.warn('No AI API key found (Groq or Gemini), will use fallback rule-based scoring')
+      logger.info('Gemini API initialized successfully for AI scoring (embeddings)')
+    } else if (!this.useGroq && !this.useOpenRouter) {
+      logger.warn('No AI API key found (OpenRouter, Groq, or Gemini), will use fallback rule-based scoring')
     }
   }
 
@@ -99,7 +104,9 @@ ${getCompactSkillTaxonomy()}`;
     let extracted: ExtractedData;
 
     try {
-      if (this.useGroq) {
+      if (this.useOpenRouter) {
+        extracted = await openRouterService.generateJSON<ExtractedData>(extractionPrompt, undefined, { systemPrompt: extractionSystemPrompt });
+      } else if (this.useGroq) {
         extracted = await groqService.generateJSON<ExtractedData>(extractionPrompt, model, { systemPrompt: extractionSystemPrompt });
       } else if (this.useGemini && this.geminiClient) {
         const m = this.geminiClient.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: extractionSystemPrompt });
@@ -138,7 +145,10 @@ Return ONLY valid JSON: { "final_reasoning": "..." }`;
 
     let reasoningStr = "Candidate evaluated based on mathematical scoring model.";
     try {
-      if (this.useGroq) {
+      if (this.useOpenRouter) {
+        const r = await openRouterService.generateJSON<{final_reasoning: string}>(reasoningPrompt, undefined, { systemPrompt: "You return only JSON." });
+        if (r.final_reasoning) reasoningStr = r.final_reasoning;
+      } else if (this.useGroq) {
         const r = await groqService.generateJSON<{final_reasoning: string}>(reasoningPrompt, model, { systemPrompt: "You return only JSON." });
         if (r.final_reasoning) reasoningStr = r.final_reasoning;
       } else if (this.useGemini && this.geminiClient) {

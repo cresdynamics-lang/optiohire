@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import { groqService } from '../services/ai/groqService.js'
+import { openRouterService } from '../services/ai/openRouterService.js'
 import { logger } from '../utils/logger.js'
 
 /**
@@ -8,7 +9,13 @@ import { logger } from '../utils/logger.js'
  */
 export async function hrChat(req: Request, res: Response) {
   try {
-    if (!groqService.isAvailable()) {
+    const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase()
+    
+    if (provider === 'openrouter' && !openRouterService.isAvailable()) {
+      return res.status(503).json({
+        error: 'AI assistant is not available right now. Please check your OpenRouter API configuration and try again later.'
+      })
+    } else if (provider === 'groq' && !groqService.isAvailable()) {
       return res.status(503).json({
         error: 'AI assistant is not available right now. Please check your Groq API configuration and try again later.'
       })
@@ -71,15 +78,25 @@ RESPONSE STYLE:
       fullPrompt = `Previous conversation:\n${historyContext}\n\nCurrent question: ${question}`
     }
 
-    // Use a better model for chat if available, fallback to default
-    const chatModel = process.env.GROQ_CHAT_MODEL || process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
+    let reply: string;
     
-    const reply = await groqService.generateText(fullPrompt, chatModel, {
-      temperature: 0.7, // Slightly higher for more natural conversation
-      maxTokens: 1200, // Increased for more detailed responses
-      systemPrompt,
-      apiKey: 'secondary' // Use secondary key for chat, fallback to primary/tertiary
-    })
+    if (provider === 'openrouter' && openRouterService.isAvailable()) {
+      reply = await openRouterService.generateText(fullPrompt, undefined, {
+        temperature: 0.7,
+        maxTokens: 1200,
+        systemPrompt
+      })
+    } else if (groqService.isAvailable()) {
+      const chatModel = process.env.GROQ_CHAT_MODEL || process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
+      reply = await groqService.generateText(fullPrompt, chatModel, {
+        temperature: 0.7,
+        maxTokens: 1200,
+        systemPrompt,
+        apiKey: 'secondary'
+      })
+    } else {
+      throw new Error('No AI provider available')
+    }
 
     logger.info('HR chat response generated successfully', { questionLength: question.length, replyLength: reply.length })
 

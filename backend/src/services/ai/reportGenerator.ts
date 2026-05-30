@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { logger } from '../../utils/logger.js'
 import { groqService } from './groqService.js'
+import { openRouterService } from './openRouterService.js'
 
 export interface ApplicantData {
   id: string
@@ -118,6 +119,24 @@ Generate a JSON response with this exact structure:
 Return ONLY valid JSON, no markdown formatting.`
 
   const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase()
+
+  // Use OpenRouter when AI_PROVIDER=openrouter
+  if (provider === 'openrouter' && openRouterService.isAvailable()) {
+    try {
+      logger.info(`Using OpenRouter for report generation`)
+      const parsed = await openRouterService.generateJSON<ReportAnalysis>(prompt, undefined, {
+        systemPrompt: 'You are an expert HR analyst. Always return valid JSON only, no markdown or code blocks.',
+      })
+      if (parsed?.top3Candidates && parsed.top3Candidates.length > 3) {
+        parsed.top3Candidates = parsed.top3Candidates.slice(0, 3)
+      }
+      logger.info('OpenRouter report generation successful')
+      return parsed
+    } catch (error: any) {
+      logger.error(`OpenRouter report generation failed: ${error.message}, using fallback`)
+      return generateBasicAnalysis(job, applicants)
+    }
+  }
 
   // Use Groq when AI_PROVIDER=groq
   if (provider === 'groq' && groqService.isAvailable()) {

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { groqService } from './groqService.js'
+import { openRouterService } from './openRouterService.js'
 
 type ParsedResume = {
   personal?: { name?: string; email?: string; phone?: string }
@@ -27,6 +28,22 @@ const emptyResume = (): ParsedResume => ({
 
 export async function parseResumeText(text: string): Promise<ParsedResume> {
   const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase()
+
+  // Use OpenRouter when AI_PROVIDER=openrouter
+  if (provider === 'openrouter' && openRouterService.isAvailable()) {
+    try {
+      const systemPrompt = `You are a resume parsing engine. Extract JSON with keys:
+personal{name,email,phone}, education[{school,degree,year}], experience[{company,role,start,end,summary}],
+skills[string[]], links{github,linkedin,portfolio[string[]]}, awards[string[]], projects[{name,description,link}].
+Return ONLY strict JSON, no markdown formatting.`
+      const prompt = `Resume Text:\n${text}\n---\nExtract the structured JSON now.`
+      const parsed = await openRouterService.generateJSON<ParsedResume>(prompt, undefined, { systemPrompt })
+      return parsed || emptyResume()
+    } catch (error) {
+      console.error('OpenRouter resume parsing failed:', error)
+      return emptyResume()
+    }
+  }
 
   // Use Groq when AI_PROVIDER=groq
   if (provider === 'groq' && groqService.isAvailable()) {
