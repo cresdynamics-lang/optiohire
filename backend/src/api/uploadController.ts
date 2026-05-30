@@ -103,7 +103,7 @@ export async function uploadCompanyLogo(req: Request, res: Response) {
     // If it's a local path, convert to URL
     const publicUrl = fileUrl.startsWith('http') 
       ? fileUrl 
-      : `${process.env.PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/storage/${filename}`
+      : `https://optiohire.com/storage/${filename}`
 
     return res.json({
       success: true,
@@ -157,7 +157,7 @@ export async function uploadCandidateDocument(req: Request, res: Response) {
 
     const publicUrl = fileUrl.startsWith('http')
       ? fileUrl
-      : `${process.env.PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/storage/${filename}`
+      : `https://optiohire.com/storage/${filename}`
 
     return res.json({
       success: true,
@@ -206,7 +206,7 @@ export async function uploadPublicCandidateDocument(req: Request, res: Response)
 
     const publicUrl = fileUrl.startsWith('http')
       ? fileUrl
-      : `${process.env.PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/storage/${filename}`
+      : `https://optiohire.com/storage/${filename}`
 
     return res.json({
       success: true,
