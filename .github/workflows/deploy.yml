@@ -35,16 +35,34 @@ jobs:
             npm ci
             npm run build
 
-            echo "=== Building frontend ==="
-            cd /root/optiohire/frontend
-            npm ci --legacy-peer-deps
-            rm -rf .next
-            npm run build
-            
-            # Fix standalone missing CSS/Assets
-            cp -r public .next/standalone/ 2>/dev/null || true
-            cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
+      - name: Build frontend locally
+        run: |
+          cd frontend
+          npm ci --legacy-peer-deps
+          npm run build
+          # Fix standalone missing CSS/Assets
+          cp -r public .next/standalone/ 2>/dev/null || true
+          cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
 
+      - name: Sync frontend build to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          source: "frontend/.next/standalone,frontend/.next/static"
+          target: "/root/optiohire/frontend/.next"
+          strip_components: 2
+
+      - name: Restart services
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
             echo "=== Restarting services ==="
             pm2 delete optiohire-backend 2>/dev/null || true
             pm2 delete optiohire-frontend 2>/dev/null || true
