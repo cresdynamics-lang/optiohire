@@ -13,10 +13,11 @@ node_modules/
 .yarn/build-state.yml
 .yarn/install-state.gz
 
-# Environment files (keep examples)
+# Environment files (keep examples and production env for CI)
 .env
 .env.*
 !.env.example
+!.env.production
 **/.env
 **/.env.local
 **/.env.*.local
@@ -26,6 +27,7 @@ backend/.env
 backend/.env.*
 frontend/.env
 frontend/.env.local
+!frontend/.env.production
 frontend/start-with-node20.sh
 deploy-update.log
 

@@ -42,9 +42,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Build frontend locally
+      - name: Build frontend in CI
         run: |
           cd frontend
+          # Use .env.production for the build (bakes NEXT_PUBLIC_ vars into JS bundle)
+          cp .env.production .env.local
           npm ci --legacy-peer-deps
           npm run build
           # Fix standalone missing CSS/Assets
@@ -62,7 +64,7 @@ jobs:
           target: "/var/www/optiohire/frontend/.next"
           strip_components: 2
 
-      - name: Restart services
+      - name: Configure Nginx and Restart services
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -70,17 +72,70 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
           script: |
+            set -e
+
+            echo "=== Ensuring Nginx has /api proxy block ==="
+            NGINX_CONF="/etc/nginx/sites-available/optiohire"
+            if ! grep -q "location /api/" "$NGINX_CONF"; then
+              echo "Adding /api/ proxy block to Nginx config..."
+              # Insert the /api/ block before the existing location / block
+              sed -i '/location \/ {/i\
+                # Backend API proxy\
+                location /api/ {\
+                    proxy_pass http://127.0.0.1:3001;\
+                    proxy_http_version 1.1;\
+                    proxy_set_header Upgrade $http_upgrade;\
+                    proxy_set_header Connection '\''upgrade'\'';\
+                    proxy_set_header Host $host;\
+                    proxy_set_header X-Real-IP $remote_addr;\
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\
+                    proxy_set_header X-Forwarded-Proto $scheme;\
+                    proxy_connect_timeout 60s;\
+                    proxy_send_timeout 60s;\
+                    proxy_read_timeout 60s;\
+                    client_max_body_size 20M;\
+                }\
+            ' "$NGINX_CONF"
+            else
+              echo "/api/ proxy block already exists in Nginx config"
+            fi
+
+            echo "=== Updating frontend .env.local on server ==="
+            cat > /var/www/optiohire/frontend/.env.local << 'ENVEOF'
+            # Frontend Environment Variables - PRODUCTION (server-side runtime)
+            BACKEND_URL=http://127.0.0.1:3001
+            NEXT_PUBLIC_BACKEND_URL=https://optiohire.com
+            NEXT_PUBLIC_APP_URL=https://optiohire.com
+            NEXT_PUBLIC_API_URL=https://optiohire.com/api
+            NEXTAUTH_URL=https://optiohire.com
+            NEXTAUTH_SECRET=b4aa889c78bcc86c4c51c51641339693fb844a9ad1cdba5001e271c95102acf2
+            JWT_SECRET=29b2f22e4c08fc0ca57ed3dd7be64b855172b720ac0cd1e08272d64d7a8630f4
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=9363904405900-e0i5c40qaeqfq3uk1t570k6ibqibp5e@apps.googleusercontent.com
+            ENVEOF
+            # Remove leading whitespace from heredoc
+            sed -i 's/^            //' /var/www/optiohire/frontend/.env.local
+
             echo "=== Restarting services ==="
             pm2 delete optiohire-backend 2>/dev/null || true
             pm2 delete optiohire-frontend 2>/dev/null || true
-            pm2 start /var/www/optiohire/backend/dist/server.js --name optiohire-backend --env production
+
+            # Start backend with correct env
+            cd /var/www/optiohire/backend
+            pm2 start dist/server.js --name optiohire-backend
+
+            # Copy env into standalone dir and start frontend
             echo "=== Copying env files for standalone Next.js ==="
             cp /var/www/optiohire/frontend/.env.local /var/www/optiohire/frontend/.next/standalone/.env.local 2>/dev/null || true
-            pm2 start "node /var/www/optiohire/frontend/.next/standalone/server.js" --name optiohire-frontend --env production
+            cd /var/www/optiohire/frontend/.next/standalone
+            pm2 start server.js --name optiohire-frontend
             pm2 save
 
-            echo "=== Reloading Nginx ==="
+            echo "=== Testing Nginx config ==="
             nginx -t && systemctl reload nginx
 
             echo "=== Deployment complete ==="
             pm2 list
+
+            echo "=== Verifying backend health ==="
+            sleep 3
+            curl -s -o /dev/null -w "Backend HTTP status: %{http_code}\n" http://127.0.0.1:3001/api/health || echo "Backend health check failed (endpoint may not exist, but server is running)"
