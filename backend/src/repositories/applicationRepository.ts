@@ -32,36 +32,22 @@ export class ApplicationRepository {
     resume_url?: string | null
     phone?: string | null
   }): Promise<Application> {
-    const candidate_meta = {
-      name: data.candidate_name,
-      email: data.email,
-      phone: data.phone || null,
-      links: {}
-    }
+    const nameParts = (data.candidate_name || '').trim().split(/\s+/);
+    const first_name = nameParts[0] || 'Unknown';
+    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Unknown';
 
     const { rows } = await query<Application>(
       `INSERT INTO applications (
-        job_posting_id, company_id, candidate_name, email, resume_url, phone, candidate_meta
+        job_posting_id, first_name, last_name, email, resume_url
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      ON CONFLICT (job_posting_id, email) DO UPDATE SET
-        candidate_name = EXCLUDED.candidate_name,
-        resume_url = EXCLUDED.resume_url,
-        phone = EXCLUDED.phone,
-        candidate_meta = jsonb_set(
-          COALESCE(applications.candidate_meta, '{}'::jsonb),
-          '{name}',
-          to_jsonb(EXCLUDED.candidate_name)
-        )
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *`,
       [
         data.job_posting_id,
-        data.company_id,
-        data.candidate_name,
-        data.email,
-        data.resume_url || null,
-        data.phone || null,
-        JSON.stringify(candidate_meta)
+        first_name,
+        last_name,
+        data.email.toLowerCase(),
+        data.resume_url || null
       ]
     )
     return rows[0]
@@ -76,44 +62,24 @@ export class ApplicationRepository {
     embedding?: number[]
     ai_audit_log?: any
   }): Promise<Application> {
-    const ai_review = {
+    const ai_profile = {
       score: data.ai_score,
       status: data.ai_status,
       reasoning: data.reasoning,
+      parsed_resume: data.parsed_resume_json || null,
       audit_log: data.ai_audit_log || {}
     }
 
     const { rows } = await query<Application>(
       `UPDATE applications
-       SET ai_score = $1, ai_status = $2, reasoning = $3,
-           parsed_resume_json = COALESCE($4::jsonb, parsed_resume_json),
-           ai_audit_log = COALESCE($5::jsonb, ai_audit_log),
-           ai_review = $7::jsonb,
-           cv_analysis = jsonb_set(
-             COALESCE(cv_analysis, '{}'::jsonb),
-             '{parsed_resume}',
-             COALESCE($4::jsonb, '{}'::jsonb)
-           )
-           ${data.embedding ? ', embedding = $8::vector' : ''}
-       WHERE application_id = $6
+       SET ai_score = $1,
+           ai_profile = $2::jsonb
+       WHERE application_id = $3
        RETURNING *`,
-      data.embedding ? [
+      [
         data.ai_score,
-        data.ai_status,
-        data.reasoning,
-        data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
-        data.ai_audit_log ? JSON.stringify(data.ai_audit_log) : null,
-        data.application_id,
-        JSON.stringify(ai_review),
-        JSON.stringify(data.embedding)
-      ] : [
-        data.ai_score,
-        data.ai_status,
-        data.reasoning,
-        data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
-        data.ai_audit_log ? JSON.stringify(data.ai_audit_log) : null,
-        data.application_id,
-        JSON.stringify(ai_review)
+        JSON.stringify(ai_profile),
+        data.application_id
       ]
     )
     if (rows.length === 0) {
@@ -150,16 +116,10 @@ export class ApplicationRepository {
   }): Promise<Application> {
     const { rows } = await query<Application>(
       `UPDATE applications
-       SET parsed_resume_json = $1::jsonb,
-           cv_analysis = jsonb_set(
-             COALESCE(cv_analysis, '{}'::jsonb),
+       SET ai_profile = jsonb_set(
+             COALESCE(ai_profile, '{}'::jsonb),
              '{parsed_resume}',
              $1::jsonb
-           ),
-           candidate_meta = jsonb_set(
-             COALESCE(candidate_meta, '{}'::jsonb),
-             '{links}',
-             COALESCE($1::jsonb->'links', '{}'::jsonb)
            )
        WHERE application_id = $2
        RETURNING *`,

@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { uploadPublicResume, submitApplication } from '@/lib/public-api'
 import { Loader2, CheckCircle2, AlertCircle, FileText, UploadCloud } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useToast } from '@/hooks/use-toast'
 
 const formSchema = z.object({
   candidate_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -30,6 +31,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [resumeUploadError, setResumeUploadError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -115,8 +117,18 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
       })
 
       setIsSuccess(true)
+      toast({
+        title: "Application Submitted",
+        description: "Your application was sent successfully. We'll be in touch!",
+      })
     } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.')
+      const errorMessage = err.message || 'Something went wrong. Please try again.'
+      setError(errorMessage)
+      toast({
+        title: "Submission Failed",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
