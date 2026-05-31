@@ -23,7 +23,11 @@ export function errorHandler(err: AppError, req: Request, res: Response, next: N
   })
 
   // Determine status code
-  const statusCode = err.statusCode || 500
+  let statusCode = err.statusCode || 500
+
+  if (err.name === 'MulterError') {
+    statusCode = 400
+  }
 
   // Don't expose internal errors in production
   const isDevelopment = process.env.NODE_ENV === 'development'
