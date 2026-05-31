@@ -17,10 +17,6 @@ export interface Application {
   interview_link: string | null
   interview_status: string | null
   created_at: string
-  // Hybrid Normalized Fields
-  candidate_meta: any | null
-  cv_analysis: any | null
-  ai_review: any | null
 }
 
 export class ApplicationRepository {
@@ -32,21 +28,18 @@ export class ApplicationRepository {
     resume_url?: string | null
     phone?: string | null
   }): Promise<Application> {
-    const nameParts = (data.candidate_name || '').trim().split(/\s+/);
-    const first_name = nameParts[0] || 'Unknown';
-    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Unknown';
-
     const { rows } = await query<Application>(
       `INSERT INTO applications (
-        job_posting_id, first_name, last_name, email, resume_url
+        job_posting_id, company_id, candidate_name, email, phone, resume_url
       )
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *`,
       [
         data.job_posting_id,
-        first_name,
-        last_name,
+        data.company_id,
+        data.candidate_name,
         data.email.toLowerCase(),
+        data.phone || null,
         data.resume_url || null
       ]
     )
@@ -62,23 +55,28 @@ export class ApplicationRepository {
     embedding?: number[]
     ai_audit_log?: any
   }): Promise<Application> {
-    const ai_profile = {
-      score: data.ai_score,
-      status: data.ai_status,
-      reasoning: data.reasoning,
-      parsed_resume: data.parsed_resume_json || null,
-      audit_log: data.ai_audit_log || {}
-    }
-
     const { rows } = await query<Application>(
       `UPDATE applications
-       SET ai_score = $1,
-           ai_profile = $2::jsonb
-       WHERE application_id = $3
+       SET ai_score = $1, ai_status = $2, reasoning = $3,
+           parsed_resume_json = COALESCE($4::jsonb, parsed_resume_json),
+           ai_audit_log = COALESCE($5::jsonb, ai_audit_log)
+           ${data.embedding ? ', embedding = $6::vector' : ''}
+       WHERE application_id = $7
        RETURNING *`,
-      [
+      data.embedding ? [
         data.ai_score,
-        JSON.stringify(ai_profile),
+        data.ai_status,
+        data.reasoning,
+        data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
+        data.ai_audit_log ? JSON.stringify(data.ai_audit_log) : null,
+        JSON.stringify(data.embedding),
+        data.application_id
+      ] : [
+        data.ai_score,
+        data.ai_status,
+        data.reasoning,
+        data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
+        data.ai_audit_log ? JSON.stringify(data.ai_audit_log) : null,
         data.application_id
       ]
     )
@@ -116,11 +114,7 @@ export class ApplicationRepository {
   }): Promise<Application> {
     const { rows } = await query<Application>(
       `UPDATE applications
-       SET ai_profile = jsonb_set(
-             COALESCE(ai_profile, '{}'::jsonb),
-             '{parsed_resume}',
-             $1::jsonb
-           )
+       SET parsed_resume_json = $1::jsonb
        WHERE application_id = $2
        RETURNING *`,
       [JSON.stringify(data.parsed_resume_json), data.application_id]

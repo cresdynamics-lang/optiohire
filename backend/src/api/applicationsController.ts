@@ -59,16 +59,11 @@ export async function submitPublicApplication(req: Request, res: Response) {
     )
     if (existing.length > 0) return res.status(409).json({ error: 'Already applied' })
 
-    // Split candidate_name into first_name and last_name
-    const nameParts = candidate_name.trim().split(/\s+/);
-    const first_name = nameParts[0] || 'Unknown';
-    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Unknown';
-
     const { rows: newApp } = await query<{ application_id: string }>(
-      `INSERT INTO applications (job_posting_id, first_name, last_name, email, resume_url, cover_letter)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
        RETURNING application_id`,
-      [job_posting_id, first_name, last_name, email.toLowerCase(), resume_url, cover_letter || null]
+      [job_posting_id, jobRows[0].company_id, candidate_name, email.toLowerCase(), phone || null, resume_url, JSON.stringify({ cover_letter: cover_letter || null })]
     )
 
     const applicationId = newApp[0].application_id
@@ -106,17 +101,12 @@ export async function submitWebApplication(req: Request, res: Response) {
 
     const { company_id } = jobs[0]
 
-    // Split candidate_name into first_name and last_name
-    const nameParts = candidate_name.trim().split(/\s+/);
-    const first_name = nameParts[0] || 'Unknown';
-    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Unknown';
-
     // Create candidate application row
     const { rows: ins } = await query<{ application_id: string }>(
-      `INSERT INTO applications (job_posting_id, first_name, last_name, email, resume_url, cover_letter)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
        RETURNING application_id`,
-      [job_posting_id, first_name, last_name, email.toLowerCase(), resume_url || null, cover_letter || null]
+      [job_posting_id, company_id, candidate_name, email.toLowerCase(), phone || null, resume_url || null, JSON.stringify({ cover_letter: cover_letter || null })]
     )
 
     const applicationId = ins[0].application_id
