@@ -120,6 +120,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
       toast({
         title: "Application Submitted",
         description: "Your application was sent successfully. We'll be in touch!",
+        variant: "success",
       })
     } catch (err: any) {
       const errorMessage = err.message || 'Something went wrong. Please try again.'
@@ -127,7 +128,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
       toast({
         title: "Submission Failed",
         description: errorMessage,
-        variant: "destructive",
+        variant: "error",
       })
     } finally {
       setIsSubmitting(false)
