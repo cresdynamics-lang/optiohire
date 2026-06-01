@@ -67,16 +67,22 @@ export async function submitPublicApplication(req: Request, res: Response) {
     )
 
     const applicationId = newApp[0].application_id
-    await aiQueue.add('profile-application', { applicationId })
+    
+    try {
+      await aiQueue.add('profile-application', { applicationId })
+    } catch (queueErr: any) {
+      logger.error('Failed to queue AI profiling for public submission:', { error: queueErr?.message, applicationId })
+      // Proceed without failing the request so the candidate is still registered
+    }
 
     return res.status(201).json({ 
       success: true, 
-      message: 'Application submitted and queued for AI profiling',
+      message: 'Application submitted successfully',
       application_id: applicationId
     })
   } catch (err: any) {
-    logger.error('Error submitting public application:', err)
-    return res.status(500).json({ error: 'Failed to submit application' })
+    logger.error('Error submitting public application:', { error: err?.message, stack: err?.stack })
+    return res.status(500).json({ error: 'Failed to submit application', details: err?.message })
   }
 }
 

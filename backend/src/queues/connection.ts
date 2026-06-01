@@ -2,7 +2,7 @@ import Redis from 'ioredis'
 import RedisMock from 'ioredis-mock'
 import { logger } from '../utils/logger.js'
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
+const REDIS_URL = process.env.REDIS_URL || (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}` : 'redis://127.0.0.1:6379')
 const redisEnabled = String(process.env.REDIS_ENABLED || '').trim().toLowerCase() === 'true'
 
 export const redisConnection = redisEnabled ? new Redis(REDIS_URL, {

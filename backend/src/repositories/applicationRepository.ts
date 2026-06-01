@@ -59,24 +59,17 @@ export class ApplicationRepository {
       `UPDATE applications
        SET ai_score = $1, ai_status = $2, reasoning = $3,
            parsed_resume_json = COALESCE($4::jsonb, parsed_resume_json),
-           ai_audit_log = COALESCE($5::jsonb, ai_audit_log)
-           ${data.embedding ? ', embedding = $6::vector' : ''}
+           ai_audit_log = COALESCE($5::jsonb, ai_audit_log),
+           search_vector = COALESCE($6::vector, search_vector)
        WHERE application_id = $7
        RETURNING *`,
-      data.embedding ? [
+      [
         data.ai_score,
         data.ai_status,
         data.reasoning,
         data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
         data.ai_audit_log ? JSON.stringify(data.ai_audit_log) : null,
-        JSON.stringify(data.embedding),
-        data.application_id
-      ] : [
-        data.ai_score,
-        data.ai_status,
-        data.reasoning,
-        data.parsed_resume_json ? JSON.stringify(data.parsed_resume_json) : null,
-        data.ai_audit_log ? JSON.stringify(data.ai_audit_log) : null,
+        data.embedding ? `[${data.embedding.join(',')}]` : null,
         data.application_id
       ]
     )
