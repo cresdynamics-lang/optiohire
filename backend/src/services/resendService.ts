@@ -198,7 +198,12 @@ export class ResendService {
     for (const { name, client } of clients) {
       try {
         const domainsResponse = await client!.domains.list()
-        const domainsList = Array.isArray(domainsResponse.data) ? domainsResponse.data : []
+        let domainsList: any[] = []
+        if (Array.isArray(domainsResponse.data)) {
+          domainsList = domainsResponse.data
+        } else if (domainsResponse.data && typeof domainsResponse.data === 'object' && Array.isArray((domainsResponse.data as any).data)) {
+          domainsList = (domainsResponse.data as any).data
+        }
         logger.info(`Resend ${name} API key verified. Found ${domainsList.length} verified domain(s)`)
         
         if (domainsList.length > 0) {
@@ -262,7 +267,12 @@ export class ResendService {
 
     try {
       const domainsResponse = await client.domains.list()
-      return Array.isArray(domainsResponse.data) ? domainsResponse.data : []
+      if (Array.isArray(domainsResponse.data)) {
+        return domainsResponse.data
+      } else if (domainsResponse.data && typeof domainsResponse.data === 'object' && Array.isArray((domainsResponse.data as any).data)) {
+        return (domainsResponse.data as any).data
+      }
+      return []
     } catch (error: any) {
       logger.error(`Failed to list domains: ${error.message}`)
       throw error
