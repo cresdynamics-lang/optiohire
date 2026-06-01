@@ -1,8 +1,14 @@
 import { Client } from 'ssh2';
 
-const HOST = process.env.SSH_HOST || 'YOUR_SERVER_IP';
+import { readFileSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PRIVATE_KEY = readFileSync(resolve(__dirname, 'optiohire_server_key'), 'utf8');
+
+const HOST = process.env.SSH_HOST || '67.205.164.114';
 const USER = process.env.SSH_USER || 'root';
-const PASSWORD = process.env.SSH_PASSWORD;
 
 function runRemote(conn, command) {
   return new Promise((resolve, reject) => {
@@ -39,7 +45,7 @@ async function deploy() {
     conn
       .on('ready', resolve)
       .on('error', reject)
-      .connect({ host: HOST, port: 22, username: USER, password: PASSWORD, readyTimeout: 20000 });
+      .connect({ host: HOST, port: 22, username: USER, privateKey: PRIVATE_KEY, readyTimeout: 20000 });
   });
 
   console.log('\n✅ Connected to server!\n');
@@ -93,6 +99,9 @@ async function deploy() {
     console.log('\n📦 === BUILDING BACKEND ===');
     await runRemote(conn, 'cd /root/optiohire/backend && npm ci && npm run build');
 
+    console.log('\n🗄️ === MIGRATING CANDIDATE SCHEMA ===');
+    await runRemote(conn, 'docker exec -i optiohire-postgres psql -U root -d optiohire < /root/optiohire/backend/src/db/candidate_schema.sql || echo "Schema migration skipped or failed"');
+
     // --- 5. Install & Build Frontend ---
     console.log('\n🎨 === BUILDING FRONTEND ===');
     await runRemote(conn, 'cd /root/optiohire/frontend && npm ci --legacy-peer-deps && npm run build');
@@ -133,6 +142,17 @@ async function deploy() {
 server {
     listen 80;
     server_name optiohire.com www.optiohire.com;
+
+    # Next.js Static Assets
+    location ^~ /_next/static {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
 
     # Frontend
     location / {

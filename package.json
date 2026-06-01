@@ -22,6 +22,7 @@
   "description": "HireBit Recruitment System - Monorepo",
   "workspaces": [],
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "groq-sdk": "^0.37.0",
     "node-ssh": "^13.2.1"
   },
