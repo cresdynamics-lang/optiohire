@@ -55,6 +55,8 @@ import {
   updateWorkflow
 } from '../api/adminControllerExtended.js'
 
+
+
 export const router = Router()
 
 // All admin routes require authentication and admin role
@@ -129,6 +131,9 @@ router.get('/telemetry/activity', getActivityTelemetry)
 // Workflow Management
 router.get('/workflows', getWorkflows)
 router.patch('/workflows/:workflowId', updateWorkflow)
+
+// Certificate Management
+
 
 // Enhanced Analytics
 import { getEnhancedStats, getTimeSeriesAnalytics } from '../api/adminAnalyticsController.js'

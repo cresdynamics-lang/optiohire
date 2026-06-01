@@ -25,6 +25,7 @@ import { router as resendRouter } from './routes/resend.js'
 import { router as uploadRouter } from './routes/upload.js'
 import { router as webhooksRouter } from './routes/webhooks.js'
 import { router as templatesRouter } from './routes/templates.js'
+
 import { ensureStorageDir } from './utils/storage.js'
 import { logger } from './utils/logger.js'
 import path from 'path'
@@ -118,6 +119,7 @@ app.use('/contact', contactRouter)
 app.use('/auth', authRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/user', userRouter)
+
 app.use('/api/user/preferences', userPreferencesRouter)
 app.use('/api/upload', uploadRouter)
 app.use('/api/templates', templatesRouter)
