@@ -1725,7 +1725,8 @@ The OptioHire Team
       }
 
       await this.logEmail(data.to, data.subject, 'failed', errorMsg)
-      throw error
+      // Do not throw error here to fail gracefully and prevent job crashes
+      logger.warn(`Gracefully handled email failure to ${data.to}`);
     }
   }
 

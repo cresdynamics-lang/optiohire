@@ -161,12 +161,24 @@ export class AIWorker {
 
   private async parseResume(resumeUrl: string) {
     try {
-      // In a real scenario, we'd fetch the file from storage/S3
-      // For now, we assume local file access for simplicity if resumeUrl is a path
-      const fullPath = path.join(process.cwd(), 'storage', resumeUrl.replace(/^cvs\//, 'cvs/'))
-      const fs = await import('fs/promises')
-      const buffer = await fs.readFile(fullPath)
-      const mime = resumeUrl.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      let buffer: Buffer;
+      let mime = resumeUrl.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      if (resumeUrl.startsWith('http://') || resumeUrl.startsWith('https://')) {
+        logger.info(`🌐 Fetching remote resume: ${resumeUrl}`);
+        const response = await fetch(resumeUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch remote resume: ${response.statusText}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        buffer = Buffer.from(arrayBuffer);
+      } else {
+        // In a real scenario, we'd fetch the file from storage/S3
+        // For now, we assume local file access for simplicity if resumeUrl is a path
+        const fullPath = path.join(process.cwd(), 'storage', resumeUrl.replace(/^cvs\//, 'cvs/'))
+        const fs = await import('fs/promises')
+        buffer = await fs.readFile(fullPath)
+      }
       
       return await cvParser.parseCVBuffer(buffer, mime)
     } catch (error) {
