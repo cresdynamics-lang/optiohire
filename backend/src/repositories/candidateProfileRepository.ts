@@ -1,0 +1,103 @@
+import { query } from '../db/index.js'
+
+export interface CandidateProfile {
+  profile_id: string
+  user_id: string
+  total_score: number
+  active_learning_path: string | null
+  metadata: any
+  created_at: string
+  updated_at: string
+}
+
+export interface CandidateSkill {
+  skill_id: string
+  profile_id: string
+  skill_name: string
+  proficiency_score: number
+  is_verified: boolean
+  verified_at: string | null
+  certificate_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface JobRecommendation {
+  recommendation_id: string
+  profile_id: string
+  job_posting_id: string
+  match_score: number
+  match_reason: string | null
+  missing_skills: any
+  created_at: string
+}
+
+export class CandidateProfileRepository {
+  async getProfileByUserId(userId: string): Promise<CandidateProfile | null> {
+    const { rows } = await query<CandidateProfile>(
+      `SELECT * FROM candidate_profiles WHERE user_id = $1 LIMIT 1`,
+      [userId]
+    )
+    return rows[0] || null
+  }
+
+  async createProfile(userId: string): Promise<CandidateProfile> {
+    const { rows } = await query<CandidateProfile>(
+      `INSERT INTO candidate_profiles (user_id, total_score)
+       VALUES ($1, 0)
+       ON CONFLICT (user_id) DO UPDATE SET updated_at = NOW()
+       RETURNING *`,
+      [userId]
+    )
+    return rows[0]
+  }
+
+  async getSkills(profileId: string): Promise<CandidateSkill[]> {
+    const { rows } = await query<CandidateSkill>(
+      `SELECT * FROM candidate_skills WHERE profile_id = $1 ORDER BY proficiency_score DESC`,
+      [profileId]
+    )
+    return rows
+  }
+
+  async addSkill(profileId: string, skillName: string, score: number = 0): Promise<CandidateSkill> {
+    const { rows } = await query<CandidateSkill>(
+      `INSERT INTO candidate_skills (profile_id, skill_name, proficiency_score)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (profile_id, skill_name) DO UPDATE SET
+         proficiency_score = EXCLUDED.proficiency_score,
+         updated_at = NOW()
+       RETURNING *`,
+      [profileId, skillName, score]
+    )
+    return rows[0]
+  }
+
+  async updateSkillScore(skillId: string, additionalScore: number, isVerified: boolean = false, certificateUrl: string | null = null): Promise<CandidateSkill> {
+    const { rows } = await query<CandidateSkill>(
+      `UPDATE candidate_skills
+       SET proficiency_score = proficiency_score + $2,
+           is_verified = $3,
+           verified_at = CASE WHEN $3 = true THEN NOW() ELSE verified_at END,
+           certificate_url = COALESCE($4, certificate_url),
+           updated_at = NOW()
+       WHERE skill_id = $1
+       RETURNING *`,
+      [skillId, additionalScore, isVerified, certificateUrl]
+    )
+    if (rows.length === 0) throw new Error('Skill not found')
+    
+    // Also boost total profile score
+    await query(`UPDATE candidate_profiles SET total_score = total_score + $2 WHERE profile_id = $1`, [rows[0].profile_id, additionalScore])
+    
+    return rows[0]
+  }
+
+  async getRecommendations(profileId: string): Promise<JobRecommendation[]> {
+    const { rows } = await query<JobRecommendation>(
+      `SELECT * FROM job_recommendations WHERE profile_id = $1 ORDER BY match_score DESC LIMIT 10`,
+      [profileId]
+    )
+    return rows
+  }
+}
