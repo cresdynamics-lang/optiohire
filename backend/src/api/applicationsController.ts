@@ -81,8 +81,8 @@ export async function submitPublicApplication(req: Request, res: Response) {
       application_id: applicationId
     })
   } catch (err: any) {
-    logger.error('Error submitting public application:', { error: err?.message, stack: err?.stack })
-    return res.status(500).json({ error: 'Failed to submit application', details: err?.message })
+    logger.error('Error submitting public application:', { err })
+    return res.status(500).json({ error: 'Failed to submit application', details: String(err), stack: err?.stack })
   }
 }
 
