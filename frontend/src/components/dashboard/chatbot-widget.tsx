@@ -414,13 +414,13 @@ export function ChatbotWidget() {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="h-20 w-20 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl hover:shadow-xl transition-all flex items-center justify-center hover:scale-110 active:scale-95"
+            className="h-20 w-20 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-2xl hover:shadow-xl transition-all flex items-center justify-center hover:scale-110 active:scale-95"
             aria-label="Open AI Agent"
           >
             <img
               src="/assets/logo/logo-removebg-preview.png"
               alt="OptioHire AI"
-              className="w-14 h-14 object-contain"
+              className="w-12 h-12 object-contain invert brightness-0"
             />
           </button>
         </div>
