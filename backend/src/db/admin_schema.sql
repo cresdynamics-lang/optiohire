@@ -189,42 +189,6 @@ INSERT INTO workflow_config (workflow_name, workflow_type, is_active, config, de
 ON CONFLICT (workflow_name) DO NOTHING;
 
 -- ============================================================================
--- SUPPORT TICKETS TABLE
--- ============================================================================
-CREATE TABLE IF NOT EXISTS support_tickets (
-  ticket_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES users(user_id) ON DELETE SET NULL,
-  user_email text NOT NULL,
-  subject text,
-  message text NOT NULL,
-  status text NOT NULL DEFAULT 'open', -- 'open', 'in_progress', 'resolved', 'closed'
-  priority text NOT NULL DEFAULT 'normal', -- 'low', 'normal', 'high', 'urgent'
-  context_data jsonb DEFAULT '{}'::jsonb, -- Store the active URL, page title, recent error
-  assigned_admin_id uuid REFERENCES users(user_id) ON DELETE SET NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status);
-CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(user_id);
-CREATE INDEX IF NOT EXISTS idx_support_tickets_created ON support_tickets(created_at DESC);
-
--- Trigger to update updated_at
-CREATE OR REPLACE FUNCTION update_support_tickets_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_support_tickets_updated_at ON support_tickets;
-CREATE TRIGGER trg_support_tickets_updated_at
-  BEFORE UPDATE ON support_tickets
-  FOR EACH ROW
-  EXECUTE FUNCTION update_support_tickets_updated_at();
-
--- ============================================================================
 -- COMMENTS
 -- ============================================================================
 COMMENT ON TABLE admin_action_logs IS 'Logs all admin actions for audit trail';
@@ -233,5 +197,3 @@ COMMENT ON TABLE system_settings IS 'System-wide configuration and feature flags
 COMMENT ON TABLE time_tracking IS 'Tracks user activity, API calls, and performance metrics';
 COMMENT ON TABLE signup_queue IS 'Queue for pending user signups awaiting approval';
 COMMENT ON TABLE workflow_config IS 'Workflow configurations for email, approval, and notification flows';
-COMMENT ON TABLE support_tickets IS 'Tracks HR support requests submitted via the Agent UI';
-
