@@ -424,17 +424,16 @@ export function CreateJobSection() {
 
       {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md bg-white border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
-          <div className="bg-indigo-600 p-12 flex flex-col items-center justify-center text-white">
+        <DialogContent className="sm:max-w-lg bg-white border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+          <div className="bg-indigo-600 p-10 sm:p-14 flex flex-col items-center justify-center text-white">
             <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-6">
               <CheckCircle className="w-12 h-12 text-white" />
             </div>
             <h2 className="text-3xl font-bold text-center">Published!</h2>
-            <p className="text-indigo-100 text-center mt-2">Your job posting is now live and ready for applicants.</p>
+            <p className="text-indigo-100 text-center mt-3 text-lg leading-relaxed">Your job posting is now live and ready for applicants.</p>
           </div>
-          
-          <div className="p-8 space-y-6">
-            <div className="space-y-6">
+
+          <div className="p-10 space-y-8">            <div className="space-y-6">
               {/* Share Link */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
