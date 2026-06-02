@@ -82,9 +82,11 @@ jobs:
             NEXT_PUBLIC_APP_URL=https://optiohire.com
             NEXT_PUBLIC_API_URL=https://optiohire.com/api
             NEXTAUTH_URL=https://optiohire.com
-            NEXTAUTH_SECRET=b4aa889c78bcc86c4c51c51641339693fb844a9ad1cdba5001e271c95102acf2
-            JWT_SECRET=29b2f22e4c08fc0ca57ed3dd7be64b855172b720ac0cd1e08272d64d7a8630f4
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=9363904405900-e0i5c40qaeqfq3uk1t570k6ibqibp5e@apps.googleusercontent.com
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DB_SSL=false
             ENVEOF
             # Remove leading whitespace from heredoc
             sed -i 's/^            //' /var/www/optiohire/frontend/.env.local

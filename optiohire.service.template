@@ -14,6 +14,7 @@ Environment=FRONTEND_URL=https://optiohire.com
 Environment=CORS_ORIGINS=https://optiohire.com,https://www.optiohire.com
 EnvironmentFile=-{{WORKING_DIR}}/.env
 EnvironmentFile=-{{WORKING_DIR}}/backend/.env
+EnvironmentFile=-{{WORKING_DIR}}/frontend/.env
 # Native direct execution
 ExecStart={{NODE_PATH}} {{WORKING_DIR}}/node_modules/.bin/concurrently -n "backend,frontend" -c "blue,green" "node -r newrelic backend/dist/server.js" "PORT=3000 node frontend/.next/standalone/server.js"
 Restart=always
