@@ -156,3 +156,6 @@ router.get('/debug/test-db', testDatabaseConnection)
 router.get('/debug/test-redis', testRedisConnection)
 router.post('/debug/clear-cache', clearCache)
 
+// Support Tickets (HR to Admin)
+import { getSupportTickets } from '../api/supportController.js'
+router.get('/support-tickets', authenticate, requireAdmin, getSupportTickets)

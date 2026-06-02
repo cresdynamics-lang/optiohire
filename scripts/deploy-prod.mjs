@@ -100,11 +100,14 @@ async function deploy() {
     await runRemote(conn, 'cd /root/optiohire/backend && npm ci && npm run build');
 
     console.log('\n🗄️ === MIGRATING CANDIDATE SCHEMA ===');
-    await runRemote(conn, 'docker exec -i optiohire-postgres psql -U root -d optiohire < /root/optiohire/backend/src/db/candidate_schema.sql || echo "Schema migration skipped or failed"');
+    await runRemote(conn, `
+      DB_URL=$(grep DATABASE_URL /root/optiohire/backend/.env | cut -d= -f2-)
+      psql $DB_URL < /root/optiohire/backend/src/db/candidate_schema.sql || echo "Schema migration skipped or failed"
+    `);
 
     // --- 5. Install & Build Frontend ---
     console.log('\n🎨 === BUILDING FRONTEND ===');
-    await runRemote(conn, 'cd /root/optiohire/frontend && npm ci --legacy-peer-deps && npm run build');
+    await runRemote(conn, 'cd /root/optiohire/frontend && rm -rf node_modules && npm ci --legacy-peer-deps && npm run build');
 
     // --- 6. Check PM2 ---
     console.log('\n🔄 === CHECKING PM2 ===');

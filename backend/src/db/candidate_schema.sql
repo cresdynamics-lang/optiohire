@@ -98,7 +98,7 @@ CREATE INDEX IF NOT EXISTS idx_certificate_approvals_skill ON certificate_approv
 CREATE TABLE IF NOT EXISTS job_recommendations (
   recommendation_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
-  job_posting_id uuid NOT NULL REFERENCES job_postings(id) ON DELETE CASCADE,
+  job_posting_id uuid NOT NULL REFERENCES job_postings(job_posting_id) ON DELETE CASCADE,
   match_score integer NOT NULL,
   match_reason text,
   missing_skills jsonb DEFAULT '[]'::jsonb,
