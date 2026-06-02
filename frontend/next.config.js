@@ -132,6 +132,10 @@ const nextConfig = {
       {
         source: '/api/job-postings/public/:path*',
         destination: 'http://127.0.0.1:3001/api/job-postings/public/:path*'
+      },
+      {
+        source: '/api/hr/:path*',
+        destination: 'http://127.0.0.1:3001/api/hr/:path*'
       }
     ]
   },
