@@ -10,7 +10,8 @@ import { query } from '../db/index.js'
 import { parseTemplate } from '../utils/templateParser.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
-const DEFAULT_FROM_EMAIL = process.env.MAIL_FROM || process.env.DEFAULT_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'jobs@optiohire.com'
+const DEFAULT_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+const DEFAULT_FROM_NAME = process.env.RESEND_FROM_NAME || 'OptioHire'
 const MAX_EMAIL_RETRY_ATTEMPTS = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
 const EMAIL_RETRY_BASE_DELAY_SEC = Number(process.env.EMAIL_RETRY_BASE_DELAY_SEC || 30)
 
@@ -651,6 +652,7 @@ HireBit System
     await this.sendEmail({
       to: data.hrEmail,
       from: DEFAULT_FROM_EMAIL,
+      fromName: DEFAULT_FROM_NAME,
       subject: `New Applicant Received for ${data.jobTitle}`,
       html,
       text,

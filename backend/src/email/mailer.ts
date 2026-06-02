@@ -8,7 +8,7 @@ declare const process: {
   }
 }
 
-const from = 'jobs@optiohire.com'
+const from = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
 const host = process.env.SMTP_HOST || 'smtp.gmail.com'
 const port = Number(process.env.SMTP_PORT || 587)
 const user = process.env.SMTP_USER || from // Default to applicationsoptiohire@gmail.com
