@@ -80,9 +80,9 @@ async function deploy() {
       console.log('\n📥 === CLONING REPO ===');
       await runRemote(conn, 'cd /root && git clone YOUR_GIT_REPO_URL optiohire');
     } else {
-      // Pull latest
+      // Pull latest (force)
       console.log('\n⬇️  === PULLING LATEST CODE ===');
-      await runRemote(conn, 'cd /root/optiohire && git checkout main && git pull origin main');
+      await runRemote(conn, 'cd /root/optiohire && git checkout main && git reset --hard HEAD && git pull origin main');
     }
 
     // --- 3. Copy ENV files from old location if needed ---
