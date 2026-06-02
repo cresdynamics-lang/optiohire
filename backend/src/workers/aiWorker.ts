@@ -1,5 +1,5 @@
 import { Worker, Job } from 'bullmq'
-import { redisConnection } from '../queues/connection.js'
+import { redisConnection, isRedisEnabled } from '../queues/connection.js'
 import { AI_QUEUE_NAME } from '../queues/aiQueue.js'
 import { logger } from '../utils/logger.js'
 import { query } from '../db/index.js'

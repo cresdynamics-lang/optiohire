@@ -39,6 +39,12 @@ export class MaintenanceWorker {
       },
       { connection: redisConnection, concurrency: 1 }
     )
+
+    this.worker.on('failed', async (job, err) => {
+      const taskKey = job ? `worker.maintenance.${job.name.replace(/-/g, '.')}` : 'worker.maintenance.unknown';
+      logger.error(`❌ Maintenance task #${job?.id} failed:`, { message: err.message })
+      await healthMonitor.updateStatus(taskKey, 'error', err.message, { lastFailedJobId: job?.id });
+    })
   }
 
   private async pollEmails() {
