@@ -98,13 +98,31 @@ function renderInline(text: string): (string | JSX.Element)[] {
 // Typing dots animation component
 function TypingDots() {
   return (
-    <div className="flex items-center gap-1 px-4 py-3">
-      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+    <div className="flex items-center gap-1 px-4 py-3 h-full">
+      <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+      <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+      <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" />
     </div>
   )
 }
+
+const getDynamicSuggestions = () => {
+  if (typeof window === 'undefined') return ['Screen candidates', 'Fix an issue', 'Create shortlist', 'Explain scores']
+  const path = window.location.pathname
+  
+  if (path.includes('/candidates')) {
+    return ['Filter by experience', 'Schedule interview', 'Show top candidates', 'Reject all unqualified']
+  }
+  if (path.includes('/jobs')) {
+    return ['Create new job posting', 'Close this job', 'Analyze applicants', 'Update job description']
+  }
+  if (path.includes('/settings')) {
+    return ['Update company profile', 'Manage users', 'Change password', 'Integration settings']
+  }
+  
+  return ['Screen candidates', 'Create new job', 'Fix an issue', 'Explain candidate scores']
+}
+
 
 export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false)
@@ -396,13 +414,13 @@ export function ChatbotWidget() {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="h-14 w-14 rounded-full bg-[#2D2DDD] hover:bg-[#2424c0] text-white shadow-2xl hover:shadow-xl transition-all flex items-center justify-center hover:scale-110 active:scale-95"
+            className="h-20 w-20 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl hover:shadow-xl transition-all flex items-center justify-center hover:scale-110 active:scale-95"
             aria-label="Open AI Agent"
           >
             <img
               src="/assets/logo/logo-removebg-preview.png"
               alt="OptioHire AI"
-              className="w-8 h-8 object-contain invert brightness-0 invert"
+              className="w-14 h-14 object-contain"
             />
           </button>
         </div>
@@ -416,21 +434,19 @@ export function ChatbotWidget() {
           }`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#2424c0]/30 bg-gradient-to-r from-[#2D2DDD] to-[#5b5bf5] text-white">
-            <div className="flex items-center gap-3">
-              {/* OptioHire Logo - transparent background version */}
-              <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center">
-                <img
-                  src="/assets/logo/logo-removebg-preview.png"
-                  alt="OptioHire"
-                  className="w-7 h-7 object-contain"
-                />
-              </div>
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+            <div className="flex items-center gap-4">
+              {/* OptioHire Logo - standing on its own, large */}
+              <img
+                src="/assets/logo/logo-removebg-preview.png"
+                alt="OptioHire"
+                className="w-16 h-16 object-contain"
+              />
               <div>
-                <p className="text-base font-bold leading-tight">OptioHire Agent</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                  <p className="text-[11px] text-white/80">AI-powered HR assistant</p>
+                <p className="text-lg font-extrabold leading-tight tracking-tight">OptioHire Agent</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">AI-powered HR assistant</p>
                 </div>
               </div>
             </div>
@@ -438,44 +454,44 @@ export function ChatbotWidget() {
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
                 aria-label={isExpanded ? 'Collapse' : 'Expand'}
               >
-                {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                {isExpanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
               </button>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
                 aria-label="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2 pt-2 gap-1">
+          <div className="flex border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/80 px-4 py-4 gap-3">
             <button
-              className={`flex items-center gap-1.5 flex-1 py-2.5 text-sm font-semibold rounded-t-lg transition-all ${
+              className={`flex items-center justify-center gap-2 flex-1 py-3.5 text-[15px] font-bold rounded-xl transition-all border-2 ${
                 activeTab === 'chat'
-                  ? 'bg-[#2D2DDD] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'border-purple-600 bg-white dark:bg-gray-800 text-purple-700 dark:text-purple-400 shadow-md transform scale-[1.02]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 hover:scale-[1.01]'
               }`}
               onClick={() => setActiveTab('chat')}
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-4 h-4" />
               Ask AI Agent
             </button>
             <button
-              className={`flex items-center gap-1.5 flex-1 py-2.5 text-sm font-semibold rounded-t-lg transition-all ${
+              className={`flex items-center justify-center gap-2 flex-1 py-3.5 text-[15px] font-bold rounded-xl transition-all border-2 ${
                 activeTab === 'support'
-                  ? 'bg-[#2D2DDD] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'border-purple-600 bg-white dark:bg-gray-800 text-purple-700 dark:text-purple-400 shadow-md transform scale-[1.02]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 hover:scale-[1.01]'
               }`}
               onClick={() => setActiveTab('support')}
             >
-              <Headphones className="w-3.5 h-3.5" />
+              <Headphones className="w-4 h-4" />
               Contact Support
             </button>
           </div>
@@ -502,20 +518,20 @@ export function ChatbotWidget() {
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         {msg.role === 'assistant' && (
-                          <div className="relative w-8 h-8 rounded-full bg-[#2D2DDD] flex items-center justify-center mr-2 flex-shrink-0 mt-1 shadow-md">
+                          <div className="relative w-10 h-10 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
                             <img
                               src="/assets/logo/logo-removebg-preview.png"
                               alt="AI"
-                              className="w-5 h-5 object-contain"
+                              className="w-10 h-10 object-contain drop-shadow-sm"
                             />
-                            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 border-2 border-white rounded-full" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full shadow-sm" />
                           </div>
                         )}
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm border ${
+                          className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm border ${
                             msg.role === 'user'
-                              ? 'bg-[#2D2DDD] text-white rounded-br-sm border-[#2424c0] whitespace-pre-wrap text-[13px] leading-relaxed'
-                              : `${colorScheme.bubble} dark:bg-gray-800 dark:border-gray-700 rounded-bl-sm`
+                              ? 'bg-purple-600 text-white rounded-br-sm border-purple-700 whitespace-pre-wrap text-[14px] leading-relaxed'
+                              : `${colorScheme.bubble} dark:bg-gray-800 dark:border-gray-700 rounded-bl-sm text-[14px]`
                           }`}
                         >
                           {msg.role === 'user'
@@ -523,7 +539,7 @@ export function ChatbotWidget() {
                             : renderMessageContent(msg.content, msg.colorIndex ?? 0)
                           }
                           {msg.role === 'user' && (
-                            <p className="text-[10px] text-white/60 mt-1 text-right">Sent</p>
+                            <p className="text-[11px] text-white/70 mt-1.5 text-right font-medium">Sent</p>
                           )}
                         </div>
                       </div>
@@ -533,14 +549,14 @@ export function ChatbotWidget() {
                   {/* Typing animation */}
                   {isTyping && (
                     <div className="flex justify-start">
-                      <div className="w-8 h-8 rounded-full bg-[#2D2DDD] flex items-center justify-center mr-2 flex-shrink-0 mt-1 shadow-md">
+                      <div className="w-10 h-10 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
                         <img
                           src="/assets/logo/logo-removebg-preview.png"
                           alt="AI"
-                          className="w-5 h-5 object-contain"
+                          className="w-10 h-10 object-contain drop-shadow-sm"
                         />
                       </div>
-                      <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl rounded-bl-sm shadow-sm">
+                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-bl-sm shadow-sm">
                         <TypingDots />
                       </div>
                     </div>
@@ -551,12 +567,12 @@ export function ChatbotWidget() {
 
                 {/* Quick action chips */}
                 {messages.length === 1 && (
-                  <div className="px-4 pb-2 flex flex-wrap gap-2">
-                    {['Screen candidates', 'Fix an issue', 'Create shortlist', 'Explain scores'].map((chip) => (
+                  <div className="px-5 pb-3 flex flex-wrap gap-2.5">
+                    {getDynamicSuggestions().map((chip) => (
                       <button
                         key={chip}
                         onClick={() => { setInput(chip); }}
-                        className="text-xs font-semibold text-[#2D2DDD] border border-[#2D2DDD]/30 bg-white hover:bg-[#2D2DDD] hover:text-white px-3 py-1.5 rounded-full transition-all shadow-sm"
+                        className="text-[13px] font-bold text-purple-700 border-2 border-purple-200 bg-purple-50 hover:bg-purple-600 hover:border-purple-600 hover:text-white px-4 py-2 rounded-full transition-all shadow-sm"
                       >
                         {chip}
                       </button>
@@ -564,14 +580,14 @@ export function ChatbotWidget() {
                   </div>
                 )}
 
-                <div className="border-t border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900">
-                  <div className="flex items-end gap-2 relative">
+                <div className="border-t border-gray-200 dark:border-gray-800 p-5 bg-white dark:bg-gray-900">
+                  <div className="flex items-end gap-3 relative">
                     <textarea
                       rows={isExpanded ? 3 : 1}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 pr-12 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D2DDD]/40 transition-shadow"
+                      className="flex-1 resize-none rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3.5 pr-14 text-[15px] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/40 transition-shadow"
                       placeholder="Ask the agent anything..."
                     />
                     <Button
@@ -579,12 +595,12 @@ export function ChatbotWidget() {
                       size="icon"
                       disabled={isSending || !input.trim()}
                       onClick={handleSendChat}
-                      className="absolute right-2 bottom-2 h-9 w-9 rounded-lg bg-[#2D2DDD] hover:bg-[#2424c0] text-white disabled:opacity-40 transition-all hover:scale-105 active:scale-95"
+                      className="absolute right-2 bottom-2 h-10 w-10 rounded-lg bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-40 transition-all hover:scale-105 active:scale-95 shadow-md"
                     >
                       {isSending ? (
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <Send className="w-4 h-4 ml-0.5" />
+                        <Send className="w-5 h-5 ml-0.5" />
                       )}
                     </Button>
                   </div>
