@@ -62,8 +62,11 @@ function ResetPasswordContent() {
 
   const verifyCode = async (emailToVerify: string, codeToVerify: string) => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/auth/verify-reset-code`, {
+      const apiUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/api/auth/verify-reset-code`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/verify-reset-code`
+        
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,8 +95,11 @@ function ResetPasswordContent() {
     setError(null)
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/auth/reset-password`, {
+      const apiUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/api/auth/reset-password`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/reset-password`
+        
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

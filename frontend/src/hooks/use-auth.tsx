@@ -297,14 +297,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     hiring_manager_email: string
   ) => {
     try {
-      // Don't set global loading here - it can cause AuthProvider to re-render and remount the signup form
-      // Call backend directly to avoid dev-time Next API compilation lag on signup.
-      const backendUrl = getBackendBaseUrl()
-      if (!backendUrl) {
-        return { error: { message: 'Backend URL is not configured. Please set NEXT_PUBLIC_BACKEND_URL.' } }
-      }
+      // Use same-origin proxy (server resolves BACKEND_URL) — avoids CORS and 405 errors on production.
+      const signUpUrl =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/api/auth/signup`
+          : `${getBackendBaseUrl() || 'http://localhost:3001'}/auth/signup`
+          
       const normalizedSignupRole = normalizeCompanyRole(company_role) || company_role
-      const resp = await fetch(`${backendUrl}/auth/signup`, {
+      const resp = await fetch(signUpUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
