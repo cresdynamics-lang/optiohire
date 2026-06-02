@@ -42,8 +42,11 @@ export default function ForgotPasswordPage() {
     setSuccess(false)
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/auth/forgot-password`, {
+      const apiUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/api/auth/forgot-password`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/forgot-password`
+        
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,8 +93,11 @@ export default function ForgotPasswordPage() {
     setError(null)
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/auth/verify-reset-code`, {
+      const apiUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/api/auth/verify-reset-code`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/verify-reset-code`
+        
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

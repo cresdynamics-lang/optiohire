@@ -43,8 +43,11 @@ function VerifyEmailContent() {
     setResendMessage(null)
     setError(null)
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/auth/send-signup-verification-email`, {
+      const apiUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}/api/auth/send-signup-verification-email`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/send-signup-verification-email`
+        
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name: email.split('@')[0] })
@@ -72,8 +75,11 @@ function VerifyEmailContent() {
     setIsLoading(true)
     setError(null)
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/auth/verify-email`, {
+      const apiUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/api/auth/verify-email`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/verify-email`
+        
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: data.code })
