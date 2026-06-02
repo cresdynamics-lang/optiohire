@@ -769,7 +769,9 @@ HireBit System
 <body>
 <div class="wrap">
   <div class="hdr">
-    <div style="display:flex;align-items:center;gap:9px"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="#1e3a5c"/><circle cx="16" cy="13" r="5" stroke="#60aaf0" stroke-width="2" fill="none"/><path d="M9 26c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="16" cy="13" r="2" fill="#60aaf0"/></svg><span style="font-family:DM Sans,Arial,sans-serif;font-size:16px;font-weight:600;color:#d4e8ff;letter-spacing:-0.02em">OptioHire</span></div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <img src="https://optiohire.com/assets/logo/logo-removebg-preview.png" alt="OptioHire Logo" style="height: 32px; width: auto;" />
+    </div>
     <span class="hdr-badge">Job Confirmation</span>
   </div>
   <div class="status-bar">
@@ -814,7 +816,7 @@ HireBit System
       <span class="share-box-tag">Copy &amp; share this</span>
       <div class="share-text">
         <p>We are hiring for a <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong>!</p>
-        <p>To apply, send an email to <strong>${APPLICATION_INBOX_EMAIL}</strong> and follow these exact steps:</p>
+        <p>To apply, send an email to <strong>${APPLICATION_INBOX_EMAIL}</strong> or <strong>jobs@optiohire.com</strong> and follow these exact steps:</p>
         <ul class="share-steps">
           <li>
             <span class="sli-num">1</span>
@@ -845,7 +847,9 @@ HireBit System
     </p>
   </div>
   <div class="foot">
-    <div style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:12px;"><svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="#1e3a5c"/><circle cx="16" cy="13" r="5" stroke="#60aaf0" stroke-width="2" fill="none"/><path d="M9 26c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="16" cy="13" r="2" fill="#60aaf0"/></svg><span style="font-family:DM Sans,Arial,sans-serif;font-size:15px;font-weight:600;color:#334155;letter-spacing:-0.02em">OptioHire</span></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:12px;">
+      <img src="https://optiohire.com/assets/logo/logo-removebg-preview.png" alt="OptioHire Logo" style="height: 28px; width: auto;" />
+    </div>
     <p>
       This notification was sent to <strong>${hrEmailAddr}</strong> by OptioHire.<br />
       <a href="https://optiohire.com">optiohire.com</a>
