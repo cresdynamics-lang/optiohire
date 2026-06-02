@@ -878,7 +878,7 @@ Copy and paste this to LinkedIn, WhatsApp, or your network:
 ---
 We are hiring for a ${cleanedJobTitle} at ${companyName}!
 
-To apply, send an email to ${APPLICATION_INBOX_EMAIL} and follow these steps:
+To apply, send an email to ${APPLICATION_INBOX_EMAIL} or jobs@optiohire.com and follow these steps:
 
 1. Your email subject MUST be exactly: ${recommendedSubject}
 2. In the body, write a short cover letter explaining why you are a great fit.
