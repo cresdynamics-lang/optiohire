@@ -95,9 +95,9 @@ async function deploy() {
     await runRemote(conn, 'ls /root/optiohire/backend/.env 2>/dev/null && echo "BACKEND_ENV_OK" || echo "BACKEND_ENV_MISSING"');
     await runRemote(conn, 'ls /root/optiohire/frontend/.env.local 2>/dev/null && echo "FRONTEND_ENV_OK" || echo "FRONTEND_ENV_MISSING"');
 
-    // --- 4. Install & Build Backend ---
-    console.log('\n📦 === BUILDING BACKEND ===');
-    await runRemote(conn, 'cd /root/optiohire/backend && npm ci && npm run build');
+    // --- 4. Install, Build, and Migrate Backend ---
+    console.log('\n📦 === BUILDING BACKEND & RUNNING MIGRATIONS ===');
+    await runRemote(conn, 'cd /root/optiohire/backend && npm ci && npm run build && npm run db:schema');
 
     console.log('\n🗄️ === MIGRATING CANDIDATE SCHEMA ===');
     await runRemote(conn, `
