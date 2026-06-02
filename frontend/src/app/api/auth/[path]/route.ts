@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string } }
+  { params }: { params: Promise<{ path: string }> }
 ) {
   try {
-    const { path } = params
+    const { path } = await params
     const body = await request.json()
     const backendUrl = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001').trim()
 
