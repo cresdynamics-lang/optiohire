@@ -82,8 +82,8 @@ jobs:
             NEXT_PUBLIC_APP_URL=https://optiohire.com
             NEXT_PUBLIC_API_URL=https://optiohire.com/api
             NEXTAUTH_URL=https://optiohire.com
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            NEXTAUTH_SECRET=5e3d2e4d7f9a4bc8e2d6f4a9b3c8e7f0a9b3c8e7f9a4d6f4a9b3c8e7f0a9b3
+            JWT_SECRET=optiohire_jwt_secret_change_in_production_2024
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=9363904405900-e0i5c40qaeqfq3uk1t570k6ibqibp5e@apps.googleusercontent.com
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             DB_SSL=false
