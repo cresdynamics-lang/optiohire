@@ -63,7 +63,7 @@ export class ResendWebhookPoller {
           }
         };
 
-        logger.info(`[ResendPoller] Processing email ${emailId} with mock payload:`, JSON.stringify(mockPayload, null, 2));
+        logger.info(`[ResendPoller] Processing email ${emailId} with mock payload: ${JSON.stringify(mockPayload, null, 2)}`);
 
         const result = await resendInboundService.processEmailReceivedEvent(mockPayload);
         
@@ -75,7 +75,7 @@ export class ResendWebhookPoller {
       // Only log errors that are not common transient ones
       const msg = error?.message || String(error);
       if (!msg.includes('fetch failed') && !msg.includes('ETIMEDOUT')) {
-        logger.error('[ResendPoller] Error during polling:', error);
+        logger.error('[ResendPoller] Error during polling:', { error });
       }
     } finally {
       this.isPolling = false;
