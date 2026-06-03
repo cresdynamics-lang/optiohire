@@ -40,6 +40,7 @@ const navigation: Array<{
   { name: 'Applications', href: '/admin/applications', icon: FileText },
   { name: 'Candidates Pipeline', href: '/admin/candidates', icon: UserCheck },
   { name: 'Talent Pool', href: '/admin/talent-pool', icon: Users },
+  { name: 'Certificates', href: '/admin/certificates', icon: FileText },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Signups', href: '/admin/signups', icon: UserCheck },
   { name: 'Emails', href: '/admin/emails', icon: Mail },
