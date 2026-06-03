@@ -118,18 +118,23 @@ export class ApplicationRepository {
     return rows[0]
   }
 
+  // Schedule a new interview (sets status to SCHEDULED)
   async scheduleInterview(data: {
     application_id: string
     interview_time: string
     interview_link: string
     interview_reminders?: any
   }): Promise<Application> {
+    const reminders = Array.isArray(data.interview_reminders)
+      ? data.interview_reminders
+      : data.interview_reminders ? ['24h', '1h'] : []
+
     const { rows } = await query<Application>(
       `UPDATE applications
-       SET interview_time = $1, interview_link = $2, interview_status = 'SCHEDULED', interview_reminders = COALESCE($4::jsonb, '[]'::jsonb)
+       SET interview_time = $1, interview_link = $2, interview_status = 'SCHEDULED', interview_reminders = $4
        WHERE application_id = $3
        RETURNING *`,
-      [data.interview_time, data.interview_link, data.application_id, data.interview_reminders ? JSON.stringify(data.interview_reminders) : null]
+      [data.interview_time, data.interview_link, data.application_id, reminders]
     )
     if (rows.length === 0) {
       throw new Error('Application not found')
@@ -137,18 +142,23 @@ export class ApplicationRepository {
     return rows[0]
   }
 
+  // Update an existing interview (keeps status, just updates time/link/reminders)
   async updateInterview(data: {
     application_id: string
     interview_time: string
     interview_link: string
     interview_reminders?: any
   }): Promise<Application> {
+    const reminders = Array.isArray(data.interview_reminders)
+      ? data.interview_reminders
+      : data.interview_reminders ? ['24h', '1h'] : []
+
     const { rows } = await query<Application>(
       `UPDATE applications
-       SET interview_time = $1, interview_link = $2, interview_reminders = COALESCE($4::jsonb, '[]'::jsonb)
+       SET interview_time = $1, interview_link = $2, interview_reminders = $4
        WHERE application_id = $3
        RETURNING *`,
-      [data.interview_time, data.interview_link, data.application_id, data.interview_reminders ? JSON.stringify(data.interview_reminders) : null]
+      [data.interview_time, data.interview_link, data.application_id, reminders]
     )
     if (rows.length === 0) {
       throw new Error('Application not found')
