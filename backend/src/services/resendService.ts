@@ -26,7 +26,7 @@ export class ResendService {
     // Fallback key - if primary/secondary fail or get rate limited
     this.apiKeyFallback = process.env.RESEND_API_KEY_FALLBACK || ''
     
-    this.fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    this.fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
     this.fromName = process.env.RESEND_FROM_NAME || 'OptioHire'
 
     // Initialize Resend clients

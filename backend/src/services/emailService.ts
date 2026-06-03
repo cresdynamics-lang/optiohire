@@ -10,7 +10,7 @@ import { query } from '../db/index.js'
 import { parseTemplate } from '../utils/templateParser.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
-const DEFAULT_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+const DEFAULT_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
 const DEFAULT_FROM_NAME = process.env.RESEND_FROM_NAME || 'OptioHire'
 const MAX_EMAIL_RETRY_ATTEMPTS = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
 const EMAIL_RETRY_BASE_DELAY_SEC = Number(process.env.EMAIL_RETRY_BASE_DELAY_SEC || 30)
@@ -403,8 +403,8 @@ ${companyName}
 Company Email: ${hrEmail}`
     }
 
-    // Use noreply@optiohire.com for all candidate emails
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    // Use applicationsoptiohire@gmail.com for all candidate emails
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
     
     await this.sendEmail({
       to: data.candidateEmail,
@@ -542,8 +542,8 @@ Company Name: ${companyName}
 Company Email: ${hrEmail}`
     }
 
-    // Use noreply@optiohire.com for all candidate emails
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    // Use applicationsoptiohire@gmail.com for all candidate emails
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
     
     await this.sendEmail({
       to: data.candidateEmail,
@@ -648,7 +648,7 @@ Kind regards,
 ${companyName}
 HR contact: ${hrEmail}`
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
 
     await this.sendEmail({
       to: data.candidateEmail,
@@ -1919,7 +1919,7 @@ ${data.companyEmail}`
 
     await this.sendEmail({
       to: data.candidateEmail,
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com',
+      from: process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com',
       replyTo: data.companyEmail,
       subject: `Message regarding your application: ${jobTitle}`,
       html,
@@ -2167,7 +2167,7 @@ The team at OptioHire`
 
     return this.sendEmail({
       to: data.candidateEmail,
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com',
+      from: process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com',
       subject,
       html,
       text,
@@ -2217,7 +2217,7 @@ Keep up the great work!
 Kind regards,
 OptioHire Admin Team`
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
 
     await this.sendEmail({
       to: data.candidateEmail,
@@ -2282,7 +2282,7 @@ If you have any questions, feel free to reply to this email.
 Kind regards,
 OptioHire Admin Team`
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
 
     await this.sendEmail({
       to: data.candidateEmail,

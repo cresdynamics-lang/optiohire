@@ -14,7 +14,7 @@ export class SendGridService {
 
   constructor() {
     this.apiKey = process.env.SENDGRID_API_KEY || ''
-    this.fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.MAIL_USER || 'noreply@optiohire.com'
+    this.fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.MAIL_USER || 'applicationsoptiohire@gmail.com'
     this.fromName = process.env.SENDGRID_FROM_NAME || 'OptioHire'
 
     if (!this.apiKey) {
