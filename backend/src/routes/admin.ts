@@ -159,3 +159,14 @@ router.post('/debug/clear-cache', clearCache)
 // Support Tickets (HR to Admin)
 import { getSupportTickets } from '../api/supportController.js'
 router.get('/support-tickets', authenticate, requireAdmin, getSupportTickets)
+
+// Candidates Full View & Revert
+import { getAllCandidates, revertCandidate } from '../api/adminCandidatesController.js'
+router.get('/candidates', authenticate, requireAdmin, getAllCandidates)
+router.post('/candidates/:id/revert', authenticate, requireAdmin, revertCandidate)
+
+// Talent Pool & AI Email
+import { getTalentPool, generatePersonalisedEmail, bulkGenerateAndSend } from '../api/adminTalentPoolController.js'
+router.get('/talent-pool', authenticate, requireAdmin, getTalentPool)
+router.post('/talent-pool/generate-email', authenticate, requireAdmin, generatePersonalisedEmail)
+router.post('/talent-pool/bulk-email', authenticate, requireAdmin, bulkGenerateAndSend)
