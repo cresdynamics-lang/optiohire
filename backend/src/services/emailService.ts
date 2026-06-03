@@ -2174,6 +2174,125 @@ The team at OptioHire`
       emailType: 'talent_pool_match'
     })
   }
+
+  // === Certificate Notifications ===
+
+  async sendCertificateApprovedEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    skillName: string
+  }) {
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const subject = `Certificate Approved: ${data.skillName}`
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Dear ${candidateName},</p>
+    <p>Good news! Your uploaded certificate for <strong>${data.skillName}</strong> has been reviewed and <strong>APPROVED</strong> by our team.</p>
+    <p>Your profile skill score has been updated accordingly. This boosts your visibility to potential employers.</p>
+    <p>Keep up the great work!</p>
+    <p>Kind regards,<br>
+    <strong>OptioHire Admin Team</strong></p>
+  </div>
+</body>
+</html>`
+
+    const text = `Dear ${candidateName},
+
+Good news! Your uploaded certificate for ${data.skillName} has been reviewed and APPROVED by our team.
+
+Your profile skill score has been updated accordingly. This boosts your visibility to potential employers.
+
+Keep up the great work!
+
+Kind regards,
+OptioHire Admin Team`
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+
+    await this.sendEmail({
+      to: data.candidateEmail,
+      from: fromEmail,
+      subject,
+      text,
+      html,
+      emailType: 'certificate_approved'
+    })
+  }
+
+  async sendCertificateRejectedEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    skillName: string
+    rejectionReason: string
+  }) {
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const subject = `Action Required: Certificate Rejected for ${data.skillName}`
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .reason-box { margin-top: 16px; padding: 16px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Dear ${candidateName},</p>
+    <p>We have reviewed your uploaded certificate for <strong>${data.skillName}</strong>. Unfortunately, it could not be approved at this time.</p>
+    
+    <div class="reason-box">
+      <strong>Reason for Rejection:</strong><br>
+      ${data.rejectionReason}
+    </div>
+
+    <p>Don't worry — you can <strong>appeal this decision</strong> or simply re-upload a clearer or updated certificate directly from your Candidate Dashboard.</p>
+    
+    <p>If you have any questions, feel free to reply to this email.</p>
+    
+    <p>Kind regards,<br>
+    <strong>OptioHire Admin Team</strong></p>
+  </div>
+</body>
+</html>`
+
+    const text = `Dear ${candidateName},
+
+We have reviewed your uploaded certificate for ${data.skillName}. Unfortunately, it could not be approved at this time.
+
+Reason for Rejection:
+${data.rejectionReason}
+
+Don't worry — you can appeal this decision or simply re-upload a clearer or updated certificate directly from your Candidate Dashboard.
+
+If you have any questions, feel free to reply to this email.
+
+Kind regards,
+OptioHire Admin Team`
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+
+    await this.sendEmail({
+      to: data.candidateEmail,
+      from: fromEmail,
+      subject,
+      text,
+      html,
+      emailType: 'certificate_rejected'
+    })
+  }
 }
 
 function escapeHtml(s: string): string {

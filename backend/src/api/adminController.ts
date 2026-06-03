@@ -429,6 +429,20 @@ export async function updateUser(req: Request, res: Response) {
       params
     )
 
+    // Auto-provision candidate profile if role is set to candidate
+    if (role === 'candidate') {
+      try {
+        await query(
+          `INSERT INTO candidate_profiles (user_id, total_score)
+           VALUES ($1, 0)
+           ON CONFLICT (user_id) DO NOTHING`,
+          [userId]
+        )
+      } catch (err) {
+        console.error('Error auto-provisioning candidate profile for user:', userId, err)
+      }
+    }
+
     // Log admin action
     await logAdminAction(req, 'update_user', 'user', userId, { role, is_active, admin_permissions })
 
