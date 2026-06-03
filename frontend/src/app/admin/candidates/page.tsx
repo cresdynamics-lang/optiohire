@@ -32,7 +32,7 @@ export default function AdminCandidatesPage() {
 
   const fetchCandidates = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/candidates`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -54,7 +54,7 @@ export default function AdminCandidatesPage() {
     if (!confirm('Revert this candidate back to SHORTLIST?')) return
     setActionLoading(id)
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/candidates/${id}/revert`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }

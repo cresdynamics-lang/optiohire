@@ -47,7 +47,7 @@ export default function AdminTalentPoolPage() {
 
   const fetchPool = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/talent-pool`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -88,7 +88,7 @@ export default function AdminTalentPoolPage() {
     setEmailDraft('Generating personalised email with AI...')
     
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/talent-pool/generate-email`, {
         method: 'POST',
         headers: { 
@@ -122,7 +122,7 @@ export default function AdminTalentPoolPage() {
     try {
       // Use existing resend email endpoint if exists, or build a simple send route
       // Actually we built bulk GenerateAndSend, so we can just use the bulk endpoint for 1 person!
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/talent-pool/bulk-email`, {
         method: 'POST',
         headers: { 
@@ -158,7 +158,7 @@ export default function AdminTalentPoolPage() {
     const selectedTalents = talents.filter(t => selectedIds.includes(t.id))
     
     try {
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/talent-pool/bulk-email`, {
         method: 'POST',
         headers: { 
