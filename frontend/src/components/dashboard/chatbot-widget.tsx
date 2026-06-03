@@ -410,18 +410,28 @@ export function ChatbotWidget() {
     <>
       {/* Floating Action Button */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-[120]">
+        <div className="fixed bottom-6 right-6 z-[120] flex flex-col items-end gap-3 animate-in slide-in-from-bottom-5 fade-in duration-500">
+          <div className="bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200 text-sm px-4 py-2 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 dark:border-slate-700 relative flex items-center gap-2 animate-bounce cursor-pointer" onClick={() => setIsOpen(true)}>
+            <span className="font-medium">✨ Need help? Ask AI!</span>
+            <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white dark:bg-gray-800 border-b border-r border-slate-100 dark:border-slate-700 transform rotate-45"></div>
+          </div>
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="h-20 w-20 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-2xl hover:shadow-xl transition-all flex items-center justify-center hover:scale-110 active:scale-95"
+            className="group relative flex items-center gap-3 px-6 py-4 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-2xl hover:shadow-xl transition-all hover:-translate-y-1 active:scale-95 border border-white/20"
             aria-label="Open AI Agent"
           >
+            <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
             <img
               src="/assets/logo/logo-removebg-preview.png"
               alt="OptioHire AI"
-              className="w-12 h-12 object-contain invert brightness-0"
+              className="w-6 h-6 object-contain invert brightness-0"
             />
+            <span className="font-semibold tracking-wide">Ask AI Agent</span>
+            <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white dark:border-gray-900"></span>
+            </span>
           </button>
         </div>
       )}

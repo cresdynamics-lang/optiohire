@@ -45,7 +45,7 @@ async function deploy() {
     conn
       .on('ready', resolve)
       .on('error', reject)
-      .connect({ host: HOST, port: 22, username: USER, privateKey: PRIVATE_KEY, readyTimeout: 20000 });
+      .connect({ host: HOST, port: 22, username: USER, privateKey: PRIVATE_KEY, readyTimeout: 60000, keepaliveInterval: 10000 });
   });
 
   console.log('\n✅ Connected to server!\n');
