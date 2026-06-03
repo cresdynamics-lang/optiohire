@@ -290,7 +290,7 @@ export class ResendService {
       logger.info('[ResendAPI] Fetching received emails list...')
       const result = await (client.emails as any).receiving.list()
       if (result.error) {
-        logger.error('[ResendAPI] Error fetching emails list:', result.error)
+        logger.error('[ResendAPI] Error fetching emails list:', { error: result.error })
         throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
       }
       
@@ -298,7 +298,7 @@ export class ResendService {
       logger.info(`[ResendAPI] Successfully fetched ${emails.length} emails from Resend`)
       return emails
     } catch (error: any) {
-      logger.error('Failed to list received emails:', error)
+      logger.error('Failed to list received emails:', { error })
       throw error
     }
   }
@@ -317,13 +317,13 @@ export class ResendService {
       // Use the receiving API for inbound emails
       const result = await (client.emails as any).receiving.get(emailId)
       if (result.error) {
-        logger.error(`[ResendAPI] Error fetching email details for ${emailId}:`, result.error)
+        logger.error(`[ResendAPI] Error fetching email details for ${emailId}:`, { error: result.error })
         throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
       }
       logger.info(`[ResendAPI] Successfully fetched details for email: ${emailId}`)
       return result.data
     } catch (error: any) {
-      logger.error(`Failed to get inbound email ${emailId}:`, error)
+      logger.error(`Failed to get inbound email ${emailId}:`, { error })
       throw error
     }
   }
@@ -341,14 +341,14 @@ export class ResendService {
       logger.info(`[ResendAPI] Fetching attachments for email ID: ${emailId}...`)
       const result = await (client.emails as any).receiving.attachments.list({ emailId })
       if (result.error) {
-        logger.error(`[ResendAPI] Error fetching attachments for ${emailId}:`, result.error)
+        logger.error(`[ResendAPI] Error fetching attachments for ${emailId}:`, { error: result.error })
         throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
       }
       const attachments = result.data || []
       logger.info(`[ResendAPI] Successfully fetched ${attachments.length} attachments for email: ${emailId}`)
       return attachments
     } catch (error: any) {
-      logger.error(`Failed to list attachments for email ${emailId}:`, error)
+      logger.error(`Failed to list attachments for email ${emailId}:`, { error })
       throw error
     }
   }

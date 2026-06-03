@@ -7,7 +7,7 @@ export const router = Router();
 router.post('/resend', async (req: Request, res: Response) => {
   try {
     const payload = req.body;
-    logger.info('[WEBHOOK] Received Resend webhook payload:', JSON.stringify(payload, null, 2));
+    logger.info(`[WEBHOOK] Received Resend webhook payload: ${JSON.stringify(payload, null, 2)}`);
     const result = await resendInboundService.processEmailReceivedEvent(payload);
 
     if (result.error) {

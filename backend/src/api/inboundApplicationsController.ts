@@ -9,7 +9,7 @@ function sha256Hex(input: string): string {
 
 export async function receiveInboundApplication(req: Request, res: Response) {
   try {
-    logger.info('[WEBHOOK] Received Inbound Application payload:', JSON.stringify(req.body, null, 2))
+    logger.info(`[WEBHOOK] Received Inbound Application payload: ${JSON.stringify(req.body, null, 2)}`)
     
     const jobId = req.params.jobId
     if (!jobId) return res.status(400).json({ success: false, error: 'jobId is required' })
