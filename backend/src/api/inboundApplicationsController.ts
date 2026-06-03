@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
 import { createHash } from 'crypto'
+import { logger } from '../utils/logger.js'
 
 function sha256Hex(input: string): string {
   return createHash('sha256').update(input).digest('hex')
@@ -8,6 +9,8 @@ function sha256Hex(input: string): string {
 
 export async function receiveInboundApplication(req: Request, res: Response) {
   try {
+    logger.info('[WEBHOOK] Received Inbound Application payload:', JSON.stringify(req.body, null, 2))
+    
     const jobId = req.params.jobId
     if (!jobId) return res.status(400).json({ success: false, error: 'jobId is required' })
 
