@@ -609,35 +609,35 @@ export default function ShortlistedPage() {
                         <div className="flex flex-col gap-2">
                         {candidate.status !== 'HIRED' && candidate.status !== 'REJECTED' && (
                           candidate.interview_status === 'SCHEDULED' || candidate.interview_time ? (
-                            <Button
-                              size="sm"
-                              disabled
-                              className="bg-green-600 hover:bg-green-600 text-white shadow-none hover:shadow-none cursor-not-allowed"
-                            >
-                              Scheduled
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                disabled
+                                className="bg-green-600 hover:bg-green-600 text-white shadow-none hover:shadow-none cursor-not-allowed"
+                              >
+                                Interview Scheduled
+                              </Button>
+                              <Button size="sm" variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 w-full" onClick={() => handleUpdateStatus(candidate.id, 'HIRED')}>
+                                Mark as Hired
+                              </Button>
+                            </>
                           ) : (
                             <Button
                               size="sm"
                               onClick={() => handleScheduleClick(candidate)}
                               className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
                             >
-                              Schedule
+                              Schedule Interview
                             </Button>
                           )
                         )}
                         {candidate.status !== 'HIRED' && candidate.status !== 'REJECTED' && (
-                          <>
-                            <Button size="sm" variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 w-full" onClick={() => handleUpdateStatus(candidate.id, 'HIRED')}>
-                              Hire
-                            </Button>
-                            <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 w-full" onClick={() => {
-                              setCandidateToReject(candidate)
-                              setIsRejectModalOpen(true)
-                            }}>
-                              Reject
-                            </Button>
-                          </>
+                          <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 w-full" onClick={() => {
+                            setCandidateToReject(candidate)
+                            setIsRejectModalOpen(true)
+                          }}>
+                            Reject
+                          </Button>
                         )}
                         </div>
                       </TableCell>
