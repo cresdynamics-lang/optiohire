@@ -33,16 +33,23 @@ export class ResendWebhookPoller {
       // 2. Poll the Inbound Receiving API using ResendService
       const emails = await this.resendService.listReceivedEmails();
       if (!emails || emails.length === 0) {
+        logger.info('[ResendPoller] No new inbound emails found');
         return;
       }
+
+      logger.info(`[ResendPoller] Processing ${emails.length} inbound emails`);
 
       for (const email of emails) {
         const emailId = email.id;
         
         const isProcessed = await this.checkIfDeliveryProcessed(emailId);
-        if (isProcessed) continue;
+        if (isProcessed) {
+          logger.debug(`[ResendPoller] Email ${emailId} already processed, skipping`);
+          continue;
+        }
 
         logger.info(`[ResendPoller] Found unprocessed inbound email: ${emailId}`);
+        logger.info(`[ResendPoller] Email details: From=${email.from}, Subject=${email.subject}`);
         
         // Construct a mock webhook payload that ResendInboundService expects
         const mockPayload = {
@@ -55,6 +62,8 @@ export class ResendWebhookPoller {
             created_at: email.created_at
           }
         };
+
+        logger.info(`[ResendPoller] Processing email ${emailId} with mock payload:`, JSON.stringify(mockPayload, null, 2));
 
         const result = await resendInboundService.processEmailReceivedEvent(mockPayload);
         
