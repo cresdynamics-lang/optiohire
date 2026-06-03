@@ -8,6 +8,7 @@ import { CVParser } from '../lib/cv-parser.js'
 import { AIScoringEngine } from '../lib/ai-scoring.js'
 import { EmailService } from '../services/emailService.js'
 import { ContributionService } from '../services/contributionService.js'
+import { provisionCandidateAccount } from '../services/candidateProvisioningService.js'
 import { healthMonitor } from '../utils/healthMonitor.js'
 import path from 'path'
 
@@ -225,6 +226,26 @@ export class AIWorker {
   }
 
   private async sendOutcomeEmails(app: any, job: any, company: any, aiResult: any, mappedStatus: string) {
+    // Auto-provision candidate account before sending emails
+    let candidateCredentials: { isNewAccount: boolean; temporaryPassword: string | null } = {
+      isNewAccount: false,
+      temporaryPassword: null,
+    }
+    try {
+      const provisioned = await provisionCandidateAccount({
+        email: app.email,
+        candidateName: app.candidate_name,
+      })
+      candidateCredentials = provisioned
+      if (provisioned.isNewAccount) {
+        logger.info(`✅ Auto-provisioned candidate account for ${app.email}`)
+      }
+    } catch (provisionErr) {
+      logger.warn('⚠️ Candidate provisioning failed (non-fatal):', provisionErr)
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://optiohire.com'
+
     const emailArgs = {
       candidateEmail: app.email,
       candidateName: app.candidate_name,
@@ -232,7 +253,11 @@ export class AIWorker {
       companyName: company.company_name,
       companyId: company.company_id,
       companyEmail: company.company_email,
-      companyDomain: company.company_domain
+      companyDomain: company.company_domain,
+      // Candidate dashboard credentials (only for new accounts)
+      candidateLoginUrl: `${frontendUrl}/auth/signin`,
+      candidateTemporaryPassword: candidateCredentials.temporaryPassword,
+      isNewCandidateAccount: candidateCredentials.isNewAccount,
     }
 
     try {

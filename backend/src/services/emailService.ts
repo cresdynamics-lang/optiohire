@@ -257,6 +257,9 @@ ${data.companyName || 'Hiring Team'}
     interviewLink?: string | null
     interviewDate?: string | null
     interviewTime?: string | null
+    candidateLoginUrl?: string | null
+    candidateTemporaryPassword?: string | null
+    isNewCandidateAccount?: boolean
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -267,6 +270,42 @@ ${data.companyName || 'Hiring Team'}
 
     let subject = `You've been shortlisted – ${cleanedJobTitle} - ${companyName}`
     const hasInterviewDetails = !!(data.interviewLink || data.interviewDate || data.interviewTime)
+
+    // Build candidate dashboard block if new account was provisioned
+    const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
+    const dashboardBlock = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+    <div style="margin-top: 24px; padding: 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">🎯 Your Candidate Dashboard is Ready</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">We've created a personal dashboard for you where you can track your application status, build your skills profile, and explore more opportunities.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 100px;">Email:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600;">${data.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Password:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">${data.candidateTemporaryPassword}</td>
+        </tr>
+      </table>
+      <a href="${loginUrl}" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Log In to Your Dashboard →</a>
+      <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Please change your password after your first login for security.</p>
+    </div>`
+      : ''
+
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
 
     let html = ''
     let text = ''
@@ -284,6 +323,12 @@ ${data.companyName || 'Hiring Team'}
       subject = parseTemplate(customTemplate.subject, vars)
       html = parseTemplate(customTemplate.body_html, vars)
       text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+      
+      // Append dashboard block to custom template
+      if (dashboardBlock) {
+        html += dashboardBlock
+        text += dashboardBlockText
+      }
     } else {
       html = `
 <!DOCTYPE html>
@@ -316,7 +361,7 @@ ${data.companyName || 'Hiring Team'}
     <p>If you have any questions, feel free to contact our HR team at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
     
     <p>We look forward to meeting you and learning more about how you can contribute to our team. Thank you!</p>
-    
+    ${dashboardBlock}
     <p>Kind regards,<br>
     <strong>${companyName}</strong><br>
     <strong>Company Email:</strong> ${hrEmail}</p>
@@ -339,7 +384,7 @@ ${data.interviewDate ? `Date: ${data.interviewDate}\n` : ''}${data.interviewTime
 During this session, we will discuss your experience, your fit for the role, and the value you can bring to our team.
 
 If you have any questions, feel free to contact our HR team at ${hrEmail}.
-
+${dashboardBlockText}
 Kind regards,
 ${companyName}
 Company Email: ${hrEmail}`
@@ -352,7 +397,7 @@ Our HR team will send you the interview date, time, and meeting link once your i
 If you have any questions, feel free to contact our HR team at ${hrEmail}.
 
 We look forward to meeting you. Thank you!
-
+${dashboardBlockText}
 Kind regards,
 ${companyName}
 Company Email: ${hrEmail}`
@@ -379,6 +424,9 @@ Company Email: ${hrEmail}`
     companyId?: string | null
     companyEmail?: string | null
     companyDomain?: string | null
+    candidateLoginUrl?: string | null
+    candidateTemporaryPassword?: string | null
+    isNewCandidateAccount?: boolean
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -388,6 +436,43 @@ Company Email: ${hrEmail}`
     const customTemplate = await this.getCustomTemplate(data.companyId, 'REJECT')
 
     let subject = `Update on Your Application for the ${jobTitle} Position - ${companyName}`
+
+    // Build candidate dashboard block if new account was provisioned
+    const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
+    const dashboardBlock = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+    <div style="margin-top: 24px; padding: 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">🎯 Your Candidate Dashboard is Ready</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">We've created a personal dashboard for you where you can track your application status, build your skills profile, and explore more opportunities.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 100px;">Email:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600;">${data.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Password:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">${data.candidateTemporaryPassword}</td>
+        </tr>
+      </table>
+      <a href="${loginUrl}" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Log In to Your Dashboard →</a>
+      <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Please change your password after your first login for security.</p>
+    </div>`
+      : ''
+
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
+
     let html = ''
     let text = ''
 
@@ -401,6 +486,12 @@ Company Email: ${hrEmail}`
       subject = parseTemplate(customTemplate.subject, vars)
       html = parseTemplate(customTemplate.body_html, vars)
       text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+      
+      // Append dashboard block to custom template
+      if (dashboardBlock) {
+        html += dashboardBlock
+        text += dashboardBlockText
+      }
     } else {
       html = `
 <!DOCTYPE html>
@@ -424,7 +515,7 @@ Company Email: ${hrEmail}`
     <p>If you have any questions or would like feedback regarding your application, please feel free to contact us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
     
     <p>We sincerely appreciate your interest in our company and wish you the very best in your job search and future career endeavors.</p>
-    
+    ${dashboardBlock}
     <p>Kind regards,<br>
     <strong>Company Name:</strong> ${companyName}<br>
     <strong>Company Email:</strong> ${hrEmail}</p>
@@ -444,7 +535,7 @@ Although you were not selected for this role, we encourage you to apply for futu
 If you have any questions or would like feedback regarding your application, please feel free to contact us at ${hrEmail}.
 
 We sincerely appreciate your interest in our company and wish you the very best in your job search and future career endeavors.
-
+${dashboardBlockText}
 Kind regards,
 
 Company Name: ${companyName}
@@ -474,6 +565,9 @@ Company Email: ${hrEmail}`
     companyName: string
     companyEmail?: string | null
     companyDomain?: string | null
+    candidateLoginUrl?: string | null
+    candidateTemporaryPassword?: string | null
+    isNewCandidateAccount?: boolean
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -481,6 +575,42 @@ Company Email: ${hrEmail}`
     const jobTitle = data.jobTitle || '[Job Title]'
 
     const subject = `Your application for ${jobTitle} - ${companyName} is under review`
+
+    // Build candidate dashboard block if new account was provisioned
+    const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
+    const dashboardBlock = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+    <div style="margin-top: 24px; padding: 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">🎯 Your Candidate Dashboard is Ready</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">We've created a personal dashboard for you where you can track your application status, build your skills profile, and explore more opportunities.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 100px;">Email:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600;">${data.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Password:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">${data.candidateTemporaryPassword}</td>
+        </tr>
+      </table>
+      <a href="${loginUrl}" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Log In to Your Dashboard →</a>
+      <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Please change your password after your first login for security.</p>
+    </div>`
+      : ''
+
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
 
     const html = `
 <!DOCTYPE html>
@@ -497,6 +627,7 @@ Company Email: ${hrEmail}`
     <p>Thank you for applying for the <strong>${jobTitle}</strong> role at <strong>${companyName}</strong>.</p>
     <p>Your CV has been received and assessed. Your profile is <strong>still under review</strong> by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.</p>
     <p>We will contact you again if we move forward with your application. If you have questions, please reach us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
+    ${dashboardBlock}
     <p>Kind regards,<br>
     <strong>${companyName}</strong><br>
     <strong>HR contact:</strong> ${hrEmail}</p>
@@ -512,7 +643,7 @@ Thank you for applying for the ${jobTitle} role - ${companyName}.
 Your CV has been received and assessed. Your profile is still under review by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.
 
 We will contact you again if we move forward with your application. If you have questions, please reach us at ${hrEmail}.
-
+${dashboardBlockText}
 Kind regards,
 ${companyName}
 HR contact: ${hrEmail}`
