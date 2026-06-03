@@ -607,7 +607,7 @@ export default function ShortlistedPage() {
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-col gap-2">
-                        {(candidate.status === 'SHORTLIST' || candidate.status === 'SHORTLISTED') && (
+                        {candidate.status !== 'HIRED' && candidate.status !== 'REJECTED' && (
                           candidate.interview_status === 'SCHEDULED' || candidate.interview_time ? (
                             <Button
                               size="sm"
