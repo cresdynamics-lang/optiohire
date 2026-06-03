@@ -1,7 +1,8 @@
 # OptioHire — Watcher Engine Platform
 
 > **AI-powered hiring management for HR professionals.**  
-> Post a role. The Watcher Engine does the rest.
+> Post a role. The Watcher Engine does the rest. (OPTIOHIRE AI AGENT PROFILES CANDIDATES,GIVES THEM SHORTLISTING SCORES,WRITES EMAILS TO BOTH HIRING MANAGERS  AND CANDIDATESTO SCHEDULE APPLICATON INTERVIEWS AND GRACEFULLY HANDLES REJECTIONS VIA REJECTION EMAILS AND RE-ADDS CANDIDATES TO A POOL FOR FEATURE REFERENCE, THIS IS AN ENTIRE
+> ECHOSYSTEM OF MODERN DAY HIRING, THE AI IS NOT JUST A BUFFER BUT A POWERFUL MODEL GIVEN THE RELEVANT SKILLS )
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org)
