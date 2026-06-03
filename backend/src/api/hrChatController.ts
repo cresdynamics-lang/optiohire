@@ -117,6 +117,8 @@ Example:
 }
 \`\`\`
 
+CRITICAL: If NO action is required, DO NOT include any JSON code block whatsoever. Do NOT invent a "none" tool. Only use the tools explicitly listed above.
+
 If your confidence is low (no matching workflow), state:
 Confidence Level: Low
 Reason: No matching workflow found.

@@ -48,6 +48,7 @@ const navigation: Array<{
   { name: 'Login Activity', href: '/admin/logins', icon: Key },
   { name: 'Activity', href: '/admin/activity', icon: Activity },
   { name: 'Help', href: '/admin/help', icon: HelpCircle },
+  { name: 'Support Tickets', href: '/admin/support', icon: HelpCircle },
 ]
 
 type AdminSidebarProps = {
