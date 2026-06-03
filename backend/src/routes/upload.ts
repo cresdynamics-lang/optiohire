@@ -5,6 +5,7 @@ import {
   uploadCandidateDocument,
   uploadCandidateDocumentMiddleware,
   uploadPublicCandidateDocument,
+  uploadJobPoster,
 } from '../api/uploadController.js'
 import { authenticate, requireHR, requireCandidate } from '../middleware/auth.js'
 
@@ -19,6 +20,7 @@ router.post(
   uploadCandidateDocumentMiddleware.single('document'),
   uploadCandidateDocument
 )
+router.post('/job-poster', authenticate, upload.single('poster'), uploadJobPoster)
 router.post(
   '/public-candidate-document',
   uploadCandidateDocumentMiddleware.single('document'),

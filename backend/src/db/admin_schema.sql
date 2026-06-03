@@ -197,3 +197,22 @@ COMMENT ON TABLE system_settings IS 'System-wide configuration and feature flags
 COMMENT ON TABLE time_tracking IS 'Tracks user activity, API calls, and performance metrics';
 COMMENT ON TABLE signup_queue IS 'Queue for pending user signups awaiting approval';
 COMMENT ON TABLE workflow_config IS 'Workflow configurations for email, approval, and notification flows';
+
+-- ============================================================================
+-- SECURITY AUDIT LOGS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS security_audit_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  scan_date timestamptz NOT NULL DEFAULT now(),
+  candidate_email text,
+  job_id text,
+  severity text NOT NULL,
+  action_taken text NOT NULL,
+  detected_patterns text[] DEFAULT '{}',
+  ai_score_original integer,
+  rule_score integer,
+  divergence_flag boolean DEFAULT false
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_audit_logs_severity ON security_audit_logs(severity);
+CREATE INDEX IF NOT EXISTS idx_security_audit_logs_scan_date ON security_audit_logs(scan_date DESC);

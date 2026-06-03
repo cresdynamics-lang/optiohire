@@ -170,3 +170,7 @@ import { getTalentPool, generatePersonalisedEmail, bulkGenerateAndSend } from '.
 router.get('/talent-pool', authenticate, requireAdmin, getTalentPool)
 router.post('/talent-pool/generate-email', authenticate, requireAdmin, generatePersonalisedEmail)
 router.post('/talent-pool/bulk-email', authenticate, requireAdmin, bulkGenerateAndSend)
+
+// Security Audit Logs
+import { getSecurityLogs } from '../api/adminSecurityLogsController.js'
+router.get('/security-logs', authenticate, requireAdmin, getSecurityLogs)

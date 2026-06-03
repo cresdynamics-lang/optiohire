@@ -15,6 +15,7 @@ const createJobSchema = z.object({
     message: 'deadline must be a future datetime'
   }),
   meeting_link: z.string().url().optional(),
+  job_poster_url: z.string().url().optional(),
 })
 
 function normalizeSkills(skills: string[]): string[] {
@@ -130,6 +131,7 @@ export async function getJobPostings(req: Request, res: Response) {
       updated_at: string
       meeting_link: string | null
       interview_meeting_link: string | null
+      job_poster_url: string | null
     }>(
       companyIds.length > 0
         ? `SELECT 
@@ -145,7 +147,8 @@ export async function getJobPostings(req: Request, res: Response) {
             created_at,
             updated_at,
             meeting_link,
-            interview_meeting_link
+            interview_meeting_link,
+            job_poster_url
           FROM job_postings
           WHERE company_id = ANY($1)
           ORDER BY created_at DESC`
@@ -162,7 +165,8 @@ export async function getJobPostings(req: Request, res: Response) {
             created_at,
             updated_at,
             meeting_link,
-            interview_meeting_link
+            interview_meeting_link,
+            job_poster_url
           FROM job_postings
           ORDER BY created_at DESC`,
       companyIds.length > 0 ? [companyIds] : []
@@ -195,6 +199,7 @@ export async function getJobPostings(req: Request, res: Response) {
             required_skills: Array.isArray(job.skills_required) ? job.skills_required : (job.skills_required ? [job.skills_required] : []),
             meeting_link: job.meeting_link || job.interview_meeting_link || null,
             interview_meeting_link: job.interview_meeting_link || job.meeting_link || null,
+            job_poster_url: job.job_poster_url || null,
             interview_start_time: job.interview_start_time || null,
             applicant_count: Number(stats[0]?.total || 0),
             shortlisted_count: Number(stats[0]?.shortlisted || 0),
@@ -211,6 +216,7 @@ export async function getJobPostings(req: Request, res: Response) {
             required_skills: Array.isArray(job.skills_required) ? job.skills_required : (job.skills_required ? [job.skills_required] : []),
             meeting_link: job.meeting_link || job.interview_meeting_link || null,
             interview_meeting_link: job.interview_meeting_link || job.meeting_link || null,
+            job_poster_url: job.job_poster_url || null,
             interview_start_time: job.interview_start_time || null,
             applicant_count: 0,
             shortlisted_count: 0,
@@ -361,8 +367,8 @@ export async function createJobPosting(req: Request, res: Response) {
     const jobIns = await client.query<{ job_posting_id: string }>(
       `insert into job_postings
        (company_id, job_title, job_description, responsibilities, skills_required,
-        application_deadline, interview_slots, interview_meeting_link, meeting_link, status)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,'ACTIVE')
+        application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'ACTIVE')
        returning job_posting_id`,
       [
         companyId,
@@ -373,7 +379,8 @@ export async function createJobPosting(req: Request, res: Response) {
         applicationDeadline.toISOString(),
         null,
         meetingLink,
-        meetingLink
+        meetingLink,
+        payload.job_poster_url || null
       ]
     )
 
@@ -572,6 +579,7 @@ export async function getPublicJobPostings(req: Request, res: Response) {
         jp.application_deadline,
         jp.status,
         jp.created_at,
+        jp.job_poster_url,
         c.company_name,
         c.company_logo_url
       FROM job_postings jp
@@ -604,6 +612,7 @@ export async function getPublicJobPostingById(req: Request, res: Response) {
         jp.application_deadline,
         jp.status,
         jp.created_at,
+        jp.job_poster_url,
         c.company_name,
         c.company_logo_url,
         c.company_domain
@@ -642,6 +651,7 @@ export async function getPublicCompanyJobPostings(req: Request, res: Response) {
         jp.application_deadline,
         jp.status,
         jp.created_at,
+        jp.job_poster_url,
         c.company_name,
         c.company_logo_url
       FROM job_postings jp

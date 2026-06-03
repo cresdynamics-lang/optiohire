@@ -17,6 +17,7 @@ interface AuthUser {
   hrEmail?: string
   hiringManagerEmail?: string | null
   companyLogoUrl?: string | null
+  companyLocation?: string | null
 }
 
 export type SignOutOptions = {
@@ -225,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             hrEmail: userData.hrEmail || null,
             hiringManagerEmail: userData.hiring_manager_email || userData.hiringManagerEmail || null,
             companyLogoUrl: userData.companyLogoUrl || null,
+            companyLocation: userData.companyLocation || null,
           }
 
           if (
@@ -344,6 +346,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             ? undefined
             : data?.company?.hiring_manager_email || data?.user?.hiringManagerEmail || hiring_manager_email,
           companyLogoUrl: isCandidate ? undefined : data?.company?.company_logo_url || data?.user?.companyLogoUrl || null,
+          companyLocation: isCandidate ? undefined : data?.company?.company_location || data?.user?.companyLocation || null,
         }
         setUser(nextUser)
         fallbackUserRef.current = nextUser
@@ -404,6 +407,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           hrEmail: isCandidate ? undefined : (u.hrEmail || null),
           hiringManagerEmail: isCandidate ? undefined : (u.hiringManagerEmail || null),
           companyLogoUrl: isCandidate ? undefined : (u.companyLogoUrl || null),
+          companyLocation: isCandidate ? undefined : (u.companyLocation || null),
         }
         setUser(nextUser)
         fallbackUserRef.current = nextUser

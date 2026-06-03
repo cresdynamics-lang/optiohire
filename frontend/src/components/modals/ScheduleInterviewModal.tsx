@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,14 @@ export function ScheduleInterviewModal({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [reminders, setReminders] = useState<string[]>(['24h', '1h'])
   const { user } = useAuth()
+
+  useEffect(() => {
+    if (interviewType === 'in-person' && user?.companyLocation && !location) {
+      setLocation(user.companyLocation)
+    }
+  }, [interviewType, user?.companyLocation, location])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,6 +83,7 @@ export function ScheduleInterviewModal({
           interviewType,
           location: interviewType === 'in-person' ? location : undefined,
           customLink: interviewType === 'online' && customLink ? customLink : undefined,
+          reminders,
         }),
       })
 
@@ -130,7 +138,7 @@ export function ScheduleInterviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Schedule Interview</DialogTitle>
           <DialogDescription>
@@ -233,6 +241,37 @@ export function ScheduleInterviewModal({
                   </p>
                 </div>
               )}
+
+              {/* Reminders */}
+              <div className="space-y-2">
+                <Label>Interview Reminders</Label>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { value: '24h', label: '24 hours before' },
+                    { value: '1h', label: '1 hour before' },
+                    { value: '15m', label: '15 minutes before' },
+                  ].map((option) => (
+                    <label key={option.value} className="flex items-center space-x-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={reminders.includes(option.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setReminders([...reminders, option.value])
+                          } else {
+                            setReminders(reminders.filter(r => r !== option.value))
+                          }
+                        }}
+                        className="rounded border-gray-300 text-[#2D2DDD] focus:ring-[#2D2DDD]"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">
+                  We will send email reminders to both you and the candidate.
+                </p>
+              </div>
 
               {error && (
                 <p className="text-sm text-red-500">{error}</p>
