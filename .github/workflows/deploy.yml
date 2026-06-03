@@ -34,6 +34,9 @@ jobs:
             cd /var/www/optiohire/backend
             npm ci
             npm run build
+            
+            echo "=== Running Database Migrations ==="
+            npx tsx migrate-prod.ts
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
