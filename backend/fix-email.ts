@@ -4,7 +4,27 @@ import * as path from 'path';
 const file = path.join(process.cwd(), 'src/services/emailService.ts');
 let content = fs.readFileSync(file, 'utf8');
 
-const newMethods = `
+// The file has a broken end. Let's find "function escapeAttr"
+const badEndIndex = content.indexOf('function escapeAttr(s: string): string {');
+
+if (badEndIndex !== -1) {
+  // Trim everything from escapeAttr downwards
+  content = content.substring(0, badEndIndex);
+  
+  // Re-add the proper escapeAttr
+  content += `function escapeAttr(s: string): string {
+  return escapeHtml(s).replace(/'/g, '&#39;')
+}
+`;
+  
+  // Find where EmailService ends.
+  // It ends right before "function escapeHtml"
+  const escapeHtmlIndex = content.indexOf('function escapeHtml(s: string): string {');
+  
+  // Find the last '}' before escapeHtmlIndex
+  const classEndIndex = content.lastIndexOf('}', escapeHtmlIndex);
+  
+  const newMethods = `
   async sendSupportTicketSeen(userEmail: string, subject: string) {
     const html = \`
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
@@ -71,9 +91,12 @@ const newMethods = `
       sourceAction: 'AdminDemoAlert'
     });
   }
-}
 `;
 
-content = content.replace(/}\s*$/, newMethods);
-fs.writeFileSync(file, content);
-console.log('Successfully updated emailService.ts');
+  content = content.substring(0, classEndIndex) + newMethods + content.substring(classEndIndex);
+  
+  fs.writeFileSync(file, content);
+  console.log('Fixed emailService.ts');
+} else {
+  console.log('Could not find escapeAttr');
+}

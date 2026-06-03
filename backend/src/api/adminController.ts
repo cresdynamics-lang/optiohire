@@ -4,6 +4,7 @@ import { query } from '../db/index.js'
 import type { AuthRequest } from '../middleware/auth.js'
 import { logAdminAction } from '../utils/adminLogger.js'
 import { logger } from '../utils/logger.js'
+import { EmailService } from '../services/emailService.js'
 
 const SALT_ROUNDS = 12
 
@@ -1257,3 +1258,49 @@ export async function getAIAuditTrail(req: Request, res: Response) {
   }
 }
 
+
+
+export async function markSupportTicketSeen(req: Request, res: Response) {
+  try {
+    const user = (req as any).user;
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can update support tickets' });
+    }
+
+    const { id } = req.params;
+    
+    // Check if seen_at column exists. If not, just set status='seen'
+    let result;
+    try {
+      result = await query(
+        `UPDATE support_tickets SET seen_at = NOW(), status = 'seen', seen_by = $1 WHERE ticket_id = $2 RETURNING *`,
+        [user.email, id]
+      );
+    } catch (colErr) {
+      // Fallback if schema doesn't have seen_at
+      result = await query(
+        `UPDATE support_tickets SET status = 'seen' WHERE ticket_id = $1 RETURNING *`,
+        [id]
+      );
+    }
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Support ticket not found' });
+    }
+
+    const ticket = result.rows[0];
+
+    // Send confirmation email to the user
+    try {
+      const emailService = new EmailService();
+      await emailService.sendSupportTicketSeen(ticket.user_email, ticket.subject);
+    } catch (emailErr) {
+      console.error('Failed to send support ticket seen confirmation email:', emailErr);
+    }
+
+    return res.json({ message: 'Support ticket marked as seen', ticket });
+  } catch (error) {
+    console.error('Error marking support ticket as seen:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}

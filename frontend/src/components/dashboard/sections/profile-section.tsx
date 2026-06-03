@@ -41,6 +41,7 @@ interface CompanyData {
   hr_email: string
   created_at: string
   company_logo_url?: string | null
+  company_location?: string
 }
 
 export function ProfileSection() {
@@ -64,6 +65,7 @@ export function ProfileSection() {
     hr_email: '',
     hiring_manager_email: '',
     company_logo_url: '',
+    company_location: '',
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -93,7 +95,8 @@ export function ProfileSection() {
         company_email: user.companyEmail || '',
         hr_email: user.hrEmail || '',
         created_at: new Date().toISOString(),
-        company_logo_url: (user as any).companyLogoUrl || null
+        company_logo_url: (user as any).companyLogoUrl || null,
+        company_location: (user as any).companyLocation || ''
       }
       
       setCompany(companyData)
@@ -103,6 +106,7 @@ export function ProfileSection() {
         hr_email: user.hrEmail || '',
         hiring_manager_email: user.hiringManagerEmail || '',
         company_logo_url: (user as any).companyLogoUrl || '',
+        company_location: (user as any).companyLocation || '',
       })
       setIsLoading(false)
       
@@ -150,6 +154,7 @@ export function ProfileSection() {
             hr_email: userData.hrEmail || '',
             hiring_manager_email: userData.hiring_manager_email || userData.hiringManagerEmail || '',
             company_logo_url: userData.companyLogoUrl || '',
+            company_location: userData.companyLocation || '',
           })
         }
       }
@@ -191,6 +196,7 @@ export function ProfileSection() {
             hr_email: userData.hrEmail || '',
             hiring_manager_email: userData.hiring_manager_email || userData.hiringManagerEmail || '',
             company_logo_url: userData.companyLogoUrl || '',
+            company_location: userData.companyLocation || '',
           })
         }
       }
@@ -752,8 +758,24 @@ export function ProfileSection() {
                         <p className="text-xs text-gray-500 dark:text-gray-500">As entered during account creation</p>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="company_email" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
+                      
+                <div className="space-y-2">
+                  <Label htmlFor="company_location" className="text-gray-700 dark:text-gray-300">Company Location</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="company_location"
+                      value={formData.company_location}
+                      onChange={(e) => setFormData({ ...formData, company_location: e.target.value })}
+                      disabled={!isEditingCompany}
+                      placeholder="e.g. San Francisco, CA"
+                      className="pl-10 border-gray-200 dark:border-gray-800 disabled:bg-gray-50 disabled:text-gray-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="company_email" className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-2">
                           <Mail className="w-4 h-4" />
                           Company Email
                         </Label>

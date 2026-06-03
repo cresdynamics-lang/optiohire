@@ -1,0 +1,125 @@
+import { Request, Response } from 'express'
+import { query } from '../db/index.js'
+import { logger } from '../utils/logger.js'
+import { GoogleCalendarService } from '../services/googleCalendarService.js'
+import { EmailService } from '../services/emailService.js'
+
+const googleCalendarService = new GoogleCalendarService()
+const emailService = new EmailService()
+
+export async function scheduleDemo(req: Request, res: Response) {
+  try {
+    const user = (req as any).user
+    if (!user || user.role === 'admin') {
+      return res.status(403).json({ error: 'Only HR/Employers can schedule demos' })
+    }
+
+    const { demo_time } = req.body
+    if (!demo_time) {
+      return res.status(400).json({ error: 'demo_time is required' })
+    }
+
+    const demoDate = new Date(demo_time)
+    if (isNaN(demoDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid demo_time format' })
+    }
+
+    // Try to schedule via Google Calendar
+    let meetingLink = ''
+    try {
+      if (googleCalendarService.isEnabled()) {
+        const event = await googleCalendarService.createMeetEvent({
+          summary: `OptioHire Demo with ${user.companyName || user.email}`,
+          description: `Product demo scheduled by ${user.email} from ${user.companyName || 'Unknown Company'}`,
+          start: demoDate.toISOString(),
+          end: new Date(demoDate.getTime() + 60 * 60 * 1000).toISOString(), // 1 hour duration
+          attendees: [user.email, process.env.ADMIN_EMAIL || 'admin@optiohire.com']
+        })
+        meetingLink = event.meetingLink
+      } else {
+        logger.warn('Google Calendar Service is not enabled. Proceeding without meeting link.')
+      }
+    } catch (gcError) {
+      logger.error('Failed to create Google Calendar event for demo:', gcError)
+      // Continue anyway, we can follow up manually
+    }
+
+    // Save to DB
+    const result = await query(
+      `INSERT INTO demos (hr_email, company_name, demo_time, meeting_link, status) 
+       VALUES ($1, $2, $3, $4, 'open') 
+       RETURNING *`,
+      [user.email, user.companyName || null, demoDate.toISOString(), meetingLink || null]
+    )
+
+    // Notify admins
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@optiohire.com'
+    try {
+      await emailService.sendDemoScheduledAdminAlert(
+        adminEmail, 
+        { email: user.email, companyName: user.companyName }, 
+        demoDate.toISOString(), 
+        meetingLink
+      )
+    } catch (emailErr) {
+      logger.error('Failed to send admin alert email for new demo:', emailErr)
+    }
+
+    return res.status(201).json({
+      message: 'Demo scheduled successfully',
+      demo: result.rows[0]
+    })
+  } catch (error) {
+    logger.error('Error scheduling demo:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getAdminDemos(req: Request, res: Response) {
+  try {
+    const user = (req as any).user
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can view all demos' })
+    }
+
+    const result = await query('SELECT * FROM demos ORDER BY created_at DESC')
+    return res.json({ demos: result.rows })
+  } catch (error) {
+    logger.error('Error fetching admin demos:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function markDemoSeen(req: Request, res: Response) {
+  try {
+    const user = (req as any).user
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can update demos' })
+    }
+
+    const { id } = req.params
+    
+    const result = await query(
+      `UPDATE demos SET status = 'seen' WHERE id = $1 RETURNING *`,
+      [id]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Demo not found' })
+    }
+
+    const demo = result.rows[0]
+
+    // Send confirmation email to HR
+    try {
+      await emailService.sendDemoSeen(demo.hr_email, demo.demo_time)
+    } catch (emailErr) {
+      logger.error('Failed to send demo seen confirmation email:', emailErr)
+    }
+
+    return res.json({ message: 'Demo marked as seen', demo })
+  } catch (error) {
+    logger.error('Error marking demo as seen:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}

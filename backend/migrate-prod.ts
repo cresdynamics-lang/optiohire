@@ -72,18 +72,20 @@ async function runMigrations() {
       console.log('7. Skipping candidate schema (file not found)')
     }
 
-    // 8. Admin schema
-    const adminSqlPath = path.join(process.cwd(), 'src/db/admin_schema.sql')
-    if (fs.existsSync(adminSqlPath)) {
-      console.log('8. Running admin schema updates...')
-      const sql = fs.readFileSync(adminSqlPath, 'utf8')
+    // 8. Demos schema
+    const demosSqlPath = path.join(process.cwd(), 'src/db/demos_schema.sql')
+    if (fs.existsSync(demosSqlPath)) {
+      console.log('8. Running demos schema updates...')
+      const sql = fs.readFileSync(demosSqlPath, 'utf8')
       await client.query(sql)
+    } else {
+      console.log('8. Skipping demos schema (file not found)')
     }
 
     // 9. Missing tables schema (talent_pool columns etc)
     const missingSqlPath = path.join(process.cwd(), 'src/db/missing_tables_schema.sql')
     if (fs.existsSync(missingSqlPath)) {
-      console.log('9. Running missing tables schema updates...')
+      console.log('8. Running missing tables schema updates...')
       const sql = fs.readFileSync(missingSqlPath, 'utf8')
       await client.query(sql)
     }

@@ -23,7 +23,8 @@ const newMethods = `
       to: userEmail,
       subject: 'Your Support Ticket is Being Reviewed',
       html,
-      sourceAction: 'SupportTicketSeen'
+      text: \`Hello, this is a quick note to let you know that our administrative team has seen your support ticket: \${subject}. We are actively looking into it and will take the necessary actions.\`,
+      emailType: 'SupportTicketSeen'
     });
   }
 
@@ -45,7 +46,8 @@ const newMethods = `
       to: userEmail,
       subject: 'OptioHire Demo Confirmed',
       html,
-      sourceAction: 'DemoSeen'
+      text: \`Hello, our team has been notified about your demo scheduled for \${new Date(demoTime).toLocaleString()}.\`,
+      emailType: 'DemoSeen'
     });
   }
 
@@ -68,12 +70,21 @@ const newMethods = `
       to: adminEmail,
       subject: 'New Demo Scheduled',
       html,
-      sourceAction: 'AdminDemoAlert'
+      text: \`A new demo has been booked by \${hrInfo.email} at \${new Date(demoTime).toLocaleString()}.\`,
+      emailType: 'AdminDemoAlert'
     });
   }
-}
 `;
 
-content = content.replace(/}\s*$/, newMethods);
-fs.writeFileSync(file, content);
-console.log('Successfully updated emailService.ts');
+// Insert the methods right before the closing brace of EmailService
+// Find the last occurrence of "\n}" before "function escapeHtml"
+const escapeHtmlIndex = content.indexOf('function escapeHtml');
+const classEndIndex = content.lastIndexOf('}', escapeHtmlIndex);
+
+if (classEndIndex !== -1) {
+  content = content.substring(0, classEndIndex) + newMethods + '\\n' + content.substring(classEndIndex);
+  fs.writeFileSync(file, content);
+  console.log('Appended methods cleanly to EmailService');
+} else {
+  console.log('Could not find EmailService class end');
+}

@@ -1,4 +1,9 @@
-'use client'
+import * as fs from 'fs';
+import * as path from 'path';
+
+const supportPagePath = path.join(process.cwd(), '../frontend/src/app/admin/support/page.tsx');
+
+const newSupportPageContent = `'use client'
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -42,11 +47,11 @@ export default function AdminSupportTicketsPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
       
       const [ticketsRes, demosRes] = await Promise.all([
-        fetch(`${backendUrl}/api/admin/support-tickets`, {
-          headers: { Authorization: `Bearer ${token}` }
+        fetch(\`\${backendUrl}/api/admin/support-tickets\`, {
+          headers: { Authorization: \`Bearer \${token}\` }
         }),
-        fetch(`${backendUrl}/api/demos/admin`, {
-          headers: { Authorization: `Bearer ${token}` }
+        fetch(\`\${backendUrl}/api/demos/admin\`, {
+          headers: { Authorization: \`Bearer \${token}\` }
         })
       ])
 
@@ -74,9 +79,9 @@ export default function AdminSupportTicketsPage() {
     try {
       const token = localStorage.getItem('token')
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const res = await fetch(`${backendUrl}/api/admin/support-tickets/${id}/seen`, {
+      const res = await fetch(\`\${backendUrl}/api/admin/support-tickets/\${id}/seen\`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: \`Bearer \${token}\` }
       })
       if (!res.ok) throw new Error('Failed to update ticket')
       fetchData()
@@ -89,9 +94,9 @@ export default function AdminSupportTicketsPage() {
     try {
       const token = localStorage.getItem('token')
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const res = await fetch(`${backendUrl}/api/demos/admin/${id}/seen`, {
+      const res = await fetch(\`\${backendUrl}/api/demos/admin/\${id}/seen\`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: \`Bearer \${token}\` }
       })
       if (!res.ok) throw new Error('Failed to update demo')
       fetchData()
@@ -233,3 +238,7 @@ export default function AdminSupportTicketsPage() {
     </div>
   )
 }
+`;
+
+fs.writeFileSync(supportPagePath, newSupportPageContent);
+console.log('Updated admin support page with Demos tab');
