@@ -29,6 +29,8 @@
 - [Architecture Overview](#architecture-overview)
 - [Deployment](#deployment)
 - [Phase 2 Roadmap](#phase-2-roadmap)
+- [LLM Skills Integrated](#llm-skills-integrated)
+- [SECURITY ENGINEERING GUIDE](#security-engineering-guide)
 
 ---
 
