@@ -426,7 +426,7 @@ export async function getDeadLetterEmails(req: Request, res: Response) {
       params
     )
 
-    const countParams = [maxAttempts]
+    const countParams: any[] = [maxAttempts]
     let countWhereClause = `WHERE status = 'failed'
       AND (
         COALESCE((metadata->>'is_retry_eligible')::boolean, true) = false
