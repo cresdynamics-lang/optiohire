@@ -12,7 +12,7 @@ import { uploadPublicResume, submitApplication } from '@/lib/public-api'
 import { Loader2, CheckCircle2, AlertCircle, FileText, UploadCloud } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
-import ReCAPTCHA from 'react-google-recaptcha'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { useRef } from 'react'
 
 const formSchema = z.object({
@@ -34,7 +34,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
   const [resumeUploadError, setResumeUploadError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const { toast } = useToast()
-  const captchaRef = useRef<ReCAPTCHA>(null)
+  const { executeRecaptcha } = useGoogleReCaptcha()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -102,9 +102,8 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
       return
     }
 
-    const token = captchaRef.current?.getValue()
-    if (!token) {
-      setError('Please complete the reCAPTCHA verification.')
+    if (!executeRecaptcha) {
+      setError('Recaptcha not yet available')
       return
     }
 
@@ -112,6 +111,11 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
     setError(null)
 
     try {
+      const token = await executeRecaptcha('public_apply')
+      if (!token) {
+        throw new Error('Failed to obtain recaptcha token')
+      }
+
       // 1. Upload Resume
       const uploadResult = await uploadPublicResume(resumeFile)
       
@@ -135,7 +139,6 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
     } catch (err: any) {
       const errorMessage = err.message || 'Something went wrong. Please try again.'
       setError(errorMessage)
-      captchaRef.current?.reset()
       toast({
         title: "Submission Failed",
         description: errorMessage,
@@ -269,13 +272,6 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
             </FormItem>
           )}
         />
-
-        <div className="flex justify-center py-2">
-          <ReCAPTCHA
-            ref={captchaRef}
-            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6Le5lgwtAAAAAMpm9GgWfY3jrCS6maXw-WZoBhgX'}
-          />
-        </div>
 
         <Button 
           type="submit" 

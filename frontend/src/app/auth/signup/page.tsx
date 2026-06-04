@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
 import { Eye, EyeOff, ArrowLeft, AlertCircle, Shield, User } from 'lucide-react'
-import ReCAPTCHA from 'react-google-recaptcha'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 
 type UserRole = 'employer' | 'candidate' | null
 
@@ -54,13 +54,13 @@ function SignUpForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { signUp } = useAuth()
+  const { executeRecaptcha } = useGoogleReCaptcha()
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [step, setStep] = useState(1) // 1: role select, 2: credentials, 3: details, 4: confirm
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const captchaRef = useRef<ReCAPTCHA>(null)
 
   // Handle pre-selected role from query params
   useEffect(() => {
@@ -83,9 +83,8 @@ function SignUpForm() {
   })
 
   const onEmployerSubmit = async (data: EmployerSignUpData) => {
-    const token = captchaRef.current?.getValue()
-    if (!token) {
-      setError('Please complete the reCAPTCHA verification.')
+    if (!executeRecaptcha) {
+      setError('Recaptcha not yet available')
       return
     }
 
@@ -93,6 +92,11 @@ function SignUpForm() {
     setError(null)
 
     try {
+      const token = await executeRecaptcha('signup_employer')
+      if (!token) {
+        throw new Error('Failed to obtain recaptcha token')
+      }
+
       const result = await signUp(
         data.name,
         data.email,
@@ -109,7 +113,6 @@ function SignUpForm() {
       if (error) {
         setError(error.message)
         setIsLoading(false)
-        captchaRef.current?.reset()
         return
       }
 
@@ -124,14 +127,12 @@ function SignUpForm() {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
       setIsLoading(false)
-      captchaRef.current?.reset()
     }
   }
 
   const onCandidateSubmit = async (data: CandidateSignUpData) => {
-    const token = captchaRef.current?.getValue()
-    if (!token) {
-      setError('Please complete the reCAPTCHA verification.')
+    if (!executeRecaptcha) {
+      setError('Recaptcha not yet available')
       return
     }
 
@@ -139,6 +140,11 @@ function SignUpForm() {
     setError(null)
 
     try {
+      const token = await executeRecaptcha('signup_candidate')
+      if (!token) {
+        throw new Error('Failed to obtain recaptcha token')
+      }
+
       const result = await signUp(
         data.name,
         data.email,
@@ -155,7 +161,6 @@ function SignUpForm() {
       if (error) {
         setError(error.message)
         setIsLoading(false)
-        captchaRef.current?.reset()
         return
       }
 
@@ -170,7 +175,6 @@ function SignUpForm() {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
       setIsLoading(false)
-      captchaRef.current?.reset()
     }
   }
 
@@ -695,13 +699,6 @@ function SignUpForm() {
                     <p className="text-sm text-red-600 font-figtree">{error}</p>
                   </div>
                 )}
-
-                <div className="flex justify-center py-2">
-                  <ReCAPTCHA
-                    ref={captchaRef}
-                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6Le5lgwtAAAAAMpm9GgWfY3jrCS6maXw-WZoBhgX'}
-                  />
-                </div>
 
                 <div className="flex gap-3">
                   <button

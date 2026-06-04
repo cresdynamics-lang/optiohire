@@ -8,6 +8,7 @@ import { CookieProvider } from '@/components/providers/cookie-provider'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { ServiceWorker } from '@/components/service-worker'
 import { BottomCtaBanner } from '@/components/ui/bottom-cta-banner'
+import { CaptchaProvider } from '@/components/providers/captcha-provider'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -121,15 +122,17 @@ export default function RootLayout({
       </head>
       <body className={`${dmSans.className} antialiased bg-background text-foreground`} suppressHydrationWarning>
         <CookieProvider>
-          <AuthProvider>
-            <ErrorBoundary>
-              <div className="min-h-screen bg-background">
-                <ConditionalLayout>{children}</ConditionalLayout>
-                <CookieConsent />
-                <ServiceWorker />
-              </div>
-            </ErrorBoundary>
-          </AuthProvider>
+          <CaptchaProvider>
+            <AuthProvider>
+              <ErrorBoundary>
+                <div className="min-h-screen bg-background">
+                  <ConditionalLayout>{children}</ConditionalLayout>
+                  <CookieConsent />
+                  <ServiceWorker />
+                </div>
+              </ErrorBoundary>
+            </AuthProvider>
+          </CaptchaProvider>
         </CookieProvider>
       </body>
     </html>
