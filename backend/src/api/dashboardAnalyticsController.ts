@@ -157,15 +157,21 @@ export async function getDashboardAnalytics(req: any, res: Response) {
         applications: parseInt(r.applications || '0', 10),
         hires: parseInt(r.hires || '0', 10)
       })),
-      aiInsights: ''
+      aiInsights: [] as any
     }
 
     // 5. Generate AI Insights
     try {
       const prompt = `
 You are an expert HR Analyst for OptioHire. 
-Analyze the following recruitment data for a company and provide 3-4 bullet points of actionable insights.
-Make it brief, professional, and highlight any bottlenecks, excellent performance, or areas needing attention.
+Analyze the following recruitment data for a company and provide 3-4 actionable insights.
+Instead of plain text, you MUST return ONLY a valid JSON array of objects. 
+Each object must have the following structure:
+{
+  "title": "Short title of the insight",
+  "description": "Detailed explanation of the insight",
+  "weight": "critical" | "positive" | "warning" | "neutral"
+}
 
 Data:
 Funnel: ${JSON.stringify(funnel)}
@@ -173,16 +179,27 @@ Time to Hire: ${JSON.stringify(payload.timeToHire)}
 Job Health: ${JSON.stringify(jobRankings)}
 Velocity: ${JSON.stringify(payload.velocity)}
 `
-      const systemPrompt = "You are an HR Analytics AI. Provide short, concise insights in bullet points."
-      const insights = await openRouterService.generateText(prompt, undefined, {
+      const systemPrompt = "You are an HR Analytics AI. Provide insights strictly as a JSON array of objects."
+      const insightsText = await openRouterService.generateText(prompt, undefined, {
         systemPrompt,
-        maxTokens: 300,
-        temperature: 0.5
+        maxTokens: 600,
+        temperature: 0.3
       })
-      payload.aiInsights = insights.trim()
+      
+      // Attempt to parse the JSON array
+      const match = insightsText.match(/\[.*\]/s)
+      if (match) {
+        payload.aiInsights = JSON.parse(match[0])
+      } else {
+        payload.aiInsights = JSON.parse(insightsText)
+      }
     } catch (err: any) {
       logger.warn('Failed to generate AI insights for dashboard:', err.message)
-      payload.aiInsights = 'AI insights are currently unavailable.'
+      payload.aiInsights = [{
+        title: "Insights Unavailable",
+        description: "AI insights could not be generated at this time.",
+        weight: "warning"
+      }]
     }
 
     return res.status(200).json(payload)

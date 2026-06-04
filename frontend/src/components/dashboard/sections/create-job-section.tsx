@@ -22,7 +22,8 @@ import {
   ChevronLeft,
   Info,
   Copy,
-  Check
+  Check,
+  Image as ImageIcon
 } from 'lucide-react'
 import { JobPostingFormData } from '@/types'
 import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
@@ -57,6 +58,8 @@ export function CreateJobSection() {
   const [createdJobInfo, setCreatedJobInfo] = useState<{ jobTitle: string; companyName: string; jobId?: string } | null>(null)
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedEmail, setCopiedEmail] = useState(false)
+  const [posterFile, setPosterFile] = useState<File | null>(null)
+  const [isUploadingPoster, setIsUploadingPoster] = useState(false)
 
   // Pre-fill company info from user
   useEffect(() => {
@@ -72,6 +75,40 @@ export function CreateJobSection() {
 
   const handleInputChange = (field: keyof JobPostingFormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handlePosterUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    
+    const file = e.target.files[0]
+    setPosterFile(file)
+    setIsUploadingPoster(true)
+    
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const token = localStorage.getItem('token')
+      const resp = await fetch('/api/upload/job-poster', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
+      
+      const data = await resp.json()
+      if (resp.ok && data.url) {
+        handleInputChange('job_poster_url', data.url)
+      } else {
+        throw new Error(data.error || 'Failed to upload poster')
+      }
+    } catch (err: any) {
+      setStatus({ status: 'error', message: err.message || 'Error uploading poster' })
+      setPosterFile(null)
+    } finally {
+      setIsUploadingPoster(false)
+    }
   }
 
   const addSkill = () => {
@@ -150,7 +187,8 @@ export function CreateJobSection() {
           job_description: formData.job_description,
           required_skills: formData.required_skills,
           application_deadline: formData.application_deadline,
-          meeting_link: formData.interview_meeting_link || undefined
+          meeting_link: formData.interview_meeting_link || undefined,
+          job_poster_url: formData.job_poster_url || undefined
         })
       })
       
@@ -330,6 +368,57 @@ export function CreateJobSection() {
                       <div className="flex items-center gap-2 text-slate-400 text-sm">
                         <Info className="h-4 w-4" />
                         <span>Add at least one skill for AI matching</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Job Poster Upload */}
+                <div className="space-y-3 pt-4">
+                  <Label className="text-sm font-semibold">Job Poster (Optional)</Label>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-4">
+                      <Label htmlFor="poster_upload" className="cursor-pointer">
+                        <div className="flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-800 transition-colors px-6 py-3 rounded-xl shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {isUploadingPoster ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                          ) : (
+                            <ImageIcon className="h-4 w-4 text-indigo-600" />
+                          )}
+                          {isUploadingPoster ? 'Uploading...' : 'Upload Image'}
+                        </div>
+                      </Label>
+                      <Input
+                        id="poster_upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handlePosterUpload}
+                        disabled={isUploadingPoster}
+                      />
+                      {formData.job_poster_url && (
+                        <div className="text-sm text-green-600 flex items-center gap-1.5 font-medium">
+                          <CheckCircle className="h-4 w-4" /> Poster Uploaded
+                        </div>
+                      )}
+                    </div>
+                    {formData.job_poster_url && (
+                      <div className="relative w-40 h-40 rounded-xl overflow-hidden border border-slate-200 mt-2">
+                        <img 
+                          src={formData.job_poster_url} 
+                          alt="Job Poster Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPosterFile(null)
+                            handleInputChange('job_poster_url', '')
+                          }}
+                          className="absolute top-2 right-2 bg-white/90 hover:bg-white text-slate-700 rounded-full p-1.5 shadow-sm transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     )}
                   </div>

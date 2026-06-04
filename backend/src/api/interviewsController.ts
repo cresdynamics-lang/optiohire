@@ -107,7 +107,7 @@ export async function getScheduledInterviews(req: any, res: Response) {
       FROM applications a
       INNER JOIN job_postings j ON a.job_posting_id = j.job_posting_id
       WHERE a.company_id = $1 
-        AND a.ai_status = 'REJECT'`,
+        AND a.interview_status = 'REJECTED'`,
       [companyId]
     )
 
