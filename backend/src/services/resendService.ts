@@ -365,7 +365,7 @@ export class ResendService {
         logger.error(`[ResendAPI] Error fetching attachments for ${emailId}:`, { error: result.error })
         throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
       }
-      const attachments = result.data || []
+      const attachments = Array.isArray(result.data) ? result.data : (result.data?.data || [])
       logger.info(`[ResendAPI] Successfully fetched ${attachments.length} attachments for email: ${emailId}`)
       return attachments
     } catch (error: any) {
