@@ -12,6 +12,7 @@ export interface AuthRequest extends Request {
   userId?: string
   userEmail?: string
   userRole?: string
+  userCompanyRole?: string
 }
 
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
