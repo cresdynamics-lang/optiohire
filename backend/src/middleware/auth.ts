@@ -76,6 +76,49 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       return res.status(401).json({ error: 'Invalid or inactive user' })
     }
 
+    // STRICT: Check if user has a company (except for admin)
+    if (userRecord.role !== 'admin') {
+      try {
+        // Check if user_id column exists in companies table
+        const checkColumn = await query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'companies' AND column_name = 'user_id'
+        `)
+        
+        let hasCompany = false
+        if (checkColumn.rows.length > 0) {
+          // user_id column exists, check by user_id
+          const companyCheck = await query(
+            `SELECT company_id FROM companies WHERE user_id = $1 LIMIT 1`,
+            [decoded.sub]
+          )
+          hasCompany = companyCheck.rows.length > 0
+        } else {
+          // Fallback: check by email (hr_email or company_email)
+          const companyCheck = await query(
+            `SELECT company_id FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
+            [userRecord.email]
+          )
+          hasCompany = companyCheck.rows.length > 0
+        }
+
+        if (!hasCompany) {
+          return res.status(403).json({ 
+            error: 'Access denied: Company profile required',
+            details: 'Your account must have a company profile to access this resource. Please contact support.'
+          })
+        }
+      } catch (err) {
+        console.error('Error checking company:', err)
+        // Strict enforcement: if check fails, deny access
+        return res.status(403).json({ 
+          error: 'Access denied: Unable to verify company profile',
+          details: 'Please contact support to set up your company profile.'
+        })
+      }
+    }
+
     req.userId = userRecord.user_id
     req.userEmail = userRecord.email
     req.userRole = userRecord.role

@@ -89,13 +89,6 @@ backend/storage/
 # Optional: keep empty dirs
 !**/storage/.gitkeep
 
-# Test scripts
-__tests__/
-*.test.ts
-*.spec.ts
-*.test.js
-*.spec.js
-
 # Ignore all shell scripts and deployment directories to prevent credential leaks
 *.sh
 deploy/

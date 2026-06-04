@@ -254,12 +254,13 @@ export async function createJobPosting(req: Request, res: Response) {
   }
 
   // Check if user_id column exists BEFORE starting transaction
-  const checkClient = await pool.connect()
+  let checkClient: any = null
   let hasUserIdColumn = false
   try {
+    checkClient = await pool.connect()
     const checkResult = await checkClient.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
+      SELECT column_name
+      FROM information_schema.columns
       WHERE table_name = 'companies' AND column_name = 'user_id'
     `)
     hasUserIdColumn = checkResult.rows.length > 0
@@ -267,9 +268,8 @@ export async function createJobPosting(req: Request, res: Response) {
     console.log('⚠️ Could not check for user_id column, assuming it does not exist')
     hasUserIdColumn = false
   } finally {
-    checkClient.release()
+    if (checkClient) checkClient.release()
   }
-
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
@@ -356,6 +356,10 @@ export async function createJobPosting(req: Request, res: Response) {
           [companyRow.company_id, payload.company_name, payload.hr_email, payload.company_email]
         )
       }
+    }
+
+    if (!companyRow) {
+      throw new Error('Failed to identify or create company for job posting')
     }
 
     const companyId = companyRow.company_id
