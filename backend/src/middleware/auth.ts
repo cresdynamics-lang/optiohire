@@ -252,6 +252,7 @@ export async function requireHR(req: AuthRequest, res: Response, next: NextFunct
 export async function requireCandidate(req: AuthRequest, res: Response, next: NextFunction) {
   const isCandidate = 
     req.userRole === 'candidate' || 
+    req.userRole === 'user' || // Allow general users to access candidate dashboard
     req.userCompanyRole === 'candidate' || 
     req.userCompanyRole === 'job_seeker' ||
     req.userCompanyRole === 'jobseeker';

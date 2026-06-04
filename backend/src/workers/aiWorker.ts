@@ -266,7 +266,8 @@ export class AIWorker {
       } else if (aiResult.status === 'REJECTED') {
         await emailService.sendRejectionEmail(emailArgs)
       } else if (aiResult.status === 'FLAGGED') {
-        await emailService.sendFlagReviewEmail(emailArgs)
+        // Redundant since the initial "Application Received" already says the application is under review.
+        // await emailService.sendFlagReviewEmail(emailArgs)
       }
 
       // Send digest to HR

@@ -298,6 +298,7 @@ Hi ${candidateName},
 
 Thank you for applying for the ${cleanedJobTitle} position at ${companyName}.
 We have successfully received your application.
+${dashboardBlockText}
 
 Best regards,
 The OptioHire Team`
