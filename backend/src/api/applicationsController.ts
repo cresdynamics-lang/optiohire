@@ -3,6 +3,7 @@ import { query } from '../db/index.js'
 import { startImapIngestion } from '../utils/imap.js'
 import { logger } from '../utils/logger.js'
 import { aiQueue } from '../queues/aiQueue.js'
+import { verifyCaptcha } from '../utils/captcha.js'
 import { provisionCandidateAccount } from '../services/candidateProvisioningService.js'
 import { EmailService } from '../services/emailService.js'
 
@@ -43,7 +44,13 @@ export async function scoreApplication(req: Request, res: Response) {
 
 export async function submitPublicApplication(req: Request, res: Response) {
   try {
-    const { job_posting_id, candidate_name, email, resume_url, cover_letter, phone } = req.body || {}
+    const { job_posting_id, candidate_name, email, resume_url, cover_letter, phone, captchaToken } = req.body || {}
+
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
+    }
 
     if (!job_posting_id || !candidate_name || !email || !resume_url) {
       return res.status(400).json({ error: 'Missing required fields' })

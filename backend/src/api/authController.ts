@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { query, pool } from '../db/index.js'
 import { EmailService } from '../services/emailService.js'
+import { verifyCaptcha } from '../utils/captcha.js'
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) {
@@ -15,7 +16,14 @@ const RESET_TOKEN_EXPIRY_HOURS = 1 // Token expires in 1 hour
 export async function signup(req: Request, res: Response) {
   const client = await pool.connect()
   try {
-    const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email } = req.body || {}
+    const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email, captchaToken } = req.body || {}
+    
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
+    }
+
     const rawCompanyRole = String(company_role || '').toLowerCase().trim()
     const isCandidateSignup =
       rawCompanyRole === 'candidate' ||
@@ -533,9 +541,15 @@ export async function adminSignin(req: Request, res: Response) {
 
 export async function forgotPassword(req: Request, res: Response) {
   try {
-    const { email } = req.body || {}
+    const { email, captchaToken } = req.body || {}
     if (!email) {
       return res.status(400).json({ error: 'Email is required' })
+    }
+
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
     }
 
     // Check if user exists
