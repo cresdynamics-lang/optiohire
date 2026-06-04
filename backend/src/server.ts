@@ -170,8 +170,8 @@ async function start() {
     logger.info('⚠️ Redis is disabled. BullMQ workers will NOT be started.');
   }
   
-  app.listen(port, () => {
-    logger.info(`Backend listening on http://localhost:${port}`)
+  app.listen(port, '0.0.0.0', () => {
+    logger.info(`Backend listening on http://0.0.0.0:${port}`)
   })
 }
 
