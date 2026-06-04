@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Search, MapPin, Clock, ChevronRight, Building2, SlidersHorizontal, X, Briefcase, ArrowRight, Sparkles, ChevronDown, Check } from 'lucide-react'
 import { useRef } from 'react'
 import { motion } from 'framer-motion'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 
 interface Job {
   id: string
