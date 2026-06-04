@@ -49,6 +49,7 @@ export default function JobDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [logoError, setLogoError] = useState(false)
   const { executeRecaptcha } = useGoogleReCaptcha()
 
   useEffect(() => {
@@ -155,8 +156,13 @@ export default function JobDetailPage() {
               <div className="w-full bg-[#1A1625] rounded-3xl p-8 sm:p-10 flex flex-col justify-between aspect-[4/5] sm:aspect-auto sm:h-[480px] shadow-2xl border border-slate-800">
                 {/* Header: Logo and Company Name */}
                 <div className="flex items-center gap-3">
-                  {job.company_logo_url ? (
-                    <img src={job.company_logo_url} alt={job.company_name} className="h-8 w-auto object-contain rounded-sm" />
+                  {job.company_logo_url && !logoError ? (
+                    <img 
+                      src={job.company_logo_url} 
+                      alt={job.company_name} 
+                      onError={() => setLogoError(true)}
+                      className="h-8 w-auto object-contain rounded-sm" 
+                    />
                   ) : (
                     <div className="h-8 w-11 rounded-md bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-xs font-bold text-white shadow-sm">
                       {initials}
@@ -203,14 +209,15 @@ export default function JobDetailPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
                 {/* Company logo */}
-                {job.company_logo_url ? (
+                {job.company_logo_url && !logoError ? (
                   <img
                     src={job.company_logo_url}
                     alt={job.company_name}
+                    onError={() => setLogoError(true)}
                     className="h-16 w-16 rounded-2xl border border-slate-100 object-contain"
                   />
                 ) : (
-                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D2DDD] to-blue-500 text-xl font-bold text-white shadow-md">
+                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 text-xl font-bold text-white shadow-md">
                     {initials}
                   </div>
                 )}
@@ -341,10 +348,15 @@ export default function JobDetailPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <h3 className="mb-3 text-sm font-bold text-slate-900 uppercase tracking-wide">About the Company</h3>
               <div className="flex items-center gap-3">
-                {job.company_logo_url ? (
-                  <img src={job.company_logo_url} alt={job.company_name} className="h-10 w-10 rounded-xl border border-slate-100 object-contain" />
+                {job.company_logo_url && !logoError ? (
+                  <img 
+                    src={job.company_logo_url} 
+                    alt={job.company_name} 
+                    onError={() => setLogoError(true)}
+                    className="h-10 w-10 rounded-xl border border-slate-100 object-contain" 
+                  />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#2D2DDD] to-blue-500 text-sm font-bold text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-sm font-bold text-white">
                     {initials}
                   </div>
                 )}

@@ -105,6 +105,11 @@ export default function HomePageContent() {
 
   const [featuredJobs, setFeaturedJobs] = useState<Job[]>([])
   const [loadingJobs, setLoadingJobs] = useState(true)
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
+
+  const handleImgError = (id: string) => {
+    setImgErrors((prev) => ({ ...prev, [id]: true }))
+  }
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -357,9 +362,18 @@ export default function HomePageContent() {
                     {/* Bottom Footer Area */}
                     <div className="mt-8 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0F172A] text-xs font-bold text-white">
-                          {job.company_name.slice(0, 2).toUpperCase()}
-                        </div>
+                        {job.company_logo_url && !imgErrors[job.job_posting_id] ? (
+                          <img
+                            src={job.company_logo_url}
+                            alt={job.company_name}
+                            onError={() => handleImgError(job.job_posting_id)}
+                            className="h-10 w-10 shrink-0 rounded-md object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-11 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-rose-500 to-pink-600 text-xs font-bold text-white shadow-sm">
+                            {job.company_name.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
                         <div className="min-w-0">
                           <p className="truncate text-sm font-bold text-slate-900">{job.company_name}</p>
                           <p className="truncate text-xs text-slate-600">Nairobi, Kenya</p>
