@@ -193,7 +193,7 @@ function SignUpForm() {
     nextStep()
   }
 
-  const registerField = (name: any) => {
+  const registerField = (name: any): any => {
     if (userRole === 'candidate') {
       return candidateForm.register(name)
     }
