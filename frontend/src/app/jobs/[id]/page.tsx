@@ -79,9 +79,9 @@ export default function JobDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 py-10 px-4">
-        <div className="mx-auto max-w-4xl space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
           <div className="h-8 w-32 animate-pulse rounded-xl bg-slate-200" />
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-5">
+          <div className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm space-y-5">
             <div className="flex gap-4">
               <div className="h-16 w-16 animate-pulse rounded-2xl bg-slate-200" />
               <div className="flex-1 space-y-3">
@@ -125,7 +125,7 @@ export default function JobDetailPage() {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#ffffff_60%)]">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Back button */}
         <Link
           href="/jobs"
@@ -135,16 +135,63 @@ export default function JobDetailPage() {
           All Jobs
         </Link>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_380px]">
           {/* Main content */}
-          <div className="space-y-6">
-            {job.job_poster_url && (
-              <div className="w-full overflow-hidden rounded-2xl shadow-sm border border-slate-200">
-                <img src={job.job_poster_url} alt={`${job.job_title} Poster`} className="w-full h-auto object-cover max-h-[400px]" />
+          <div className="space-y-8">
+            {job.job_poster_url ? (
+              <div className="w-full overflow-hidden rounded-3xl shadow-sm border border-slate-200">
+                <img src={job.job_poster_url} alt={`${job.job_title} Poster`} className="w-full h-auto object-cover max-h-[500px]" />
+              </div>
+            ) : (
+              <div className="w-full bg-[#1A1625] rounded-3xl p-8 sm:p-10 flex flex-col justify-between aspect-[4/5] sm:aspect-auto sm:h-[480px] shadow-2xl border border-slate-800">
+                {/* Header: Logo and Company Name */}
+                <div className="flex items-center gap-3">
+                  {job.company_logo_url ? (
+                    <img src={job.company_logo_url} alt={job.company_name} className="h-8 w-auto object-contain rounded-sm" />
+                  ) : (
+                    <div className="h-8 w-11 rounded-md bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-xs font-bold text-white shadow-sm">
+                      {initials}
+                    </div>
+                  )}
+                  <span className="text-white font-bold text-xl tracking-tight">{job.company_name}</span>
+                </div>
+
+                {/* Main Content */}
+                <div className="mt-auto mb-8">
+                  <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.1] tracking-tight mb-10">
+                    {job.job_title}
+                  </h1>
+
+                  <div className="flex items-center gap-5">
+                    {/* Date Block */}
+                    <div className="bg-[#2A2438] rounded-xl flex flex-col items-center justify-center w-[72px] h-[72px] shadow-inner shrink-0">
+                      {deadline ? (
+                        <>
+                          <span className="text-white/80 text-[11px] font-bold uppercase tracking-widest">{new Date(deadline.formatted).toLocaleString('default', { month: 'short' })}</span>
+                          <span className="text-white text-2xl font-bold leading-none mt-1.5">{new Date(deadline.formatted).getDate()}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-white/80 text-[11px] font-bold uppercase tracking-widest">ASAP</span>
+                          <span className="text-white text-2xl font-bold leading-none mt-1.5">—</span>
+                        </>
+                      )}
+                    </div>
+                    {/* Location */}
+                    <span className="text-slate-300 font-medium text-base">Online, Remote</span>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="pt-6 border-t border-white/10">
+                  <p className="text-slate-400 text-sm font-medium">
+                    By {job.company_name} <span className="text-rose-500 font-bold ml-1">Apply on Optiohire</span>
+                  </p>
+                </div>
               </div>
             )}
             {/* Header card */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
                 {/* Company logo */}
                 {job.company_logo_url ? (
@@ -205,7 +252,7 @@ export default function JobDetailPage() {
             </div>
 
             {/* About the role */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm">
               <h2 className="mb-4 text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-blue-600" />
                 About the Role
@@ -219,7 +266,7 @@ export default function JobDetailPage() {
 
             {/* Responsibilities */}
             {job.responsibilities && (
-              <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm">
                 <h2 className="mb-4 text-lg font-bold text-slate-900">Responsibilities</h2>
                 <ul className="space-y-2.5">
                   {job.responsibilities.split('\n').filter(Boolean).map((item, i) => (
@@ -234,7 +281,7 @@ export default function JobDetailPage() {
 
             {/* Skills required */}
             {skills.length > 0 && (
-              <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm">
                 <h2 className="mb-4 text-lg font-bold text-slate-900 flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-blue-600" />
                   Skills & Requirements
@@ -254,9 +301,9 @@ export default function JobDetailPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Apply CTA */}
-            <div className="sticky top-24 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="sticky top-24 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <h3 className="mb-1 text-base font-bold text-slate-900">Ready to apply?</h3>
               <p className="mb-5 text-sm text-slate-500">
                 Submit your application directly to {job.company_name}.
@@ -282,7 +329,7 @@ export default function JobDetailPage() {
             </div>
 
             {/* Company info */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <h3 className="mb-3 text-sm font-bold text-slate-900 uppercase tracking-wide">About the Company</h3>
               <div className="flex items-center gap-3">
                 {job.company_logo_url ? (

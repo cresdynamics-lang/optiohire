@@ -60,6 +60,7 @@ export function CreateJobSection() {
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [posterFile, setPosterFile] = useState<File | null>(null)
   const [isUploadingPoster, setIsUploadingPoster] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   // Pre-fill company info from user
   useEffect(() => {
@@ -83,30 +84,64 @@ export function CreateJobSection() {
     const file = e.target.files[0]
     setPosterFile(file)
     setIsUploadingPoster(true)
+    setUploadProgress(0)
     
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('poster', file) // Must match upload.single('poster') on backend
       
       const token = localStorage.getItem('token')
-      const resp = await fetch('/api/upload/job-poster', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
       
-      const data = await resp.json()
-      if (resp.ok && data.url) {
-        handleInputChange('job_poster_url', data.url)
-      } else {
-        throw new Error(data.error || 'Failed to upload poster')
+      const xhr = new XMLHttpRequest()
+      
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100)
+          setUploadProgress(percentComplete)
+        }
       }
+      
+      xhr.onload = () => {
+        setIsUploadingPoster(false)
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText)
+            if (data.url) {
+              handleInputChange('job_poster_url', data.url)
+              setUploadProgress(100)
+            } else {
+              throw new Error('No URL in response')
+            }
+          } catch (err) {
+            setStatus({ status: 'error', message: 'Failed to parse response' })
+            setPosterFile(null)
+          }
+        } else {
+          try {
+            const errorData = JSON.parse(xhr.responseText)
+            setStatus({ status: 'error', message: errorData.error || 'Upload failed' })
+          } catch {
+            setStatus({ status: 'error', message: `Upload failed with status ${xhr.status}` })
+          }
+          setPosterFile(null)
+        }
+      }
+      
+      xhr.onerror = () => {
+        setIsUploadingPoster(false)
+        setStatus({ status: 'error', message: 'Network error during upload' })
+        setPosterFile(null)
+      }
+      
+      xhr.open('POST', '/api/upload/job-poster', true)
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      }
+      xhr.send(formData)
+      
     } catch (err: any) {
       setStatus({ status: 'error', message: err.message || 'Error uploading poster' })
       setPosterFile(null)
-    } finally {
       setIsUploadingPoster(false)
     }
   }
@@ -378,14 +413,14 @@ export function CreateJobSection() {
                   <Label className="text-sm font-semibold">Job Poster (Optional)</Label>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-4">
-                      <Label htmlFor="poster_upload" className="cursor-pointer">
+                      <Label htmlFor="poster_upload" className={`cursor-pointer ${isUploadingPoster ? 'pointer-events-none opacity-70' : ''}`}>
                         <div className="flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-800 transition-colors px-6 py-3 rounded-xl shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
                           {isUploadingPoster ? (
                             <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
                           ) : (
                             <ImageIcon className="h-4 w-4 text-indigo-600" />
                           )}
-                          {isUploadingPoster ? 'Uploading...' : 'Upload Image'}
+                          {isUploadingPoster ? `Uploading... ${uploadProgress}%` : 'Upload Image'}
                         </div>
                       </Label>
                       <Input
@@ -396,13 +431,21 @@ export function CreateJobSection() {
                         onChange={handlePosterUpload}
                         disabled={isUploadingPoster}
                       />
-                      {formData.job_poster_url && (
+                      {formData.job_poster_url && !isUploadingPoster && (
                         <div className="text-sm text-green-600 flex items-center gap-1.5 font-medium">
                           <CheckCircle className="h-4 w-4" /> Poster Uploaded
                         </div>
                       )}
                     </div>
-                    {formData.job_poster_url && (
+                    {isUploadingPoster && (
+                      <div className="w-full bg-slate-100 rounded-full h-2 mt-2 max-w-xs dark:bg-slate-800 overflow-hidden">
+                        <div 
+                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300 ease-out" 
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                    )}
+                    {formData.job_poster_url && !isUploadingPoster && (
                       <div className="relative w-40 h-40 rounded-xl overflow-hidden border border-slate-200 mt-2">
                         <img 
                           src={formData.job_poster_url} 
