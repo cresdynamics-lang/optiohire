@@ -19,6 +19,7 @@ interface Job {
   company_name: string
   company_email: string
   company_logo_url: string | null
+  job_poster_url?: string
 }
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Hybrid']
@@ -122,35 +123,68 @@ function JobCard({ job }: { job: Job }) {
   const deadline = deadlineLabel(job.application_deadline)
   const initials = job.company_name.slice(0, 2).toUpperCase()
 
+  // Fallback pattern if no poster
+  const fallbackGradient = 'from-[#1A1625] to-[#2D243F]'
+
   return (
     <Link
       href={`/jobs/${job.job_posting_id}`}
-      className="group relative flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:border-blue-200 hover:shadow-[0_8px_30px_rgba(37,99,235,0.12)] hover:-translate-y-0.5"
+      className="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-xl hover:-translate-y-1"
     >
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        {job.company_logo_url ? (
-          <img src={job.company_logo_url} alt={job.company_name} className="h-11 w-11 rounded-xl object-contain border border-slate-100" />
+      {/* Conspicuous Deadline Badge */}
+      {deadline && (
+        <div className={`absolute top-4 right-4 z-10 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg backdrop-blur-md ${deadline.urgent ? 'bg-red-500/90 text-white' : 'bg-orange-500/90 text-white'}`}>
+          {deadline.urgent && '🔥 '}
+          {deadline.text}
+        </div>
+      )}
+
+      {/* Poster / Header Area */}
+      <div className="relative h-48 w-full overflow-hidden bg-slate-100">
+        {job.job_poster_url ? (
+          <img 
+            src={job.job_poster_url} 
+            alt={`Poster for ${job.job_title}`} 
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         ) : (
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#2D2DDD] to-blue-500 text-sm font-bold text-white">
-            {initials}
+          <div className={`h-full w-full bg-gradient-to-br ${fallbackGradient} p-6 flex flex-col justify-between transition-transform duration-500 group-hover:scale-105`}>
+            <div className="flex justify-between items-start">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2.5 inline-flex shadow-sm">
+                {job.company_logo_url ? (
+                  <img src={job.company_logo_url} alt={job.company_name} className="h-8 w-8 object-contain rounded-md bg-white" />
+                ) : (
+                  <div className="h-8 w-8 rounded-md bg-white text-[#1A1625] flex items-center justify-center font-bold text-xs">
+                    {initials}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <h3 className="font-syne text-xl font-bold text-white line-clamp-2">{job.job_title}</h3>
+              <p className="text-white/70 text-sm mt-1">{job.company_name}</p>
+            </div>
           </div>
         )}
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-semibold text-slate-900 group-hover:text-blue-700 transition-colors duration-200">
+        
+        {/* Overlay gradient for text readability if poster exists */}
+        {job.job_poster_url && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4 p-5 flex-1">
+        {/* Header (if poster is used, we still show title here for clarity, or just rely on the fallback?)
+            Actually, let's always show title below because poster might be anything. */}
+        <div>
+          <h3 className="truncate font-semibold text-slate-900 group-hover:text-blue-700 transition-colors duration-200 text-lg">
             {job.job_title}
           </h3>
-          <p className="flex items-center gap-1 text-sm text-slate-500 mt-0.5">
-            <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
+          <p className="flex items-center gap-1.5 text-sm text-slate-500 mt-1">
+            <Building2 className="h-4 w-4 flex-shrink-0" />
             {job.company_name}
           </p>
         </div>
-        {deadline && (
-          <span className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${deadline.urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-            {deadline.text}
-          </span>
-        )}
-      </div>
 
       {/* Description */}
       <p className="text-sm text-slate-600 leading-relaxed line-clamp-2">
@@ -183,6 +217,7 @@ function JobCard({ job }: { job: Job }) {
           Apply now
           <ArrowRight className="h-3.5 w-3.5" />
         </span>
+      </div>
       </div>
     </Link>
   )

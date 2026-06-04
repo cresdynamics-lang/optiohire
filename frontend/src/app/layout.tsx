@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { DM_Sans, Playfair_Display, Syne } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/hooks/use-auth'
 import { ConditionalLayout } from '@/components/layout/conditional-layout'
@@ -10,36 +9,18 @@ import { ServiceWorker } from '@/components/service-worker'
 import { BottomCtaBanner } from '@/components/ui/bottom-cta-banner'
 import { CaptchaProvider } from '@/components/providers/captcha-provider'
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+const dmSans = {
   variable: '--font-dm-sans',
-  display: 'swap',
-  preload: true,
-  adjustFontFallback: true,
-  fallback: ['Inter', 'system-ui', 'arial'],
-})
+  className: 'font-sans'
+}
 
-const syne = Syne({
-  subsets: ['latin'],
-  weight: ['600', '700', '800'],
-  variable: '--font-syne',
-  display: 'swap',
-  preload: true,
-  adjustFontFallback: true,
-  fallback: ['Poppins', 'system-ui', 'arial'],
-})
+const syne = {
+  variable: '--font-syne'
+}
 
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  style: ['italic'],
-  variable: '--font-playfair-display',
-  display: 'swap',
-  preload: true,
-  adjustFontFallback: true,
-  fallback: ['Georgia', 'Times New Roman', 'serif'],
-})
+const playfairDisplay = {
+  variable: '--font-playfair-display'
+}
 
 // Get metadata base URL - prioritize NEXT_PUBLIC_APP_URL, then VERCEL_URL, fallback to localhost
 const getMetadataBase = () => {

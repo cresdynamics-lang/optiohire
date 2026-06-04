@@ -51,9 +51,9 @@ export async function scheduleInterview(req: Request, res: Response) {
       return res.status(404).json({ error: 'Application not found' })
     }
 
-    // Check if already shortlisted
-    if (application.ai_status !== 'SHORTLIST') {
-      return res.status(400).json({ error: 'Only shortlisted candidates can be scheduled for interviews' })
+    // Check if already shortlisted or flagged
+    if (application.ai_status !== 'SHORTLIST' && application.ai_status !== 'FLAG') {
+      return res.status(400).json({ error: 'Only shortlisted or flagged candidates can be scheduled for interviews' })
     }
 
     // Get job posting

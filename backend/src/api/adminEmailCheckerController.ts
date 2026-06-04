@@ -14,7 +14,10 @@ import { logger } from '../utils/logger.js'
  */
 export async function checkAndSendMissingEmails(req: Request, res: Response) {
   try {
-    logger.info('🔍 [ADMIN] Starting comprehensive email check and send operation')
+    const { applicationIds } = req.body || {}
+    logger.info('🔍 [ADMIN] Starting comprehensive email check and send operation', {
+      applicationIds: applicationIds || 'all'
+    })
 
     const emailService = new EmailService()
     const companyRepo = new CompanyRepository()
@@ -51,10 +54,14 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
       JOIN job_postings jp ON a.job_posting_id = jp.job_posting_id
       JOIN companies c ON jp.company_id = c.company_id
       WHERE a.ai_status IN ('SHORTLIST', 'REJECT', 'FLAG')
-      ORDER BY a.created_at DESC`
+      ${Array.isArray(applicationIds) && applicationIds.length > 0 
+        ? `AND a.application_id = ANY($1::uuid[])` 
+        : ''}
+      ORDER BY a.created_at DESC`,
+      Array.isArray(applicationIds) && applicationIds.length > 0 ? [applicationIds] : []
     )
 
-    logger.info(`📊 [ADMIN] Found ${applications.length} application(s) with SHORTLIST, REJECT, or FLAG status`)
+    logger.info(`📊 [ADMIN] Found ${applications.length} application(s) to process`)
 
     const results = {
       totalApplications: applications.length,
@@ -169,6 +176,97 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
     res.status(500).json({
       success: false,
       error: err.message || 'Failed to check and send emails'
+    })
+  }
+}
+
+/**
+ * Get details of missing emails
+ * GET /api/admin/email-check/missing
+ */
+export async function getMissingEmailDetails(req: Request, res: Response) {
+  try {
+    logger.info('🔍 [ADMIN] Fetching missing email details')
+
+    const companyRepo = new CompanyRepository()
+
+    const { rows: applications } = await query<{
+      application_id: string
+      email: string
+      candidate_name: string | null
+      ai_status: string
+      created_at: Date
+      job_title: string
+      company_id: string
+      company_name: string
+      company_email: string | null
+    }>(
+      `SELECT 
+        a.application_id,
+        a.email,
+        a.candidate_name,
+        a.ai_status,
+        a.created_at,
+        jp.job_title,
+        c.company_id,
+        c.company_name,
+        c.company_email
+      FROM applications a
+      JOIN job_postings jp ON a.job_posting_id = jp.job_posting_id
+      JOIN companies c ON jp.company_id = c.company_id
+      WHERE a.ai_status IN ('SHORTLIST', 'REJECT', 'FLAG')
+      ORDER BY a.created_at DESC`
+    )
+
+    const missingEmails = []
+
+    for (const app of applications) {
+      const emailType =
+        app.ai_status === 'SHORTLIST'
+          ? 'shortlist'
+          : app.ai_status === 'REJECT'
+            ? 'rejection'
+            : 'flag_review'
+
+      // Check if email was already sent
+      const { rows: emailLogs } = await query<{
+        email_id: string
+      }>(
+        `SELECT email_id
+         FROM email_logs
+         WHERE recipient_email = $1
+           AND email_type = $2
+           AND created_at >= $3::timestamp - INTERVAL '1 hour'
+           AND created_at <= NOW()
+           AND status = 'sent'
+         LIMIT 1`,
+        [app.email, emailType, app.created_at]
+      )
+
+      if (emailLogs.length === 0) {
+        missingEmails.push({
+          applicationId: app.application_id,
+          candidateName: app.candidate_name || 'Candidate',
+          candidateEmail: app.email,
+          companyName: app.company_name,
+          companyEmail: app.company_email || 'jobs@optiohire.com',
+          jobTitle: app.job_title,
+          emailType: emailType,
+          status: app.ai_status,
+          createdAt: app.created_at
+        })
+      }
+    }
+
+    res.json({
+      success: true,
+      missingEmails
+    })
+  } catch (err: any) {
+    logger.error('❌ [ADMIN] Error in getMissingEmailDetails:', err)
+    res.status(500).json({
+      success: false,
+      error: err.message || 'Failed to fetch missing email details'
     })
   }
 }

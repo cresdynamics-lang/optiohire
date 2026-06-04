@@ -565,49 +565,55 @@ export function CreateJobSection() {
             <p className="text-indigo-100 text-center mt-3 text-lg leading-relaxed">Your job posting is now live and ready for applicants.</p>
           </div>
 
-          <div className="p-10 space-y-8">            <div className="space-y-6">
+          <div className="p-8 sm:p-10 space-y-8">
+            <div className="space-y-6">
               {/* Share Link */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">Public Apply Link</h4>
-                  {copiedLink && <span className="text-[10px] font-bold text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> Copied!</span>}
+                  <h4 className="font-bold text-sm text-slate-700">Public Apply Link</h4>
+                  {copiedLink && <span className="text-xs font-bold text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Copied!</span>}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 truncate rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 text-sm font-mono text-slate-600">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 overflow-hidden rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm font-mono text-slate-700 whitespace-nowrap overflow-ellipsis">
                     {typeof window !== 'undefined' ? `${window.location.origin}/apply/${createdJobInfo?.jobId}` : ''}
                   </div>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="h-11 w-11 rounded-xl shrink-0 border-slate-200 hover:bg-slate-50"
-                    onClick={() => copyToClipboard(`${window.location.origin}/apply/${createdJobInfo?.jobId}`, 'link')}
-                  >
-                    <Copy className="h-4 w-4 text-slate-600" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-11 px-4 rounded-xl border-slate-200 hover:bg-slate-50 gap-2 font-medium"
+                      onClick={() => copyToClipboard(`${window.location.origin}/apply/${createdJobInfo?.jobId}`, 'link')}
+                    >
+                      <Copy className="h-4 w-4 text-slate-600" />
+                      Copy
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               {/* Application Email */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">Application Email</h4>
-                  {copiedEmail && <span className="text-[10px] font-bold text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> Copied!</span>}
+                  <h4 className="font-bold text-sm text-slate-700">Application Email</h4>
+                  {copiedEmail && <span className="text-xs font-bold text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Copied!</span>}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 truncate rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 text-sm font-mono text-slate-600">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 overflow-hidden rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm font-mono text-slate-700 whitespace-nowrap overflow-ellipsis">
                     {APPLICATION_INBOX_EMAIL}
                   </div>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="h-11 w-11 rounded-xl shrink-0 border-slate-200 hover:bg-slate-50"
-                    onClick={() => copyToClipboard(APPLICATION_INBOX_EMAIL, 'email')}
-                  >
-                    <Copy className="h-4 w-4 text-slate-600" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-11 px-4 rounded-xl border-slate-200 hover:bg-slate-50 gap-2 font-medium"
+                      onClick={() => copyToClipboard(APPLICATION_INBOX_EMAIL, 'email')}
+                    >
+                      <Copy className="h-4 w-4 text-slate-600" />
+                      Copy
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-[10px] text-slate-400 italic">
-                  Candidates should use subject: <strong>{createdJobInfo?.jobTitle} - {createdJobInfo?.companyName}</strong>
+                <p className="text-xs text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-100 mt-2">
+                  <Info className="w-4 h-4 inline-block mr-1 text-blue-600" />
+                  Candidates should use subject: <strong className="text-slate-800">{createdJobInfo?.jobTitle} - {createdJobInfo?.companyName}</strong>
                 </p>
               </div>
             </div>

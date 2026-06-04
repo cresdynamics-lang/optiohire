@@ -26,7 +26,8 @@ import {
 import { getCandidateDecisions } from '../api/adminCandidatesController.js'
 import {
   checkAndSendMissingEmails,
-  getEmailCheckStats
+  getEmailCheckStats,
+  getMissingEmailDetails
 } from '../api/adminEmailCheckerController.js'
 import {
   getActivityTelemetry
@@ -114,6 +115,7 @@ router.post('/emails/requeue-all', requeueAllDeadLetterEmails)
 
 // Email Checker & Sender
 router.get('/email-check/stats', getEmailCheckStats)
+router.get('/email-check/missing', getMissingEmailDetails)
 router.post('/email-check/send-missing', checkAndSendMissingEmails)
 
 // System Settings
