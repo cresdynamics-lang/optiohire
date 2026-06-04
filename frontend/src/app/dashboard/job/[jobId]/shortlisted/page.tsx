@@ -612,10 +612,10 @@ export default function ShortlistedPage() {
                             <>
                               <Button
                                 size="sm"
-                                disabled
-                                className="bg-green-600 hover:bg-green-600 text-white shadow-none hover:shadow-none cursor-not-allowed"
+                                className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                                onClick={() => handleScheduleClick(candidate)}
                               >
-                                Interview Scheduled
+                                ✏️ Edit Interview
                               </Button>
                               <Button size="sm" variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 w-full" onClick={() => handleUpdateStatus(candidate.id, 'HIRED')}>
                                 Mark as Hired
@@ -656,6 +656,12 @@ export default function ShortlistedPage() {
         isOpen={isModalOpen}
         candidate={selectedCandidate}
         meetingLink={meetingLink}
+        existingInterview={selectedCandidate?.interview_time ? {
+          applicationId: selectedCandidate.id,
+          interviewTime: selectedCandidate.interview_time,
+          interviewLink: selectedCandidate.interview_link || '',
+          interviewType: 'online',
+        } : null}
         onClose={() => {
           setIsModalOpen(false)
           setSelectedCandidate(null)

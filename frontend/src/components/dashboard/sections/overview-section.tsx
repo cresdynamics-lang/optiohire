@@ -744,21 +744,20 @@ export function OverviewSection() {
           {/* Welcome Section */}
           <div className="flex-1 min-w-0">
             <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-              <h1 
+              <h1
                 data-tour="dashboard-overview-title"
                 className="min-w-0 flex-1 text-xl font-semibold text-gray-900 sm:flex-none sm:text-2xl md:text-3xl dark:text-white"
               >
                 {getGreeting()}, {getDisplayName()}
               </h1>
               <Button
-                variant="ghost"
-                size="sm"
+                size="lg"
                 type="button"
                 onClick={() => setIsTourOpen(true)}
-                className="h-9 min-h-[44px] shrink-0 rounded-lg border border-slate-300 px-3 text-xs text-slate-700 transition-all hover:bg-slate-100 sm:h-8 sm:min-h-0"
+                className="h-11 shrink-0 rounded-xl border-2 border-yellow-400 bg-yellow-400 px-6 text-sm font-bold text-yellow-900 shadow-[0_0_18px_rgba(234,179,8,0.7)] transition-all hover:bg-yellow-300 hover:border-yellow-300 hover:shadow-[0_0_28px_rgba(234,179,8,0.9)] animate-pulse"
                 aria-label="Start product tour"
               >
-                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                <Sparkles className="w-4 h-4 mr-2" />
                 Take Tour
               </Button>
             </div>
