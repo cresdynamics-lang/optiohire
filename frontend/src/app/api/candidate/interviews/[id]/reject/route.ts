@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: any) {
   try {
     const id = params.id
     const token = request.headers.get('authorization')?.split(' ')[1] || ''
