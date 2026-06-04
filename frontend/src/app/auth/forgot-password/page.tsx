@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowLeft, Mail, CheckCircle, KeyRound } from 'lucide-react'
-import ReCAPTCHA from 'react-google-recaptcha'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { useRef } from 'react'
 
 const forgotPasswordSchema = z.object({
@@ -24,12 +24,12 @@ type VerifyCodeFormData = z.infer<typeof verifyCodeSchema>
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
+  const { executeRecaptcha } = useGoogleReCaptcha()
   const [step, setStep] = useState<'email' | 'code'>('email')
   const [email, setEmail] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const captchaRef = useRef<ReCAPTCHA>(null)
 
   const emailForm = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -40,9 +40,8 @@ export default function ForgotPasswordPage() {
   })
 
   const onSubmitEmail = async (data: ForgotPasswordFormData) => {
-    const token = captchaRef.current?.getValue()
-    if (!token) {
-      setError('Please complete the reCAPTCHA verification.')
+    if (!executeRecaptcha) {
+      setError('Recaptcha not yet available')
       return
     }
 
@@ -51,6 +50,11 @@ export default function ForgotPasswordPage() {
     setSuccess(false)
 
     try {
+      const token = await executeRecaptcha('forgot_password')
+      if (!token) {
+        throw new Error('Failed to obtain recaptcha token')
+      }
+
       const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/auth/forgot-password`
         : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/forgot-password`
@@ -69,12 +73,10 @@ export default function ForgotPasswordPage() {
           const result = await response.json()
           errorMessage = result.error || errorMessage
         } catch (parseError) {
-          // If response is not JSON, use status text
           errorMessage = response.statusText || errorMessage
         }
         setError(errorMessage)
         setIsLoading(false)
-        captchaRef.current?.reset()
         return
       }
 
@@ -105,7 +107,7 @@ export default function ForgotPasswordPage() {
     try {
       const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/auth/verify-reset-code`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/verify-reset-code`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/auth/verify-reset-code`
         
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -135,7 +137,6 @@ export default function ForgotPasswordPage() {
         return
       }
 
-      // Redirect to reset password page with email and code
       router.push(`/auth/reset-password?email=${encodeURIComponent(email)}&code=${data.code}`)
     } catch (err) {
       console.error('Verify code error:', err)
@@ -152,7 +153,6 @@ export default function ForgotPasswordPage() {
   return (
     <div className="w-full min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl flex items-start gap-4">
-        {/* Left Aligned Button */}
         <div className="flex-shrink-0 pt-0">
           <button
             onClick={() => router.push('/auth/signin')}
@@ -193,7 +193,6 @@ export default function ForgotPasswordPage() {
                   </div>
                 ) : (
                   <form onSubmit={emailForm.handleSubmit(onSubmitEmail)} className="space-y-6">
-                    {/* Email Field */}
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
                         Email Address
@@ -214,21 +213,12 @@ export default function ForgotPasswordPage() {
                       )}
                     </div>
 
-                    {/* Error Display */}
                     {error && (
                       <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                         <p className="text-sm text-red-600 font-figtree">{error}</p>
                       </div>
                     )}
 
-                    <div className="flex justify-center py-2">
-                      <ReCAPTCHA
-                        ref={captchaRef}
-                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6Le5lgwtAAAAAMpm9GgWfY3jrCS6maXw-WZoBhgX'}
-                      />
-                    </div>
-
-                    {/* Submit Button */}
                     <button
                       type="submit"
                       disabled={isLoading}
@@ -257,7 +247,6 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <form onSubmit={codeForm.handleSubmit(onSubmitCode)} className="space-y-6">
-                  {/* Code Field */}
                   <div>
                     <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2 font-figtree">
                       Reset Code
@@ -283,14 +272,12 @@ export default function ForgotPasswordPage() {
                     )}
                   </div>
 
-                  {/* Error Display */}
                   {error && (
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       <p className="text-sm text-red-600 font-figtree">{error}</p>
                     </div>
                   )}
 
-                  {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={isLoading}
