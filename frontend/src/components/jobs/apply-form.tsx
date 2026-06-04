@@ -273,7 +273,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
         <div className="flex justify-center py-2">
           <ReCAPTCHA
             ref={captchaRef}
-            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6Le5lgwtAAAAAMpm9GgWfY3jrCS6maXw-WZoBhgX'}
           />
         </div>
 
