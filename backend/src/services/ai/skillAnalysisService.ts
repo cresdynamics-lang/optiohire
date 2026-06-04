@@ -18,7 +18,7 @@ export class SkillAnalysisService {
     // Fetch some active jobs (e.g. latest 20)
     // Normally this would be a more complex ML match, but we use a simpler database + AI prompt approach
     const { rows: jobs } = await query(`
-      SELECT id, job_title, required_skills 
+      SELECT job_posting_id, job_title, skills_required 
       FROM job_postings 
       WHERE status = 'ACTIVE' 
       ORDER BY created_at DESC 
@@ -28,9 +28,9 @@ export class SkillAnalysisService {
     // Count skills from jobs
     const skillCounts: Record<string, number> = {}
     for (const job of jobs) {
-      const reqSkills: string[] = typeof job.required_skills === 'string' 
-        ? JSON.parse(job.required_skills) 
-        : (job.required_skills || [])
+      const reqSkills: string[] = typeof job.skills_required === 'string' 
+        ? JSON.parse(job.skills_required) 
+        : (job.skills_required || [])
       
       for (const skill of reqSkills) {
         const s = skill.trim().toLowerCase()

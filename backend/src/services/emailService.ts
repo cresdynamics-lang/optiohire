@@ -243,6 +243,92 @@ ${data.companyName || 'Hiring Team'}
   }
 
   /**
+   * Sent to candidate immediately upon application submission
+   */
+  async sendCandidateApplicationReceivedEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    jobTitle: string
+    companyName: string
+    candidateLoginUrl?: string | null
+    candidateTemporaryPassword?: string | null
+    isNewCandidateAccount?: boolean
+  }) {
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const companyName = data.companyName || '[Company Name]'
+    const cleanedJobTitle = cleanJobTitle(data.jobTitle || '[Job Title]')
+
+    const subject = `Application Received: ${cleanedJobTitle} at ${companyName}`
+    const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
+
+    const dashboardBlock = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+    <div style="margin-top: 24px; padding: 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">🎯 Your Candidate Dashboard is Ready</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">We've created a personal dashboard for you where you can track your application status, build your skills profile, and explore more opportunities.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 100px;">Email:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600;">${data.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Password:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">${data.candidateTemporaryPassword}</td>
+        </tr>
+      </table>
+      <a href="${loginUrl}" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Log In to Your Dashboard →</a>
+      <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Please change your password after your first login for security.</p>
+    </div>`
+      : ''
+
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
+
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
+        <h2 style="color: #0f1c2e; margin-bottom: 16px;">Application Received</h2>
+        <p>Hi ${candidateName},</p>
+        <p>Thank you for applying for the <strong>${cleanedJobTitle}</strong> position at <strong>${companyName}</strong>.</p>
+        <p>We have successfully received your application. The hiring team will review your profile and get back to you with next steps.</p>
+        ${dashboardBlock}
+        <p style="margin-top: 24px;">Best regards,<br>The OptioHire Team</p>
+      </div>
+    `
+
+    const text = `Application Received
+
+Hi ${candidateName},
+
+Thank you for applying for the ${cleanedJobTitle} position at ${companyName}.
+We have successfully received your application.
+${dashboardBlockText}
+
+Best regards,
+The OptioHire Team`
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
+
+    await this.sendEmail({
+      to: data.candidateEmail,
+      from: fromEmail,
+      subject,
+      html,
+      text
+    })
+  }
+
+  /**
    * Shortlist notification only. Does NOT include interview date/time/link.
    * Interview details are sent later when HR uses the Schedule button (scheduleInterviewController).
    */

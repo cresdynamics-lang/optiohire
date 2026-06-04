@@ -4,6 +4,10 @@ import { startImapIngestion } from '../utils/imap.js'
 import { logger } from '../utils/logger.js'
 import { aiQueue } from '../queues/aiQueue.js'
 import { verifyCaptcha } from '../utils/captcha.js'
+import { provisionCandidateAccount } from '../services/candidateProvisioningService.js'
+import { EmailService } from '../services/emailService.js'
+
+const emailService = new EmailService()
 
 export async function parseEmailApplications(req: Request, res: Response) {
   try {
@@ -53,7 +57,10 @@ export async function submitPublicApplication(req: Request, res: Response) {
     }
 
     const { rows: jobRows } = await query(
-      'SELECT company_id, status FROM job_postings WHERE job_posting_id = $1',
+      `SELECT jp.company_id, jp.status, jp.job_title, c.company_name 
+       FROM job_postings jp
+       LEFT JOIN companies c ON jp.company_id = c.company_id
+       WHERE jp.job_posting_id = $1`,
       [job_posting_id]
     )
 
@@ -75,6 +82,22 @@ export async function submitPublicApplication(req: Request, res: Response) {
 
     const applicationId = newApp[0].application_id
     
+    try {
+      const provisioned = await provisionCandidateAccount({ email: email.toLowerCase(), candidateName: candidate_name })
+      const frontendUrl = process.env.FRONTEND_URL || 'https://optiohire.com'
+      
+      await emailService.sendCandidateApplicationReceivedEmail({
+        candidateEmail: email.toLowerCase(),
+        candidateName: candidate_name,
+        jobTitle: jobRows[0].job_title || 'Job Position',
+        companyName: jobRows[0].company_name || 'OptioHire',
+        candidateLoginUrl: `${frontendUrl}/auth/signin`,
+        candidateTemporaryPassword: provisioned.temporaryPassword,
+        isNewCandidateAccount: provisioned.isNewAccount
+      })
+    } catch (err) {
+      logger.warn('Failed to send candidate application email:', err)
+    }
     try {
       await aiQueue.add('profile-application', { applicationId })
     } catch (queueErr: any) {
@@ -103,8 +126,11 @@ export async function submitWebApplication(req: Request, res: Response) {
     }
 
     // Get company_id from job_postings
-    const { rows: jobs } = await query<{ company_id: string; job_title: string }>(
-      `SELECT company_id, job_title FROM job_postings WHERE job_posting_id = $1`,
+    const { rows: jobs } = await query<{ company_id: string; job_title: string; company_name: string }>(
+      `SELECT jp.company_id, jp.job_title, c.company_name 
+       FROM job_postings jp
+       LEFT JOIN companies c ON jp.company_id = c.company_id
+       WHERE jp.job_posting_id = $1`,
       [job_posting_id]
     )
 
@@ -123,6 +149,23 @@ export async function submitWebApplication(req: Request, res: Response) {
     )
 
     const applicationId = ins[0].application_id
+
+    try {
+      const provisioned = await provisionCandidateAccount({ email: email.toLowerCase(), candidateName: candidate_name })
+      const frontendUrl = process.env.FRONTEND_URL || 'https://optiohire.com'
+      
+      await emailService.sendCandidateApplicationReceivedEmail({
+        candidateEmail: email.toLowerCase(),
+        candidateName: candidate_name,
+        jobTitle: jobs[0].job_title || 'Job Position',
+        companyName: jobs[0].company_name || 'OptioHire',
+        candidateLoginUrl: `${frontendUrl}/auth/signin`,
+        candidateTemporaryPassword: provisioned.temporaryPassword,
+        isNewCandidateAccount: provisioned.isNewAccount
+      })
+    } catch (err) {
+      logger.warn('Failed to send candidate application email:', err)
+    }
 
     // Asynchronously trigger AI scoring and notification emails
     setTimeout(async () => {

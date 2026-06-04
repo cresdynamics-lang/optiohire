@@ -89,6 +89,9 @@ export async function getPublicJobs(req: Request, res: Response) {
 export async function getPublicJobById(req: Request, res: Response) {
   try {
     const { id } = req.params
+    if (!id || id === 'undefined') {
+      return res.status(400).json({ error: 'Invalid job ID' })
+    }
     const { rows } = await query(
       `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
               jp.responsibilities, jp.skills_required, jp.application_deadline, 
