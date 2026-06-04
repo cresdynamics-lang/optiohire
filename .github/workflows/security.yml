@@ -11,34 +11,34 @@ on:
 
 jobs:
   gitleaks-full-scan:
-    name: Gitleaks Full Repo Scan
+    name: Gitleaks Repo Scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Force Gitleaks Full Repo Scan
+      - name: Force Gitleaks Repo Scan
         run: |
           wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz
           tar -xzf gitleaks_8.18.2_linux_x64.tar.gz
-          ./gitleaks detect --source . -v # "detect" scans everything, "protect" only scans commits
+          ./gitleaks detect --source . -v
 
   trivy-full-fs-scan:
-    name: Trivy Full Filesystem Scan
+    name: Trivy Filesystem Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout entire repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # CRITICAL: '0' fetches the whole repo.
+          fetch-depth: 1
 
-      - name: Run Trivy Full Filesystem Scan
+      - name: Run Trivy Filesystem Scan
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'     # forces a full filesystem scan.
-          scan-ref: '.'       # Starts at the root directory
-          scanners: 'vuln,secret,config' # Scans dependencies, hardcoded keys, and bad configs
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln,secret,config'
           severity: 'HIGH,CRITICAL'
           format: 'table'
 

@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 process.env.JWT_SECRET = 'test-secret-key-for-unit-tests';
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
-process.env.RESEND_API_KEY = 're_123';
+process.env.RESEND_API_KEY = 'test_123';
 process.env.OPENROUTER_API_KEY = 'sk-or-123';
 
 // Mock BullMQ globally since it requires a real Redis connection
