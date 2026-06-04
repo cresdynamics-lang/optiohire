@@ -148,7 +148,9 @@ export class MaintenanceWorker {
        JOIN companies c ON jp.company_id = c.company_id
        WHERE a.created_at >= NOW() - INTERVAL '1 hour' AND a.ai_status IN ('SHORTLIST', 'REJECT', 'FLAG')
        AND NOT EXISTS (
-         SELECT 1 FROM email_logs el WHERE el.recipient_email = a.email AND el.status = 'sent'
+         SELECT 1 FROM email_logs el WHERE el.recipient_email = a.email 
+         AND el.status IN ('sent', 'failed', 'pending')
+         AND el.subject ILIKE '%' || jp.job_title || '%'
          AND el.created_at >= a.created_at - INTERVAL '10 minutes'
        ) LIMIT 10`
     )
