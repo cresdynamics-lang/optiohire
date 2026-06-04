@@ -36,7 +36,8 @@ interface AuthContextType {
     organization_name: string,
     company_email: string,
     hr_email: string,
-    hiring_manager_email: string
+    hiring_manager_email: string,
+    captchaToken?: string
   ) => Promise<{ error: null | { message: string }; needsEmailVerification?: boolean; email?: string }>
   signIn: (email: string, password: string) => Promise<{ error: null | { message: string } }>
   signOut: (options?: SignOutOptions) => Promise<void>
@@ -296,7 +297,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     organization_name: string,
     company_email: string,
     hr_email: string,
-    hiring_manager_email: string
+    hiring_manager_email: string,
+    captchaToken?: string
   ) => {
     try {
       // Use same-origin proxy (server resolves BACKEND_URL) — avoids CORS and 405 errors on production.
@@ -317,7 +319,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           company_name: organization_name, 
           company_email, 
           hr_email,
-          hiring_manager_email 
+          hiring_manager_email,
+          captchaToken
         }),
         signal: AbortSignal.timeout(20000)
       })

@@ -12,6 +12,8 @@ import { uploadPublicResume, submitApplication } from '@/lib/public-api'
 import { Loader2, CheckCircle2, AlertCircle, FileText, UploadCloud } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
+import ReCAPTCHA from 'react-google-recaptcha'
+import { useRef } from 'react'
 
 const formSchema = z.object({
   candidate_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -32,6 +34,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
   const [resumeUploadError, setResumeUploadError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const { toast } = useToast()
+  const captchaRef = useRef<ReCAPTCHA>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -99,6 +102,12 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
       return
     }
 
+    const token = captchaRef.current?.getValue()
+    if (!token) {
+      setError('Please complete the reCAPTCHA verification.')
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
@@ -114,6 +123,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
         resume_url: uploadResult.url,
         cover_letter: values.cover_letter,
         phone: values.phone,
+        captchaToken: token,
       })
 
       setIsSuccess(true)
@@ -125,6 +135,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
     } catch (err: any) {
       const errorMessage = err.message || 'Something went wrong. Please try again.'
       setError(errorMessage)
+      captchaRef.current?.reset()
       toast({
         title: "Submission Failed",
         description: errorMessage,
@@ -258,6 +269,13 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
             </FormItem>
           )}
         />
+
+        <div className="flex justify-center py-2">
+          <ReCAPTCHA
+            ref={captchaRef}
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+          />
+        </div>
 
         <Button 
           type="submit" 

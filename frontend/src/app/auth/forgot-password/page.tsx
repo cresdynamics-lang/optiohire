@@ -8,6 +8,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowLeft, Mail, CheckCircle, KeyRound } from 'lucide-react'
+import ReCAPTCHA from 'react-google-recaptcha'
+import { useRef } from 'react'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -27,6 +29,7 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const captchaRef = useRef<ReCAPTCHA>(null)
 
   const emailForm = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -37,6 +40,12 @@ export default function ForgotPasswordPage() {
   })
 
   const onSubmitEmail = async (data: ForgotPasswordFormData) => {
+    const token = captchaRef.current?.getValue()
+    if (!token) {
+      setError('Please complete the reCAPTCHA verification.')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
     setSuccess(false)
@@ -51,7 +60,7 @@ export default function ForgotPasswordPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: data.email }),
+        body: JSON.stringify({ email: data.email, captchaToken: token }),
       })
 
       if (!response.ok) {
@@ -65,6 +74,7 @@ export default function ForgotPasswordPage() {
         }
         setError(errorMessage)
         setIsLoading(false)
+        captchaRef.current?.reset()
         return
       }
 
@@ -210,6 +220,13 @@ export default function ForgotPasswordPage() {
                         <p className="text-sm text-red-600 font-figtree">{error}</p>
                       </div>
                     )}
+
+                    <div className="flex justify-center py-2">
+                      <ReCAPTCHA
+                        ref={captchaRef}
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+                      />
+                    </div>
 
                     {/* Submit Button */}
                     <button

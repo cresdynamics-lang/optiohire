@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
 import { Eye, EyeOff, ArrowLeft, AlertCircle, Shield, User } from 'lucide-react'
+import ReCAPTCHA from 'react-google-recaptcha'
 
 type UserRole = 'employer' | 'candidate' | null
 
@@ -59,6 +60,7 @@ function SignUpForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const captchaRef = useRef<ReCAPTCHA>(null)
 
   // Handle pre-selected role from query params
   useEffect(() => {
@@ -81,6 +83,12 @@ function SignUpForm() {
   })
 
   const onEmployerSubmit = async (data: EmployerSignUpData) => {
+    const token = captchaRef.current?.getValue()
+    if (!token) {
+      setError('Please complete the reCAPTCHA verification.')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
@@ -93,13 +101,15 @@ function SignUpForm() {
         data.organization_name,
         data.company_email,
         data.hr_email,
-        data.hiring_manager_email
+        data.hiring_manager_email,
+        token
       )
       const { error, needsEmailVerification, email } = result
 
       if (error) {
         setError(error.message)
         setIsLoading(false)
+        captchaRef.current?.reset()
         return
       }
 
@@ -114,10 +124,17 @@ function SignUpForm() {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
       setIsLoading(false)
+      captchaRef.current?.reset()
     }
   }
 
   const onCandidateSubmit = async (data: CandidateSignUpData) => {
+    const token = captchaRef.current?.getValue()
+    if (!token) {
+      setError('Please complete the reCAPTCHA verification.')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
@@ -130,13 +147,15 @@ function SignUpForm() {
         'Individual', // default organization for candidates
         data.email, // use personal email as company email
         data.email, // use personal email as hr email
-        data.email // use personal email as hiring manager email
+        data.email, // use personal email as hiring manager email
+        token
       )
       const { error, needsEmailVerification, email } = result
 
       if (error) {
         setError(error.message)
         setIsLoading(false)
+        captchaRef.current?.reset()
         return
       }
 
@@ -151,6 +170,7 @@ function SignUpForm() {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
       setIsLoading(false)
+      captchaRef.current?.reset()
     }
   }
 
@@ -675,6 +695,13 @@ function SignUpForm() {
                     <p className="text-sm text-red-600 font-figtree">{error}</p>
                   </div>
                 )}
+
+                <div className="flex justify-center py-2">
+                  <ReCAPTCHA
+                    ref={captchaRef}
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+                  />
+                </div>
 
                 <div className="flex gap-3">
                   <button
