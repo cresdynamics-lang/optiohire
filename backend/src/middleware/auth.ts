@@ -125,6 +125,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       }
     }
 
+
     req.userId = userRecord.user_id
     req.userEmail = userRecord.email
     req.userRole = userRecord.role
