@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -17,12 +17,21 @@ import { useAuth } from '@/hooks/use-auth'
 import type { Candidate } from '@/components/CandidateRow'
 import { cleanCandidateName } from '@/lib/utils'
 
+interface ExistingInterview {
+  applicationId: string
+  interviewTime: string
+  interviewLink: string
+  interviewType: 'online' | 'in-person'
+  reminders?: string[]
+}
+
 interface ScheduleInterviewModalProps {
   isOpen: boolean
   candidate: Candidate | null
   meetingLink: string
   onClose: () => void
   onSuccess: () => void
+  existingInterview?: ExistingInterview | null
 }
 
 export function ScheduleInterviewModal({
@@ -31,7 +40,9 @@ export function ScheduleInterviewModal({
   meetingLink,
   onClose,
   onSuccess,
+  existingInterview,
 }: ScheduleInterviewModalProps) {
+  const isEditMode = !!existingInterview
   const [interviewTime, setInterviewTime] = useState<string>('')
   const [interviewType, setInterviewType] = useState<'online' | 'in-person'>('online')
   const [location, setLocation] = useState('')
@@ -39,7 +50,31 @@ export function ScheduleInterviewModal({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [reminders, setReminders] = useState<string[]>(['24h', '1h'])
   const { user } = useAuth()
+
+  // Pre-fill form when editing an existing interview
+  useEffect(() => {
+    if (isOpen && existingInterview) {
+      const dt = new Date(existingInterview.interviewTime)
+      setInterviewTime(dt.toISOString().slice(0, 16))
+      setInterviewType(existingInterview.interviewType || 'online')
+      setCustomLink(existingInterview.interviewLink || '')
+      setReminders(existingInterview.reminders || ['24h', '1h'])
+    } else if (isOpen && !existingInterview) {
+      setInterviewTime('')
+      setInterviewType('online')
+      setCustomLink('')
+      setLocation('')
+      setReminders(['24h', '1h'])
+    }
+  }, [isOpen, existingInterview])
+
+  useEffect(() => {
+    if (interviewType === 'in-person' && user?.companyLocation && !location) {
+      setLocation(user.companyLocation)
+    }
+  }, [interviewType, user?.companyLocation, location])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,9 +98,11 @@ export function ScheduleInterviewModal({
       const date = new Date(interviewTime)
       const isoString = date.toISOString()
 
-      // Use Next.js API route instead of calling backend directly
-      const response = await fetch('/api/schedule-interview', {
-        method: 'POST',
+      // Use PUT for editing, POST for new scheduling
+      const endpoint = isEditMode ? '/api/update-interview' : '/api/schedule-interview'
+      const method = isEditMode ? 'PUT' : 'POST'
+      const response = await fetch(endpoint, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -76,6 +113,7 @@ export function ScheduleInterviewModal({
           interviewType,
           location: interviewType === 'in-person' ? location : undefined,
           customLink: interviewType === 'online' && customLink ? customLink : undefined,
+          reminders,
         }),
       })
 
@@ -130,11 +168,13 @@ export function ScheduleInterviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Schedule Interview</DialogTitle>
+          <DialogTitle>{isEditMode ? '✏️ Edit Interview' : 'Schedule Interview'}</DialogTitle>
           <DialogDescription>
-            Schedule an interview for {candidate ? cleanCandidateName(candidate.candidate_name) : 'candidate'}
+            {isEditMode
+              ? `Update the interview details for ${candidate ? cleanCandidateName(candidate.candidate_name) : 'candidate'}`
+              : `Schedule an interview for ${candidate ? cleanCandidateName(candidate.candidate_name) : 'candidate'}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -234,6 +274,37 @@ export function ScheduleInterviewModal({
                 </div>
               )}
 
+              {/* Reminders */}
+              <div className="space-y-2">
+                <Label>Interview Reminders</Label>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { value: '24h', label: '24 hours before' },
+                    { value: '1h', label: '1 hour before' },
+                    { value: '15m', label: '15 minutes before' },
+                  ].map((option) => (
+                    <label key={option.value} className="flex items-center space-x-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={reminders.includes(option.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setReminders([...reminders, option.value])
+                          } else {
+                            setReminders(reminders.filter(r => r !== option.value))
+                          }
+                        }}
+                        className="rounded border-gray-300 text-[#2D2DDD] focus:ring-[#2D2DDD]"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500">
+                  We will send email reminders to both you and the candidate.
+                </p>
+              </div>
+
               {error && (
                 <p className="text-sm text-red-500">{error}</p>
               )}
@@ -254,7 +325,9 @@ export function ScheduleInterviewModal({
                 disabled={isLoading || !interviewTime}
                 className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
               >
-                {isLoading ? 'Scheduling...' : 'Schedule Interview'}
+                {isLoading
+                  ? (isEditMode ? 'Updating...' : 'Scheduling...')
+                  : (isEditMode ? 'Update Interview' : 'Schedule Interview')}
               </Button>
             </DialogFooter>
           </form>

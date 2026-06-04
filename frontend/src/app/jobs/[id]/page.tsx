@@ -21,6 +21,7 @@ interface Job {
   company_name: string
   company_email: string
   company_logo_url: string | null
+  job_poster_url?: string | null
 }
 
 function timeAgo(dateStr: string) {
@@ -137,6 +138,11 @@ export default function JobDetailPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
           {/* Main content */}
           <div className="space-y-6">
+            {job.job_poster_url && (
+              <div className="w-full overflow-hidden rounded-2xl shadow-sm border border-slate-200">
+                <img src={job.job_poster_url} alt={`${job.job_title} Poster`} className="w-full h-auto object-cover max-h-[400px]" />
+              </div>
+            )}
             {/* Header card */}
             <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start">

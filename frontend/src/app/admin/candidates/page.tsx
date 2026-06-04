@@ -33,7 +33,7 @@ export default function AdminCandidatesPage() {
   const fetchCandidates = async () => {
     try {
       const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/candidates`, {
+      const res = await fetch(`/api/admin/candidates`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (!res.ok) throw new Error('Failed to load candidates')
@@ -55,7 +55,7 @@ export default function AdminCandidatesPage() {
     setActionLoading(id)
     try {
       const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/candidates/${id}/revert`, {
+      const res = await fetch(`/api/admin/candidates/${id}/revert`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       })

@@ -47,6 +47,13 @@ export default function AdminCertificatesPage() {
   }, [])
 
   const handleReview = async (approvalId: string, status: 'APPROVED' | 'REJECTED') => {
+    let rejectionReason = ''
+    if (status === 'REJECTED') {
+      const reason = window.prompt('Please enter a reason for rejecting this certificate (this will be sent to the candidate):')
+      if (reason === null) return // User cancelled
+      rejectionReason = reason || 'Did not meet requirements'
+    }
+
     try {
       const res = await fetch('/api/admin/certificates/approve', {
         method: 'POST',
@@ -54,7 +61,7 @@ export default function AdminCertificatesPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ approvalId, status, rejectionReason: status === 'REJECTED' ? 'Did not meet requirements' : '' })
+        body: JSON.stringify({ approvalId, status, rejectionReason })
       })
       const data = await res.json()
       if (data.success) {

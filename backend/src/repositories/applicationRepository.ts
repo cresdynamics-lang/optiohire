@@ -16,6 +16,8 @@ export interface Application {
   interview_time: string | null
   interview_link: string | null
   interview_status: string | null
+  interview_reminders: any | null
+  interview_rejection_reason: string | null
   created_at: string
 }
 
@@ -116,17 +118,65 @@ export class ApplicationRepository {
     return rows[0]
   }
 
+  // Schedule a new interview (sets status to SCHEDULED)
   async scheduleInterview(data: {
     application_id: string
     interview_time: string
     interview_link: string
+    interview_reminders?: any
+  }): Promise<Application> {
+    const reminders = Array.isArray(data.interview_reminders)
+      ? data.interview_reminders
+      : data.interview_reminders ? ['24h', '1h'] : []
+
+    const { rows } = await query<Application>(
+      `UPDATE applications
+       SET interview_time = $1, interview_link = $2, interview_status = 'SCHEDULED', interview_reminders = $4
+       WHERE application_id = $3
+       RETURNING *`,
+      [data.interview_time, data.interview_link, data.application_id, reminders]
+    )
+    if (rows.length === 0) {
+      throw new Error('Application not found')
+    }
+    return rows[0]
+  }
+
+  // Update an existing interview (keeps status, just updates time/link/reminders)
+  async updateInterview(data: {
+    application_id: string
+    interview_time: string
+    interview_link: string
+    interview_reminders?: any
+  }): Promise<Application> {
+    const reminders = Array.isArray(data.interview_reminders)
+      ? data.interview_reminders
+      : data.interview_reminders ? ['24h', '1h'] : []
+
+    const { rows } = await query<Application>(
+      `UPDATE applications
+       SET interview_time = $1, interview_link = $2, interview_reminders = $4
+       WHERE application_id = $3
+       RETURNING *`,
+      [data.interview_time, data.interview_link, data.application_id, reminders]
+    )
+    if (rows.length === 0) {
+      throw new Error('Application not found')
+    }
+    return rows[0]
+  }
+
+  async updateInterviewStatus(data: {
+    application_id: string
+    status: string
+    rejection_reason?: string | null
   }): Promise<Application> {
     const { rows } = await query<Application>(
       `UPDATE applications
-       SET interview_time = $1, interview_link = $2, interview_status = 'SCHEDULED'
+       SET interview_status = $1, interview_rejection_reason = COALESCE($2, interview_rejection_reason)
        WHERE application_id = $3
        RETURNING *`,
-      [data.interview_time, data.interview_link, data.application_id]
+      [data.status, data.rejection_reason || null, data.application_id]
     )
     if (rows.length === 0) {
       throw new Error('Application not found')
@@ -134,4 +184,3 @@ export class ApplicationRepository {
     return rows[0]
   }
 }
-

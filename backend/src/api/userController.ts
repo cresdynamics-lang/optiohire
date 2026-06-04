@@ -70,6 +70,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
     let hrEmail: string | null = null
     let hiringManagerEmail: string | null = null
     let companyLogoUrl: string | null = null
+    let companyLocation: string | null = null
     
     if (user.role !== 'admin') {
       try {
@@ -93,8 +94,12 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
             if (hasLogoColumn) {
               companySelectFields += ', company_logo_url'
             }
+            const hasLocationColumn = companyCols.some((r: any) => r.column_name === 'company_location')
+            if (hasLocationColumn) {
+              companySelectFields += ', company_location'
+            }
           } catch (e) {
-            // If this check fails, continue without logo field
+            // If this check fails, continue without extra fields
           }
 
           // user_id column exists, check by user_id
@@ -110,6 +115,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
             hrEmail = companyCheck.rows[0]?.hr_email || null
             hiringManagerEmail = companyCheck.rows[0]?.hiring_manager_email || null
             companyLogoUrl = (companyCheck.rows[0] as any)?.company_logo_url || null
+            companyLocation = (companyCheck.rows[0] as any)?.company_location || null
           }
         } else {
           // Fallback: check by email (hr_email or company_email)
@@ -124,8 +130,12 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
             if (hasLogoColumn) {
               companySelectFields += ', company_logo_url'
             }
+            const hasLocationColumn = companyCols.some((r: any) => r.column_name === 'company_location')
+            if (hasLocationColumn) {
+              companySelectFields += ', company_location'
+            }
           } catch (e) {
-            // Ignore logo field if check fails
+            // Ignore extra fields if check fails
           }
 
           const companyCheck = await query<any>(
@@ -140,6 +150,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
             hrEmail = companyCheck.rows[0]?.hr_email || null
             hiringManagerEmail = companyCheck.rows[0]?.hiring_manager_email || null
             companyLogoUrl = (companyCheck.rows[0] as any)?.company_logo_url || null
+            companyLocation = (companyCheck.rows[0] as any)?.company_location || null
           }
         }
       } catch (err) {
@@ -161,6 +172,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       hrEmail = null
       hiringManagerEmail = null
       companyLogoUrl = null
+      companyLocation = null
     }
 
     const userData = {
@@ -179,7 +191,8 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       companyEmail,
       hrEmail,
       hiring_manager_email: hiringManagerEmail,
-      companyLogoUrl
+      companyLogoUrl,
+      companyLocation
     }
 
     // Cache user data for 5 minutes
@@ -200,7 +213,7 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    const { company_name, company_email, hr_email, company_logo_url } = req.body || {}
+    const { company_name, company_email, hr_email, company_logo_url, company_location } = req.body || {}
 
     if (!company_name || !company_email || !hr_email) {
       return res.status(400).json({ error: 'Company name, company email, and HR email are required' })
@@ -259,44 +272,43 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
     // Extract domain from company_email
     const companyDomain = company_email.split('@')[1] || null
 
-    // Determine if company_logo_url column exists
+    // Determine if company_logo_url and company_location columns exist
     let hasLogoColumn = false
+    let hasLocationColumn = false
     try {
       const { rows: logoCols } = await query(
         `SELECT column_name 
          FROM information_schema.columns 
-         WHERE table_name = 'companies' AND column_name = 'company_logo_url'`
+         WHERE table_name = 'companies' AND column_name IN ('company_logo_url', 'company_location')`
       )
-      hasLogoColumn = logoCols.length > 0
+      hasLogoColumn = logoCols.some((r: any) => r.column_name === 'company_logo_url')
+      hasLocationColumn = logoCols.some((r: any) => r.column_name === 'company_location')
     } catch (e) {
       hasLogoColumn = false
+      hasLocationColumn = false
     }
 
     // Update company
+    let updateQuery = `UPDATE companies SET company_name = $1, company_email = $2, hr_email = $3, company_domain = $4`
+    let queryParams: any[] = [company_name, company_email, hr_email, companyDomain]
+    let paramCount = 5
+
     if (hasLogoColumn) {
-      await query(
-        `UPDATE companies 
-         SET company_name = $1, 
-             company_email = $2, 
-             hr_email = $3,
-             company_domain = $4,
-             company_logo_url = $5,
-             updated_at = NOW()
-         WHERE company_id = $6`,
-        [company_name, company_email, hr_email, companyDomain, company_logo_url || null, companyId]
-      )
-    } else {
-      await query(
-        `UPDATE companies 
-         SET company_name = $1, 
-             company_email = $2, 
-             hr_email = $3,
-             company_domain = $4,
-             updated_at = NOW()
-         WHERE company_id = $5`,
-        [company_name, company_email, hr_email, companyDomain, companyId]
-      )
+      updateQuery += `, company_logo_url = $${paramCount}`
+      queryParams.push(company_logo_url || null)
+      paramCount++
     }
+
+    if (hasLocationColumn) {
+      updateQuery += `, company_location = $${paramCount}`
+      queryParams.push(company_location || null)
+      paramCount++
+    }
+
+    updateQuery += `, updated_at = NOW() WHERE company_id = $${paramCount}`
+    queryParams.push(companyId)
+
+    await query(updateQuery, queryParams)
 
     return res.json({
       success: true,
@@ -305,7 +317,8 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
         company_name,
         company_email,
         hr_email,
-        company_logo_url: hasLogoColumn ? (company_logo_url || null) : undefined
+        company_logo_url: hasLogoColumn ? (company_logo_url || null) : undefined,
+        company_location: hasLocationColumn ? (company_location || null) : undefined
       }
     })
   } catch (err) {

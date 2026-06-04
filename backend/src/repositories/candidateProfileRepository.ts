@@ -20,6 +20,8 @@ export interface CandidateSkill {
   certificate_url: string | null
   created_at: string
   updated_at: string
+  certificate_status?: string | null
+  certificate_rejection_reason?: string | null
 }
 
 export interface JobRecommendation {
@@ -54,7 +56,17 @@ export class CandidateProfileRepository {
 
   async getSkills(profileId: string): Promise<CandidateSkill[]> {
     const { rows } = await query<CandidateSkill>(
-      `SELECT * FROM candidate_skills WHERE profile_id = $1 ORDER BY proficiency_score DESC`,
+      `SELECT cs.*, 
+              ca.status AS certificate_status, 
+              ca.rejection_reason AS certificate_rejection_reason
+       FROM candidate_skills cs
+       LEFT JOIN (
+           SELECT DISTINCT ON (skill_id) *
+           FROM certificate_approvals
+           ORDER BY skill_id, submitted_at DESC
+       ) ca ON cs.skill_id = ca.skill_id
+       WHERE cs.profile_id = $1 
+       ORDER BY cs.proficiency_score DESC`,
       [profileId]
     )
     return rows

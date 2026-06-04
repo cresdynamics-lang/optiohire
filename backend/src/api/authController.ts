@@ -42,18 +42,14 @@ export async function signup(req: Request, res: Response) {
     if (!normalizedCompanyRole) {
       return res.status(400).json({ error: 'Company role is required' })
     }
-    if (isCandidateSignup) {
-      return res.status(403).json({
-        error: 'Candidate account creation is disabled. This platform supports HR and hiring manager accounts only.',
-      })
-    }
+    // Candidate signups are allowed, so we don't block them here.
     if (!isCandidateSignup && (!company_name || !normalizedCompanyEmail || !normalizedHrEmail)) {
       return res.status(400).json({ error: 'Company role, organization name, company email, and HR email are required' })
     }
     
     // Validate company_role
-    if (normalizedCompanyRole !== 'hr' && normalizedCompanyRole !== 'hiring_manager') {
-      return res.status(400).json({ error: 'Company role must be either "hr" or "hiring_manager"' })
+    if (normalizedCompanyRole !== 'hr' && normalizedCompanyRole !== 'hiring_manager' && normalizedCompanyRole !== 'candidate') {
+      return res.status(400).json({ error: 'Company role must be either "hr", "hiring_manager", or "candidate"' })
     }
 
     // Validate email formats

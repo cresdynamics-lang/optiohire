@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CalendarClock, Sparkles, Video, MapPin, ExternalLink, Loader2 } from 'lucide-react'
+import { RejectInterviewModal } from '@/components/modals/RejectInterviewModal'
+import { CalendarClock, Sparkles, Video, MapPin, ExternalLink, Loader2, XCircle } from 'lucide-react'
 
 interface Interview {
   id: string
@@ -20,6 +21,8 @@ export function JobSeekerInterviewsSection() {
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [rejectModalOpen, setRejectModalOpen] = useState(false)
+  const [selectedInterview, setSelectedInterview] = useState<any | null>(null)
 
   useEffect(() => {
     async function fetchInterviews() {
@@ -162,6 +165,22 @@ export function JobSeekerInterviewsSection() {
                     Join Meeting
                     <ExternalLink className="h-3 w-3" />
                   </a>
+                )}
+
+                
+
+                {/* Cancel Interview Button */}
+                {isUpcoming(interview.interviewTime) && interview.status !== 'REJECTED' && (
+                  <button
+                    onClick={() => {
+                      setSelectedInterview(interview)
+                      setRejectModalOpen(true)
+                    }}
+                    className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors ml-3"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Cancel
+                  </button>
                 )}
 
                 {/* In-Person: Location + Google Maps */}

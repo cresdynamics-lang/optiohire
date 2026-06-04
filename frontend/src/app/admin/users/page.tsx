@@ -368,29 +368,45 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                         <div className="flex gap-2 flex-wrap">
-                          {userItem.role !== 'admin' && (
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                if (confirm('Promote this user to admin? They will require approval before accessing admin features.')) {
-                                  updateUser(userItem.user_id, { 
-                                    role: 'admin',
-                                    admin_permissions: {
+                          {/* Role Assignment UI */}
+                          <div className="flex items-center gap-2 mr-2 border-r border-slate-200 pr-4">
+                            <span className="text-xs font-medium text-slate-500">Change Role:</span>
+                            <Select 
+                              value={userItem.role} 
+                              onValueChange={(newRole) => {
+                                if (newRole === userItem.role) return;
+                                
+                                const confirmMsg = newRole === 'admin' 
+                                  ? 'Promote this user to admin? They will require approval before accessing admin features.'
+                                  : `Change this user's role to ${newRole}?`;
+                                  
+                                if (confirm(confirmMsg)) {
+                                  const updates: any = { role: newRole };
+                                  if (newRole === 'admin') {
+                                    updates.admin_permissions = {
                                       manage_users: true,
                                       manage_companies: true,
                                       manage_jobs: true,
                                       manage_applications: true,
                                       view_analytics: true
-                                    }
-                                  })
+                                    };
+                                  }
+                                  updateUser(userItem.user_id, updates);
                                 }
                               }}
-                              className="bg-blue-600 hover:bg-blue-700"
+                              disabled={!!isCurrentUser}
                             >
-                              <Shield className="h-4 w-4 mr-1" />
-                              Make Admin
-                            </Button>
-                          )}
+                              <SelectTrigger className="w-[110px] h-8 text-xs border-slate-300">
+                                <SelectValue placeholder="Select Role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="hr">HR</SelectItem>
+                                <SelectItem value="candidate">Candidate</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                           {userItem.role === 'admin' && userItem.admin_approval_status === 'pending' && (
                             <>
                               <Button

@@ -1,9 +1,11 @@
 import { Request, Response } from 'express'
 import { CertificateRepository } from '../repositories/certificateRepository.js'
 import { CandidateProfileRepository } from '../repositories/candidateProfileRepository.js'
+import { EmailService } from '../services/emailService.js'
 
 const certRepo = new CertificateRepository()
 const candidateProfileRepo = new CandidateProfileRepository()
+const emailService = new EmailService()
 
 export const getPendingCertificates = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -30,6 +32,23 @@ export const approveCertificate = async (req: Request, res: Response): Promise<v
     if (status === 'APPROVED') {
       // Give the student a proficiency score boost (e.g. 50 points)
       await candidateProfileRepo.updateSkillScore(updatedApproval.skill_id, 50, true, updatedApproval.certificate_url)
+      
+      if (updatedApproval.candidate_email) {
+        await emailService.sendCertificateApprovedEmail({
+          candidateEmail: updatedApproval.candidate_email,
+          candidateName: updatedApproval.candidate_name,
+          skillName: updatedApproval.skill_name
+        }).catch(err => console.error('Failed to send cert approval email:', err))
+      }
+    } else if (status === 'REJECTED') {
+      if (updatedApproval.candidate_email) {
+        await emailService.sendCertificateRejectedEmail({
+          candidateEmail: updatedApproval.candidate_email,
+          candidateName: updatedApproval.candidate_name,
+          skillName: updatedApproval.skill_name,
+          rejectionReason: rejectionReason || 'Certificate did not meet our verification requirements.'
+        }).catch(err => console.error('Failed to send cert rejection email:', err))
+      }
     }
 
     res.status(200).json({ success: true, message: `Certificate ${status}`, data: updatedApproval })

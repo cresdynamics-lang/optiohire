@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { authenticate } from '../middleware/auth.js'
+import { authenticate, requireHR } from '../middleware/auth.js'
 import { 
   createJobPosting, 
   getJobPostings, 
@@ -17,8 +17,8 @@ router.get('/public/:id', getPublicJobPostingById)
 router.get('/public/company/:companyId', getPublicCompanyJobPostings)
 
 // Authenticated routes
-router.get('/', authenticate, getJobPostings)
-router.post('/', authenticate, createJobPosting)
-router.post('/send-created-notification', authenticate, sendJobPostingCreatedNotification)
+router.get('/', authenticate, requireHR, getJobPostings)
+router.post('/', authenticate, requireHR, createJobPosting)
+router.post('/send-created-notification', authenticate, requireHR, sendJobPostingCreatedNotification)
 
 

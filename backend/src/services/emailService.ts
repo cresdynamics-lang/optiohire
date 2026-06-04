@@ -10,7 +10,7 @@ import { query } from '../db/index.js'
 import { parseTemplate } from '../utils/templateParser.js'
 
 /** Default from address for candidate emails and fallback when company email is not set */
-const DEFAULT_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+const DEFAULT_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
 const DEFAULT_FROM_NAME = process.env.RESEND_FROM_NAME || 'OptioHire'
 const MAX_EMAIL_RETRY_ATTEMPTS = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
 const EMAIL_RETRY_BASE_DELAY_SEC = Number(process.env.EMAIL_RETRY_BASE_DELAY_SEC || 30)
@@ -257,6 +257,9 @@ ${data.companyName || 'Hiring Team'}
     interviewLink?: string | null
     interviewDate?: string | null
     interviewTime?: string | null
+    candidateLoginUrl?: string | null
+    candidateTemporaryPassword?: string | null
+    isNewCandidateAccount?: boolean
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -267,6 +270,42 @@ ${data.companyName || 'Hiring Team'}
 
     let subject = `You've been shortlisted – ${cleanedJobTitle} - ${companyName}`
     const hasInterviewDetails = !!(data.interviewLink || data.interviewDate || data.interviewTime)
+
+    // Build candidate dashboard block if new account was provisioned
+    const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
+    const dashboardBlock = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+    <div style="margin-top: 24px; padding: 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">🎯 Your Candidate Dashboard is Ready</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">We've created a personal dashboard for you where you can track your application status, build your skills profile, and explore more opportunities.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 100px;">Email:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600;">${data.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Password:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">${data.candidateTemporaryPassword}</td>
+        </tr>
+      </table>
+      <a href="${loginUrl}" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Log In to Your Dashboard →</a>
+      <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Please change your password after your first login for security.</p>
+    </div>`
+      : ''
+
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
 
     let html = ''
     let text = ''
@@ -284,6 +323,12 @@ ${data.companyName || 'Hiring Team'}
       subject = parseTemplate(customTemplate.subject, vars)
       html = parseTemplate(customTemplate.body_html, vars)
       text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+      
+      // Append dashboard block to custom template
+      if (dashboardBlock) {
+        html += dashboardBlock
+        text += dashboardBlockText
+      }
     } else {
       html = `
 <!DOCTYPE html>
@@ -316,7 +361,7 @@ ${data.companyName || 'Hiring Team'}
     <p>If you have any questions, feel free to contact our HR team at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
     
     <p>We look forward to meeting you and learning more about how you can contribute to our team. Thank you!</p>
-    
+    ${dashboardBlock}
     <p>Kind regards,<br>
     <strong>${companyName}</strong><br>
     <strong>Company Email:</strong> ${hrEmail}</p>
@@ -339,7 +384,7 @@ ${data.interviewDate ? `Date: ${data.interviewDate}\n` : ''}${data.interviewTime
 During this session, we will discuss your experience, your fit for the role, and the value you can bring to our team.
 
 If you have any questions, feel free to contact our HR team at ${hrEmail}.
-
+${dashboardBlockText}
 Kind regards,
 ${companyName}
 Company Email: ${hrEmail}`
@@ -352,14 +397,14 @@ Our HR team will send you the interview date, time, and meeting link once your i
 If you have any questions, feel free to contact our HR team at ${hrEmail}.
 
 We look forward to meeting you. Thank you!
-
+${dashboardBlockText}
 Kind regards,
 ${companyName}
 Company Email: ${hrEmail}`
     }
 
-    // Use noreply@optiohire.com for all candidate emails
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    // Use applicationsoptiohire@gmail.com for all candidate emails
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
     
     await this.sendEmail({
       to: data.candidateEmail,
@@ -379,6 +424,9 @@ Company Email: ${hrEmail}`
     companyId?: string | null
     companyEmail?: string | null
     companyDomain?: string | null
+    candidateLoginUrl?: string | null
+    candidateTemporaryPassword?: string | null
+    isNewCandidateAccount?: boolean
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -388,6 +436,43 @@ Company Email: ${hrEmail}`
     const customTemplate = await this.getCustomTemplate(data.companyId, 'REJECT')
 
     let subject = `Update on Your Application for the ${jobTitle} Position - ${companyName}`
+
+    // Build candidate dashboard block if new account was provisioned
+    const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
+    const dashboardBlock = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+    <div style="margin-top: 24px; padding: 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">🎯 Your Candidate Dashboard is Ready</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">We've created a personal dashboard for you where you can track your application status, build your skills profile, and explore more opportunities.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 100px;">Email:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600;">${data.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Password:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">${data.candidateTemporaryPassword}</td>
+        </tr>
+      </table>
+      <a href="${loginUrl}" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Log In to Your Dashboard →</a>
+      <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Please change your password after your first login for security.</p>
+    </div>`
+      : ''
+
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
+
     let html = ''
     let text = ''
 
@@ -401,6 +486,12 @@ Company Email: ${hrEmail}`
       subject = parseTemplate(customTemplate.subject, vars)
       html = parseTemplate(customTemplate.body_html, vars)
       text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+      
+      // Append dashboard block to custom template
+      if (dashboardBlock) {
+        html += dashboardBlock
+        text += dashboardBlockText
+      }
     } else {
       html = `
 <!DOCTYPE html>
@@ -424,7 +515,7 @@ Company Email: ${hrEmail}`
     <p>If you have any questions or would like feedback regarding your application, please feel free to contact us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
     
     <p>We sincerely appreciate your interest in our company and wish you the very best in your job search and future career endeavors.</p>
-    
+    ${dashboardBlock}
     <p>Kind regards,<br>
     <strong>Company Name:</strong> ${companyName}<br>
     <strong>Company Email:</strong> ${hrEmail}</p>
@@ -444,15 +535,15 @@ Although you were not selected for this role, we encourage you to apply for futu
 If you have any questions or would like feedback regarding your application, please feel free to contact us at ${hrEmail}.
 
 We sincerely appreciate your interest in our company and wish you the very best in your job search and future career endeavors.
-
+${dashboardBlockText}
 Kind regards,
 
 Company Name: ${companyName}
 Company Email: ${hrEmail}`
     }
 
-    // Use noreply@optiohire.com for all candidate emails
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    // Use applicationsoptiohire@gmail.com for all candidate emails
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
     
     await this.sendEmail({
       to: data.candidateEmail,
@@ -474,6 +565,9 @@ Company Email: ${hrEmail}`
     companyName: string
     companyEmail?: string | null
     companyDomain?: string | null
+    candidateLoginUrl?: string | null
+    candidateTemporaryPassword?: string | null
+    isNewCandidateAccount?: boolean
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -481,6 +575,42 @@ Company Email: ${hrEmail}`
     const jobTitle = data.jobTitle || '[Job Title]'
 
     const subject = `Your application for ${jobTitle} - ${companyName} is under review`
+
+    // Build candidate dashboard block if new account was provisioned
+    const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
+    const dashboardBlock = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+    <div style="margin-top: 24px; padding: 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">🎯 Your Candidate Dashboard is Ready</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">We've created a personal dashboard for you where you can track your application status, build your skills profile, and explore more opportunities.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 100px;">Email:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600;">${data.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Password:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">${data.candidateTemporaryPassword}</td>
+        </tr>
+      </table>
+      <a href="${loginUrl}" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Log In to Your Dashboard →</a>
+      <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Please change your password after your first login for security.</p>
+    </div>`
+      : ''
+
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
 
     const html = `
 <!DOCTYPE html>
@@ -497,6 +627,7 @@ Company Email: ${hrEmail}`
     <p>Thank you for applying for the <strong>${jobTitle}</strong> role at <strong>${companyName}</strong>.</p>
     <p>Your CV has been received and assessed. Your profile is <strong>still under review</strong> by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.</p>
     <p>We will contact you again if we move forward with your application. If you have questions, please reach us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
+    ${dashboardBlock}
     <p>Kind regards,<br>
     <strong>${companyName}</strong><br>
     <strong>HR contact:</strong> ${hrEmail}</p>
@@ -512,12 +643,12 @@ Thank you for applying for the ${jobTitle} role - ${companyName}.
 Your CV has been received and assessed. Your profile is still under review by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.
 
 We will contact you again if we move forward with your application. If you have questions, please reach us at ${hrEmail}.
-
+${dashboardBlockText}
 Kind regards,
 ${companyName}
 HR contact: ${hrEmail}`
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com'
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
 
     await this.sendEmail({
       to: data.candidateEmail,
@@ -1788,7 +1919,7 @@ ${data.companyEmail}`
 
     await this.sendEmail({
       to: data.candidateEmail,
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com',
+      from: process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com',
       replyTo: data.companyEmail,
       subject: `Message regarding your application: ${jobTitle}`,
       html,
@@ -2036,12 +2167,236 @@ The team at OptioHire`
 
     return this.sendEmail({
       to: data.candidateEmail,
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@optiohire.com',
+      from: process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com',
       subject,
       html,
       text,
       emailType: 'talent_pool_match'
     })
+  }
+
+  // === Certificate Notifications ===
+
+  async sendCertificateApprovedEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    skillName: string
+  }) {
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const subject = `Certificate Approved: ${data.skillName}`
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Dear ${candidateName},</p>
+    <p>Good news! Your uploaded certificate for <strong>${data.skillName}</strong> has been reviewed and <strong>APPROVED</strong> by our team.</p>
+    <p>Your profile skill score has been updated accordingly. This boosts your visibility to potential employers.</p>
+    <p>Keep up the great work!</p>
+    <p>Kind regards,<br>
+    <strong>OptioHire Admin Team</strong></p>
+  </div>
+</body>
+</html>`
+
+    const text = `Dear ${candidateName},
+
+Good news! Your uploaded certificate for ${data.skillName} has been reviewed and APPROVED by our team.
+
+Your profile skill score has been updated accordingly. This boosts your visibility to potential employers.
+
+Keep up the great work!
+
+Kind regards,
+OptioHire Admin Team`
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
+
+    await this.sendEmail({
+      to: data.candidateEmail,
+      from: fromEmail,
+      subject,
+      text,
+      html,
+      emailType: 'certificate_approved'
+    })
+  }
+
+  async sendCertificateRejectedEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    skillName: string
+    rejectionReason: string
+  }) {
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const subject = `Action Required: Certificate Rejected for ${data.skillName}`
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .reason-box { margin-top: 16px; padding: 16px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Dear ${candidateName},</p>
+    <p>We have reviewed your uploaded certificate for <strong>${data.skillName}</strong>. Unfortunately, it could not be approved at this time.</p>
+    
+    <div class="reason-box">
+      <strong>Reason for Rejection:</strong><br>
+      ${data.rejectionReason}
+    </div>
+
+    <p>Don't worry — you can <strong>appeal this decision</strong> or simply re-upload a clearer or updated certificate directly from your Candidate Dashboard.</p>
+    
+    <p>If you have any questions, feel free to reply to this email.</p>
+    
+    <p>Kind regards,<br>
+    <strong>OptioHire Admin Team</strong></p>
+  </div>
+</body>
+</html>`
+
+    const text = `Dear ${candidateName},
+
+We have reviewed your uploaded certificate for ${data.skillName}. Unfortunately, it could not be approved at this time.
+
+Reason for Rejection:
+${data.rejectionReason}
+
+Don't worry — you can appeal this decision or simply re-upload a clearer or updated certificate directly from your Candidate Dashboard.
+
+If you have any questions, feel free to reply to this email.
+
+Kind regards,
+OptioHire Admin Team`
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
+
+    await this.sendEmail({
+      to: data.candidateEmail,
+      from: fromEmail,
+      subject,
+      text,
+      html,
+      emailType: 'certificate_rejected'
+    })
+  }
+
+  async sendSupportTicketSeen(userEmail: string, subject: string) {
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #1e293b; margin: 0;">We've seen your message</h2>
+        </div>
+        <div style="background-color: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hello,</p>
+          <p style="color: #334155; font-size: 16px;">This is a quick note to let you know that our administrative team has seen your support ticket: <strong>${subject}</strong>.</p>
+          <p style="color: #334155; font-size: 16px;">We are actively looking into it and will take the necessary actions. You will hear from us shortly.</p>
+          <p style="color: #334155; font-size: 16px; margin-bottom: 0;">Best regards,<br/>The OptioHire Team</p>
+        </div>
+      </div>
+    `;
+    await this.sendEmail({
+      to: userEmail,
+      subject: 'Your Support Ticket is Being Reviewed',
+      html,
+      text: `Hello, this is a quick note to let you know that our administrative team has seen your support ticket: ${subject}. We are actively looking into it and will take the necessary actions.`,
+      emailType: 'SupportTicketSeen'
+    });
+  }
+
+  async sendDemoSeen(userEmail: string, demoTime: string) {
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #1e293b; margin: 0;">Demo Confirmed</h2>
+        </div>
+        <div style="background-color: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hello,</p>
+          <p style="color: #334155; font-size: 16px;">Our team has been notified about your demo scheduled for <strong>${new Date(demoTime).toLocaleString()}</strong>.</p>
+          <p style="color: #334155; font-size: 16px;">We look forward to speaking with you! If you need to reschedule or have any questions beforehand, please reply to this email.</p>
+          <p style="color: #334155; font-size: 16px; margin-bottom: 0;">Best regards,<br/>The OptioHire Team</p>
+        </div>
+      </div>
+    `;
+    await this.sendEmail({
+      to: userEmail,
+      subject: 'OptioHire Demo Confirmed',
+      html,
+      text: `Hello, our team has been notified about your demo scheduled for ${new Date(demoTime).toLocaleString()}.`,
+      emailType: 'DemoSeen'
+    });
+  }
+
+  async sendDemoScheduledAdminAlert(adminEmail: string, hrInfo: any, demoTime: string, meetingLink?: string) {
+    const meetingHtml = meetingLink ? `<li><strong>Meeting Link:</strong> <a href="${meetingLink}">${meetingLink}</a></li>` : '';
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #fffbeb; border: 1px solid #fde68a;">
+        <h2 style="color: #92400e; margin-top: 0;">New Demo Scheduled!</h2>
+        <p style="color: #92400e;">A new demo has been booked.</p>
+        <ul style="color: #92400e;">
+          <li><strong>Email:</strong> ${hrInfo.email}</li>
+          <li><strong>Company:</strong> ${hrInfo.companyName || 'N/A'}</li>
+          <li><strong>Time:</strong> ${new Date(demoTime).toLocaleString()}</li>
+          ${meetingHtml}
+        </ul>
+        <p style="color: #92400e; margin-bottom: 0;">Check the admin dashboard to mark it as seen.</p>
+      </div>
+    `;
+    await this.sendEmail({
+      to: adminEmail,
+      subject: 'New Demo Scheduled',
+      html,
+      text: `A new demo has been booked by ${hrInfo.email} at ${new Date(demoTime).toLocaleString()}.`,
+      emailType: 'AdminDemoAlert'
+    });
+  }
+
+  async sendInterviewUpdated(candidateEmail: string, hrEmail: string, meetingTime: string, jobTitle: string) {
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Interview Updated</h2>
+        <p>Your interview for <strong>${jobTitle}</strong> has been updated.</p>
+        <p>New time: ${new Date(meetingTime).toLocaleString()}</p>
+        <p>Please contact ${hrEmail} if you have any questions.</p>
+      </div>
+    `;
+    await this.sendEmail({
+      to: candidateEmail,
+      subject: 'Interview Updated',
+      html,
+      text: `Your interview for ${jobTitle} has been updated to ${new Date(meetingTime).toLocaleString()}`,
+      emailType: 'InterviewUpdated'
+    });
+  }
+
+  async sendHRInterviewUpdated(hrEmail: string, candidateName: string, meetingTime: string, jobTitle: string) {
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Interview Updated</h2>
+        <p>The interview with <strong>${candidateName}</strong> for <strong>${jobTitle}</strong> has been updated.</p>
+        <p>New time: ${new Date(meetingTime).toLocaleString()}</p>
+      </div>
+    `;
+    await this.sendEmail({
+      to: hrEmail,
+      subject: 'Interview Updated',
+      html,
+      text: `The interview with ${candidateName} for ${jobTitle} has been updated to ${new Date(meetingTime).toLocaleString()}`,
+      emailType: 'HRInterviewUpdated'
+    });
   }
 }
 

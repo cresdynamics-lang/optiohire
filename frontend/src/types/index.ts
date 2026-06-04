@@ -60,6 +60,7 @@ export interface JobPostingFormData {
   required_skills: string[]
   interview_meeting_link?: string
   application_deadline?: string
+  job_poster_url?: string
 }
 
 export interface WebhookPayload {

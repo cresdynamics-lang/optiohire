@@ -141,7 +141,7 @@ export default function AdminLayout({
           </AdminErrorBoundary>
         </Suspense>
 
-        <main className="min-h-screen overflow-auto bg-slate-50">
+        <main className="min-h-screen overflow-auto bg-slate-50 pt-16">
           <AdminErrorBoundary>
             {children}
           </AdminErrorBoundary>

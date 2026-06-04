@@ -60,7 +60,7 @@ const jobSeekerSidebarItems = [
     id: 'overview',
     label: 'My Dashboard',
     icon: LayoutDashboard,
-    href: '/dashboard',
+    href: '/dashboard/candidate',
   },
   {
     id: 'jobs',

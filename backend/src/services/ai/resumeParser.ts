@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { groqService } from './groqService.js'
 import { openRouterService } from './openRouterService.js'
+import { scanForInjections } from './injectionScanner.js'
+import { buildSecureSystemPrompt, sandboxCvText } from './promptBuilder.js'
+import { saveAuditLog } from './auditLogger.js'
 
 type ParsedResume = {
   personal?: { name?: string; email?: string; phone?: string }
@@ -29,14 +32,39 @@ const emptyResume = (): ParsedResume => ({
 export async function parseResumeText(text: string): Promise<ParsedResume> {
   const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase()
 
-  // Use OpenRouter when AI_PROVIDER=openrouter
-  if (provider === 'openrouter' && openRouterService.isAvailable()) {
-    try {
-      const systemPrompt = `You are a resume parsing engine. Extract JSON with keys:
+  // --- SECURITY LAYER 1: PATTERN SCANNING ---
+  const scanResult = scanForInjections(text)
+  if (scanResult.severity === 'CRITICAL') {
+    console.warn('[SECURITY] Critical prompt injection detected, blocking request.')
+    await saveAuditLog({
+      severity: 'CRITICAL',
+      actionTaken: 'AUTO_REJECTED',
+      detectedPatterns: scanResult.detectedPatterns
+    })
+    return emptyResume()
+  }
+
+  // Log non-critical findings
+  if (!scanResult.isClean) {
+    await saveAuditLog({
+      severity: scanResult.severity,
+      actionTaken: 'FLAGGED',
+      detectedPatterns: scanResult.detectedPatterns
+    })
+  }
+
+  // --- SECURITY LAYER 2: PROMPT SANDBOXING ---
+  const rawSystemPrompt = `You are a resume parsing engine. Extract JSON with keys:
 personal{name,email,phone}, education[{school,degree,year}], experience[{company,role,start,end,summary}],
 skills[string[]], links{github,linkedin,portfolio[string[]]}, awards[string[]], projects[{name,description,link}].
 Return ONLY strict JSON, no markdown formatting.`
-      const prompt = `Resume Text:\n${text}\n---\nExtract the structured JSON now.`
+  
+  const systemPrompt = buildSecureSystemPrompt(rawSystemPrompt)
+  const prompt = sandboxCvText(text)
+
+  // Use OpenRouter when AI_PROVIDER=openrouter
+  if (provider === 'openrouter' && openRouterService.isAvailable()) {
+    try {
       const parsed = await openRouterService.generateJSON<ParsedResume>(prompt, undefined, { systemPrompt })
       return parsed || emptyResume()
     } catch (error) {
@@ -49,11 +77,6 @@ Return ONLY strict JSON, no markdown formatting.`
   if (provider === 'groq' && groqService.isAvailable()) {
     try {
       const model = process.env.RESUME_PARSER_MODEL || process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
-      const systemPrompt = `You are a resume parsing engine. Extract JSON with keys:
-personal{name,email,phone}, education[{school,degree,year}], experience[{company,role,start,end,summary}],
-skills[string[]], links{github,linkedin,portfolio[string[]]}, awards[string[]], projects[{name,description,link}].
-Return ONLY strict JSON, no markdown formatting.`
-      const prompt = `Resume Text:\n${text}\n---\nExtract the structured JSON now.`
       const parsed = await groqService.generateJSON<ParsedResume>(prompt, model, { systemPrompt, apiKey: 'primary' })
       return parsed || emptyResume()
     } catch (error) {
@@ -68,12 +91,7 @@ Return ONLY strict JSON, no markdown formatting.`
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = process.env.RESUME_PARSER_MODEL || 'gemini-2.0-flash'
-    const systemInstruction = `You are a resume parsing engine. Extract JSON with keys:
-personal{name,email,phone}, education[{school,degree,year}], experience[{company,role,start,end,summary}],
-skills[string[]], links{github,linkedin,portfolio[string[]]}, awards[string[]], projects[{name,description,link}].
-Return ONLY strict JSON, no markdown formatting.`
-    const prompt = `Resume Text:\n${text}\n---\nExtract the structured JSON now.`
-    const geminiModel = genAI.getGenerativeModel({ model, systemInstruction })
+    const geminiModel = genAI.getGenerativeModel({ model, systemInstruction: systemPrompt })
     const result = await geminiModel.generateContent(prompt)
     const response = await result.response
     let content = response.text() || '{}'

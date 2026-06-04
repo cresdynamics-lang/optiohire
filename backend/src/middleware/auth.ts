@@ -12,6 +12,7 @@ export interface AuthRequest extends Request {
   userId?: string
   userEmail?: string
   userRole?: string
+  userCompanyRole?: string
 }
 
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
@@ -54,19 +55,29 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; email: string }
 
     // Verify user exists and is active
-    const userResult = await query<{ user_id: string; email: string; role: string; is_active: boolean }>(
-      `SELECT user_id, email, role, is_active FROM users WHERE user_id = $1`,
-      [decoded.sub]
-    )
+    // Try to fetch company_role if it exists, otherwise fallback to standard fetch
+    let userRecord = null;
+    try {
+      const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean; company_role?: string }>(
+        `SELECT user_id, email, role, is_active, company_role FROM users WHERE user_id = $1`,
+        [decoded.sub]
+      )
+      if (rows.length > 0) userRecord = rows[0];
+    } catch (err) {
+      // Fallback if company_role column doesn't exist
+      const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean }>(
+        `SELECT user_id, email, role, is_active FROM users WHERE user_id = $1`,
+        [decoded.sub]
+      )
+      if (rows.length > 0) userRecord = rows[0];
+    }
 
-    if (!userResult || !userResult.rows || userResult.rows.length === 0 || !userResult.rows[0].is_active) {
+    if (!userRecord || !userRecord.is_active) {
       return res.status(401).json({ error: 'Invalid or inactive user' })
     }
 
-    const rows = userResult.rows
-
     // STRICT: Check if user has a company (except for admin)
-    if (rows[0].role !== 'admin') {
+    if (userRecord.role !== 'admin') {
       try {
         // Check if user_id column exists in companies table
         const checkColumn = await query(`
@@ -87,7 +98,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
           // Fallback: check by email (hr_email or company_email)
           const companyCheck = await query(
             `SELECT company_id FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
-            [rows[0].email]
+            [userRecord.email]
           )
           hasCompany = companyCheck.rows.length > 0
         }
@@ -108,11 +119,14 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       }
     }
 
-    req.userId = rows[0].user_id
-    req.userEmail = rows[0].email
-    req.userRole = rows[0].role
+    req.userId = userRecord.user_id
+    req.userEmail = userRecord.email
+    req.userRole = userRecord.role
+    req.userCompanyRole = (userRecord as any).company_role
 
     next()
+
+
   } catch (err: any) {
     console.error('Authentication error:', err)
     
@@ -169,6 +183,79 @@ export async function optionalAuthenticate(req: AuthRequest, res: Response, next
   } catch {
     next()
   }
+}
+
+/**
+ * requireHR: Ensures the user is either an admin or has a company profile.
+ * Use this on routes specifically meant for Employers / HR.
+ */
+export async function requireHR(req: AuthRequest, res: Response, next: NextFunction) {
+  if (req.userRole === 'admin') {
+    return next()
+  }
+  
+  if (!req.userId) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  try {
+    // Check if user_id column exists in companies table
+    const checkColumn = await query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'companies' AND column_name = 'user_id'
+    `)
+    
+    let hasCompany = false
+    if (checkColumn.rows.length > 0) {
+      // user_id column exists, check by user_id
+      const companyCheck = await query(
+        `SELECT company_id FROM companies WHERE user_id = $1 LIMIT 1`,
+        [req.userId]
+      )
+      hasCompany = companyCheck.rows.length > 0
+    } else {
+      // Fallback: check by email (hr_email or company_email)
+      const companyCheck = await query(
+        `SELECT company_id FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
+        [req.userEmail]
+      )
+      hasCompany = companyCheck.rows.length > 0
+    }
+
+    if (!hasCompany) {
+      return res.status(403).json({ 
+        error: 'Access denied: Company profile required',
+        details: 'Your account must have a company profile to access this resource. Please contact support.'
+      })
+    }
+    next()
+  } catch (err) {
+    console.error('Error checking company for requireHR:', err)
+    return res.status(403).json({ 
+      error: 'Access denied: Unable to verify company profile',
+      details: 'Please contact support to set up your company profile.'
+    })
+  }
+}
+
+/**
+ * requireCandidate: Ensures the user has the 'candidate' role or company_role.
+ */
+export async function requireCandidate(req: AuthRequest, res: Response, next: NextFunction) {
+  const isCandidate = 
+    req.userRole === 'candidate' || 
+    req.userCompanyRole === 'candidate' || 
+    req.userCompanyRole === 'job_seeker' ||
+    req.userCompanyRole === 'jobseeker';
+
+  if (!isCandidate && req.userRole !== 'admin') {
+    return res.status(403).json({ 
+      error: 'Access denied: Candidate profile required',
+      details: 'This endpoint is restricted to candidates.'
+    })
+  }
+  next()
 }
 
 export async function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {

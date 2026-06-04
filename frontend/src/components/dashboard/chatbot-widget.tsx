@@ -175,6 +175,19 @@ export function ChatbotWidget() {
     }
   }, [])
 
+  // Listen for the "open-hr-assistant" event dispatched by the overview card
+  useEffect(() => {
+    const handleOpenChatbot = () => {
+      setIsOpen(true)
+      setActiveTab('chat')
+    }
+    document.addEventListener('open-hr-assistant', handleOpenChatbot)
+    return () => {
+      document.removeEventListener('open-hr-assistant', handleOpenChatbot)
+    }
+  }, [])
+
+
   // Context gathering
   const getPageContext = () => {
     if (typeof window === 'undefined') return {}

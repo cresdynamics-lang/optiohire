@@ -26,6 +26,8 @@ import { router as resendRouter } from './routes/resend.js'
 import { router as uploadRouter } from './routes/upload.js'
 import { router as webhooksRouter } from './routes/webhooks.js'
 import { router as templatesRouter } from './routes/templates.js'
+import { router as demosRouter } from './routes/demos.js'
+import { router as adminCertificatesRouter } from './routes/certificates.js'
 
 import { ensureStorageDir } from './utils/storage.js'
 import { logger } from './utils/logger.js'
@@ -115,6 +117,8 @@ app.use('/api/hr/reports', hrReportsRouter)
 app.use('/api/hr', hrCandidatesRouter)
 app.use('/api/webhooks', webhooksRouter)
 app.use('/api/system/reports', reportsRouter)
+app.use('/api/demos', demosRouter)
+app.use('/api/admin/certificates', adminCertificatesRouter)
 app.use('/api', scheduleRouter)
 app.use('/contact', contactRouter)
 app.use('/auth', authRouter)

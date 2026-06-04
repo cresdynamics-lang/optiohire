@@ -21,6 +21,7 @@ import {
   Send,
   AlertTriangle,
   X,
+  ShieldAlert,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,7 @@ const navigation: Array<{
   { name: 'Applications', href: '/admin/applications', icon: FileText },
   { name: 'Candidates Pipeline', href: '/admin/candidates', icon: UserCheck },
   { name: 'Talent Pool', href: '/admin/talent-pool', icon: Users },
+  { name: 'Certificates', href: '/admin/certificates', icon: FileText },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Signups', href: '/admin/signups', icon: UserCheck },
   { name: 'Emails', href: '/admin/emails', icon: Mail },
@@ -51,6 +53,7 @@ const navigation: Array<{
   { name: 'Activity', href: '/admin/activity', icon: Activity },
   { name: 'Help', href: '/admin/help', icon: HelpCircle },
   { name: 'Support Tickets', href: '/admin/support', icon: HelpCircle },
+  { name: 'Security Logs', href: '/admin/security-logs', icon: ShieldAlert },
 ]
 
 type AdminSidebarProps = {
