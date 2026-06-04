@@ -28,12 +28,7 @@ export default function DashboardPage() {
       return
     }
 
-    // Job seekers should land on their dashboard overview
-    if (user && isJobSeeker) {
-      router.replace('/dashboard/candidate')
-      return
-    }
-
+    // Job seekers should land on their dashboard overview (handled by OptimizedDashboardLayout)
     // Require company setup before dashboard (employers only; job seekers skip)
     if (
       user &&
