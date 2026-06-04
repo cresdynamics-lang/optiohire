@@ -281,6 +281,20 @@ ${data.companyName || 'Hiring Team'}
     </div>`
       : ''
 
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
+
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
         <h2 style="color: #0f1c2e; margin-bottom: 16px;">Application Received</h2>
