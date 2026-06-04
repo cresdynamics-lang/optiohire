@@ -193,7 +193,13 @@ function SignUpForm() {
     nextStep()
   }
 
-  const currentRegister = userRole === 'candidate' ? candidateForm.register : employerForm.register
+  const registerField = (name: any) => {
+    if (userRole === 'candidate') {
+      return candidateForm.register(name)
+    }
+    return employerForm.register(name)
+  }
+
   const currentErrors = userRole === 'candidate' ? (candidateForm.formState.errors as any) : (employerForm.formState.errors as any)
 
   return (
@@ -319,7 +325,7 @@ function SignUpForm() {
                     type="text"
                     id="name"
                     placeholder="Enter your full name"
-                    {...currentRegister('name')}
+                    {...registerField('name')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                     required
                   />
@@ -339,7 +345,7 @@ function SignUpForm() {
                     type="email"
                     id="email"
                     placeholder="Email Address"
-                    {...currentRegister('email')}
+                    {...registerField('email')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                     required
                   />
@@ -360,7 +366,7 @@ function SignUpForm() {
                       type={showPassword ? 'text' : 'password'}
                       id="password"
                       placeholder="Password"
-                      {...currentRegister('password')}
+                      {...registerField('password')}
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                       required
                     />
@@ -396,7 +402,7 @@ function SignUpForm() {
                       type={showConfirmPassword ? 'text' : 'password'}
                       id="confirmPassword"
                       placeholder="Confirm Password"
-                      {...currentRegister('confirmPassword')}
+                      {...registerField('confirmPassword')}
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                       required
                     />
