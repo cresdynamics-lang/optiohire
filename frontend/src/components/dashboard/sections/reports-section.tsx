@@ -31,6 +31,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { JobPosting } from '@/types'
 import { ApplicantReportModal } from '../applicant-report-modal'
 import { createTimeoutSignal } from '@/lib/utils'
+import { AnalyticsDashboard } from './analytics-dashboard'
 
 interface JobReportItem {
   job: JobPosting
@@ -280,6 +281,9 @@ export function ReportsSection() {
           </p>
         </div>
       </motion.div>
+
+      {/* New Top-Level Dashboard Metrics & Insights */}
+      <AnalyticsDashboard />
 
       {error && (
         <motion.div

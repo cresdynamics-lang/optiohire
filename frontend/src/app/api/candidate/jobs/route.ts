@@ -104,6 +104,7 @@ export async function GET(request: NextRequest) {
          jp.skills_required,
          jp.application_deadline,
          jp.created_at,
+         jp.job_poster_url,
          c.company_name
        FROM job_postings jp
        LEFT JOIN companies c ON c.company_id = jp.company_id

@@ -23,6 +23,7 @@ export interface JobPosting {
   status: 'active' | 'paused' | 'closed'
   n8n_webhook_sent: boolean
   google_calendar_link?: string | null
+  job_poster_url?: string | null
 }
 
 export interface Applicant {

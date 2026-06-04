@@ -63,7 +63,7 @@ export function ToggleTheme() {
           <button
             key={option.value}
             className={cn(
-              'relative flex size-7 cursor-pointer items-center justify-center rounded-md transition-all z-10',
+              'relative flex w-7 h-7 cursor-pointer items-center justify-center rounded-md transition-all z-10',
               active
                 ? 'text-[#2D2DDD] dark:text-white' 
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
@@ -80,7 +80,7 @@ export function ToggleTheme() {
                 className="border-[#2D2DDD] dark:border-white/50 absolute inset-0 rounded-md border-2 bg-white dark:bg-gray-700"
               />
             )}
-            <option.icon className="size-3.5 relative z-10" />
+            <option.icon className="w-4 h-4 relative z-10" />
           </button>
         )
       })}

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { X, Plus, Calendar, Briefcase, MapPin, Users, Loader2, CheckCircle, AlertCircle, Clock, Video, ExternalLink, Copy, Check } from 'lucide-react'
 import { JobPostingFormData } from '@/types'
 import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -33,6 +34,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
     required_skills: [],
     interview_meeting_link: '',
     application_deadline: '',
+    job_poster_url: '',
   })
 
   // Pre-fill company info from user when modal opens
@@ -273,6 +275,15 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                     <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
                       Job Details
                     </h3>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-gray-900 dark:text-white">Job Poster (Optional)</Label>
+                      <ImageUpload
+                        value={formData.job_poster_url}
+                        onChange={(url) => handleInputChange('job_poster_url', url || '')}
+                        label="Upload a promotional poster for this job"
+                      />
+                    </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="job_title" className="text-gray-900 dark:text-white">Job Title</Label>
@@ -528,6 +539,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                   required_skills: [],
                   interview_meeting_link: '',
                   application_deadline: '',
+                  job_poster_url: '',
                 })
                 setWebhookStatus({ status: 'idle', message: '' })
                 setCreatedJobInfo(null)
