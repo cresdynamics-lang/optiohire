@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { JobRecommendations } from '@/components/candidate/JobRecommendations'
 import { SkillGapRoadmap } from '@/components/candidate/SkillGapRoadmap'
 import { Trophy, TrendingUp, Target, ShieldCheck, Check, Clock, X, AlertCircle, UploadCloud, Loader2 } from 'lucide-react'
@@ -58,25 +59,32 @@ export function TalentProfileSection() {
     fetchDashboard()
   }, [])
 
+  const [certFile, setCertFile] = useState<File | null>(null)
+
   const handleUpload = async (skillId: string) => {
-    if (!certUrl) {
-      toast.error('Please enter a certificate URL')
+    if (!certUrl && !certFile) {
+      toast.error('Please enter a certificate URL or upload a file')
       return
     }
     try {
+      const formData = new FormData()
+      formData.append('skillId', skillId)
+      if (certUrl) formData.append('certificateUrl', certUrl)
+      if (certFile) formData.append('certificate', certFile)
+
       const res = await fetch('/api/candidate/certificate', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ skillId, certificateUrl: certUrl })
+        body: formData
       })
       const result = await res.json()
-      if (result.success) {
+      if (result.success || res.ok) {
         toast.success('Certificate uploaded successfully!')
         setUploadingSkillId(null)
         setCertUrl('')
+        setCertFile(null)
         fetchDashboard()
       } else {
         toast.error(result.error || 'Failed to upload certificate')
@@ -257,15 +265,40 @@ export function TalentProfileSection() {
                         )}
 
                         {uploadingSkillId === skill.skill_id && (
-                          <div className="mt-4 flex gap-2">
-                            <Input 
-                              placeholder="Certificate URL (e.g., https://coursera.org/...)" 
-                              value={certUrl}
-                              onChange={(e) => setCertUrl(e.target.value)}
-                              className="h-8 text-sm bg-white"
-                            />
-                            <Button size="sm" className="h-8" onClick={() => handleUpload(skill.skill_id)}>Submit</Button>
-                            <Button variant="ghost" size="sm" className="h-8" onClick={() => { setUploadingSkillId(null); setCertUrl(''); }}>Cancel</Button>
+                          <div className="mt-4 flex flex-col gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <p className="text-sm font-medium text-slate-700">Choose one option to verify your skill:</p>
+                            <div className="flex flex-col md:flex-row gap-4">
+                              <div className="flex-1 space-y-1">
+                                <Label className="text-xs text-slate-500">Option 1: Link</Label>
+                                <Input 
+                                  placeholder="Certificate URL (e.g., https://coursera.org/...)" 
+                                  value={certUrl}
+                                  onChange={(e) => {
+                                    setCertUrl(e.target.value);
+                                    if (e.target.value) setCertFile(null);
+                                  }}
+                                  className="h-9 text-sm bg-white"
+                                />
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <Label className="text-xs text-slate-500">Option 2: Upload File</Label>
+                                <Input 
+                                  type="file"
+                                  accept=".pdf,.png,.jpg,.jpeg"
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      setCertFile(e.target.files[0]);
+                                      setCertUrl('');
+                                    }
+                                  }}
+                                  className="h-9 text-sm bg-white cursor-pointer"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex gap-2 justify-end mt-2">
+                              <Button variant="ghost" size="sm" onClick={() => { setUploadingSkillId(null); setCertUrl(''); setCertFile(null); }}>Cancel</Button>
+                              <Button size="sm" disabled={!certUrl && !certFile} onClick={() => handleUpload(skill.skill_id)}>Submit to Admin</Button>
+                            </div>
                           </div>
                         )}
                       </div>

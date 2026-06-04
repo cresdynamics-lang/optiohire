@@ -891,7 +891,7 @@ function DashboardContent() {
       
       {/* Toast Notification System */}
       <Toaster />
-      <ChatbotWidget />
+      {!isJobSeeker && <ChatbotWidget />}
     </div>
   )
 }

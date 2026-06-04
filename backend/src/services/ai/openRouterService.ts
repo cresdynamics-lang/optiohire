@@ -61,64 +61,54 @@ class OpenRouterService {
     if (!this.apiKey) throw new Error('OpenRouter API key not configured')
 
     const modelsToTry = [model || this.primaryModel, this.fallbackModel]
-    let lastError: Error | null = null
 
-    for (const m of modelsToTry) {
-      try {
-        const messages: ChatMessage[] = []
-        if (options.systemPrompt) {
-          messages.push({ role: 'system', content: options.systemPrompt })
-        }
-        messages.push({ role: 'user', content: prompt })
-
-        const bodyPayload: any = {
-          model: m,
-          messages,
-          temperature: options.temperature ?? 0.7,
-          max_tokens: options.maxTokens ?? 1024,
-        }
-        if (options.tools && options.tools.length > 0) {
-          bodyPayload.tools = options.tools
-          bodyPayload.tool_choice = 'auto'
-        }
-
-        const response = await fetch(`${this.baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://optiohire.com',
-            'X-Title': 'OptioHire AI Scoring',
-          },
-          body: JSON.stringify(bodyPayload),
-        })
-
-        if (!response.ok) {
-          const errBody = await response.text()
-          throw new Error(`OpenRouter API error (${response.status}): ${errBody.substring(0, 300)}`)
-        }
-
-        const data = (await response.json()) as OpenRouterResponse
-
-        const content = data.choices?.[0]?.message?.content
-        if (!content) {
-          throw new Error('OpenRouter returned empty response')
-        }
-
-        logger.debug(`OpenRouter response via ${m} (${data.usage?.total_tokens || '?'} tokens)`)
-        return content
-      } catch (error: any) {
-        lastError = error
-        logger.warn(`OpenRouter ${m} failed: ${error.message}`)
-        // If this is the primary model, try the fallback
-        if (m !== this.fallbackModel) {
-          logger.info(`Trying fallback model: ${this.fallbackModel}`)
-          continue
-        }
+    try {
+      const messages: ChatMessage[] = []
+      if (options.systemPrompt) {
+        messages.push({ role: 'system', content: options.systemPrompt })
       }
-    }
+      messages.push({ role: 'user', content: prompt })
 
-    throw lastError || new Error('OpenRouter: all models failed')
+      const bodyPayload: any = {
+        models: modelsToTry,
+        messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens ?? 1024,
+      }
+      if (options.tools && options.tools.length > 0) {
+        bodyPayload.tools = options.tools
+        bodyPayload.tool_choice = 'auto'
+      }
+
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://optiohire.com',
+          'X-Title': 'OptioHire AI Scoring',
+        },
+        body: JSON.stringify(bodyPayload),
+      })
+
+      if (!response.ok) {
+        const errBody = await response.text()
+        throw new Error(`OpenRouter API error (${response.status}): ${errBody.substring(0, 300)}`)
+      }
+
+      const data = (await response.json()) as OpenRouterResponse
+
+      const content = data.choices?.[0]?.message?.content
+      if (!content) {
+        throw new Error('OpenRouter returned empty response')
+      }
+
+      logger.debug(`OpenRouter response via ${data.model} (${data.usage?.total_tokens || '?'} tokens)`)
+      return content
+    } catch (error: any) {
+      logger.error(`OpenRouter native fallback failed: ${error.message}`)
+      throw new Error(`OpenRouter: API request failed`)
+    }
   }
 
   /**
@@ -137,56 +127,47 @@ class OpenRouterService {
     if (!this.apiKey) throw new Error('OpenRouter API key not configured')
 
     const modelsToTry = [model || this.primaryModel, this.fallbackModel]
-    let lastError: Error | null = null
 
-    for (const m of modelsToTry) {
-      try {
-        const messages: ChatMessage[] = []
-        if (options.systemPrompt) {
-          messages.push({ role: 'system', content: options.systemPrompt })
-        }
-        messages.push({ role: 'user', content: prompt })
-
-        const bodyPayload: any = {
-          model: m,
-          messages,
-          temperature: options.temperature ?? 0.7,
-          max_tokens: options.maxTokens ?? 1024,
-          stream: true,
-        }
-        if (options.tools && options.tools.length > 0) {
-          bodyPayload.tools = options.tools
-          bodyPayload.tool_choice = 'auto'
-        }
-
-        const response = await fetch(`${this.baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://optiohire.com',
-            'X-Title': 'OptioHire AI Agent',
-          },
-          body: JSON.stringify(bodyPayload),
-        })
-
-        if (!response.ok || !response.body) {
-          const errBody = await response.text()
-          throw new Error(`OpenRouter API error (${response.status}): ${errBody.substring(0, 300)}`)
-        }
-
-        return response.body
-      } catch (error: any) {
-        lastError = error
-        logger.warn(`OpenRouter Stream ${m} failed: ${error.message}`)
-        if (m !== this.fallbackModel) {
-          logger.info(`Trying fallback model: ${this.fallbackModel}`)
-          continue
-        }
+    try {
+      const messages: ChatMessage[] = []
+      if (options.systemPrompt) {
+        messages.push({ role: 'system', content: options.systemPrompt })
       }
-    }
+      messages.push({ role: 'user', content: prompt })
 
-    throw lastError || new Error('OpenRouter: all models failed')
+      const bodyPayload: any = {
+        models: modelsToTry,
+        messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens ?? 1024,
+        stream: true,
+      }
+      if (options.tools && options.tools.length > 0) {
+        bodyPayload.tools = options.tools
+        bodyPayload.tool_choice = 'auto'
+      }
+
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://optiohire.com',
+          'X-Title': 'OptioHire AI Agent',
+        },
+        body: JSON.stringify(bodyPayload),
+      })
+
+      if (!response.ok || !response.body) {
+        const errBody = await response.text()
+        throw new Error(`OpenRouter API error (${response.status}): ${errBody.substring(0, 300)}`)
+      }
+
+      return response.body
+    } catch (error: any) {
+      logger.error(`OpenRouter Stream fallback failed: ${error.message}`)
+      throw new Error(`OpenRouter: Stream request failed`)
+    }
   }
 
   /**

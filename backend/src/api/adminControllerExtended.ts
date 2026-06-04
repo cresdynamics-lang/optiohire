@@ -426,11 +426,23 @@ export async function getDeadLetterEmails(req: Request, res: Response) {
       params
     )
 
+    const countParams = [maxAttempts]
+    let countWhereClause = `WHERE status = 'failed'
+      AND (
+        COALESCE((metadata->>'is_retry_eligible')::boolean, true) = false
+        OR COALESCE((metadata->>'retry_count')::int, 0) >= $1
+      )`
+    
+    if (emailType) {
+      countWhereClause += ` AND email_type = $2`
+      countParams.push(String(emailType))
+    }
+
     const { rows: countRows } = await query<{ count: string }>(
       `SELECT COUNT(*) as count
        FROM email_logs
-       ${whereClause}`,
-      params.slice(2)
+       ${countWhereClause}`,
+      countParams
     )
 
     return res.json({
@@ -666,7 +678,7 @@ export async function updateSystemSetting(req: AuthRequest, res: Response) {
     const { settingKey } = req.params
     const { settingValue, description } = req.body || {}
 
-    if (!settingValue) {
+    if (settingValue === undefined) {
       return res.status(400).json({ error: 'settingValue is required' })
     }
 

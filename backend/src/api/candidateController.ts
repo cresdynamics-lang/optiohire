@@ -62,9 +62,39 @@ export const getLearningRoadmap = async (req: Request, res: Response): Promise<v
 
 export const uploadCertificate = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { skillId, certificateUrl } = req.body
-    if (!skillId || !certificateUrl) {
-      res.status(400).json({ success: false, error: 'Missing parameters' })
+    const { skillId } = req.body
+    let certificateUrl = req.body.certificateUrl
+
+    if (!skillId) {
+      res.status(400).json({ success: false, error: 'Skill ID is required' })
+      return
+    }
+
+    if (req.file) {
+      const file = req.file
+      if (file.size > 10 * 1024 * 1024) {
+        res.status(400).json({ success: false, error: 'File size exceeds 10MB limit' })
+        return
+      }
+
+      const { saveFile } = await import('../utils/storage.js')
+      const path = await import('path')
+      const crypto = await import('crypto')
+
+      const safeExt = path.extname(file.originalname).toLowerCase() || '.pdf'
+      const uniqueId = crypto.randomBytes(16).toString('hex')
+      const authReq = req as any
+      const userId = authReq.userId || 'unknown'
+      const filename = `certificates/${userId}/${uniqueId}${safeExt}`
+
+      const fileUrl = await saveFile(filename, file.buffer)
+      certificateUrl = fileUrl.startsWith('http')
+        ? fileUrl
+        : `https://optiohire.com/storage/${filename}`
+    }
+
+    if (!certificateUrl) {
+      res.status(400).json({ success: false, error: 'Certificate URL or file is required' })
       return
     }
 

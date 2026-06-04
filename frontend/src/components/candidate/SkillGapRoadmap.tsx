@@ -18,6 +18,7 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
   const [roadmapHtml, setRoadmapHtml] = useState<string | null>(null)
   const [loadingRoadmap, setLoadingRoadmap] = useState(false)
   const [certificateUrl, setCertificateUrl] = useState('')
+  const [certificateFile, setCertificateFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
 
   if (!gapAnalysis.topMissingSkill) {
@@ -60,18 +61,23 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
       // We pass a dummy skillId here for the prototype, in real app we'd fetch the skill_id 
       // from candidate_skills table or create it as unverified first.
       const dummySkillId = '00000000-0000-0000-0000-000000000000'
+      const formData = new FormData()
+      formData.append('skillId', dummySkillId)
+      if (certificateUrl) formData.append('certificateUrl', certificateUrl)
+      if (certificateFile) formData.append('certificate', certificateFile)
+
       const res = await fetch('/api/candidate/certificate', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ skillId: dummySkillId, certificateUrl })
+        body: formData
       })
       const data = await res.json()
-      if (data.success) {
+      if (data.success || res.ok) {
         toast.success('Certificate uploaded and sent for Admin review!')
         setCertificateUrl('')
+        setCertificateFile(null)
       } else {
         toast.error(data.error || 'Failed to upload certificate')
       }
@@ -122,21 +128,39 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
           <Card className="mt-8 border-dashed bg-slate-50 dark:bg-slate-900">
             <CardHeader>
               <CardTitle className="text-lg">Already know this? Mastered it?</CardTitle>
-              <CardDescription>Upload a link to your certificate to verify this skill and boost your score.</CardDescription>
+              <CardDescription>Upload a link or a file to your certificate to verify this skill and boost your score.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleUploadCertificate} className="flex gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="certUrl" className="sr-only">Certificate Link (URL)</Label>
-                  <Input 
-                    id="certUrl" 
-                    placeholder="https://coursera.org/verify/..." 
-                    value={certificateUrl}
-                    onChange={(e) => setCertificateUrl(e.target.value)}
-                    required
-                  />
+              <form onSubmit={handleUploadCertificate} className="flex flex-col gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="certUrl">Option 1: Certificate Link (URL)</Label>
+                    <Input 
+                      id="certUrl" 
+                      placeholder="https://coursera.org/verify/..." 
+                      value={certificateUrl}
+                      onChange={(e) => {
+                        setCertificateUrl(e.target.value)
+                        if (e.target.value) setCertificateFile(null)
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="certFile">Option 2: Upload Certificate (PDF/Image)</Label>
+                    <Input 
+                      id="certFile" 
+                      type="file" 
+                      accept=".pdf,.png,.jpg,.jpeg"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setCertificateFile(e.target.files[0])
+                          setCertificateUrl('')
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
-                <Button type="submit" disabled={uploading}>
+                <Button type="submit" disabled={uploading || (!certificateUrl && !certificateFile)} className="w-full md:w-auto self-end mt-2">
                   {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
                   Submit to Admin
                 </Button>
