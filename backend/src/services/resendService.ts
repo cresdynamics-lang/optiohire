@@ -3,6 +3,24 @@ import { logger } from '../utils/logger.js'
 import fs from 'fs/promises'
 import path from 'path'
 
+// Global queue to respect Resend's 5 req/sec rate limit
+let emailQueuePromise = Promise.resolve()
+
+function enqueueEmailTask<T>(task: () => Promise<T>, delayMs: number = 250): Promise<T> {
+  return new Promise((resolve, reject) => {
+    emailQueuePromise = emailQueuePromise.then(async () => {
+      try {
+        const result = await task()
+        resolve(result)
+      } catch (err) {
+        reject(err)
+      }
+      // Wait for the rate limit delay before allowing the next task (4 requests per second)
+      await new Promise(r => setTimeout(r, delayMs))
+    })
+  })
+}
+
 /**
  * Resend Email Service
  * Uses Resend API for reliable email delivery with domain verification
@@ -73,6 +91,7 @@ export class ResendService {
     }
   }
 
+
   /**
    * Send email using Resend API with fallback support
    * @param data Email data
@@ -87,77 +106,79 @@ export class ResendService {
     fromName?: string
     replyTo?: string
   }, useSecondary: boolean = false): Promise<void> {
-    const fromEmail = data.from || this.fromEmail
-    const fromName = data.fromName || this.fromName
-    
-    // Determine which Resend client to use
-    // Priority: useSecondary ? secondary > primary > fallback : primary > secondary > fallback
-    const clients = useSecondary 
-      ? [this.resendSecondary, this.resendPrimary, this.resendFallback]
-      : [this.resendPrimary, this.resendSecondary, this.resendFallback]
-    
-    const clientNames = useSecondary
-      ? ['secondary', 'primary', 'fallback']
-      : ['primary', 'secondary', 'fallback']
-
-    let lastError: Error | null = null
-
-    // Try each client in order until one succeeds
-    for (let i = 0; i < clients.length; i++) {
-      const client = clients[i]
-      const clientName = clientNames[i]
+    return enqueueEmailTask(async () => {
+      const fromEmail = data.from || this.fromEmail
+      const fromName = data.fromName || this.fromName
       
-      if (!client) {
-        continue // Skip if this client is not configured
+      // Determine which Resend client to use
+      // Priority: useSecondary ? secondary > primary > fallback : primary > secondary > fallback
+      const clients = useSecondary 
+        ? [this.resendSecondary, this.resendPrimary, this.resendFallback]
+        : [this.resendPrimary, this.resendSecondary, this.resendFallback]
+      
+      const clientNames = useSecondary
+        ? ['secondary', 'primary', 'fallback']
+        : ['primary', 'secondary', 'fallback']
+
+      let lastError: Error | null = null
+
+      // Try each client in order until one succeeds
+      for (let i = 0; i < clients.length; i++) {
+        const client = clients[i]
+        const clientName = clientNames[i]
+        
+        if (!client) {
+          continue // Skip if this client is not configured
+        }
+
+        try {
+          logger.debug(`Attempting to send email via Resend ${clientName} key`)
+          
+          const toArray = data.to.includes(',') 
+            ? data.to.split(',').map(e => e.trim()).filter(Boolean)
+            : data.to
+
+          const result = await client.emails.send({
+            from: `${fromName} <${fromEmail}>`,
+            to: toArray,
+            subject: data.subject,
+            html: data.html,
+            text: data.text,
+            replyTo: data.replyTo,
+          })
+
+          if (result.error) {
+            throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
+          }
+
+          logger.info(`Email sent via Resend ${clientName} to ${data.to}: ${data.subject} (ID: ${result.data?.id})`)
+          await this.logEmail(data.to, data.subject, 'sent', `via ${clientName}`)
+          return // Success - exit function
+        } catch (error: any) {
+          const errorMsg = error?.message || String(error)
+          lastError = error
+          logger.warn(`Resend ${clientName} failed: ${errorMsg}`)
+          
+          // Check if it's a rate limit or quota error - try next client
+          if (errorMsg.includes('rate limit') || errorMsg.includes('quota') || errorMsg.includes('429')) {
+            logger.info(`Rate limit/quota exceeded on ${clientName}, trying next key...`)
+            continue
+          }
+          
+          // For other errors, also try next client
+          if (i < clients.length - 1) {
+            logger.info(`Trying next Resend API key...`)
+            continue
+          }
+        }
       }
 
-      try {
-        logger.debug(`Attempting to send email via Resend ${clientName} key`)
-        
-        const toArray = data.to.includes(',') 
-          ? data.to.split(',').map(e => e.trim()).filter(Boolean)
-          : data.to
-
-        const result = await client.emails.send({
-          from: `${fromName} <${fromEmail}>`,
-          to: toArray,
-          subject: data.subject,
-          html: data.html,
-          text: data.text,
-          replyTo: data.replyTo,
-        })
-
-        if (result.error) {
-          throw new Error(`Resend API error: ${JSON.stringify(result.error)}`)
-        }
-
-        logger.info(`Email sent via Resend ${clientName} to ${data.to}: ${data.subject} (ID: ${result.data?.id})`)
-        await this.logEmail(data.to, data.subject, 'sent', `via ${clientName}`)
-        return // Success - exit function
-      } catch (error: any) {
-        const errorMsg = error?.message || String(error)
-        lastError = error
-        logger.warn(`Resend ${clientName} failed: ${errorMsg}`)
-        
-        // Check if it's a rate limit or quota error - try next client
-        if (errorMsg.includes('rate limit') || errorMsg.includes('quota') || errorMsg.includes('429')) {
-          logger.info(`Rate limit/quota exceeded on ${clientName}, trying next key...`)
-          continue
-        }
-        
-        // For other errors, also try next client
-        if (i < clients.length - 1) {
-          logger.info(`Trying next Resend API key...`)
-          continue
-        }
-      }
-    }
-
-    // All clients failed
-    const errorMsg = lastError?.message || 'All Resend API keys failed'
-    logger.error('Failed to send email via Resend (all keys exhausted)', { to: data.to, error: errorMsg })
-    await this.logEmail(data.to, data.subject, 'failed', errorMsg)
-    throw new Error(`Resend email failed: ${errorMsg}`)
+      // All clients failed
+      const errorMsg = lastError?.message || 'All Resend API keys failed'
+      logger.error('Failed to send email via Resend (all keys exhausted)', { to: data.to, error: errorMsg })
+      await this.logEmail(data.to, data.subject, 'failed', errorMsg)
+      throw new Error(`Resend email failed: ${errorMsg}`)
+    }, 250)
   }
 
   /**

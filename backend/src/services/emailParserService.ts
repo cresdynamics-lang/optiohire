@@ -16,8 +16,9 @@ export class EmailParserService {
   async matchSubjectToJob(subject: string): Promise<string | null> {
     if (!subject) return null;
 
-    // Collapse all whitespace and trim. No prefix removal.
-    const processedSubject = subject.replace(/\s+/g, ' ').trim().toLowerCase();
+    // Strip common email prefixes (Re:, Fwd:, Fw:) and collapse whitespace
+    const cleanPrefixes = subject.replace(/^(?:(?:re|fwd|fw|fwd?)\s*:\s*)+/i, '');
+    const processedSubject = cleanPrefixes.replace(/\s+/g, ' ').trim().toLowerCase();
     
     // Execute high-speed exact match in the database using "Job Title - Company Name" format
     const { rows } = await this.query(`
