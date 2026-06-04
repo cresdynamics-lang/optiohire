@@ -199,11 +199,19 @@ export default function JobsPage() {
   const [selectedLocation, setSelectedLocation] = useState('')
   const [page, setPage] = useState(1)
   const PER_PAGE = 12
+  const { executeRecaptcha } = useGoogleReCaptcha()
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await fetch('/api/jobs')
+        let captchaToken = ''
+        if (executeRecaptcha) {
+          captchaToken = await executeRecaptcha('jobs_listing')
+        }
+
+        const res = await fetch('/api/jobs', {
+          headers: captchaToken ? { 'X-Captcha-Token': captchaToken } : {}
+        })
         const data = await res.json()
         if (!res.ok) throw new Error(data?.error || 'Failed to load jobs')
         setJobs(data.jobs || [])
@@ -215,7 +223,7 @@ export default function JobsPage() {
       }
     }
     fetchJobs()
-  }, [])
+  }, [executeRecaptcha])
 
   const applyFilters = useCallback(() => {
     let result = jobs

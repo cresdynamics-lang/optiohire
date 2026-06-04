@@ -37,7 +37,7 @@ export async function getPublicJobPostings(): Promise<JobPosting[]> {
 
 export async function getPublicJobPostingById(id: string): Promise<JobPosting | null> {
   try {
-    const response = await fetch(`${getBaseUrl()}/api/job-postings/public/${id}`, {
+    const response = await fetch(`${getBaseUrl()}/api/jobs/${id}`, {
       next: { revalidate: 0 }
     })
     if (!response.ok) return null
@@ -84,12 +84,18 @@ export async function submitApplication(data: {
   return result
 }
 
-export async function uploadPublicResume(file: File) {
+export async function uploadPublicResume(file: File, captchaToken?: string) {
   const formData = new FormData()
   formData.append('document', file)
 
+  const headers: Record<string, string> = {}
+  if (captchaToken) {
+    headers['X-Captcha-Token'] = captchaToken
+  }
+
   const response = await fetch(`${getBaseUrl()}/api/upload/public-candidate-document`, {
     method: 'POST',
+    headers,
     body: formData
   })
 

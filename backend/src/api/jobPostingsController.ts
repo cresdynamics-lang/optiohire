@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { pool, query } from '../db/index.js'
 import { logger } from '../utils/logger.js'
+import { verifyCaptcha } from '../utils/captcha.js'
 import { APPLICATION_INBOX_EMAIL, getRecommendedApplicationSubject } from '../config/applicationInbox.js'
 
 const createJobSchema = z.object({
@@ -567,12 +568,17 @@ export async function sendJobPostingCreatedNotification(req: Request, res: Respo
   }
 }
 
-/**
- * Get all active public job postings
- * GET /api/job-postings/public
- */
+// GET all public active job postings
 export async function getPublicJobPostings(req: Request, res: Response) {
   try {
+    const captchaToken = req.headers['x-captcha-token'] as string | undefined
+    
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
+    }
+
     const { rows: jobs } = await query(
       `SELECT 
         jp.job_posting_id,
@@ -604,6 +610,14 @@ export async function getPublicJobPostings(req: Request, res: Response) {
  */
 export async function getPublicJobPostingById(req: Request, res: Response) {
   try {
+    const captchaToken = req.headers['x-captcha-token'] as string | undefined
+    
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
+    }
+
     const { id } = req.params
     const { rows: jobs } = await query(
       `SELECT 
@@ -644,6 +658,14 @@ export async function getPublicJobPostingById(req: Request, res: Response) {
  */
 export async function getPublicCompanyJobPostings(req: Request, res: Response) {
   try {
+    const captchaToken = req.headers['x-captcha-token'] as string | undefined
+    
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
+    }
+
     const { companyId } = req.params
     const { rows: jobs } = await query(
       `SELECT 
