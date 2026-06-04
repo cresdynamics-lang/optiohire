@@ -4,7 +4,7 @@ import { startImapIngestion } from '../utils/imap.js'
 import { logger } from '../utils/logger.js'
 import { aiQueue } from '../queues/aiQueue.js'
 import { provisionCandidateAccount } from '../services/candidateProvisioningService.js'
-import { emailService } from '../email/mailer.js'
+import { emailService } from '../services/emailService.js'
 
 export async function parseEmailApplications(req: Request, res: Response) {
   try {
