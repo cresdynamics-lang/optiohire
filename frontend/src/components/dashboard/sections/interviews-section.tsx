@@ -5,10 +5,12 @@ import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, Video, ExternalLink, Loader2, User } from 'lucide-react'
+import { Calendar, Clock, Video, ExternalLink, Loader2, User, XCircle, Pencil } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { createTimeoutSignal } from '@/lib/utils'
 import { JobPosting } from '@/types'
+import { RejectedInterviewsModal } from './rejected-interviews-modal'
+import { ScheduleInterviewModal } from '@/components/modals/ScheduleInterviewModal'
 
 interface InterviewData extends JobPosting {
   interview_date?: string
@@ -27,11 +29,31 @@ interface InterviewData extends JobPosting {
   }
 }
 
+interface RejectedCandidate {
+  application_id: string
+  candidate_name: string
+  job_title: string
+  reasoning: string
+}
+
+interface DashboardStats {
+  total: number
+  upcoming: number
+  past: number
+  rejected: number
+}
+
 export function InterviewsSection() {
   const { user } = useAuth()
   const [interviews, setInterviews] = useState<InterviewData[]>([])
+  const [rejectedCandidates, setRejectedCandidates] = useState<RejectedCandidate[]>([])
+  const [stats, setStats] = useState<DashboardStats>({ total: 0, upcoming: 0, past: 0, rejected: 0 })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Modals state
+  const [isRejectedModalOpen, setIsRejectedModalOpen] = useState(false)
+  const [selectedInterviewForEdit, setSelectedInterviewForEdit] = useState<InterviewData | null>(null)
 
   const loadInterviews = useCallback(async (options?: { silent?: boolean }) => {
     if (!user) {
@@ -50,7 +72,6 @@ export function InterviewsSection() {
         return
       }
 
-      // Fetch scheduled interviews from API
       const response = await fetch('/api/interviews', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -60,7 +81,6 @@ export function InterviewsSection() {
       })
 
       if (!response.ok) {
-        // If endpoint doesn't exist yet, return empty array
         if (response.status === 404) {
           setInterviews([])
           if (!silent) setIsLoading(false)
@@ -72,16 +92,22 @@ export function InterviewsSection() {
       }
 
       const data = await response.json()
-      const scheduledInterviews = data.interviews || []
+      
+      if (data.stats) {
+        setStats(data.stats)
+      }
+      if (data.rejectedCandidates) {
+        setRejectedCandidates(data.rejectedCandidates)
+      }
 
-      // Transform scheduled interviews to InterviewData format
-      const interviewsData: InterviewData[] = scheduledInterviews.map((interview: any) => ({
+      const fetchedInterviews = data.interviews || []
+      const interviewsData: InterviewData[] = fetchedInterviews.map((interview: any) => ({
         id: interview.id,
         job_title: interview.jobTitle,
         status: 'active',
         interview_date: interview.interviewTime,
         meeting_link: interview.interviewLink,
-        google_calendar_link: interview.interviewLink,
+        google_calendar_link: interview.googleCalendarLink || interview.interviewLink, // Prefer googleCalendarLink if it exists
         applicantCount: 1,
         upcomingInterviews: 1,
         candidateName: interview.candidateName,
@@ -114,7 +140,6 @@ export function InterviewsSection() {
         }
       }
 
-      // Keep prior state during silent refresh to avoid UI flicker/noise.
       if (!options?.silent && interviews.length === 0) {
         setInterviews([])
       }
@@ -128,7 +153,6 @@ export function InterviewsSection() {
   useEffect(() => {
     loadInterviews()
 
-    // Refresh every 30 seconds without blocking the UI
     const interval = setInterval(() => {
       loadInterviews({ silent: true })
     }, 30000)
@@ -147,6 +171,10 @@ export function InterviewsSection() {
 
   const upcomingInterviews = interviews.filter(interview => 
     interview.interview_date && new Date(interview.interview_date) > new Date()
+  )
+
+  const pastInterviews = interviews.filter(interview => 
+    interview.interview_date && new Date(interview.interview_date) <= new Date()
   )
 
   return (
@@ -169,7 +197,6 @@ export function InterviewsSection() {
         </div>
       </motion.div>
 
-      {/* Error Message */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -180,7 +207,6 @@ export function InterviewsSection() {
         </motion.div>
       )}
 
-      {/* Loading State */}
       {isLoading && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -209,20 +235,37 @@ export function InterviewsSection() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 sm:gap-6">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
                 <div className="text-center">
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 shadow-lg shadow-slate-500/20 dark:bg-slate-100">
-                    <Calendar className="w-8 h-8 text-white dark:text-slate-900" />
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 shadow-lg shadow-slate-500/20 dark:bg-slate-100">
+                    <Calendar className="w-6 h-6 text-white dark:text-slate-900" />
                   </div>
-                  <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Total Interviews</h3>
-                  <p className="font-figtree text-xl font-bold text-slate-900 dark:text-slate-100">{interviews.length}</p>
+                  <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Total</h3>
+                  <p className="font-figtree text-xl font-bold text-slate-900 dark:text-slate-100">{stats.total || interviews.length}</p>
                 </div>
                 <div className="text-center">
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 shadow-lg shadow-slate-500/20 dark:bg-slate-100">
-                    <Clock className="w-8 h-8 text-white dark:text-slate-900" />
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 shadow-lg shadow-blue-500/20 dark:bg-blue-500">
+                    <Clock className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Upcoming</h3>
-                  <p className="font-figtree text-xl font-bold text-slate-900 dark:text-slate-100">{upcomingInterviews.length}</p>
+                  <p className="font-figtree text-xl font-bold text-blue-600 dark:text-blue-400">{stats.upcoming || upcomingInterviews.length}</p>
+                </div>
+                <div className="text-center">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 shadow-lg dark:bg-slate-800">
+                    <Clock className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                  </div>
+                  <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Past</h3>
+                  <p className="font-figtree text-xl font-bold text-slate-600 dark:text-slate-400">{stats.past || pastInterviews.length}</p>
+                </div>
+                <div 
+                  className="text-center cursor-pointer group" 
+                  onClick={() => setIsRejectedModalOpen(true)}
+                >
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 shadow-lg shadow-red-500/20 dark:bg-red-900/30 group-hover:scale-105 transition-transform">
+                    <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <h3 className="text-sm font-figtree font-medium mb-1 text-red-600 dark:text-red-400 group-hover:underline">Rejected</h3>
+                  <p className="font-figtree text-xl font-bold text-red-600 dark:text-red-400">{stats.rejected || rejectedCandidates.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -280,7 +323,7 @@ export function InterviewsSection() {
                                 </div>
                                 <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground font-figtree font-light">
                                   <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
+                                    <Clock className="w-4 h-4" />
                                     {dateInfo.date} at {dateInfo.time}
                                   </div>
                                   {interview.candidateName && (
@@ -296,14 +339,14 @@ export function InterviewsSection() {
                                   </p>
                                 )}
                               </div>
-                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-4 sm:mt-0">
+                              <div className="flex flex-wrap items-stretch sm:items-center gap-2 mt-4 sm:mt-0">
                                 {interview.meeting_link && (
                                   <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
                                     onClick={() => window.open(interview.meeting_link!, '_blank')}
-                                    className="min-h-[44px] w-full touch-manipulation rounded-xl bg-slate-900 text-white hover:bg-slate-800 sm:min-h-0 sm:w-auto dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+                                    className="min-h-[44px] touch-manipulation rounded-xl bg-slate-900 text-white hover:bg-slate-800 sm:min-h-0 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                                   >
                                     <Video className="w-4 h-4 mr-1" />
                                     Join Meeting
@@ -315,12 +358,22 @@ export function InterviewsSection() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => interview.google_calendar_link && window.open(interview.google_calendar_link, '_blank')}
-                                    className="min-h-[44px] w-full touch-manipulation rounded-xl bg-slate-100 text-slate-900 hover:bg-slate-200 sm:min-h-0 sm:w-auto dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                                    className="min-h-[44px] touch-manipulation rounded-xl bg-slate-100 text-slate-900 hover:bg-slate-200 sm:min-h-0 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                                   >
                                     <ExternalLink className="w-4 h-4 mr-1" />
                                     Calendar
                                   </Button>
                                 )}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedInterviewForEdit(interview)}
+                                  className="min-h-[44px] touch-manipulation rounded-xl sm:min-h-0"
+                                >
+                                  <Pencil className="w-4 h-4 mr-1" />
+                                  Edit
+                                </Button>
                               </div>
                             </div>
                           </CardContent>
@@ -333,6 +386,98 @@ export function InterviewsSection() {
             </CardContent>
           </Card>
         </motion.div>
+      )}
+
+      {/* Past Interviews */}
+      {!isLoading && pastInterviews.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 opacity-80 hover:opacity-100 transition-opacity">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-lg font-semibold tracking-tight">
+                <Clock className="h-5 w-5 text-slate-500" />
+                Past Interviews
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {pastInterviews.map((interview, index) => {
+                  if (!interview.interview_date) return null
+                  const dateInfo = formatInterviewDate(interview.interview_date)
+                  return (
+                    <motion.div
+                      key={interview.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                    >
+                      <Card className="border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+                        <CardContent className="p-4 sm:p-5">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="mb-2 flex flex-wrap items-center gap-2 gap-y-2">
+                                <h3 className="text-base font-semibold font-figtree text-slate-700 dark:text-slate-300">{interview.job_title}</h3>
+                                <Badge variant="secondary" className="bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                                  Completed
+                                </Badge>
+                              </div>
+                              <div className="mb-1 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500 font-figtree font-light">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  {dateInfo.date} at {dateInfo.time}
+                                </div>
+                                {interview.candidateName && (
+                                  <div className="flex items-center gap-1">
+                                    <User className="w-4 h-4" />
+                                    {interview.candidateName}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Modals */}
+      <RejectedInterviewsModal
+        isOpen={isRejectedModalOpen}
+        onClose={() => setIsRejectedModalOpen(false)}
+        rejectedCandidates={rejectedCandidates}
+      />
+
+      {selectedInterviewForEdit && (
+        <ScheduleInterviewModal
+          isOpen={true}
+          onClose={() => setSelectedInterviewForEdit(null)}
+          onSuccess={() => {
+            setSelectedInterviewForEdit(null)
+            loadInterviews()
+          }}
+          candidate={{
+            id: selectedInterviewForEdit.id,
+            candidate_name: selectedInterviewForEdit.candidateName || 'Candidate',
+            email: selectedInterviewForEdit.candidateEmail || '',
+            job_title: selectedInterviewForEdit.job_title,
+          } as any}
+          meetingLink={selectedInterviewForEdit.meeting_link || ''}
+          existingInterview={{
+            applicationId: selectedInterviewForEdit.id,
+            interviewTime: selectedInterviewForEdit.interview_date || new Date().toISOString(),
+            interviewLink: selectedInterviewForEdit.meeting_link || '',
+            interviewType: 'online'
+          }}
+        />
       )}
     </div>
   )

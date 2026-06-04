@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { X, Plus, Clock, Video, ExternalLink } from 'lucide-react'
 import { JobPosting } from '@/types'
+import { ImageUpload } from '@/components/ui/image-upload'
 
 interface EditJobModalProps {
   isOpen: boolean
@@ -30,6 +31,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
         required_skills: jobPosting.required_skills,
         interview_meeting_link: jobPosting.interview_meeting_link,
         application_deadline: jobPosting.application_deadline,
+        job_poster_url: jobPosting.job_poster_url,
         status: jobPosting.status,
       })
     }
@@ -110,6 +112,15 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                     <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
                       Job Details
                     </h3>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-gray-900 dark:text-white">Job Poster (Optional)</Label>
+                      <ImageUpload
+                        value={formData.job_poster_url}
+                        onChange={(url) => handleInputChange('job_poster_url', url || '')}
+                        label="Upload a promotional poster for this job"
+                      />
+                    </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="job_title">Job Title</Label>

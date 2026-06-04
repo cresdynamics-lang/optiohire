@@ -92,25 +92,54 @@ export async function getScheduledInterviews(req: any, res: Response) {
       }))
     })
 
+    // Get rejected candidates
+    const { rows: rejectedRows } = await query<{
+      application_id: string
+      candidate_name: string
+      job_title: string
+      reasoning: string
+    }>(
+      `SELECT 
+        a.application_id,
+        a.candidate_name,
+        j.job_title,
+        COALESCE(a.reasoning, 'No reason provided') as reasoning
+      FROM applications a
+      INNER JOIN job_postings j ON a.job_posting_id = j.job_posting_id
+      WHERE a.company_id = $1 
+        AND a.ai_status = 'REJECT'`,
+      [companyId]
+    )
+
+    // Calculate stats
+    const now = new Date()
+    const upcoming = rows.filter(r => new Date(r.interview_time) > now).length
+    const past = rows.filter(r => new Date(r.interview_time) <= now).length
+    
     return res.status(200).json({
       success: true,
+      stats: {
+        total: rows.length,
+        upcoming,
+        past,
+        rejected: rejectedRows.length
+      },
       interviews: rows.map(row => ({
         id: row.application_id,
         candidateName: row.candidate_name,
         candidateEmail: row.email,
+        jobTitle: row.job_title,
         interviewTime: row.interview_time,
         interviewLink: row.interview_link,
-        jobId: row.job_posting_id,
-        jobTitle: row.job_title,
-        companyName: row.company_name,
+        googleCalendarLink: row.interview_link // For now, mapping both since we only store one link
       })),
-      total: rows.length
+      rejectedCandidates: rejectedRows
     })
   } catch (error: any) {
-    logger.error('Failed to fetch scheduled interviews:', error)
-    return res.status(500).json({
+    logger.error('Error fetching scheduled interviews:', error)
+    return res.status(500).json({ 
       error: 'Failed to fetch scheduled interviews',
-      details: error.message
+      details: error.message 
     })
   }
 }

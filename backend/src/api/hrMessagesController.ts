@@ -2,7 +2,7 @@ import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
 import { EmailService } from '../services/emailService.js'
 import { logger } from '../utils/logger.js'
-import groqService from '../services/ai/groqService.js'
+import openRouterService from '../services/ai/openRouterService.js'
 
 /**
  * POST /api/hr/messages
@@ -124,7 +124,7 @@ You are writing on behalf of ${companyName} regarding the ${jobTitle} position.
 Follow the user's instructions (the prompt) to draft the email body.
 Do NOT include the subject line, just the email body. Use placeholders like [Candidate Name] if needed.`
 
-    const generatedText = await groqService.generateText(prompt, process.env.GROQ_MODEL || 'llama-3.1-8b-instant', {
+    const generatedText = await openRouterService.generateText(prompt, undefined, {
       systemPrompt,
       temperature: 0.7,
       maxTokens: 500,

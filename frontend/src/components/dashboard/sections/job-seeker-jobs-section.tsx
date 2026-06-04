@@ -14,6 +14,7 @@ type CandidateJob = {
   skills_required: string[] | string | null
   application_deadline: string | null
   company_name: string | null
+  job_poster_url?: string | null
 }
 
 type CandidateApplication = {
@@ -449,7 +450,20 @@ export function JobSeekerJobsSection() {
                 form.resumeUrl || form.linkedinUrl || form.githubUrl || form.otherUrl
               )
               return (
-                <Card key={job.job_posting_id} className="group border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                <Card key={job.job_posting_id} className="group border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden">
+                  {/* Job Poster & Fallback */}
+                  <div className="w-full h-32 sm:h-40 bg-slate-100 flex items-center justify-center overflow-hidden relative border-b border-slate-100">
+                    {job.job_poster_url ? (
+                      <img src={job.job_poster_url} alt={`${job.job_title} Poster`} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-2 opacity-50">
+                          <Briefcase className="h-8 w-8 text-slate-400" />
+                          <span className="text-xs font-medium text-slate-400 tracking-wider uppercase">{job.company_name || 'OptioHire'}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <CardHeader className="space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <CardTitle className="flex items-center gap-2 text-base text-slate-900">
