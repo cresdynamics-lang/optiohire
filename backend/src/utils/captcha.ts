@@ -1,5 +1,12 @@
 import { logger } from './logger.js'
 
+interface RecaptchaResponse {
+  success: boolean
+  challenge_ts?: string
+  hostname?: string
+  'error-codes'?: string[]
+}
+
 /**
  * Verifies a Google reCAPTCHA v2/v3 token.
  * @param token The token from the frontend.
@@ -20,10 +27,10 @@ export async function verifyCaptcha(token: string | undefined): Promise<boolean>
       body: `secret=${secretKey}&response=${token}`
     })
 
-    const data = await response.json()
+    const data = await response.json() as RecaptchaResponse
     
     if (!data.success) {
-      logger.warn('Captcha verification failed:', data['error-codes'])
+      logger.warn('Captcha verification failed', { errorCodes: data['error-codes'] })
       return false
     }
 
