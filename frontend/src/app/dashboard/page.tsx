@@ -28,9 +28,9 @@ export default function DashboardPage() {
       return
     }
 
-    // Job seekers should land on Jobs immediately (lighter/faster than overview).
+    // Job seekers should land on their dashboard overview
     if (user && isJobSeeker) {
-      router.replace('/dashboard/jobs')
+      router.replace('/dashboard/candidate')
       return
     }
 
