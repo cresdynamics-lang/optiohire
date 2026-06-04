@@ -116,8 +116,8 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
         throw new Error('Failed to obtain recaptcha token')
       }
 
-      // 1. Upload Resume
-      const uploadResult = await uploadPublicResume(resumeFile)
+      // 1. Upload Resume - pass the token
+      const uploadResult = await uploadPublicResume(resumeFile, token)
       
       // 2. Submit Application
       await submitApplication({

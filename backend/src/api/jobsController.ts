@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
+import { verifyCaptcha } from '../utils/captcha.js'
 
 export async function createJob(req: Request, res: Response) {
   try {
@@ -69,6 +70,14 @@ export async function getApplicantsByJob(req: Request, res: Response) {
 // GET all public active job postings
 export async function getPublicJobs(req: Request, res: Response) {
   try {
+    const captchaToken = req.headers['x-captcha-token'] as string | undefined
+    
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
+    }
+
     const { rows } = await query(
       `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
               jp.responsibilities, jp.skills_required, jp.application_deadline, 
@@ -88,6 +97,14 @@ export async function getPublicJobs(req: Request, res: Response) {
 // GET single public job posting by ID
 export async function getPublicJobById(req: Request, res: Response) {
   try {
+    const captchaToken = req.headers['x-captcha-token'] as string | undefined
+    
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
+    }
+
     const { id } = req.params
     if (!id || id === 'undefined') {
       return res.status(400).json({ error: 'Invalid job ID' })
@@ -112,6 +129,3 @@ export async function getPublicJobById(req: Request, res: Response) {
     return res.status(500).json({ error: 'Failed to fetch job details' })
   }
 }
-
-
-

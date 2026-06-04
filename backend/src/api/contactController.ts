@@ -1,10 +1,18 @@
 import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
 import { EmailService } from '../services/emailService.js'
+import { verifyCaptcha } from '../utils/captcha.js'
 
 export async function createContact(req: Request, res: Response) {
   try {
-    const { fullName, email, company, role, topic, message } = req.body || {}
+    const { fullName, email, company, role, topic, message, captchaToken } = req.body || {}
+    
+    // Verify captcha
+    const isCaptchaValid = await verifyCaptcha(captchaToken)
+    if (!isCaptchaValid) {
+      return res.status(400).json({ message: 'Invalid captcha. Please try again.' })
+    }
+
     if (!fullName || !email || !company || !role || !topic || !message) {
       return res.status(422).json({ message: 'Invalid contact submission.' })
     }

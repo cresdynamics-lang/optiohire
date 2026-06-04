@@ -80,6 +80,7 @@ const infoHighlights = [
 ]
 
 import { contactSchema, type ContactFormValues } from '@/lib/schemas/contact'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 
 const fadeUp = (index: number, disable: boolean) => ({
   initial: disable ? undefined : { opacity: 0, y: 28 },
@@ -98,6 +99,7 @@ export default function ContactPage() {
   const prefersReducedMotion = useReducedMotion()
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const disableMotion = prefersReducedMotion ?? false
+  const { executeRecaptcha } = useGoogleReCaptcha()
 
   const {
     register,
@@ -111,13 +113,21 @@ export default function ContactPage() {
 
   const onSubmit = async (values: ContactFormValues) => {
     try {
+      if (!executeRecaptcha) {
+        setStatus('error')
+        console.error('Recaptcha not yet available')
+        return
+      }
+
       setStatus('idle')
+      const token = await executeRecaptcha('contact_form')
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, captchaToken: token }),
       })
 
       if (!response.ok) {

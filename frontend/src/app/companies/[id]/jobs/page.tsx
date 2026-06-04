@@ -1,30 +1,87 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { getPublicCompanyJobPostings } from '@/lib/public-api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CalendarDays, Building2, Briefcase, ChevronLeft } from 'lucide-react'
+import { CalendarDays, Building2, Briefcase, ChevronLeft, Loader2 } from 'lucide-react'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const { company } = await getPublicCompanyJobPostings(id)
-  if (!company) return { title: 'Company Not Found' }
-
-  return {
-    title: `Careers at ${company.company_name} | OptioHire`,
-    description: `Explore current job openings at ${company.company_name}.`,
-  }
+interface Job {
+  job_posting_id: string
+  job_title: string
+  job_description: string
+  skills_required: string[]
+  created_at: string
 }
 
-export default async function CompanyJobsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const { jobs, company } = await getPublicCompanyJobPostings(id)
+interface Company {
+  company_name: string
+  company_logo_url: string | null
+}
 
-  if (!company) {
+export default function CompanyJobsPage() {
+  const params = useParams()
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [company, setCompany] = useState<Company | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { executeRecaptcha } = useGoogleReCaptcha()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const companyId = params.id
+        if (!companyId) return
+
+        let captchaToken = ''
+        if (executeRecaptcha) {
+          captchaToken = await executeRecaptcha('company_jobs')
+        }
+
+        const res = await fetch(`/api/job-postings/public/company/${companyId}`, {
+          headers: captchaToken ? { 'X-Captcha-Token': captchaToken } : {}
+        })
+        const data = await res.json()
+        
+        if (!res.ok) throw new Error(data?.error || 'Failed to load company jobs')
+        
+        setJobs(data.jobs || [])
+        setCompany(data.company)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [params.id, executeRecaptcha])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    )
+  }
+
+  if (!company && !loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <h1 className="text-2xl font-bold text-slate-900">Company not found</h1>
         <Link href="/jobs" className="text-indigo-600 hover:underline mt-4">Back to all jobs</Link>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 text-center">
+        <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
+        <p className="text-slate-600 mb-4">{error}</p>
+        <Button onClick={() => window.location.reload()} variant="outline">Try again</Button>
       </div>
     )
   }
@@ -40,27 +97,29 @@ export default async function CompanyJobsPage({ params }: { params: Promise<{ id
           All companies
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-12 flex flex-col md:flex-row items-center gap-8">
-          {company.company_logo_url ? (
-            <img 
-              src={company.company_logo_url} 
-              alt={company.company_name} 
-              className="w-24 h-24 rounded-2xl object-contain bg-slate-50 p-2 border border-slate-100 shadow-sm"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-2xl bg-indigo-100 flex items-center justify-center border border-indigo-200">
-              <Building2 className="w-12 h-12 text-indigo-600" />
+        {company && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-12 flex flex-col md:flex-row items-center gap-8">
+            {company.company_logo_url ? (
+              <img 
+                src={company.company_logo_url} 
+                alt={company.company_name} 
+                className="w-24 h-24 rounded-2xl object-contain bg-slate-50 p-2 border border-slate-100 shadow-sm"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-2xl bg-indigo-100 flex items-center justify-center border border-indigo-200">
+                <Building2 className="w-12 h-12 text-indigo-600" />
+              </div>
+            )}
+            <div className="text-center md:text-left">
+              <h1 className="text-4xl font-extrabold text-slate-900 mb-2">
+                Careers at {company.company_name}
+              </h1>
+              <p className="text-lg text-slate-600">
+                Join our team and help us build the future.
+              </p>
             </div>
-          )}
-          <div className="text-center md:text-left">
-            <h1 className="text-4xl font-extrabold text-slate-900 mb-2">
-              Careers at {company.company_name}
-            </h1>
-            <p className="text-lg text-slate-600">
-              Join our team and help us build the future.
-            </p>
           </div>
-        </div>
+        )}
 
         <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
           <Briefcase className="w-6 h-6 text-indigo-600" />
@@ -94,7 +153,7 @@ export default async function CompanyJobsPage({ params }: { params: Promise<{ id
                         {job.job_description}
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {job.skills_required.slice(0, 5).map((skill) => (
+                        {(job.skills_required || []).slice(0, 5).map((skill) => (
                           <Badge key={skill} variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100">
                             {skill}
                           </Badge>
@@ -115,9 +174,11 @@ export default async function CompanyJobsPage({ params }: { params: Promise<{ id
           </div>
         )}
 
-        <div className="mt-16 text-center text-slate-500 text-sm">
-          <p>© {new Date().getFullYear()} {company.company_name}. Powered by OptioHire.</p>
-        </div>
+        {company && (
+          <div className="mt-16 text-center text-slate-500 text-sm">
+            <p>© {new Date().getFullYear()} {company.company_name}. Powered by OptioHire.</p>
+          </div>
+        )}
       </div>
     </div>
   )

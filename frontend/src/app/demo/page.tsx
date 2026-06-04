@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { contactSchema, type ContactFormValues } from '@/lib/schemas/contact'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 
 export default function DemoPage() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const { executeRecaptcha } = useGoogleReCaptcha()
   const {
     register,
     handleSubmit,
@@ -21,12 +23,20 @@ export default function DemoPage() {
 
   const onSubmit = async (values: ContactFormValues) => {
     try {
+      if (!executeRecaptcha) {
+        setStatus('error')
+        console.error('Recaptcha not yet available')
+        return
+      }
+
       setStatus('idle')
+      const token = await executeRecaptcha('demo_request')
+
       const backend = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '')
       const response = await fetch(`${backend}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, topic: values.topic || 'Demo Request' }),
+        body: JSON.stringify({ ...values, topic: values.topic || 'Demo Request', captchaToken: token }),
       })
       if (!response.ok) {
         const err = await response.json().catch(() => ({}))

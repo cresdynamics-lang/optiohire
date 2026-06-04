@@ -12,8 +12,17 @@ export async function GET(
   try {
     const backendUrl = getBackendUrl()
     const resolvedParams = await params
+    const captchaToken = request.headers.get('x-captcha-token')
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (captchaToken) {
+      headers['X-Captcha-Token'] = captchaToken
+    }
+
     const res = await fetch(`${backendUrl}/jobs/${resolvedParams.id}`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       signal: AbortSignal.timeout(10000),
     })
 
