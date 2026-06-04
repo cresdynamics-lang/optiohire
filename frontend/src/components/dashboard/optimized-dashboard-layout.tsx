@@ -422,12 +422,43 @@ const LazyEditJobSection = dynamic(
   }
 )
 
+const LazyTalentProfileSection = dynamic(
+  () => {
+    return import('./sections/talent-profile-section')
+      .then((mod: any) => {
+        if (!mod || typeof mod !== 'object') {
+          throw new Error('TalentProfileSection module not found')
+        }
+        const Export = mod.TalentProfileSection
+        if (!Export || typeof Export !== 'function') {
+          throw new Error('TalentProfileSection export not found')
+        }
+        return { default: Export }
+      })
+      .catch((err: any) => {
+        console.error('Error loading TalentProfileSection:', err)
+        return {
+          default: function TalentProfileErrorFallback() {
+            return <SectionLoader sectionName="talent-profile" />
+          },
+        }
+      })
+  },
+  {
+    loading: () => <SectionLoader sectionName="talent-profile" />,
+    ssr: false,
+  }
+)
+
 function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
   const p = pathname || ''
   if (p.startsWith('/dashboard/profile')) {
     return isJobSeeker
       ? { eyebrow: 'Candidate', title: 'My profile' }
       : { eyebrow: 'Workspace', title: 'Profile & company' }
+  }
+  if (p.startsWith('/dashboard/candidate')) {
+    return { eyebrow: 'Candidate workspace', title: 'Talent Profile' }
   }
   if (p.startsWith('/dashboard/jobs/new')) {
     return { eyebrow: 'Hiring', title: 'Create new job' }
@@ -516,6 +547,10 @@ function DashboardContent() {
       setActiveSection('overview')
       return
     }
+    if (pathname === '/dashboard/candidate' || pathname?.startsWith('/dashboard/candidate/')) {
+      setActiveSection('talent-profile')
+      return
+    }
     if (pathname === '/dashboard/profile' || pathname?.startsWith('/dashboard/profile/')) {
       setActiveSection('profile')
       return
@@ -555,6 +590,8 @@ function DashboardContent() {
       switch (activeSection) {
         case 'overview':
           return isJobSeeker ? <LazyJobSeekerOverviewSection /> : <LazyOverviewSection />
+        case 'talent-profile':
+          return <LazyTalentProfileSection />
         case 'jobs':
           return isJobSeeker ? <LazyJobSeekerJobsSection /> : <LazyJobsSection />
         case 'create-job':
@@ -612,6 +649,7 @@ function DashboardContent() {
     const sectionMap: Record<string, string> = isJobSeeker
       ? {
           overview: '/dashboard',
+          'talent-profile': '/dashboard/candidate',
           jobs: '/dashboard/jobs',
           interviews: '/dashboard/interviews',
           profile: '/dashboard/profile',
@@ -627,7 +665,7 @@ function DashboardContent() {
         }
     const newPath = sectionMap[section] || '/dashboard'
     router.push(newPath)
-  }, [router, isJobSeeker])
+  }, [router, isJobSeeker, pathname])
 
   // No session: redirect runs in useEffect — avoid skeleton (reads as “stuck loading”) during client nav / sign-out
   if (!user) {

@@ -164,9 +164,8 @@ export default function HomePageContent() {
               trail your stakeholders can trust.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button className="rounded-2xl bg-[#2a2a7a] hover:bg-[#1a1a5a]" onClick={() => router.push('/demo')}>Request Demo</Button>
-              <Button variant="outline" className="rounded-2xl border-[#15a36b] text-[#15a36b] hover:bg-[#DCFCE7]/30" onClick={() => router.push('/auth/signup?role=candidate')}>Join as Candidate</Button>
-              <Button variant="ghost" className="rounded-2xl" onClick={() => router.push('/how-it-works')}>See How It Works</Button>
+              <Button className="rounded-2xl" onClick={() => router.push('/demo')}>Request Demo</Button>
+              <Button variant="outline" className="rounded-2xl" onClick={() => router.push('/how-it-works')}>See How It Works</Button>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

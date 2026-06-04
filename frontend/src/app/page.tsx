@@ -40,20 +40,15 @@ export default function HomePage() {
               </p>
 
               <div className="mt-10 flex flex-wrap items-center gap-3">
-                <Button asChild size="lg" className="gap-2 rounded-2xl bg-[#2a2a7a] px-7 py-6 text-base font-semibold text-white hover:bg-[#1a1a5a]">
-                  <Link href="/auth/signup?role=employer">Get Started Free <ArrowRight className="ml-1 inline h-5 w-5" /></Link>
+                <Button asChild size="lg" className="gap-2 rounded-2xl bg-slate-900 px-7 py-6 text-base font-semibold text-white hover:bg-black">
+                  <Link href="/auth/signup">Get Started <ArrowRight className="ml-1 inline h-5 w-5" /></Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="rounded-2xl border-[#15a36b] bg-[#DCFCE7]/30 px-7 py-6 text-base font-medium text-[#15a36b] hover:bg-[#DCFCE7]/50 shadow-sm">
-                  <Link href="/auth/signup?role=candidate">Join as Candidate</Link>
-                </Button>
-                <Button asChild variant="ghost" size="lg" className="rounded-2xl px-7 py-6 text-base font-medium text-slate-600 hover:bg-slate-100">
+                <Button asChild variant="outline" size="lg" className="rounded-2xl border-slate-300 bg-white/90 px-7 py-6 text-base font-medium text-slate-700 hover:bg-slate-50">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
               </div>
 
-              <p className="mt-8 text-sm font-medium text-slate-500 italic">
-                Built for HR teams & Job Seekers
-              </p>
+              <p className="mt-8 text-sm font-medium text-slate-500">Built for HR managers and hiring managers</p>
 
               {/* Animated feature list */}
               <ul className="mt-4 flex flex-col gap-3">

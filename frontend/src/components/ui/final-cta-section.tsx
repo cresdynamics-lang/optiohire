@@ -136,7 +136,7 @@ export default function FinalCTASection() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6"
           >
             <motion.button
-              onClick={() => router.push('/auth/signup?role=employer')}
+              onClick={handleGetStarted}
               onHoverStart={() => setIsHovered(true)}
               onHoverEnd={() => setIsHovered(false)}
               className="group relative px-8 py-4 sm:px-10 sm:py-5 rounded-full font-semibold font-figtree text-white overflow-hidden transition-all duration-300"
@@ -150,7 +150,7 @@ export default function FinalCTASection() {
               whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
             >
               <span className="relative z-10 flex items-center gap-2 text-sm sm:text-base">
-                Get Started for HR
+                Get Started Free
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
               </span>
               <motion.div
@@ -162,12 +162,12 @@ export default function FinalCTASection() {
             </motion.button>
 
             <motion.button
-              onClick={() => router.push('/auth/signup?role=candidate')}
-              className="group px-8 py-4 sm:px-10 sm:py-5 rounded-full font-semibold font-figtree text-[#15a36b] border-2 border-[#15a36b]/30 bg-[#DCFCE7]/10 backdrop-blur-sm hover:bg-[#DCFCE7]/20 hover:border-[#15a36b]/50 transition-all duration-300"
+              onClick={handleContact}
+              className="group px-8 py-4 sm:px-10 sm:py-5 rounded-full font-semibold font-figtree text-white border-2 border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/30 transition-all duration-300"
               whileHover={shouldReduceMotion ? {} : { scale: 1.05, y: -2 }}
               whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
             >
-              <span className="text-sm sm:text-base">Join as Job Seeker</span>
+              <span className="text-sm sm:text-base">Talk to Sales</span>
             </motion.button>
           </motion.div>
         </motion.div>
