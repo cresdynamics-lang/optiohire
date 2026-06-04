@@ -16,6 +16,7 @@ import { router as reportsRouter } from './routes/reports.js'
 import { router as contactRouter } from './routes/contact.js'
 import { router as authRouter } from './routes/auth.js'
 import { router as hrReportsRouter } from './routes/hr-reports.js'
+import candidateRouter from './routes/candidate.js'
 import { router as hrCandidatesRouter } from './routes/hr-candidates.js'
 import { router as scheduleRouter } from './routes/schedule.js'
 import { router as adminRouter } from './routes/admin.js'
@@ -114,6 +115,7 @@ app.use('/inbound/applications', inboundApplicationsRouter)
 app.use('/applications', applicationsRouter)
 app.use('/companies', reportsRouter)
 app.use('/api/hr/reports', hrReportsRouter)
+app.use('/api/candidate', candidateRouter)
 app.use('/api/hr', hrCandidatesRouter)
 app.use('/api/webhooks', webhooksRouter)
 app.use('/api/system/reports', reportsRouter)

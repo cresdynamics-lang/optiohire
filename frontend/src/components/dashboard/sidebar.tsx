@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Calendar,
   Shield,
-  Mail
+  Mail,
+  Target
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, usePathname } from 'next/navigation'
@@ -60,6 +61,12 @@ const jobSeekerSidebarItems = [
     id: 'overview',
     label: 'My Dashboard',
     icon: LayoutDashboard,
+    href: '/dashboard',
+  },
+  {
+    id: 'talent-profile',
+    label: 'Talent Profile',
+    icon: Target,
     href: '/dashboard/candidate',
   },
   {
