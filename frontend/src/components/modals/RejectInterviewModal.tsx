@@ -30,11 +30,11 @@ export function RejectInterviewModal({ isOpen, onClose, interviewId, companyName
       setError(null)
       
       const token = localStorage.getItem('token')
-      const res = await fetch(\`/api/candidate/interviews/\${interviewId}/reject\`, {
+      const res = await fetch(`/api/candidate/interviews/${interviewId}/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: \`Bearer \${token}\`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ reason })
       })
