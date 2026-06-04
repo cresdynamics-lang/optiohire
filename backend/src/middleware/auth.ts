@@ -76,8 +76,14 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       return res.status(401).json({ error: 'Invalid or inactive user' })
     }
 
-    // STRICT: Check if user has a company (except for admin)
-    if (userRecord.role !== 'admin') {
+    // STRICT: Check if user has a company (except for admin and candidates)
+    const isCandidateUser = 
+      userRecord.role === 'candidate' || 
+      (userRecord as any).company_role === 'candidate' || 
+      (userRecord as any).company_role === 'job_seeker' ||
+      (userRecord as any).company_role === 'jobseeker';
+
+    if (userRecord.role !== 'admin' && !isCandidateUser) {
       try {
         // Check if user_id column exists in companies table
         const checkColumn = await query(`

@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Briefcase, Sparkles, TrendingUp, Upload, FileText, Link2, CheckCircle2, Clock3, AlertTriangle, XCircle, ChevronDown } from 'lucide-react'
+import { Briefcase, Sparkles, TrendingUp, Upload, FileText, Link2, CheckCircle2, Clock3, AlertTriangle, XCircle, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
 type CandidateJob = {
@@ -43,6 +43,12 @@ type CandidateApplication = {
   company_name?: string | null
 }
 
+const truncateWords = (text: string, limit: number) => {
+  const words = text.split(/\s+/)
+  if (words.length <= limit) return text
+  return words.slice(0, limit).join(' ') + '...'
+}
+
 export function JobSeekerJobsSection() {
   const { user } = useAuth()
   const [jobs, setJobs] = useState<CandidateJob[]>([])
@@ -68,6 +74,11 @@ export function JobSeekerJobsSection() {
   const [uploadingJobId, setUploadingJobId] = useState<string | null>(null)
   const [applications, setApplications] = useState<CandidateApplication[]>([])
   const [expandedApplicationId, setExpandedApplicationId] = useState<string | null>(null)
+
+  // Filters and Pagination State
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const jobsPerPage = 5
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -110,18 +121,34 @@ export function JobSeekerJobsSection() {
     void loadJobs()
   }, [])
 
-  const normalizedJobs = useMemo(
-    () =>
-      jobs.map((job) => ({
+  const filteredJobs = useMemo(() => {
+    const query = searchQuery.toLowerCase()
+    return jobs
+      .map((job) => ({
         ...job,
         skills: Array.isArray(job.skills_required)
           ? job.skills_required
           : typeof job.skills_required === 'string'
             ? job.skills_required.split(',').map((s) => s.trim()).filter(Boolean)
             : [],
-      })),
-    [jobs]
-  )
+      }))
+      .filter((job) => 
+        job.job_title.toLowerCase().includes(query) || 
+        (job.company_name || '').toLowerCase().includes(query) ||
+        job.job_description.toLowerCase().includes(query)
+      )
+  }, [jobs, searchQuery])
+
+  const paginatedJobs = useMemo(() => {
+    const startIndex = (currentPage - 1) * jobsPerPage
+    return filteredJobs.slice(startIndex, startIndex + jobsPerPage)
+  }, [filteredJobs, currentPage])
+
+  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery])
 
   const updateForm = (jobId: string, key: string, value: string) => {
     setFormByJobId((prev) => ({
@@ -250,6 +277,17 @@ export function JobSeekerJobsSection() {
           <p className="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
             Apply using your CV link, LinkedIn, GitHub, and any additional portfolio link. Your latest submission is saved.
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 mt-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search jobs by title, company, or description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11 rounded-xl border-slate-200"
+              />
+            </div>
+          </div>
           <p className="inline-flex items-center gap-2 text-xs font-medium text-slate-500">
             <TrendingUp className="h-3.5 w-3.5" />
             AI watcher continuously reviews submitted evidence and updates employer decisions.
@@ -384,166 +422,239 @@ export function JobSeekerJobsSection() {
         </Card>
       ) : null}
 
-      {normalizedJobs.length === 0 ? (
+      {filteredJobs.length === 0 ? (
         <Card className="border-slate-200 bg-white">
-          <CardContent className="pt-5 text-sm text-slate-600">No active job postings are available right now.</CardContent>
+          <CardContent className="pt-5 text-sm text-slate-600">
+            {searchQuery ? `No jobs found matching "${searchQuery}".` : 'No active job postings are available right now.'}
+          </CardContent>
         </Card>
-      ) : null}
-
-      <div className="grid grid-cols-1 gap-4">
-        {normalizedJobs.map((job) => {
-          const form = formByJobId[job.job_posting_id] || {
-            resumeUrl: '',
-            resumeFileName: '',
-            resumeMimeType: '',
-            linkedinUrl: '',
-            githubUrl: '',
-            otherUrl: '',
-            phone: '',
-            message: '',
-          }
-          const isExpanded = expandedJobId === job.job_posting_id
-          const isSubmitting = submittingJobId === job.job_posting_id
-          const isUploading = uploadingJobId === job.job_posting_id
-          const hasApplicationEvidence = Boolean(
-            form.resumeUrl || form.linkedinUrl || form.githubUrl || form.otherUrl
-          )
-          return (
-            <Card key={job.job_posting_id} className="group border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-              <CardHeader className="space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="flex items-center gap-2 text-base text-slate-900">
-                    <Briefcase className="h-4 w-4 text-slate-500" />
-                    {job.job_title}
-                  </CardTitle>
-                  <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-                    Open
-                  </Badge>
-                </div>
-                <CardDescription className="flex flex-wrap items-center gap-3 text-slate-600">
-                  <span>{job.company_name || 'OptioHire Employer'}</span>
-                  {job.application_deadline ? (
-                    <span>Deadline: {new Date(job.application_deadline).toLocaleDateString()}</span>
-                  ) : null}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm leading-relaxed text-slate-600">{job.job_description}</p>
-                {job.skills.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills.slice(0, 6).map((skill) => (
-                      <Badge key={`${job.job_posting_id}-${skill}`} variant="outline" className="text-xs">
-                        {skill}
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4">
+            {paginatedJobs.map((job) => {
+              const form = formByJobId[job.job_posting_id] || {
+                resumeUrl: '',
+                resumeFileName: '',
+                resumeMimeType: '',
+                linkedinUrl: '',
+                githubUrl: '',
+                otherUrl: '',
+                phone: '',
+                message: '',
+              }
+              const isExpanded = expandedJobId === job.job_posting_id
+              const isSubmitting = submittingJobId === job.job_posting_id
+              const isUploading = uploadingJobId === job.job_posting_id
+              const hasApplicationEvidence = Boolean(
+                form.resumeUrl || form.linkedinUrl || form.githubUrl || form.otherUrl
+              )
+              return (
+                <Card key={job.job_posting_id} className="group border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                  <CardHeader className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <CardTitle className="flex items-center gap-2 text-base text-slate-900">
+                        <Briefcase className="h-4 w-4 text-slate-500" />
+                        {job.job_title}
+                      </CardTitle>
+                      <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                        Open
                       </Badge>
-                    ))}
-                  </div>
-                ) : null}
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                  <span className="inline-flex items-center gap-1">
-                    <TrendingUp className="h-3.5 w-3.5" />
-                    Apply with your professional links
-                  </span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => setExpandedJobId(isExpanded ? null : job.job_posting_id)}
-                    className="bg-slate-900 text-white hover:bg-slate-800"
-                  >
-                    {isExpanded ? 'Close' : 'Apply'}
-                  </Button>
-                </div>
-
-                {isExpanded ? (
-                  <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <Input value={user?.email || ''} readOnly disabled />
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
-                        <FileText className="h-3.5 w-3.5" />
-                        Upload CV / resume document
-                      </p>
-                      <label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50">
-                        <span className="inline-flex items-center gap-2">
-                          <Upload className="h-4 w-4" />
-                          {isUploading ? 'Uploading document...' : 'Choose file (PDF, DOC, DOCX, TXT, image)'}
-                        </span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.jpg,.jpeg,.png,.webp"
-                          disabled={isUploading}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              void uploadDocument(job.job_posting_id, file)
-                            }
-                            e.currentTarget.value = ''
-                          }}
-                        />
-                      </label>
-                      <p className="mt-2 text-xs text-slate-500">
-                        Uploaded document becomes your application CV link and is visible to the AI watcher.
-                      </p>
-                      {form.resumeFileName ? (
-                        <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          Document attached: {form.resumeFileName}
-                        </p>
-                      ) : null}
                     </div>
-                    <Input
-                      placeholder="CV/Resume URL (or upload above)"
-                      value={form.resumeUrl}
-                      onChange={(e) => updateForm(job.job_posting_id, 'resumeUrl', e.target.value)}
-                    />
-                    <p className="inline-flex items-center gap-1 text-xs text-slate-500">
-                      <Link2 className="h-3.5 w-3.5" />
-                      Add relevant links so the watcher can analyze your evidence more accurately.
+                    <CardDescription className="flex flex-wrap items-center gap-3 text-slate-600">
+                      <span>{job.company_name || 'OptioHire Employer'}</span>
+                      {job.application_deadline ? (
+                        <span>Deadline: {new Date(job.application_deadline).toLocaleDateString()}</span>
+                      ) : null}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm leading-relaxed text-slate-600">
+                      {isExpanded ? job.job_description : truncateWords(job.job_description, 48)}
                     </p>
-                    <Input
-                      placeholder="LinkedIn URL"
-                      value={form.linkedinUrl}
-                      onChange={(e) => updateForm(job.job_posting_id, 'linkedinUrl', e.target.value)}
-                    />
-                    <Input
-                      placeholder="GitHub URL"
-                      value={form.githubUrl}
-                      onChange={(e) => updateForm(job.job_posting_id, 'githubUrl', e.target.value)}
-                    />
-                    <Input
-                      placeholder="Other professional link (portfolio, Behance, website...)"
-                      value={form.otherUrl}
-                      onChange={(e) => updateForm(job.job_posting_id, 'otherUrl', e.target.value)}
-                    />
-                    <Input
-                      placeholder="Phone (optional)"
-                      value={form.phone}
-                      onChange={(e) => updateForm(job.job_posting_id, 'phone', e.target.value)}
-                    />
-                    <Textarea
-                      placeholder="Short note to employer (optional)"
-                      value={form.message}
-                      onChange={(e) => updateForm(job.job_posting_id, 'message', e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      disabled={!hasApplicationEvidence}
-                      onClick={() => void applyToJob(job.job_posting_id)}
-                      className="bg-slate-900 text-white hover:bg-slate-800"
-                    >
-                      Submit Application
-                    </Button>
-                    {!hasApplicationEvidence ? (
-                      <p className="text-xs text-amber-700">
-                        Add at least one link (or upload a document) before submitting.
-                      </p>
+                    {job.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {job.skills.slice(0, 6).map((skill) => (
+                          <Badge key={`${job.job_posting_id}-${skill}`} variant="outline" className="text-xs">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
                     ) : null}
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+                    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                      <span className="inline-flex items-center gap-1">
+                        <TrendingUp className="h-3.5 w-3.5" />
+                        Apply with your professional links
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setExpandedJobId(isExpanded ? null : job.job_posting_id)}
+                        className="bg-slate-900 text-white hover:bg-slate-800"
+                      >
+                        {isExpanded ? 'Close' : 'Apply'}
+                      </Button>
+                    </div>
+
+                    {isExpanded ? (
+                      <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <Input value={user?.email || ''} readOnly disabled />
+                        <div className="rounded-lg border border-slate-200 bg-white p-3">
+                          <p className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+                            <FileText className="h-3.5 w-3.5" />
+                            Upload CV / resume document
+                          </p>
+                          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50">
+                            <span className="inline-flex items-center gap-2">
+                              <Upload className="h-4 w-4" />
+                              {isUploading ? 'Uploading document...' : 'Choose file (PDF, DOC, DOCX, TXT, image)'}
+                            </span>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.jpg,.jpeg,.png,.webp"
+                              disabled={isUploading}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  void uploadDocument(job.job_posting_id, file)
+                                }
+                                e.currentTarget.value = ''
+                              }}
+                            />
+                          </label>
+                          <p className="mt-2 text-xs text-slate-500">
+                            Uploaded document becomes your application CV link and is visible to the AI watcher.
+                          </p>
+                          {form.resumeFileName ? (
+                            <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Document attached: {form.resumeFileName}
+                            </p>
+                          ) : null}
+                        </div>
+                        <Input
+                          placeholder="CV/Resume URL (or upload above)"
+                          value={form.resumeUrl}
+                          onChange={(e) => updateForm(job.job_posting_id, 'resumeUrl', e.target.value)}
+                        />
+                        <p className="inline-flex items-center gap-1 text-xs text-slate-500">
+                          <Link2 className="h-3.5 w-3.5" />
+                          Add relevant links so the watcher can analyze your evidence more accurately.
+                        </p>
+                        <Input
+                          placeholder="LinkedIn URL"
+                          value={form.linkedinUrl}
+                          onChange={(e) => updateForm(job.job_posting_id, 'linkedinUrl', e.target.value)}
+                        />
+                        <Input
+                          placeholder="GitHub URL"
+                          value={form.githubUrl}
+                          onChange={(e) => updateForm(job.job_posting_id, 'githubUrl', e.target.value)}
+                        />
+                        <Input
+                          placeholder="Other professional link (portfolio, Behance, website...)"
+                          value={form.otherUrl}
+                          onChange={(e) => updateForm(job.job_posting_id, 'otherUrl', e.target.value)}
+                        />
+                        <Input
+                          placeholder="Phone (optional)"
+                          value={form.phone}
+                          onChange={(e) => updateForm(job.job_posting_id, 'phone', e.target.value)}
+                        />
+                        <Textarea
+                          placeholder="Short note to employer (optional)"
+                          value={form.message}
+                          onChange={(e) => updateForm(job.job_posting_id, 'message', e.target.value)}
+                        />
+                        <Button
+                          type="button"
+                          disabled={!hasApplicationEvidence}
+                          onClick={() => void applyToJob(job.job_posting_id)}
+                          className="bg-slate-900 text-white hover:bg-slate-800"
+                        >
+                          Submit Application
+                        </Button>
+                        {!hasApplicationEvidence ? (
+                          <p className="text-xs text-amber-700">
+                            Add at least one link (or upload a document) before submitting.
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 sm:px-6 mt-6">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <Button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  variant="outline"
+                  size="sm"
+                >
+                  Previous
+                </Button>
+                <Button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  variant="outline"
+                  size="sm"
+                >
+                  Next
+                </Button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-slate-700">
+                    Showing <span className="font-medium">{(currentPage - 1) * jobsPerPage + 1}</span> to{' '}
+                    <span className="font-medium">
+                      {Math.min(currentPage * jobsPerPage, filteredJobs.length)}
+                    </span> of{' '}
+                    <span className="font-medium">{filteredJobs.length}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <Button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      variant="outline"
+                      className="rounded-l-md px-2 py-2"
+                    >
+                      <span className="sr-only">Previous</span>
+                      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                    </Button>
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <Button
+                        key={i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                        variant={currentPage === i + 1 ? "default" : "outline"}
+                        className={`hidden md:inline-flex ${currentPage === i + 1 ? "bg-[#2D2DDD] text-white" : ""}`}
+                      >
+                        {i + 1}
+                      </Button>
+                    ))}
+                    <Button
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      variant="outline"
+                      className="rounded-r-md px-2 py-2"
+                    >
+                      <span className="sr-only">Next</span>
+                      <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                    </Button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
