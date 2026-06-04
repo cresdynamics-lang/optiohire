@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { ServiceWorker } from '@/components/service-worker'
 import { BottomCtaBanner } from '@/components/ui/bottom-cta-banner'
 import { CaptchaProvider } from '@/components/providers/captcha-provider'
+import { ThemeProvider } from '@/components/providers/theme-provider'
 
 const dmSans = {
   variable: '--font-dm-sans',
@@ -107,7 +108,9 @@ export default function RootLayout({
             <AuthProvider>
               <ErrorBoundary>
                 <div className="min-h-screen bg-background">
-                  <ConditionalLayout>{children}</ConditionalLayout>
+                  <ThemeProvider>
+                    <ConditionalLayout>{children}</ConditionalLayout>
+                  </ThemeProvider>
                   <CookieConsent />
                   <ServiceWorker />
                 </div>

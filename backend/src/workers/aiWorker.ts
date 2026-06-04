@@ -280,6 +280,17 @@ export class AIWorker {
   private async sendHRDigest(job: any, company: any, applicationId: string, aiResult: any, mappedStatus: string) {
     if (process.env.ENABLE_WATCHER_PIPELINE_DIGEST === 'false') return
 
+    const countRes = await query(
+      'SELECT COUNT(*) as count FROM applications WHERE job_posting_id = $1 AND ai_status IS NOT NULL',
+      [job.job_posting_id]
+    )
+    const processedCount = parseInt(countRes.rows[0].count, 10)
+
+    // Only send the digest every 5 candidates to reduce frequency
+    if (processedCount === 0 || processedCount % 5 !== 0) {
+      return
+    }
+
     const { rows } = await query(
       'SELECT candidate_name, email, ai_score, ai_status FROM applications WHERE job_posting_id = $1 ORDER BY ai_score DESC NULLS LAST LIMIT 12',
       [job.job_posting_id]
@@ -313,13 +324,17 @@ export class AIWorker {
         score: r.ai_score,
         status: String(r.ai_status || '')
       })),
-      bestPick: {
-        name: rows[0].candidate_name || 'Candidate',
-        email: rows[0].email,
-        score: rows[0].ai_score,
-        status: String(rows[0].ai_status || ''),
-        explanation: 'Top pick'
-      }
+      bestPick: (() => {
+        const validPicks = rows.filter(r => r.ai_status && !String(r.ai_status).toUpperCase().includes('REJECT'))
+        if (validPicks.length === 0) return null
+        return {
+          name: validPicks[0].candidate_name || 'Candidate',
+          email: validPicks[0].email,
+          score: validPicks[0].ai_score,
+          status: String(validPicks[0].ai_status || ''),
+          explanation: 'Top pick'
+        }
+      })()
     })
   }
 }

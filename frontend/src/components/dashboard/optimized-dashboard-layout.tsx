@@ -669,20 +669,20 @@ function DashboardContent() {
 
   // No session: redirect runs in useEffect — avoid skeleton (reads as “stuck loading”) during client nav / sign-out
   if (!user) {
-    return <div className="min-h-screen bg-slate-50" aria-hidden />
+    return <div className="min-h-screen bg-slate-50 dark:bg-gray-950" aria-hidden />
   }
 
   // Company setup redirect in flight — minimal pulse (effect calls router.replace)
   if (user.role !== 'admin' && !isJobSeeker && user.hasCompany === false && !user.companyId) {
     return (
-      <div className="min-h-screen bg-slate-50 [background-image:linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]">
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-950 [background-image:linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] dark:[background-image:none]">
         <DashboardChromeSkeleton />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-foreground [background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]">
+    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-gray-950 text-foreground [background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] dark:[background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_42%)]" >
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]"

@@ -107,20 +107,20 @@ function TypingDots() {
 }
 
 const getDynamicSuggestions = () => {
-  if (typeof window === 'undefined') return ['Screen candidates', 'Fix an issue', 'Create shortlist', 'Explain scores']
+  if (typeof window === 'undefined') return ['Screen candidates', 'Fix an issue', 'Create shortlist']
   const path = window.location.pathname
   
   if (path.includes('/candidates')) {
-    return ['Filter by experience', 'Schedule interview', 'Show top candidates', 'Reject all unqualified']
+    return ['Filter by experience', 'Schedule interview', 'Show top candidates']
   }
   if (path.includes('/jobs')) {
-    return ['Create new job posting', 'Close this job', 'Analyze applicants', 'Update job description']
+    return ['Create new job posting', 'Close this job', 'Analyze applicants']
   }
   if (path.includes('/settings')) {
-    return ['Update company profile', 'Manage users', 'Change password', 'Integration settings']
+    return ['Update company profile', 'Manage users', 'Change password']
   }
   
-  return ['Screen candidates', 'Create new job', 'Fix an issue', 'Explain candidate scores']
+  return ['Screen candidates', 'Create new job', 'Fix an issue']
 }
 
 
@@ -343,33 +343,6 @@ export function ChatbotWidget() {
   }
 
   const renderMessageContent = (content: string, colorIndex: number = 0) => {
-    const toolMatch = content.match(/```json\s*(\{[\s\S]*?"tool"[\s\S]*?\})\s*```/)
-    if (toolMatch) {
-      try {
-        const toolData = JSON.parse(toolMatch[1])
-        const cleanContent = content.replace(toolMatch[0], '').trim()
-        return (
-          <div className="flex flex-col gap-3 w-full">
-            {cleanContent && <div className="whitespace-pre-wrap">{renderMarkdown(cleanContent)}</div>}
-            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-3 text-sm mt-2">
-              <div className="font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-2 mb-2">
-                <Settings className="w-4 h-4" /> Action Required: {toolData.tool}
-              </div>
-              <pre className="text-xs bg-white/70 dark:bg-black/20 p-2 rounded-lg overflow-x-auto text-gray-600 dark:text-gray-300">
-                {JSON.stringify(toolData.arguments, null, 2)}
-              </pre>
-              <Button
-                size="sm"
-                className="w-full mt-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
-                onClick={() => executeTool(toolData.tool, toolData.arguments)}
-              >
-                Approve Action
-              </Button>
-            </div>
-          </div>
-        )
-      } catch (e) { }
-    }
 
     // Hide partial JSON blocks during stream
     if (content.includes('```json') && !content.includes('```', content.indexOf('```json') + 7)) {
@@ -600,6 +573,24 @@ export function ChatbotWidget() {
                         {chip}
                       </button>
                     ))}
+                    <button
+                      onClick={() => setActiveTab('support')}
+                      className="text-[13px] font-bold text-red-700 border-2 border-red-200 bg-red-50 hover:bg-red-600 hover:border-red-600 hover:text-white px-4 py-2 rounded-full transition-all shadow-sm flex items-center gap-1.5"
+                    >
+                      <Headphones className="w-3.5 h-3.5" />
+                      Contact Support
+                    </button>
+                    <button
+                      onClick={() => {
+                        window.location.href = window.location.pathname.includes('/candidate') 
+                          ? '/dashboard/candidate/help' 
+                          : '/dashboard/help'
+                      }}
+                      className="text-[13px] font-bold text-blue-700 border-2 border-blue-200 bg-blue-50 hover:bg-blue-600 hover:border-blue-600 hover:text-white px-4 py-2 rounded-full transition-all shadow-sm flex items-center gap-1.5"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                      Help Center
+                    </button>
                   </div>
                 )}
 

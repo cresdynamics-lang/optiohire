@@ -2039,7 +2039,7 @@ ${data.companyEmail}`
       score: number | null
       status: string
       explanation: string
-    }
+    } | null
   }): Promise<void> {
     const safeTitle = cleanJobTitle(opts.jobTitle)
     const subject = `[OptioHire] AI screening update — ${safeTitle} at ${opts.companyName}`
@@ -2079,10 +2079,11 @@ ${data.companyEmail}`
     <li><strong>Reject</strong> (below threshold): weaker fit for this posting.</li>
     <li>Among equal status, higher <strong>AI score</strong> ranks first; then earlier applications break ties.</li>
   </ul>
+  ${opts.bestPick ? `
   <p style="font-size:14px;background:#f0fdf4;border:1px solid #bbf7d0;padding:12px;border-radius:8px">
     <strong>Recommended lead →</strong> ${escapeHtml(opts.bestPick.name)} (${escapeHtml(opts.bestPick.email)})<br/>
     <span style="color:#166534">${escapeHtml(opts.bestPick.explanation)}</span>
-  </p>
+  </p>` : ''}
   <h2 style="font-size:15px">Current pipeline (top ${opts.rankedRows.length})</h2>
   <table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="text-align:left;background:#f8fafc">
@@ -2108,7 +2109,9 @@ ${data.companyEmail}`
       `Just analyzed: ${opts.latestCandidate.name} <${opts.latestCandidate.email}> — score ${opts.latestCandidate.score}, status ${opts.latestCandidate.status}`,
       opts.latestCandidate.reasoningPreview,
       ``,
-      `Best pick: ${opts.bestPick.name} <${opts.bestPick.email}> — ${opts.bestPick.explanation}`,
+      ...(opts.bestPick ? [
+        `Best pick: ${opts.bestPick.name} <${opts.bestPick.email}> — ${opts.bestPick.explanation}`,
+      ] : []),
       ``,
       `Pipeline (top ${opts.rankedRows.length}):`,
       ...opts.rankedRows.map(

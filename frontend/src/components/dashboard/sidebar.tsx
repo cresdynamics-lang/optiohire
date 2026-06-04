@@ -12,7 +12,8 @@ import {
   Calendar,
   Shield,
   Mail,
-  Target
+  Target,
+  HelpCircle
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, usePathname } from 'next/navigation'
@@ -54,6 +55,12 @@ const sidebarItems = [
     icon: Mail,
     href: '/dashboard/templates',
   },
+  {
+    id: 'help',
+    label: 'Help Center',
+    icon: HelpCircle,
+    href: '/dashboard/help',
+  },
 ]
 
 const jobSeekerSidebarItems = [
@@ -86,6 +93,12 @@ const jobSeekerSidebarItems = [
     label: 'My Profile',
     icon: Settings,
     href: '/dashboard/profile',
+  },
+  {
+    id: 'help',
+    label: 'Help Center',
+    icon: HelpCircle,
+    href: '/dashboard/candidate/help',
   },
 ]
 

@@ -139,24 +139,24 @@ export default function AdminHelpPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-neutral-400 hover:text-white"
+            className="text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
               <HelpCircle className="w-8 h-8 text-[#2D2DDD]" />
               Admin Help & Documentation
             </h1>
-            <p className="text-neutral-400 mt-1">Complete guide to admin capabilities and quick access</p>
+            <p className="text-slate-500 dark:text-neutral-400 mt-1">Complete guide to admin capabilities and quick access</p>
           </div>
         </div>
 
@@ -175,15 +175,15 @@ export default function AdminHelpPage() {
                 const Icon = link.icon
                 return (
                   <Link key={link.title} href={link.link}>
-                    <Card className="cursor-pointer border border-slate-200 bg-white transition-all hover:border-primary/40 hover:shadow-md">
+                    <Card className="cursor-pointer border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-800 transition-all hover:border-primary/40 hover:shadow-md">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <Icon className={`w-6 h-6 ${link.color} flex-shrink-0 mt-1`} />
                           <div>
-                            <h3 className="font-semibold text-white mb-1">
+                            <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
                               {link.title}
                             </h3>
-                            <p className="text-sm text-neutral-400">
+                            <p className="text-sm text-slate-500 dark:text-neutral-400">
                               {link.description}
                             </p>
                           </div>
@@ -210,12 +210,12 @@ export default function AdminHelpPage() {
             <div className="space-y-6">
               {adminCapabilities.map((category) => (
                 <div key={category.category} className="border-l-4 border-[#2D2DDD] pl-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
                     {category.category}
                   </h3>
                   <ul className="space-y-2">
                     {category.items.map((item, index) => (
-                      <li key={index} className="flex items-start gap-2 text-neutral-300">
+                      <li key={index} className="flex items-start gap-2 text-slate-600 dark:text-neutral-300">
                         <span className="text-[#2D2DDD] mt-1">•</span>
                         <span>{item}</span>
                       </li>
@@ -258,7 +258,7 @@ export default function AdminHelpPage() {
         {/* Support */}
         <Card className="border-slate-200 bg-white">
           <CardHeader>
-            <CardTitle>Need More Help?</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-white">Need More Help?</CardTitle>
             <CardDescription>Contact support or view documentation</CardDescription>
           </CardHeader>
           <CardContent>
