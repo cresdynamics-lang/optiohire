@@ -1,4 +1,4 @@
-import { query } from '../db/index.js';
+import { query as defaultQuery } from '../db/index.js';
 import { logger } from '../utils/logger.js';
 import { ResendService } from './resendService.js';
 import { emailParserService } from './emailParserService.js';
@@ -7,9 +7,17 @@ import { aiQueue } from '../queues/aiQueue.js';
 import { saveFile } from '../utils/storage.js';
 import { randomUUID } from 'crypto';
 
-const resendService = new ResendService();
+const defaultResendService = new ResendService();
 
 export class ResendInboundService {
+  private query: typeof defaultQuery;
+  private resendService: ResendService;
+
+  constructor(queryFn = defaultQuery, resendService = defaultResendService) {
+    this.query = queryFn;
+    this.resendService = resendService;
+  }
+
   /**
    * Processes a Resend "email.received" event payload.
    * This is idempotent based on the emailId.
@@ -28,7 +36,7 @@ export class ResendInboundService {
       }
 
       // Check if already processed as an application (using external_id)
-      const { rows: existing } = await query<{ application_id: string }>('SELECT application_id FROM applications WHERE external_id = $1', [emailId]);
+      const { rows: existing } = await this.query<{ application_id: string }>('SELECT application_id FROM applications WHERE external_id = $1', [emailId]);
       if (existing.length > 0) {
         logger.info(`[ResendInbound] Email ${emailId} already processed as application ${existing[0].application_id}`);
         return { success: true, application_id: existing[0].application_id };
@@ -37,7 +45,7 @@ export class ResendInboundService {
       logger.info(`[ResendInbound] Processing received email: ${emailId}`);
 
       // Fetch full email content and attachments
-      const emailData = await resendService.getEmail(emailId);
+      const emailData = await this.resendService.getEmail(emailId);
       if (!emailData) {
         logger.error(`[ResendInbound] Could not fetch email data for ID: ${emailId}`);
         return { success: false, error: 'Email data not found' };
@@ -77,7 +85,7 @@ export class ResendInboundService {
       const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
       try {
-        const attachments = await resendService.getAttachments(emailId);
+        const attachments = await this.resendService.getAttachments(emailId);
         for (const attachment of attachments) {
           const filename = (attachment.filename || `attachment-${randomUUID()}`).toLowerCase();
           const downloadUrl = attachment.download_url;
@@ -106,7 +114,7 @@ export class ResendInboundService {
       }
 
       // Get company ID
-      const { rows: jobs } = await query<{ company_id: string }>('SELECT company_id FROM job_postings WHERE job_posting_id = $1', [jobId]);
+      const { rows: jobs } = await this.query<{ company_id: string }>('SELECT company_id FROM job_postings WHERE job_posting_id = $1', [jobId]);
       const companyId = jobs[0]?.company_id;
 
       if (!companyId) {
@@ -115,7 +123,7 @@ export class ResendInboundService {
       }
 
       // Create the application (using external_id for idempotency)
-      const { rows: applicationRows } = await query<{ application_id: string }>(
+      const { rows: applicationRows } = await this.query<{ application_id: string }>(
         `INSERT INTO applications (
           job_posting_id, company_id, candidate_name, email, resume_url, external_id
         )

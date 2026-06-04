@@ -12,7 +12,8 @@
     "ensure-admin": "tsx scripts/ensure-admin-user.ts",
     "test:verification-email": "tsx scripts/send-test-verification-code.ts",
     "test:talent-pool": "tsx scripts/test-talent-pool-notification.ts",
-    "seed:talent-pool-fake": "tsx scripts/seed-talent-pool-fake-data.ts"
+    "seed:talent-pool-fake": "tsx scripts/seed-talent-pool-fake-data.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -53,8 +54,12 @@
     "@types/node": "^24.10.1",
     "@types/nodemailer": "^7.0.4",
     "@types/pg": "^8.15.6",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "node-pg-migrate": "^8.0.4",
+    "supertest": "^7.2.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8"
   }
 }

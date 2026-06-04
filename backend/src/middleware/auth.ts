@@ -54,14 +54,16 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; email: string }
 
     // Verify user exists and is active
-    const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean }>(
+    const userResult = await query<{ user_id: string; email: string; role: string; is_active: boolean }>(
       `SELECT user_id, email, role, is_active FROM users WHERE user_id = $1`,
       [decoded.sub]
     )
 
-    if (rows.length === 0 || !rows[0].is_active) {
+    if (!userResult || !userResult.rows || userResult.rows.length === 0 || !userResult.rows[0].is_active) {
       return res.status(401).json({ error: 'Invalid or inactive user' })
     }
+
+    const rows = userResult.rows
 
     // STRICT: Check if user has a company (except for admin)
     if (rows[0].role !== 'admin') {

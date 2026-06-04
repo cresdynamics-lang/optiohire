@@ -10,6 +10,11 @@ router.post('/resend', async (req: Request, res: Response) => {
     logger.info(`[WEBHOOK] Received Resend webhook payload: ${JSON.stringify(payload, null, 2)}`);
     const result = await resendInboundService.processEmailReceivedEvent(payload);
 
+    if (!result) {
+      logger.error('[WEBHOOK] processEmailReceivedEvent returned undefined');
+      return res.status(500).json({ error: 'Internal error: no result from service' });
+    }
+
     if (result.error) {
       return res.status(500).json({ error: result.error });
     }

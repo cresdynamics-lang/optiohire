@@ -1,7 +1,13 @@
-import { query } from '../db/index.js';
+import { query as defaultQuery } from '../db/index.js';
 import { logger } from '../utils/logger.js';
 
 export class EmailParserService {
+  private query: typeof defaultQuery;
+
+  constructor(queryFn = defaultQuery) {
+    this.query = queryFn;
+  }
+
   /**
    * Attempts to match an email subject to a specific job posting.
    * Enforces a literal exact match after stripping extra whitespace.
@@ -13,12 +19,13 @@ export class EmailParserService {
     // Collapse all whitespace and trim. No prefix removal.
     const processedSubject = subject.replace(/\s+/g, ' ').trim().toLowerCase();
     
-    // Execute high-speed exact match in the database
-    const { rows } = await query(`
-      SELECT job_posting_id 
-      FROM job_postings 
-      WHERE status = 'ACTIVE' 
-        AND TRIM(REGEXP_REPLACE(LOWER(job_title), '\\s+', ' ', 'g')) = $1
+    // Execute high-speed exact match in the database using "Job Title - Company Name" format
+    const { rows } = await this.query(`
+      SELECT j.job_posting_id 
+      FROM job_postings j
+      JOIN companies c ON j.company_id = c.company_id
+      WHERE j.status = 'ACTIVE' 
+        AND LOWER(TRIM(REGEXP_REPLACE(j.job_title || ' - ' || c.company_name, '\\s+', ' ', 'g'))) = $1
       LIMIT 1
     `, [processedSubject]);
 
