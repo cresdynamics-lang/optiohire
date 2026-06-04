@@ -1,15 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
-import { Eye, EyeOff, ArrowLeft, AlertCircle, Shield } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, AlertCircle, Shield, User } from 'lucide-react'
 
-type UserRole = 'employer' | null
+type UserRole = 'employer' | 'candidate' | null
 
 const employerSignUpSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -49,8 +49,9 @@ const candidateSignUpSchema = z.object({
 type EmployerSignUpData = z.infer<typeof employerSignUpSchema>
 type CandidateSignUpData = z.infer<typeof candidateSignUpSchema>
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signUp } = useAuth()
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [step, setStep] = useState(1) // 1: role select, 2: credentials, 3: details, 4: confirm
@@ -58,6 +59,18 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Handle pre-selected role from query params
+  useEffect(() => {
+    const role = searchParams.get('role')
+    if (role === 'candidate' || role === 'job-seeker') {
+      setUserRole('candidate')
+      setStep(2)
+    } else if (role === 'employer') {
+      setUserRole('employer')
+      setStep(2)
+    }
+  }, [searchParams])
 
   const employerForm = useForm<EmployerSignUpData>({
     resolver: zodResolver(employerSignUpSchema),
@@ -133,7 +146,7 @@ export default function SignUpPage() {
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
         return
       }
-      router.push('/dashboard')
+      router.push('/dashboard/candidate')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
@@ -142,10 +155,6 @@ export default function SignUpPage() {
   }
 
   const handleRoleSelect = (role: UserRole) => {
-    if (role !== 'employer') {
-      setError('Only HR and hiring manager accounts can be created here.')
-      return
-    }
     setUserRole(role)
     setStep(2)
     setError(null)
@@ -174,12 +183,18 @@ export default function SignUpPage() {
     if (userRole === 'employer') {
       const isValid = await employerForm.trigger(['name', 'email', 'password', 'confirmPassword'])
       if (!isValid) return
+    } else if (userRole === 'candidate') {
+      const isValid = await candidateForm.trigger(['name', 'email', 'password', 'confirmPassword'])
+      if (!isValid) return
     } else {
       return
     }
 
     nextStep()
   }
+
+  const currentRegister = userRole === 'candidate' ? candidateForm.register : employerForm.register
+  const currentErrors = userRole === 'candidate' ? (candidateForm.formState.errors as any) : (employerForm.formState.errors as any)
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-start pt-8 pb-12 px-4">
@@ -234,10 +249,25 @@ export default function SignUpPage() {
               <div className="space-y-6">
                 <div className="text-center">
                   <h2 className="headline-platform text-xl !font-semibold mb-2">What brings you here?</h2>
-                  <p className="text-gray-600 font-figtree text-sm">This platform is for HR and hiring managers only</p>
+                  <p className="text-gray-600 font-figtree text-sm">Select your account type to get started</p>
                 </div>
 
                 <div className="space-y-4">
+                  <button
+                    onClick={() => handleRoleSelect('candidate')}
+                    className="w-full p-4 border-2 border-slate-200 rounded-xl hover:border-primary hover:bg-blue-50 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <User className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="headline-platform !font-semibold">I'm a Job Seeker</h3>
+                        <p className="text-sm text-gray-600 font-figtree">Create your profile and apply for jobs</p>
+                      </div>
+                    </div>
+                  </button>
+
                   <button
                     onClick={() => handleRoleSelect('employer')}
                     className="w-full p-4 border-2 border-slate-200 rounded-xl hover:border-primary hover:bg-blue-50 transition-all text-left"
@@ -289,13 +319,13 @@ export default function SignUpPage() {
                     type="text"
                     id="name"
                     placeholder="Enter your full name"
-                    {...employerForm.register('name')}
+                    {...currentRegister('name')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                     required
                   />
-                  {employerForm.formState.errors.name && (
+                  {currentErrors.name && (
                     <p className="text-sm text-red-500 mt-1 font-figtree">
-                      {employerForm.formState.errors.name?.message}
+                      {currentErrors.name?.message}
                     </p>
                   )}
                 </div>
@@ -309,13 +339,13 @@ export default function SignUpPage() {
                     type="email"
                     id="email"
                     placeholder="Email Address"
-                    {...employerForm.register('email')}
+                    {...currentRegister('email')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                     required
                   />
-                  {employerForm.formState.errors.email && (
+                  {currentErrors.email && (
                     <p className="text-sm text-red-500 mt-1 font-figtree">
-                      {employerForm.formState.errors.email?.message}
+                      {currentErrors.email?.message}
                     </p>
                   )}
                 </div>
@@ -330,7 +360,7 @@ export default function SignUpPage() {
                       type={showPassword ? 'text' : 'password'}
                       id="password"
                       placeholder="Password"
-                      {...employerForm.register('password')}
+                      {...currentRegister('password')}
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                       required
                     />
@@ -346,9 +376,9 @@ export default function SignUpPage() {
                       )}
                     </button>
                   </div>
-                  {employerForm.formState.errors.password && (
+                  {currentErrors.password && (
                     <p className="text-sm text-red-500 mt-1 font-figtree">
-                      {employerForm.formState.errors.password?.message}
+                      {currentErrors.password?.message}
                     </p>
                   )}
                   <p className="text-xs text-gray-500 mt-1 font-figtree">
@@ -366,7 +396,7 @@ export default function SignUpPage() {
                       type={showConfirmPassword ? 'text' : 'password'}
                       id="confirmPassword"
                       placeholder="Confirm Password"
-                      {...employerForm.register('confirmPassword')}
+                      {...currentRegister('confirmPassword')}
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm"
                       required
                     />
@@ -382,9 +412,9 @@ export default function SignUpPage() {
                       )}
                     </button>
                   </div>
-                  {employerForm.formState.errors.confirmPassword && (
+                  {currentErrors.confirmPassword && (
                     <p className="text-sm text-red-500 mt-1 font-figtree">
-                      {employerForm.formState.errors.confirmPassword?.message}
+                      {currentErrors.confirmPassword?.message}
                     </p>
                   )}
                 </div>
@@ -544,7 +574,7 @@ export default function SignUpPage() {
             )}
 
             {/* Step 3: Candidate Details (simpler) */}
-            {false && (
+            {step === 3 && userRole === 'candidate' && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
                   <h2 className="headline-platform text-xl !font-semibold mb-2">Almost Done!</h2>
@@ -553,7 +583,7 @@ export default function SignUpPage() {
 
                 <div className="bg-gray-50 p-4 rounded-xl">
                   <p className="text-sm text-gray-600 font-figtree">
-                    You're all set! Click "Create Account" to complete your registration as a job seeker.
+                    You're all set! Click "Continue" to review your registration as a job seeker.
                   </p>
                 </div>
 
@@ -570,7 +600,7 @@ export default function SignUpPage() {
                     onClick={nextStep}
                     className="flex-1 bg-primary text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors font-figtree"
                   >
-                    Next
+                    Continue
                   </button>
                 </div>
               </div>
@@ -615,7 +645,7 @@ export default function SignUpPage() {
                       </div>
                     </>
                   )}
-                  {false && (
+                  {userRole === 'candidate' && (
                     <>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600 font-figtree">Name:</span>
@@ -650,7 +680,7 @@ export default function SignUpPage() {
                   </button>
                   <button
                     type="submit"
-                    onClick={handleEmployerSubmit}
+                    onClick={userRole === 'candidate' ? handleCandidateSubmit : handleEmployerSubmit}
                     disabled={isLoading}
                     className="flex-1 bg-primary text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
                   >
@@ -659,9 +689,21 @@ export default function SignUpPage() {
                 </div>
               </div>
             )}
+          </div>
         </div>
       </div>
     </div>
-    </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-50">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <SignUpForm />
+    </Suspense>
   )
 }
