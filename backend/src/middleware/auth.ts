@@ -54,18 +54,31 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; email: string }
 
     // Verify user exists and is active
-    const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean }>(
-      `SELECT user_id, email, role, is_active FROM users WHERE user_id = $1`,
-      [decoded.sub]
-    )
+    // Try to fetch company_role if it exists, otherwise fallback to standard fetch
+    let userRecord = null;
+    try {
+      const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean; company_role?: string }>(
+        `SELECT user_id, email, role, is_active, company_role FROM users WHERE user_id = $1`,
+        [decoded.sub]
+      )
+      if (rows.length > 0) userRecord = rows[0];
+    } catch (err) {
+      // Fallback if company_role column doesn't exist
+      const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean }>(
+        `SELECT user_id, email, role, is_active FROM users WHERE user_id = $1`,
+        [decoded.sub]
+      )
+      if (rows.length > 0) userRecord = rows[0];
+    }
 
-    if (rows.length === 0 || !rows[0].is_active) {
+    if (!userRecord || !userRecord.is_active) {
       return res.status(401).json({ error: 'Invalid or inactive user' })
     }
 
-    req.userId = rows[0].user_id
-    req.userEmail = rows[0].email
-    req.userRole = rows[0].role
+    req.userId = userRecord.user_id
+    req.userEmail = userRecord.email
+    req.userRole = userRecord.role
+    req.userCompanyRole = (userRecord as any).company_role
 
     next()
 
@@ -183,10 +196,16 @@ export async function requireHR(req: AuthRequest, res: Response, next: NextFunct
 }
 
 /**
- * requireCandidate: Ensures the user has the 'candidate' role.
+ * requireCandidate: Ensures the user has the 'candidate' role or company_role.
  */
 export async function requireCandidate(req: AuthRequest, res: Response, next: NextFunction) {
-  if (req.userRole !== 'candidate' && req.userRole !== 'admin') {
+  const isCandidate = 
+    req.userRole === 'candidate' || 
+    req.userCompanyRole === 'candidate' || 
+    req.userCompanyRole === 'job_seeker' ||
+    req.userCompanyRole === 'jobseeker';
+
+  if (!isCandidate && req.userRole !== 'admin') {
     return res.status(403).json({ 
       error: 'Access denied: Candidate profile required',
       details: 'This endpoint is restricted to candidates.'
