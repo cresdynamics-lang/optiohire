@@ -42,6 +42,9 @@ interface SystemStats {
     shortlisted: number
   }
   reports: number
+  ai_usage?: {
+    total_cost: number
+  }
 }
 
 export default function AdminDashboardOverview() {
@@ -201,6 +204,14 @@ export default function AdminDashboardOverview() {
       subtitle: 'Total reports',
       icon: BarChart3,
       tone: 'bg-teal-500', // Teal/Light Blue
+      link: '/admin/analytics',
+    },
+    {
+      title: 'Daily AI Cost',
+      value: stats?.ai_usage?.total_cost || 0,
+      subtitle: `Estimated USD cost`,
+      icon: Activity,
+      tone: 'bg-orange-600', // Orange for AI cost
       link: '/admin/analytics',
     },
   ]

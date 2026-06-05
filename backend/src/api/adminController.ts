@@ -1105,7 +1105,8 @@ export async function getSystemStats(req: Request, res: Response) {
       { rows: companyStats },
       { rows: jobStats },
       { rows: applicationStats },
-      { rows: reportStats }
+      { rows: reportStats },
+      { rows: aiUsageStats }
     ] = await Promise.all([
       query<{ total: string; active: string; admins: string }>(
         `SELECT 
@@ -1127,7 +1128,14 @@ export async function getSystemStats(req: Request, res: Response) {
           COUNT(*) FILTER (WHERE ai_status = 'SHORTLIST') as shortlisted
          FROM applications`
       ),
-      query<{ count: string }>(`SELECT COUNT(*) as count FROM reports`)
+      query<{ count: string }>(`SELECT COUNT(*) as count FROM reports`),
+      query<{ total_cost: number }>(
+        `
+        SELECT COALESCE(SUM(cost_estimate), 0)::float as total_cost 
+        FROM ai_usage_logs 
+        WHERE created_at >= CURRENT_DATE
+        `
+      ).catch(() => ({ rows: [{ total_cost: 0 }] }))
     ])
 
     return res.json({
@@ -1145,7 +1153,10 @@ export async function getSystemStats(req: Request, res: Response) {
         total: Number(applicationStats[0].count),
         shortlisted: Number(applicationStats[0].shortlisted)
       },
-      reports: Number(reportStats[0].count)
+      reports: Number(reportStats[0].count),
+      ai_usage: {
+        total_cost: aiUsageStats[0]?.total_cost || 0
+      }
     })
   } catch (err) {
     return res.status(500).json({ error: 'Failed to fetch system stats' })

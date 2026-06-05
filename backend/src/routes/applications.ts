@@ -1,11 +1,19 @@
 import { Router } from 'express'
 import { parseEmailApplications, scoreApplication, submitPublicApplication, getApplicationAudit } from '../api/applicationsController.js'
+import { authenticate, requireHR } from '../middleware/auth.js'
+import rateLimit from 'express-rate-limit'
+
+const applyLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  message: { error: 'Too many applications submitted. Please try again later.' }
+})
 
 export const router = Router()
 
 router.post('/parse-email', parseEmailApplications)
-router.post('/score', scoreApplication)
-router.post('/public-submit', submitPublicApplication)
-router.get('/:id/audit', getApplicationAudit)
+router.post('/score', authenticate, requireHR, scoreApplication)
+router.post('/public-submit', applyLimiter, submitPublicApplication)
+router.get('/:id/audit', authenticate, requireHR, getApplicationAudit)
 
 

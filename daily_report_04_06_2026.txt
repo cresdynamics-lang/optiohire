@@ -1,0 +1,35 @@
+Report date
+
+04/06/2026
+
+What worked
+- Refactored Admin Dashboard tables (Users, Companies, Jobs) into a responsive, card-based Grid layout with expandable Dialog views for detailed information.
+- Migrated the HR Dashboard Shortlisted Candidates table to the responsive Grid + Dialog layout with "Select All" capabilities.
+- Updated the Candidate/Student Dashboard's Application History from a simple list to a cohesive Grid + Dialog layout.
+- Added a `ThemeToggle` component to fix build errors related to missing theme toggle imports in Admin layouts.
+- Integrated OpenRouter Fallback system for the HR AI Chatbot and optimized the `hrAgentController`.
+- Added 5 suggested prompt buttons to the HR AI agent, including a direct link to the Help Center.
+
+Blockers
+- Theme preference persistence across different user accounts on the same browser (currently uses `next-themes` local storage which applies to the browser session globally).
+- Potential rate limits from primary AI providers necessitating continuous monitoring of the new OpenRouter fallback mechanism.
+
+What needs attention
+- Implementing a user-preference database field for theme persistence to ensure "dark mode" or "light mode" is specific to the user account, not the browser window.
+- Expanding the AI agent's Help Center routing to accurately reflect dynamically generated or linked FAQ documentation.
+
+What's been implemented
+- Grid view with summary and expandable dialog UI for Admin, HR, and Candidate dashboards.
+- HR AI chatbot suggested prompts and fallback mechanism.
+- Overall system build validation (TypeScript and linting passing).
+
+What's pending
+- Wiring the informational guide to the created subdomain.
+- Monitoring LLM usage.
+- Optimizing and hardening all routes (role-checking and robust validation).
+- Proper rate limitings (`express-rate-limit` implementation across remaining sensitive routes).
+
+Next plan / planned for next day
+- Complete implementation of global rate limiting and route hardening.
+- Link all FAQ and Help Center documentation to the created subdomain.
+- Refactor the Theme provider to use a database-backed preference system instead of `next-themes` standard localStorage to isolate theme changes per user account.

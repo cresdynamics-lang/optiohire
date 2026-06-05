@@ -1,5 +1,5 @@
 import { logger } from '../../utils/logger.js'
-
+import { query } from '../../db/index.js'
 /**
  * OpenRouter AI Service
  * Drop-in replacement for groqService, using the OpenAI-compatible OpenRouter API.
@@ -32,7 +32,7 @@ class OpenRouterService {
   constructor() {
     this.apiKey = process.env.OPENROUTER_API_KEY || null
     this.primaryModel = process.env.PRIMARY_AI_MODEL || 'google/gemini-2.0-flash-001'
-    this.fallbackModel = process.env.FALLBACK_AI_MODEL || 'meta-llama/llama-3-8b-instruct'
+    this.fallbackModel = process.env.FALLBACK_AI_MODEL || 'openai/gpt-4o-mini'
 
     if (this.apiKey) {
       logger.info(`OpenRouter service initialized (primary: ${this.primaryModel}, fallback: ${this.fallbackModel})`)
@@ -104,6 +104,10 @@ class OpenRouterService {
       }
 
       logger.debug(`OpenRouter response via ${data.model} (${data.usage?.total_tokens || '?'} tokens)`)
+      
+      // Async DB Logging
+      this.logUsageAsync(data.model, data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0, data.usage?.total_tokens || 0);
+
       return content
     } catch (error: any) {
       logger.error(`OpenRouter native fallback failed: ${error.message}`)
@@ -210,6 +214,31 @@ class OpenRouterService {
       logger.error('Failed to parse JSON from OpenRouter response:', { responseSnippet: response.substring(0, 200) })
       throw new Error('Invalid JSON response from OpenRouter')
     }
+  }
+
+  /**
+   * Log AI token usage to the database asynchronously
+   */
+  private logUsageAsync(model: string, promptTokens: number, completionTokens: number, totalTokens: number) {
+    setImmediate(() => {
+      try {
+        // Approximate cost calculation based on typical provider rates
+        // Flash: ~$0.15/1M prompt, $0.60/1M completion
+        // GPT-4o-mini: ~$0.15/1M prompt, $0.60/1M completion
+        // We'll use a blended generic estimate of $0.0003 per 1k tokens as a baseline
+        const costEstimate = (totalTokens / 1000) * 0.0003;
+        
+        query(
+          `INSERT INTO ai_usage_logs (model, prompt_tokens, completion_tokens, total_tokens, cost_estimate)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [model, promptTokens, completionTokens, totalTokens, costEstimate]
+        ).catch(err => {
+          logger.error('Failed to log AI usage to database', { error: err.message });
+        });
+      } catch (err) {
+        logger.error('Error in async AI usage logging', { error: err });
+      }
+    });
   }
 }
 

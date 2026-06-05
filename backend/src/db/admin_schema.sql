@@ -216,3 +216,18 @@ CREATE TABLE IF NOT EXISTS security_audit_logs (
 
 CREATE INDEX IF NOT EXISTS idx_security_audit_logs_severity ON security_audit_logs(severity);
 CREATE INDEX IF NOT EXISTS idx_security_audit_logs_scan_date ON security_audit_logs(scan_date DESC);
+
+-- ============================================================================
+-- AI USAGE LOGS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS ai_usage_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  model text NOT NULL,
+  prompt_tokens integer DEFAULT 0,
+  completion_tokens integer DEFAULT 0,
+  total_tokens integer DEFAULT 0,
+  cost_estimate numeric(10, 6) DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_usage_logs_created_at ON ai_usage_logs(created_at DESC);

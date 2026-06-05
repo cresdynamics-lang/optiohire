@@ -11,7 +11,7 @@ import { logger } from '../utils/logger.js'
 export async function getEnhancedStats(req: AuthRequest, res: Response) {
   try {
     // Get basic stats
-    const [usersStats, companiesStats, jobsStats, applicationsStats, reportsStats] = await Promise.all([
+    const [usersStats, companiesStats, jobsStats, applicationsStats, reportsStats, aiUsageStats] = await Promise.all([
       // Users statistics
       query<{ total: number; active: number; admins: number; pending: number }>(
         `SELECT 
@@ -52,7 +52,17 @@ export async function getEnhancedStats(req: AuthRequest, res: Response) {
       // Reports statistics
       query<{ total: number }>(
         `SELECT COUNT(*)::int as total FROM reports`
-      )
+      ),
+
+      // AI Usage statistics (Daily Cost)
+      // Check if table exists first to avoid crashing if schema isn't fully migrated
+      query<{ total_cost: number }>(
+        `
+        SELECT COALESCE(SUM(cost_estimate), 0)::float as total_cost 
+        FROM ai_usage_logs 
+        WHERE created_at >= CURRENT_DATE
+        `
+      ).catch(() => ({ rows: [{ total_cost: 0 }], rowCount: 1 }))
     ])
 
     // Get trends (last 30 days)
@@ -119,6 +129,7 @@ export async function getEnhancedStats(req: AuthRequest, res: Response) {
       job_postings: jobsStats.rows[0],
       applications: applicationsStats.rows[0],
       reports: reportsStats.rows[0],
+      ai_usage: aiUsageStats.rows[0],
       trends: trends.rows,
       topCompanies: topCompanies.rows,
       statusDistribution: statusDistribution.rows,
