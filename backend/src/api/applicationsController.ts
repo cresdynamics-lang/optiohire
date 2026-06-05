@@ -42,6 +42,8 @@ export async function scoreApplication(req: Request, res: Response) {
   }
 }
 
+import { cache, cacheKeys } from '../utils/redis.js'
+
 export async function submitPublicApplication(req: Request, res: Response) {
   try {
     const { job_posting_id, candidate_name, email, resume_url, cover_letter, phone, captchaToken } = req.body || {}
@@ -56,7 +58,7 @@ export async function submitPublicApplication(req: Request, res: Response) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
-    const { rows: jobRows } = await query(
+    const { rows: jobRows } = await query<{ company_id: string; status: string; job_title: string; company_name: string }>(
       `SELECT jp.company_id, jp.status, jp.job_title, c.company_name 
        FROM job_postings jp
        LEFT JOIN companies c ON jp.company_id = c.company_id
@@ -66,6 +68,8 @@ export async function submitPublicApplication(req: Request, res: Response) {
 
     if (jobRows.length === 0) return res.status(404).json({ error: 'Job posting not found' })
     if (jobRows[0].status !== 'ACTIVE') return res.status(400).json({ error: 'Job is no longer active' })
+
+    const companyId = jobRows[0].company_id
 
     const { rows: existing } = await query(
       'SELECT application_id FROM applications WHERE job_posting_id = $1 AND email = $2',
@@ -77,10 +81,13 @@ export async function submitPublicApplication(req: Request, res: Response) {
       `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json)
        VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
        RETURNING application_id`,
-      [job_posting_id, jobRows[0].company_id, candidate_name, email.toLowerCase(), phone || null, resume_url, JSON.stringify({ cover_letter: cover_letter || null })]
+      [job_posting_id, companyId, candidate_name, email.toLowerCase(), phone || null, resume_url, JSON.stringify({ cover_letter: cover_letter || null })]
     )
 
     const applicationId = newApp[0].application_id
+
+    // Invalidate dashboard cache
+    await cache.del(cacheKeys.dashboardOverview(companyId))
     
     try {
       const provisioned = await provisionCandidateAccount({ email: email.toLowerCase(), candidateName: candidate_name })
@@ -149,6 +156,9 @@ export async function submitWebApplication(req: Request, res: Response) {
     )
 
     const applicationId = ins[0].application_id
+
+    // Invalidate dashboard cache
+    await cache.del(cacheKeys.dashboardOverview(company_id))
 
     try {
       const provisioned = await provisionCandidateAccount({ email: email.toLowerCase(), candidateName: candidate_name })

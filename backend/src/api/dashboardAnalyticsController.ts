@@ -3,6 +3,8 @@ import { query } from '../db/index.js'
 import openRouterService from '../services/ai/openRouterService.js'
 import { logger } from '../utils/logger.js'
 
+import { cache, cacheKeys } from '../utils/redis.js'
+
 export async function getDashboardAnalytics(req: any, res: Response) {
   try {
     const userId = req.userId
@@ -44,6 +46,13 @@ export async function getDashboardAnalytics(req: any, res: Response) {
 
     if (!companyId) {
       return res.status(404).json({ error: 'Company not found' })
+    }
+
+    // Try cache first
+    const cacheKey = cacheKeys.dashboardOverview(companyId)
+    const cached = await cache.get<any>(cacheKey)
+    if (cached) {
+      return res.json(cached)
     }
 
     // 1. Candidate Funnel (Counts by ai_status)
@@ -201,6 +210,9 @@ Velocity: ${JSON.stringify(payload.velocity)}
         weight: "warning"
       }]
     }
+
+    // Cache for 10 minutes
+    await cache.set(cacheKey, payload, 600)
 
     return res.status(200).json(payload)
   } catch (error: any) {

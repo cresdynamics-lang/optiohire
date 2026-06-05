@@ -310,6 +310,9 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
 
     await query(updateQuery, queryParams)
 
+    // Invalidate user cache
+    await cache.del(cacheKeys.user(userId))
+
     return res.json({
       success: true,
       company: {

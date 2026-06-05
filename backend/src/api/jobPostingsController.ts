@@ -4,6 +4,7 @@ import { pool, query } from '../db/index.js'
 import { logger } from '../utils/logger.js'
 import { verifyCaptcha } from '../utils/captcha.js'
 import { APPLICATION_INBOX_EMAIL, getRecommendedApplicationSubject } from '../config/applicationInbox.js'
+import { cache, cacheKeys } from '../utils/redis.js'
 
 const createJobSchema = z.object({
   company_name: z.string().min(2).max(255),
@@ -117,7 +118,6 @@ export async function getJobPostings(req: Request, res: Response) {
     }
 
     // Get all job postings - show all jobs if no specific company filter
-    // This allows seeing all jobs including those from "strive"
     const { rows: jobs } = await query<{
       job_posting_id: string
       company_id: string
@@ -208,7 +208,6 @@ export async function getJobPostings(req: Request, res: Response) {
             flagged_count: Number(stats[0]?.flagged || 0),
           }
         } catch (statErr) {
-          // If stats query fails, return job without stats
           console.error('Error fetching stats for job:', job.job_posting_id, statErr)
           return {
             ...job,
@@ -231,7 +230,6 @@ export async function getJobPostings(req: Request, res: Response) {
     return res.json({ jobs: jobsWithStats })
   } catch (err) {
     console.error('Error fetching job postings:', err)
-    // Return empty array instead of error to prevent frontend crashes
     return res.json({ jobs: [] })
   }
 }
@@ -244,9 +242,8 @@ export async function createJobPosting(req: Request, res: Response) {
 
   const payload = parse.data
   const skills = normalizeSkills(payload.required_skills)
-  
-  // Validate and parse dates
   const applicationDeadline = new Date(payload.application_deadline)
+  
   if (isNaN(applicationDeadline.getTime())) {
     return res.status(400).json({ 
       success: false, 
@@ -254,28 +251,22 @@ export async function createJobPosting(req: Request, res: Response) {
     })
   }
 
-  // Check if user_id column exists BEFORE starting transaction
-  let checkClient: any = null
   let hasUserIdColumn = false
   try {
-    checkClient = await pool.connect()
-    const checkResult = await checkClient.query(`
+    const checkResult = await query(`
       SELECT column_name
       FROM information_schema.columns
       WHERE table_name = 'companies' AND column_name = 'user_id'
     `)
     hasUserIdColumn = checkResult.rows.length > 0
   } catch (err) {
-    console.log('⚠️ Could not check for user_id column, assuming it does not exist')
-    hasUserIdColumn = false
-  } finally {
-    if (checkClient) checkClient.release()
+    console.log('⚠️ Could not check for user_id column')
   }
+
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
 
-    // 1) Link or create company by domain or company_email
     const companyDomain = domainFromEmail(payload.company_email) || domainFromEmail(payload.hr_email) || null
     let companyRow: { company_id: string } | null = null
 
@@ -287,7 +278,6 @@ export async function createJobPosting(req: Request, res: Response) {
       companyRow = c1.rows[0] || null
     }
     if (!companyRow) {
-      // Try by exact company_email if column exists/populated
       const c2 = await client.query<{ company_id: string }>(
         `select company_id from companies where company_email = $1 limit 1`,
         [payload.company_email]
@@ -296,120 +286,60 @@ export async function createJobPosting(req: Request, res: Response) {
     }
 
     if (!companyRow) {
-      // Get user_id from authenticated request if available
       const userId = (req as any).userId || null
-      
-      // Insert company with or without user_id based on column existence
       let ins
       if (hasUserIdColumn && userId) {
         ins = await client.query<{ company_id: string }>(
           `insert into companies (user_id, company_name, hr_email, hiring_manager_email, company_domain, company_email)
            values ($1,$2,$3,$4,$5,$6)
            returning company_id`,
-          [
-            userId,
-            payload.company_name,
-            payload.hr_email,
-            payload.hr_email, // fallback as hiring manager if not provided
-            companyDomain ?? payload.company_email.split('@')[1],
-            payload.company_email
-          ]
+          [userId, payload.company_name, payload.hr_email, payload.hr_email, companyDomain ?? payload.company_email.split('@')[1], payload.company_email]
         )
       } else {
         ins = await client.query<{ company_id: string }>(
           `insert into companies (company_name, hr_email, hiring_manager_email, company_domain, company_email)
            values ($1,$2,$3,$4,$5)
            returning company_id`,
-          [
-            payload.company_name,
-            payload.hr_email,
-            payload.hr_email, // fallback as hiring manager if not provided
-            companyDomain ?? payload.company_email.split('@')[1],
-            payload.company_email
-          ]
+          [payload.company_name, payload.hr_email, payload.hr_email, companyDomain ?? payload.company_email.split('@')[1], payload.company_email]
         )
       }
       companyRow = ins.rows[0]
     } else {
-      // Update company and link to user if not already linked
       const userId = (req as any).userId || null
-      
-      // Update company with or without user_id based on column existence
       if (hasUserIdColumn && userId) {
         await client.query(
-          `update companies
-           set user_id = coalesce($2, user_id),
-               company_name = coalesce($3, company_name),
-               hr_email = $4,
-               company_email = $5,
-               updated_at = now()
-           where company_id = $1`,
+          `update companies set user_id = coalesce($2, user_id), company_name = coalesce($3, company_name), hr_email = $4, company_email = $5, updated_at = now() where company_id = $1`,
           [companyRow.company_id, userId, payload.company_name, payload.hr_email, payload.company_email]
         )
       } else {
         await client.query(
-          `update companies
-           set company_name = coalesce($2, company_name),
-               hr_email = $3,
-               company_email = $4,
-               updated_at = now()
-           where company_id = $1`,
+          `update companies set company_name = coalesce($2, company_name), hr_email = $3, company_email = $4, updated_at = now() where company_id = $1`,
           [companyRow.company_id, payload.company_name, payload.hr_email, payload.company_email]
         )
       }
     }
 
-    if (!companyRow) {
-      throw new Error('Failed to identify or create company for job posting')
-    }
-
     const companyId = companyRow.company_id
-
-    // 2) Insert job_posting
-    // responsibilities is required in current schema; mirror job_description
     const meetingLink = payload.meeting_link ?? null
 
     const jobIns = await client.query<{ job_posting_id: string }>(
       `insert into job_postings
-       (company_id, job_title, job_description, responsibilities, skills_required,
-        application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status)
+       (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status)
        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'ACTIVE')
        returning job_posting_id`,
-      [
-        companyId,
-        payload.job_title,
-        payload.job_description,
-        payload.job_description,
-        skills,
-        applicationDeadline.toISOString(),
-        null,
-        meetingLink,
-        meetingLink,
-        payload.job_poster_url || null
-      ]
+      [companyId, payload.job_title, payload.job_description, payload.job_description, skills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null]
     )
 
     const jobPostingId = jobIns.rows[0].job_posting_id
-
-    // 3) Generate webhook url + secret
-    const { randomBytes } = await import('crypto')
-    const secret = randomBytes(32).toString('hex')
-    const base =
-      process.env.PUBLIC_API_BASE_URL ||
-      process.env.NEXT_PUBLIC_BACKEND_URL ||
-      `http://localhost:${process.env.PORT || 3001}`
+    const secret = (await import('crypto')).randomBytes(32).toString('hex')
+    const base = process.env.PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`
     const webhookUrl = `${base}/inbound/applications/${jobPostingId}`
 
     await client.query(
-      `update job_postings
-       set webhook_receiver_url = $2,
-           webhook_secret = $3,
-           updated_at = now()
-       where job_posting_id = $1`,
+      `update job_postings set webhook_receiver_url = $2, webhook_secret = $3, updated_at = now() where job_posting_id = $1`,
       [jobPostingId, webhookUrl, secret]
     )
 
-    // 5) Audit log
     await client.query(
       `insert into audit_logs (action, company_id, job_posting_id, metadata)
        values ('job_posting.created', $1, $2, $3::jsonb)`,
@@ -418,18 +348,11 @@ export async function createJobPosting(req: Request, res: Response) {
 
     await client.query('COMMIT')
 
-    // Send confirmation email to HR / company contacts
-    let emailError: string | null = null
-    let emailSent = false
-    
-    // Prepare recipients list (remove duplicates and empty values)
-    const recipients = [payload.hr_email, payload.company_email]
-      .filter((email): email is string => Boolean(email && typeof email === 'string' && email.includes('@')))
-    
-    if (recipients.length === 0) {
-      emailError = 'No valid email addresses provided (hr_email and company_email are required)'
-      logger.warn('Cannot send job created email: no valid recipients', { hr_email: payload.hr_email, company_email: payload.company_email })
-    } else {
+    // Invalidate public jobs cache
+    await cache.del(cacheKeys.publicJobs())
+
+    const recipients = [payload.hr_email, payload.company_email].filter((email): email is string => Boolean(email && email.includes('@')))
+    if (recipients.length > 0) {
       try {
         const emailService = new (await import('../services/emailService.js')).EmailService()
         await emailService.sendJobPostingCreatedEmail({
@@ -438,34 +361,8 @@ export async function createJobPosting(req: Request, res: Response) {
           companyName: payload.company_name,
           applicationDeadline: applicationDeadline.toISOString()
         })
-        emailSent = true
-        logger.info(`✅ Job created email sent successfully to: ${recipients.join(', ')}`)
-      } catch (emailErr: any) {
-        emailError = emailErr?.message || String(emailErr)
-        logger.error('❌ Failed to send job posting created email:', {
-          error: emailError,
-          recipients,
-          jobTitle: payload.job_title,
-          companyName: payload.company_name
-        })
-        
-        // Log to email_logs for each recipient
-        try {
-          const { query } = await import('../db/index.js')
-          const subject = `Job posted – ${payload.job_title} at ${payload.company_name}`
-          for (const recipient of recipients) {
-            await query(
-              `INSERT INTO email_logs (recipient_email, subject, email_type, status, error_message, created_at)
-               VALUES ($1, $2, 'notification', 'failed', $3, now())
-               ON CONFLICT DO NOTHING`,
-              [recipient, subject, emailError]
-            ).catch((logErr) => {
-              logger.error(`Failed to log email error for ${recipient}:`, logErr)
-            })
-          }
-        } catch (logErr) {
-          logger.error('Failed to log email errors:', logErr)
-        }
+      } catch (emailErr) {
+        logger.error('Failed to send job posting created email:', emailErr)
       }
     }
 
@@ -475,68 +372,27 @@ export async function createJobPosting(req: Request, res: Response) {
       company_id: companyId,
       message: 'Job posted successfully',
       applicationInboxEmail: APPLICATION_INBOX_EMAIL,
-      recommendedApplicationSubject: getRecommendedApplicationSubject(payload.job_title, payload.company_name),
-      emailSent,
-      emailError: emailError || undefined,
-      recipients: recipients.length > 0 ? recipients : undefined
+      recommendedApplicationSubject: getRecommendedApplicationSubject(payload.job_title, payload.company_name)
     })
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {}) // Ignore rollback errors
-    console.error('Job posting creation error:', err)
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    return res.status(500).json({ 
-      success: false, 
-      error: { 
-        message: 'Failed to create job posting',
-        details: errorMessage
-      } 
-    })
+    await client.query('ROLLBACK').catch(() => {})
+    logger.error('Job posting creation error:', err)
+    return res.status(500).json({ success: false, error: { message: 'Failed to create job posting' } })
   } finally {
     client.release()
   }
 }
 
-const sendCreatedNotificationSchema = z.object({
-  hr_email: z.string().email(),
-  company_email: z.string().email().optional(),
-  job_title: z.string().min(1),
-  company_name: z.string().min(1),
-  application_deadline: z.string()
-})
-
-/**
- * Send "job posting created" email to HR/company. Used when job is created via
- * frontend API route (which does not send email). Call this after creating a job.
- */
 export async function sendJobPostingCreatedNotification(req: Request, res: Response) {
   try {
-    const parse = sendCreatedNotificationSchema.safeParse(req.body)
-    if (!parse.success) {
-      return res.status(400).json({ error: { message: 'Invalid payload', fieldErrors: parse.error.flatten().fieldErrors } })
-    }
-    const { hr_email, company_email, job_title, company_name, application_deadline } = parse.data
+    const { hr_email, company_email, job_title, company_name, application_deadline } = req.body
+    const recipients = [hr_email, company_email].filter((email): email is string => Boolean(email && email.includes('@')))
     
-    // Prepare recipients
-    const recipients = [hr_email, company_email].filter((email): email is string => 
-      Boolean(email && typeof email === 'string' && email.includes('@'))
-    )
-
     if (recipients.length === 0) {
-      return res.status(400).json({ 
-        error: { 
-          message: 'No valid email addresses provided',
-          details: 'hr_email and company_email are required'
-        } 
-      })
+      return res.status(400).json({ error: { message: 'No valid email addresses provided' } })
     }
 
     const emailService = new (await import('../services/emailService.js')).EmailService()
-    
-    logger.info(`[Job Notification] Sending job created email to: ${recipients.join(', ')}`, {
-      jobTitle: job_title,
-      companyName: company_name
-    })
-
     await emailService.sendJobPostingCreatedEmail({
       recipients,
       jobTitle: job_title,
@@ -544,27 +400,10 @@ export async function sendJobPostingCreatedNotification(req: Request, res: Respo
       applicationDeadline: application_deadline
     })
 
-    logger.info(`[Job Notification] ✅ Email sent successfully to: ${recipients.join(', ')}`)
-
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Notification sent',
-      recipients,
-      applicationInboxEmail: APPLICATION_INBOX_EMAIL,
-      recommendedApplicationSubject: getRecommendedApplicationSubject(job_title, company_name)
-    })
-  } catch (err: any) {
-    const errorMessage = err?.message || String(err)
-    logger.error('[Job Notification] ❌ Failed to send job posting created notification:', {
-      error: errorMessage,
-      stack: err?.stack
-    })
-    return res.status(500).json({ 
-      error: { 
-        message: 'Failed to send notification',
-        details: errorMessage
-      } 
-    })
+    return res.status(200).json({ success: true, message: 'Notification sent' })
+  } catch (err) {
+    logger.error('Failed to send job posting created notification:', err)
+    return res.status(500).json({ error: { message: 'Failed to send notification' } })
   }
 }
 
@@ -572,95 +411,68 @@ export async function sendJobPostingCreatedNotification(req: Request, res: Respo
 export async function getPublicJobPostings(req: Request, res: Response) {
   try {
     const captchaToken = req.headers['x-captcha-token'] as string | undefined
-    
-    // Verify captcha
     const isCaptchaValid = await verifyCaptcha(captchaToken)
     if (!isCaptchaValid) {
       return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
     }
 
+    const cacheKey = cacheKeys.publicJobs()
+    const cached = await cache.get<{ jobs: any[] }>(cacheKey)
+    if (cached) return res.json(cached)
+
     const { rows: jobs } = await query(
-      `SELECT 
-        jp.job_posting_id,
-        jp.company_id,
-        jp.job_title,
-        jp.job_description,
-        jp.skills_required,
-        jp.application_deadline,
-        jp.status,
-        jp.created_at,
-        jp.job_poster_url,
-        c.company_name,
-        c.company_logo_url
-      FROM job_postings jp
-      JOIN companies c ON jp.company_id = c.company_id
-      WHERE jp.status = 'ACTIVE'
-      ORDER BY jp.created_at DESC`
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url
+       FROM job_postings jp
+       JOIN companies c ON jp.company_id = c.company_id
+       WHERE jp.status = 'ACTIVE'
+       ORDER BY jp.created_at DESC`
     )
-    return res.json({ jobs })
+    
+    const result = { jobs }
+    await cache.set(cacheKey, result, 3600)
+    return res.json(result)
   } catch (err) {
     logger.error('Error fetching public job postings:', err)
     return res.json({ jobs: [] })
   }
 }
 
-/**
- * Get a single public job posting by ID
- * GET /api/job-postings/public/:id
- */
 export async function getPublicJobPostingById(req: Request, res: Response) {
   try {
     const captchaToken = req.headers['x-captcha-token'] as string | undefined
-    
-    // Verify captcha
     const isCaptchaValid = await verifyCaptcha(captchaToken)
     if (!isCaptchaValid) {
       return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
     }
 
     const { id } = req.params
+    const cacheKey = cacheKeys.publicJob(id)
+    const cached = await cache.get<{ job: any }>(cacheKey)
+    if (cached) return res.json(cached)
+
     const { rows: jobs } = await query(
-      `SELECT 
-        jp.job_posting_id,
-        jp.company_id,
-        jp.job_title,
-        jp.job_description,
-        jp.responsibilities,
-        jp.skills_required,
-        jp.application_deadline,
-        jp.status,
-        jp.created_at,
-        jp.job_poster_url,
-        c.company_name,
-        c.company_logo_url,
-        c.company_domain
-      FROM job_postings jp
-      JOIN companies c ON jp.company_id = c.company_id
-      WHERE jp.job_posting_id = $1 AND jp.status = 'ACTIVE'
-      LIMIT 1`,
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.responsibilities, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url, c.company_domain
+       FROM job_postings jp
+       JOIN companies c ON jp.company_id = c.company_id
+       WHERE jp.job_posting_id = $1 AND jp.status = 'ACTIVE'
+       LIMIT 1`,
       [id]
     )
 
-    if (jobs.length === 0) {
-      return res.status(404).json({ error: 'Job posting not found' })
-    }
+    if (jobs.length === 0) return res.status(404).json({ error: 'Job posting not found' })
 
-    return res.json({ job: jobs[0] })
+    const result = { job: jobs[0] }
+    await cache.set(cacheKey, result, 172800)
+    return res.json(result)
   } catch (err) {
     logger.error('Error fetching public job posting by id:', err)
     return res.status(404).json({ error: 'Job posting not found' })
   }
 }
 
-/**
- * Get all active job postings for a specific company
- * GET /api/job-postings/public/company/:companyId
- */
 export async function getPublicCompanyJobPostings(req: Request, res: Response) {
   try {
     const captchaToken = req.headers['x-captcha-token'] as string | undefined
-    
-    // Verify captcha
     const isCaptchaValid = await verifyCaptcha(captchaToken)
     if (!isCaptchaValid) {
       return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
@@ -668,22 +480,11 @@ export async function getPublicCompanyJobPostings(req: Request, res: Response) {
 
     const { companyId } = req.params
     const { rows: jobs } = await query(
-      `SELECT 
-        jp.job_posting_id,
-        jp.company_id,
-        jp.job_title,
-        jp.job_description,
-        jp.skills_required,
-        jp.application_deadline,
-        jp.status,
-        jp.created_at,
-        jp.job_poster_url,
-        c.company_name,
-        c.company_logo_url
-      FROM job_postings jp
-      JOIN companies c ON jp.company_id = c.company_id
-      WHERE jp.company_id = $1 AND jp.status = 'ACTIVE'
-      ORDER BY jp.created_at DESC`,
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url
+       FROM job_postings jp
+       JOIN companies c ON jp.company_id = c.company_id
+       WHERE jp.company_id = $1 AND jp.status = 'ACTIVE'
+       ORDER BY jp.created_at DESC`,
       [companyId]
     )
 
@@ -692,14 +493,9 @@ export async function getPublicCompanyJobPostings(req: Request, res: Response) {
       [companyId]
     )
 
-    return res.json({ 
-      jobs,
-      company: companyRows[0] || null
-    })
+    return res.json({ jobs, company: companyRows[0] || null })
   } catch (err) {
     logger.error('Error fetching public company job postings:', err)
     return res.json({ jobs: [], company: null })
   }
 }
-
-
