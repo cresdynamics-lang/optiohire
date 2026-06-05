@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
 import { verifyCaptcha } from '../utils/captcha.js'
+import { cache, cacheKeys } from '../utils/redis.js'
 
 export async function createJob(req: Request, res: Response) {
   try {
@@ -45,6 +46,9 @@ export async function createJob(req: Request, res: Response) {
       [company_id, jobPostingId, JSON.stringify({ job_title })]
     )
 
+    // Invalidate public jobs cache
+    await cache.del(cacheKeys.publicJobs())
+
     return res.status(201).json({ job_posting_id: jobPostingId })
   } catch (err) {
     return res.status(500).json({ error: 'Failed to create job' })
@@ -78,6 +82,13 @@ export async function getPublicJobs(req: Request, res: Response) {
       return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
     }
 
+    // Try cache first
+    const cacheKey = cacheKeys.publicJobs()
+    const cached = await cache.get<{ jobs: any[] }>(cacheKey)
+    if (cached) {
+      return res.json(cached)
+    }
+
     const { rows } = await query(
       `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
               jp.responsibilities, jp.skills_required, jp.application_deadline, 
@@ -87,7 +98,12 @@ export async function getPublicJobs(req: Request, res: Response) {
        WHERE jp.status = 'ACTIVE'
        ORDER BY jp.created_at DESC`
     )
-    return res.status(200).json({ jobs: rows })
+    
+    const result = { jobs: rows }
+    // Cache for 1 hour
+    await cache.set(cacheKey, result, 3600)
+    
+    return res.json(result)
   } catch (err) {
     console.error('Failed to get public jobs:', err)
     return res.status(500).json({ error: 'Failed to fetch jobs' })
@@ -109,6 +125,14 @@ export async function getPublicJobById(req: Request, res: Response) {
     if (!id || id === 'undefined') {
       return res.status(400).json({ error: 'Invalid job ID' })
     }
+
+    // Try cache first
+    const cacheKey = cacheKeys.publicJob(id)
+    const cached = await cache.get<{ job: any }>(cacheKey)
+    if (cached) {
+      return res.json(cached)
+    }
+
     const { rows } = await query(
       `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
               jp.responsibilities, jp.skills_required, jp.application_deadline, 
@@ -123,7 +147,11 @@ export async function getPublicJobById(req: Request, res: Response) {
       return res.status(404).json({ error: 'Job not found or inactive' })
     }
     
-    return res.status(200).json({ job: rows[0] })
+    const result = { job: rows[0] }
+    // Cache for 2 days
+    await cache.set(cacheKey, result, 172800)
+    
+    return res.json(result)
   } catch (err) {
     console.error('Failed to get public job details:', err)
     return res.status(500).json({ error: 'Failed to fetch job details' })

@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import { query } from '../db/index.js'
+import { cache, cacheKeys } from '../utils/redis.js'
 import type { AuthRequest } from '../middleware/auth.js'
 import { logAdminAction } from '../utils/adminLogger.js'
 import { logger } from '../utils/logger.js'
@@ -429,6 +430,9 @@ export async function updateUser(req: Request, res: Response) {
       `UPDATE users SET ${updates.join(', ')} WHERE user_id = $${paramIndex}`,
       params
     )
+
+    // Invalidate user cache
+    await cache.del(cacheKeys.user(userId))
 
     // Auto-provision candidate profile if role is set to candidate
     if (role === 'candidate') {

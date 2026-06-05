@@ -117,6 +117,8 @@ export class AIWorker {
       return
     }
 
+import { cache, cacheKeys } from '../utils/redis.js'
+
     logger.info(`✅ Score: ${aiResult.score}, Status: ${aiResult.status} for application: ${applicationId}`)
 
     const status = this.mapAIStatus(aiResult.status)
@@ -129,6 +131,11 @@ export class AIWorker {
       embedding: aiResult.embedding,
       ai_audit_log: aiResult.audit
     })
+
+    // Invalidate dashboard cache
+    if (jobPosting.company_id) {
+      await cache.del(cacheKeys.dashboardOverview(jobPosting.company_id))
+    }
 
     logger.info(`📧 Sending outcome emails for application: ${applicationId}`)
     await this.sendOutcomeEmails(application, jobPosting, company, aiResult, status)
