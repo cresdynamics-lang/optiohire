@@ -255,7 +255,7 @@ export default function EmailManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Error Display */}
         {error && (
@@ -306,50 +306,50 @@ export default function EmailManagementPage() {
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+                  <p className="text-sm text-muted-foreground ">Total</p>
                   <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Sent</p>
+                  <p className="text-sm text-muted-foreground ">Sent</p>
                   <p className="text-2xl font-bold text-blue-600">{stats.sent}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Delivered</p>
+                  <p className="text-sm text-muted-foreground ">Delivered</p>
                   <p className="text-2xl font-bold text-green-600">{stats.delivered}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Failed</p>
+                  <p className="text-sm text-muted-foreground ">Failed</p>
                   <p className="text-2xl font-bold text-red-600">{stats.failed}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Bounced</p>
+                  <p className="text-sm text-muted-foreground ">Bounced</p>
                   <p className="text-2xl font-bold text-orange-600">{stats.bounced}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+                  <p className="text-sm text-muted-foreground ">Pending</p>
                   <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
                 </div>
               </CardContent>
@@ -358,7 +358,7 @@ export default function EmailManagementPage() {
         )}
 
         {/* Dead-letter Queue */}
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-white">Dead-letter queue</CardTitle>
             <CardDescription>
@@ -377,11 +377,11 @@ export default function EmailManagementPage() {
               deadLetters.map((email) => (
                 <div
                   key={`dead-${email.email_id}`}
-                  className="rounded-md border border-slate-200 bg-slate-50 p-3"
+                  className="rounded-md border border-border bg-background p-3"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-white">{email.subject}</p>
+                      <p className="text-sm font-medium text-foreground">{email.subject}</p>
                       <p className="text-xs text-neutral-400">{email.recipient_email}</p>
                       <p className="text-xs text-neutral-500">
                         retries: {email.metadata?.retry_count ?? 0}
@@ -403,11 +403,11 @@ export default function EmailManagementPage() {
         </Card>
 
         {/* Filters */}
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder="Search by recipient email..."
                   value={searchTerm}
@@ -417,11 +417,11 @@ export default function EmailManagementPage() {
                 />
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Filter className="w-4 h-4 text-gray-400" />
+                <Filter className="w-4 h-4 text-muted-foreground" />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 rounded border border-slate-200 bg-white text-slate-900"
+                  className="px-3 py-2 rounded border border-border bg-white text-foreground"
                 >
                   <option value="all">All Status</option>
                   <option value="sent">Sent</option>
@@ -433,7 +433,7 @@ export default function EmailManagementPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-3 py-2 rounded border border-slate-200 bg-white text-slate-900"
+                  className="px-3 py-2 rounded border border-border bg-white text-foreground"
                 >
                   <option value="all">All Types</option>
                   <option value="password_reset">Password Reset</option>
@@ -450,7 +450,7 @@ export default function EmailManagementPage() {
         {/* Emails List */}
         <div className="space-y-4">
           {emails.map((email) => (
-            <Card key={email.email_id} className="border-slate-200 bg-white">
+            <Card key={email.email_id} className="border-border bg-white">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -462,12 +462,12 @@ export default function EmailManagementPage() {
                       <Badge variant="outline">{email.provider}</Badge>
                       <Badge variant="outline">{email.email_type}</Badge>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground ">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4" />
                         <span>{email.recipient_email}</span>
                         {email.recipient_name && (
-                          <span className="text-gray-500">({email.recipient_name})</span>
+                          <span className="text-muted-foreground">({email.recipient_name})</span>
                         )}
                       </div>
                       <div>
@@ -484,7 +484,7 @@ export default function EmailManagementPage() {
                         </div>
                       )}
                       {email.provider_message_id && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           ID: {email.provider_message_id}
                         </div>
                       )}
@@ -512,11 +512,11 @@ export default function EmailManagementPage() {
         </div>
 
         {emails.length === 0 && (
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardContent className="pt-6">
               <div className="text-center py-12">
-                <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">
+                <Mail className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground ">
                   No emails found
                 </p>
               </div>
@@ -534,7 +534,7 @@ export default function EmailManagementPage() {
             >
               Previous
             </Button>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-muted-foreground ">
               Page {page} of {Math.ceil(total / 50)}
             </span>
             <Button

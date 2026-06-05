@@ -75,7 +75,7 @@ export default function CompanyDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -83,10 +83,10 @@ export default function CompanyDetailsPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Card className="border-slate-200 bg-white">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="border-border">
           <CardContent className="p-6">
-            <p className="text-white">Company not found</p>
+            <p className="text-foreground">Company not found</p>
           </CardContent>
         </Card>
       </div>
@@ -94,27 +94,27 @@ export default function CompanyDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin/companies')}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
             <h1 className="text-3xl font-bold">{data.company.company_name}</h1>
-            <p className="text-gray-400">Company Details</p>
+            <p className="text-muted-foreground">Company Details</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Card className="bg-gradient-to-br from-blue-900/20 to-blue-600/10 border-blue-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-400">Job Postings</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Job Postings</CardTitle>
               <Briefcase className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
@@ -124,7 +124,7 @@ export default function CompanyDetailsPage() {
 
           <Card className="bg-gradient-to-br from-orange-900/20 to-orange-600/10 border-orange-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-400">Applications</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Applications</CardTitle>
               <FileText className="h-4 w-4 text-orange-400" />
             </CardHeader>
             <CardContent>
@@ -133,34 +133,34 @@ export default function CompanyDetailsPage() {
           </Card>
         </div>
 
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardHeader>
             <CardTitle>Company Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm text-gray-400">Company Name</label>
-              <p className="text-white font-medium">{data.company.company_name}</p>
+              <label className="text-sm text-muted-foreground">Company Name</label>
+              <p className="text-foreground font-medium">{data.company.company_name}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">Domain</label>
-              <p className="text-white">{data.company.company_domain}</p>
+              <label className="text-sm text-muted-foreground">Domain</label>
+              <p className="text-foreground">{data.company.company_domain}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">Company Email</label>
-              <p className="text-white">{data.company.company_email || 'N/A'}</p>
+              <label className="text-sm text-muted-foreground">Company Email</label>
+              <p className="text-foreground">{data.company.company_email || 'N/A'}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">HR Email</label>
-              <p className="text-white">{data.company.hr_email}</p>
+              <label className="text-sm text-muted-foreground">HR Email</label>
+              <p className="text-foreground">{data.company.hr_email}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">Hiring Manager Email</label>
-              <p className="text-white">{data.company.hiring_manager_email}</p>
+              <label className="text-sm text-muted-foreground">Hiring Manager Email</label>
+              <p className="text-foreground">{data.company.hiring_manager_email}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">Created</label>
-              <p className="text-white">{new Date(data.company.created_at).toLocaleString()}</p>
+              <label className="text-sm text-muted-foreground">Created</label>
+              <p className="text-foreground">{new Date(data.company.created_at).toLocaleString()}</p>
             </div>
           </CardContent>
         </Card>

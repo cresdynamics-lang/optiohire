@@ -310,7 +310,7 @@ export default function SignupQueuePage() {
   const rejectedSignups = signups.filter(s => s.status === 'rejected')
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -345,33 +345,33 @@ export default function SignupQueuePage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+                  <p className="text-sm text-muted-foreground ">Pending</p>
                   <p className="text-2xl font-bold text-yellow-600">{pendingSignups.length}</p>
                 </div>
                 <AlertTriangle className="w-8 h-8 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Approved</p>
+                  <p className="text-sm text-muted-foreground ">Approved</p>
                   <p className="text-2xl font-bold text-green-600">{approvedSignups.length}</p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Rejected</p>
+                  <p className="text-sm text-muted-foreground ">Rejected</p>
                   <p className="text-2xl font-bold text-red-600">{rejectedSignups.length}</p>
                 </div>
                 <XCircle className="w-8 h-8 text-red-600" />
@@ -381,7 +381,7 @@ export default function SignupQueuePage() {
         </div>
 
         {/* Filters */}
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Button
@@ -414,7 +414,7 @@ export default function SignupQueuePage() {
 
         {/* Bulk Actions */}
         {statusFilter === 'pending' && pendingSignups.length > 0 && (
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -435,7 +435,7 @@ export default function SignupQueuePage() {
                       </>
                     )}
                   </Button>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-sm text-muted-foreground ">
                     {selectedSignups.size} selected
                   </span>
                 </div>
@@ -478,7 +478,7 @@ export default function SignupQueuePage() {
         {/* Signups List */}
         <div className="space-y-4">
           {signups.map((signup) => (
-            <Card key={signup.queue_id} className="border-slate-200 bg-white">
+            <Card key={signup.queue_id} className="border-border bg-white">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
                   {statusFilter === 'pending' && (
@@ -510,19 +510,19 @@ export default function SignupQueuePage() {
                       </Badge>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-muted-foreground ">
                         <Mail className="w-4 h-4" />
                         <span>{signup.email}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-muted-foreground ">
                         <Building2 className="w-4 h-4" />
                         <span>{signup.company_name}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-muted-foreground ">
                         <Mail className="w-4 h-4" />
                         <span>{signup.company_email}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-muted-foreground ">
                         <Calendar className="w-4 h-4" />
                         <span>{new Date(signup.created_at).toLocaleDateString()}</span>
                       </div>
@@ -532,7 +532,7 @@ export default function SignupQueuePage() {
                         </div>
                       )}
                       {signup.reviewed_at && (
-                        <div className="col-span-2 text-xs text-gray-500">
+                        <div className="col-span-2 text-xs text-muted-foreground">
                           Reviewed on {new Date(signup.reviewed_at).toLocaleString()}
                         </div>
                       )}
@@ -576,11 +576,11 @@ export default function SignupQueuePage() {
         </div>
 
         {signups.length === 0 && (
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardContent className="pt-6">
               <div className="text-center py-12">
-                <UserCheck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">
+                <UserCheck className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground ">
                   No signups found
                 </p>
               </div>
@@ -591,7 +591,7 @@ export default function SignupQueuePage() {
         {/* Reject Modal */}
         {showRejectModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-md border-slate-200 bg-white">
+            <Card className="w-full max-w-md border-border">
               <CardHeader>
                 <CardTitle>Reject Signup</CardTitle>
                 <CardDescription>
@@ -600,7 +600,7 @@ export default function SignupQueuePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <textarea
-                  className="w-full rounded border border-slate-200 bg-white p-2 text-slate-900"
+                  className="w-full rounded border border-border bg-white p-2 text-foreground"
                   rows={4}
                   placeholder="Enter rejection reason..."
                   value={rejectReason}

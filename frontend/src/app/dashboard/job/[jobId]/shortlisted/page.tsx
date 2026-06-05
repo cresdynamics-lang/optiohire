@@ -355,9 +355,9 @@ export default function ShortlistedPage() {
 
   const getRankIcon = useCallback((rank: number) => {
     if (rank === 1) return <Trophy className="w-5 h-5 text-yellow-500" />
-    if (rank === 2) return <Medal className="w-5 h-5 text-gray-400" />
+    if (rank === 2) return <Medal className="w-5 h-5 text-muted-foreground" />
     if (rank === 3) return <Award className="w-5 h-5 text-amber-600" />
-    return <span className="text-sm font-semibold text-gray-600">#{rank}</span>
+    return <span className="text-sm font-semibold text-muted-foreground">#{rank}</span>
   }, [])
 
   type StatusKey = 'SHORTLIST' | 'SHORTLISTED' | 'FLAG' | 'FLAGGED' | 'REJECT' | 'REJECTED' | 'PENDING'
@@ -386,15 +386,15 @@ export default function ShortlistedPage() {
       if (typeof parsed === 'object' && parsed !== null) {
         return (
           <div className="space-y-1">
-            <p className="font-medium text-gray-900 dark:text-white line-clamp-1">{parsed.overview}</p>
+            <p className="font-medium text-foreground  line-clamp-1">{parsed.overview}</p>
             <div className="flex gap-2 text-[10px]">
               {parsed.strengths?.length > 0 && (
-                <span className="text-green-600 dark:text-green-400 font-semibold">
+                <span className="text-green-600  font-semibold">
                   {parsed.strengths.length} Strengths
                 </span>
               )}
               {parsed.weaknesses?.length > 0 && (
-                <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                <span className="text-amber-600  font-semibold">
                   {parsed.weaknesses.length} Gaps
                 </span>
               )}
@@ -411,8 +411,8 @@ export default function ShortlistedPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="min-h-screen bg-background ">
+        <div className="sticky top-0 z-10 bg-background/95 /95 backdrop-blur-md border-b border-border dark:border-gray-800 shadow-sm">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <TopNavigation />
@@ -425,7 +425,7 @@ export default function ShortlistedPage() {
               <div className="text-center">
                 <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <p className="text-red-500 text-lg font-semibold mb-2">Failed to load candidates</p>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+                <p className="text-muted-foreground  mb-4">{error}</p>
                 <Button
                   onClick={fetchCandidates}
                   className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
@@ -441,9 +441,9 @@ export default function ShortlistedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-background ">
       {/* Top Navigation */}
-      <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="sticky top-0 z-10 bg-background/95 /95 backdrop-blur-md border-b border-border dark:border-gray-800 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <TopNavigation />
@@ -468,7 +468,7 @@ export default function ShortlistedPage() {
             Back to Jobs
           </Button>
           
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground ">
             <Home className="w-4 h-4" />
             <span>/</span>
             <Briefcase className="w-4 h-4" />
@@ -489,7 +489,7 @@ export default function ShortlistedPage() {
                     <Loader2 className="h-4 w-4 animate-spin ml-2 text-[#2D2DDD]" />
                   )}
                 </CardTitle>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground  mt-1">
                   Ranked from top shortlisted to last rejected. Updates every 30s.
                 </p>
               </div>
@@ -509,12 +509,12 @@ export default function ShortlistedPage() {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-[#2D2DDD]" />
-                <p className="text-gray-600 dark:text-gray-400">Loading candidates...</p>
+                <p className="text-muted-foreground ">Loading candidates...</p>
               </div>
             </div>
           ) : (
           <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/50 p-3 rounded-xl border border-slate-200 dark:border-gray-800">
+            <div className="flex items-center gap-3 bg-background /50 p-3 rounded-xl border border-border dark:border-gray-800">
               <input
                 type="checkbox"
                 id="select-all"
@@ -522,7 +522,7 @@ export default function ShortlistedPage() {
                 onChange={toggleSelectAll}
                 className="rounded border-gray-300 accent-[#2D2DDD] w-4 h-4 cursor-pointer"
               />
-              <label htmlFor="select-all" className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+              <label htmlFor="select-all" className="text-sm font-medium text-slate-700  cursor-pointer">
                 Select All ({selectedIds.size} selected)
               </label>
             </div>
@@ -530,16 +530,16 @@ export default function ShortlistedPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {candidates.length === 0 ? (
                 <div className="col-span-full text-center py-16">
-                  <User className="w-12 h-12 text-slate-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-medium text-slate-900 dark:text-white mb-2">No candidates found</h3>
-                  <p className="text-slate-500 dark:text-gray-400">There are no candidates on this job post yet.</p>
+                  <User className="w-12 h-12 text-slate-300  mx-auto mb-4" />
+                  <h3 className="text-xl font-medium text-foreground  mb-2">No candidates found</h3>
+                  <p className="text-muted-foreground ">There are no candidates on this job post yet.</p>
                 </div>
               ) : (
                 candidates.map((candidate) => {
                   const linkedInUrl = getLinkedInUrl(candidate)
                   return (
                     <Dialog key={candidate.id}>
-                      <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md hover:border-[#2D2DDD]/40 transition-all cursor-pointer group flex flex-col h-full relative">
+                      <Card className="border border-border dark:border-gray-800  shadow-sm hover:shadow-md hover:border-[#2D2DDD]/40 transition-all cursor-pointer group flex flex-col h-full relative">
                         <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
@@ -552,14 +552,14 @@ export default function ShortlistedPage() {
                         <DialogTrigger asChild>
                           <div className="p-5 flex flex-col h-full w-full text-left outline-none pt-8">
                             <div className="flex items-center gap-3 mb-4">
-                              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                                {candidate.rank ? getRankIcon(candidate.rank) : <User className="w-5 h-5 text-gray-400" />}
+                              <div className="w-12 h-12 rounded-full bg-slate-100  flex items-center justify-center shrink-0">
+                                {candidate.rank ? getRankIcon(candidate.rank) : <User className="w-5 h-5 text-muted-foreground" />}
                               </div>
                               <div className="overflow-hidden">
-                                <h3 className="font-semibold text-slate-900 dark:text-white truncate" title={cleanCandidateName(candidate.candidate_name)}>
+                                <h3 className="font-semibold text-foreground  truncate" title={cleanCandidateName(candidate.candidate_name)}>
                                   {cleanCandidateName(candidate.candidate_name)}
                                 </h3>
-                                <p className="text-xs text-slate-500 dark:text-gray-400 truncate" title={candidate.email}>
+                                <p className="text-xs text-muted-foreground  truncate" title={candidate.email}>
                                   {candidate.email}
                                 </p>
                               </div>
@@ -567,16 +567,22 @@ export default function ShortlistedPage() {
                             
                             <div className="flex items-center justify-between mt-auto mb-3">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-xs font-medium text-slate-500 dark:text-gray-400">Score:</span>
+                                <span className="text-xs font-medium text-muted-foreground ">Score:</span>
                                 {candidate.score !== null && candidate.score !== undefined && typeof candidate.score === 'number' ? (
-                                  <span className="font-bold text-[#2D2DDD] dark:text-white">
+                                  <span className="font-bold text-[#2D2DDD] ">
                                     {Number(candidate.score).toFixed(1)}
                                   </span>
                                 ) : (
-                                  <span className="text-gray-400">-</span>
+                                  <span className="text-muted-foreground">-</span>
                                 )}
                               </div>
                               {getStatusBadge(candidate.status)}
+                            </div>
+                            
+                            <div className="mt-2 w-full border-t border-border dark:border-gray-800 pt-3">
+                              <Button variant="outline" className="w-full text-xs font-medium hover:bg-[#2D2DDD] hover:text-white transition-colors" size="sm">
+                                View & Take Action →
+                              </Button>
                             </div>
                           </div>
                         </DialogTrigger>
@@ -587,16 +593,16 @@ export default function ShortlistedPage() {
                           </DialogHeader>
                           <div className="space-y-6 py-4">
                             <div className="flex items-center gap-4">
-                              <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                                {candidate.rank ? getRankIcon(candidate.rank) : <User className="w-8 h-8 text-gray-400" />}
+                              <div className="w-16 h-16 rounded-full bg-slate-100  flex items-center justify-center shrink-0">
+                                {candidate.rank ? getRankIcon(candidate.rank) : <User className="w-8 h-8 text-muted-foreground" />}
                               </div>
                               <div>
                                 <h3 className="text-xl font-bold">{cleanCandidateName(candidate.candidate_name)}</h3>
-                                <p className="text-slate-500">{candidate.email}</p>
+                                <p className="text-muted-foreground">{candidate.email}</p>
                               </div>
                               <div className="ml-auto">
                                 {linkedInUrl && (
-                                  <a href={linkedInUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                                  <a href={linkedInUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 bg-blue-50 /20 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
                                     <Linkedin className="w-4 h-4" /> LinkedIn
                                   </a>
                                 )}
@@ -604,13 +610,13 @@ export default function ShortlistedPage() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                              <div className="p-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50">
-                                <span className="text-sm text-slate-500 block mb-1">Status</span>
+                              <div className="p-4 rounded-xl border border-border dark:border-gray-800 bg-background /50">
+                                <span className="text-sm text-muted-foreground block mb-1">Status</span>
                                 {getStatusBadge(candidate.status)}
                               </div>
-                              <div className="p-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50">
-                                <span className="text-sm text-slate-500 block mb-1">AI Score</span>
-                                <span className="font-bold text-xl text-[#2D2DDD] dark:text-white">
+                              <div className="p-4 rounded-xl border border-border dark:border-gray-800 bg-background /50">
+                                <span className="text-sm text-muted-foreground block mb-1">AI Score</span>
+                                <span className="font-bold text-xl text-[#2D2DDD] ">
                                   {candidate.score !== null && candidate.score !== undefined && typeof candidate.score === 'number' 
                                     ? Number(candidate.score).toFixed(1) 
                                     : '-'}
@@ -623,12 +629,12 @@ export default function ShortlistedPage() {
                                 <Sparkles className="w-5 h-5 text-[#2D2DDD]" />
                                 AI Reasoning
                               </h4>
-                              <div className="p-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                              <div className="p-4 rounded-xl border border-border dark:border-gray-800 bg-background /50 text-sm leading-relaxed text-slate-700 ">
                                 {renderReasoning(candidate.reasoning)}
                               </div>
                             </div>
                             
-                            <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-gray-800">
+                            <div className="flex gap-3 pt-4 border-t border-border dark:border-gray-800">
                               {candidate.status !== 'HIRED' && candidate.status !== 'REJECTED' && (
                                 candidate.interview_status === 'SCHEDULED' || candidate.interview_time ? (
                                   <>
@@ -714,8 +720,8 @@ export default function ShortlistedPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Messages Sent!</h3>
-              <p className="text-sm text-gray-600">{selectedIds.size} email{selectedIds.size > 1 ? 's' : ''} sent successfully.</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Messages Sent!</h3>
+              <p className="text-sm text-muted-foreground">{selectedIds.size} email{selectedIds.size > 1 ? 's' : ''} sent successfully.</p>
             </div>
           ) : (
             <div className="space-y-4 py-2">

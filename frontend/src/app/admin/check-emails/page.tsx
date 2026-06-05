@@ -152,15 +152,15 @@ export default function CheckEmailsPage() {
   if (!user || user.role !== 'admin') return null
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Check & Send Missing Emails</h1>
-            <p className="text-slate-500">Review missing feedback emails and send them manually.</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Check & Send Missing Emails</h1>
+            <p className="text-muted-foreground">Review missing feedback emails and send them manually.</p>
           </div>
-          <Button onClick={loadData} variant="outline" className="flex items-center gap-2 text-slate-700 bg-white border-slate-300">
+          <Button onClick={loadData} variant="outline" className="flex items-center gap-2 text-slate-700 bg-white border-border">
             <RefreshCw className="w-4 h-4" /> Refresh
           </Button>
         </div>
@@ -177,7 +177,7 @@ export default function CheckEmailsPage() {
         )}
 
         {/* Missing Emails Table */}
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-100">
             <div>
               <CardTitle className="text-xl">Missing Emails ({missingList.length})</CardTitle>
@@ -188,7 +188,7 @@ export default function CheckEmailsPage() {
                 variant="outline"
                 disabled={sending || selectedIds.size === 0}
                 onClick={() => handleSend(Array.from(selectedIds))}
-                className="text-slate-700 border-slate-300 bg-white"
+                className="text-slate-700 border-border bg-white"
               >
                 Send Selected ({selectedIds.size})
               </Button>
@@ -206,12 +206,12 @@ export default function CheckEmailsPage() {
             {missingList.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left text-slate-600">
-                  <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+                  <thead className="text-xs text-muted-foreground uppercase bg-background border-b border-slate-100">
                     <tr>
                       <th className="p-4 w-12">
                         <input
                           type="checkbox"
-                          className="w-4 h-4 rounded border-slate-300"
+                          className="w-4 h-4 rounded border-border"
                           checked={selectedIds.size === missingList.length && missingList.length > 0}
                           onChange={toggleSelectAll}
                         />
@@ -224,23 +224,23 @@ export default function CheckEmailsPage() {
                   </thead>
                   <tbody>
                     {missingList.map((m) => (
-                      <tr key={m.applicationId} className="border-b border-slate-50 hover:bg-slate-50/50">
+                      <tr key={m.applicationId} className="border-b border-slate-50 hover:bg-background/50">
                         <td className="p-4">
                           <input
                             type="checkbox"
-                            className="w-4 h-4 rounded border-slate-300"
+                            className="w-4 h-4 rounded border-border"
                             checked={selectedIds.has(m.applicationId)}
                             onChange={() => toggleSelectRow(m.applicationId)}
                           />
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-medium text-slate-900">{m.candidateName}</div>
-                          <div className="text-slate-500 text-xs">{m.candidateEmail}</div>
+                          <div className="font-medium text-foreground">{m.candidateName}</div>
+                          <div className="text-muted-foreground text-xs">{m.candidateEmail}</div>
                         </td>
                         <td className="py-3 px-4 text-slate-700">{m.jobTitle}</td>
                         <td className="py-3 px-4">
-                          <div className="font-medium text-slate-900">{m.companyName}</div>
-                          <div className="text-slate-500 text-xs">{m.companyEmail}</div>
+                          <div className="font-medium text-foreground">{m.companyName}</div>
+                          <div className="text-muted-foreground text-xs">{m.companyEmail}</div>
                         </td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-1 rounded-md text-xs font-medium ${
@@ -257,7 +257,7 @@ export default function CheckEmailsPage() {
                 </table>
               </div>
             ) : (
-              <div className="p-8 text-center text-slate-500">
+              <div className="p-8 text-center text-muted-foreground">
                 No missing emails found.
               </div>
             )}
@@ -266,7 +266,7 @@ export default function CheckEmailsPage() {
 
         {/* Results */}
         {results && (
-          <Card className="border-slate-200 bg-white mt-6">
+          <Card className="border-border mt-6">
             <CardHeader>
               <CardTitle>Operation Results</CardTitle>
             </CardHeader>

@@ -13,7 +13,8 @@ import {
   Shield,
   Mail,
   Target,
-  HelpCircle
+  HelpCircle,
+  LogOut
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, usePathname } from 'next/navigation'
@@ -246,6 +247,33 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
             </button>
           )}
         </nav>
+
+        {/* Footer with HR Profile and Logout */}
+        <div className="mt-auto border-t border-slate-200/90 bg-slate-50/50 p-4 dark:border-gray-800 dark:bg-gray-900/50">
+          <div className="flex items-center gap-3">
+             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 dark:bg-gray-800 dark:text-gray-300">
+               {user?.name ? user.name.charAt(0).toUpperCase() : <Settings className="h-5 w-5" />}
+             </div>
+             <div className="flex-1 min-w-0">
+               <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
+                 {user?.name || 'HR Professional'}
+               </p>
+               <p className="truncate text-xs text-slate-500 dark:text-gray-400">
+                 {user?.email || 'hr@company.com'}
+               </p>
+             </div>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem('token')
+              router.push('/auth/signin')
+            }}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-red-600 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-200 dark:hover:bg-gray-700 dark:hover:text-red-400"
+          >
+            <LogOut className="h-4 w-4" />
+            Log Out
+          </button>
+        </div>
 
       </div>
     </div>

@@ -213,7 +213,7 @@ export default function SystemSettingsPage() {
   const generalSettings = settings.filter(s => s.category !== 'features')
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
@@ -247,7 +247,7 @@ export default function SystemSettingsPage() {
         </motion.div>
 
         {/* Tabs */}
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
               <Button
@@ -279,7 +279,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'settings' && (
           <div className="space-y-4">
             {generalSettings.map((setting) => (
-              <Card key={setting.setting_id} className="border-slate-200 bg-white">
+              <Card key={setting.setting_id} className="border-border bg-white">
                 <CardHeader>
                   <CardTitle className="text-lg">{setting.setting_key}</CardTitle>
                   {setting.description && (
@@ -358,7 +358,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'features' && (
           <div className="space-y-4">
             {featureFlags.map((flag) => (
-              <Card key={flag.setting_id} className="border-slate-200 bg-white">
+              <Card key={flag.setting_id} className="border-border bg-white">
                 <CardHeader>
                   <CardTitle className="text-lg">{flag.setting_key}</CardTitle>
                   {flag.description && (
@@ -371,7 +371,7 @@ export default function SystemSettingsPage() {
                       {flag.setting_value ? (
                         <CheckCircle className="w-5 h-5 text-green-600" />
                       ) : (
-                        <AlertCircle className="w-5 h-5 text-gray-400" />
+                        <AlertCircle className="w-5 h-5 text-muted-foreground" />
                       )}
                       <span className="font-medium">
                         {flag.setting_value ? 'Enabled' : 'Disabled'}
@@ -407,7 +407,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'workflows' && (
           <div className="space-y-4">
             {workflows.map((workflow) => (
-              <Card key={workflow.workflow_id} className="border-slate-200 bg-white">
+              <Card key={workflow.workflow_id} className="border-border bg-white">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -446,7 +446,7 @@ export default function SystemSettingsPage() {
                       </Button>
                     </div>
                     {workflow.config && (
-                      <div className="p-3 border border-slate-200 bg-slate-100 rounded text-xs font-mono">
+                      <div className="p-3 border border-border bg-slate-100 rounded text-xs font-mono">
                         {JSON.stringify(workflow.config, null, 2)}
                       </div>
                     )}

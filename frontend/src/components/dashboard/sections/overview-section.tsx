@@ -485,6 +485,7 @@ export function OverviewSection() {
       title: 'Active Jobs',
       value: metrics.activeJobs,
       icon: TrendingUp,
+      tone: 'bg-emerald-600',
       trend: metrics.totalJobs > 0 ? { 
         value: metrics.totalJobs, 
         label: 'total jobs', 
@@ -495,11 +496,13 @@ export function OverviewSection() {
       title: 'Total Jobs',
       value: metrics.totalJobs,
       icon: Briefcase,
+      tone: 'bg-slate-800',
     },
     {
       title: 'Reports Generated',
       value: metrics.totalReports,
       icon: BarChart3,
+      tone: 'bg-teal-500',
       trend: metrics.totalReports > 0 ? { 
         value: metrics.readyReports, 
         label: 'ready reports', 
@@ -510,6 +513,7 @@ export function OverviewSection() {
       title: 'Ready Reports',
       value: metrics.readyReports,
       icon: CheckCircle,
+      tone: 'bg-purple-600',
     },
   ]
 
@@ -882,6 +886,7 @@ export function OverviewSection() {
                 value={metric.value}
                 icon={metric.icon}
                 trend={metric.trend}
+                tone={metric.tone}
                 delay={index * 0.1}
               />
             </div>
@@ -917,61 +922,73 @@ export function OverviewSection() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-              <div data-tour="total-applicants" className="text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center mx-auto mb-3">
-                  <Users className="w-8 h-8 text-white" />
+              <div data-tour="total-applicants" className="relative text-center p-6 rounded-2xl bg-blue-600 overflow-hidden group shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+                <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-base font-figtree font-medium mb-1 text-gray-900 dark:text-white">Total Applicants</h3>
+                <h3 className="text-xs uppercase tracking-wider font-bold mb-1 text-white/80">Total Applicants</h3>
                 {isLoadingAnalytics ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-[#2D2DDD] mx-auto my-2" />
+                  <Loader2 className="w-6 h-6 animate-spin text-white mx-auto my-2" />
                 ) : (
-                  <p className="text-xl font-bold text-blue-600 dark:text-blue-400 font-figtree">{metrics.totalApplicants}</p>
+                  <p className="text-3xl font-bold text-white font-figtree mb-2">{metrics.totalApplicants}</p>
                 )}
-                <p className="text-xs text-gray-600 dark:text-gray-400 font-figtree font-light">
-                  For selected job
-                </p>
+                <div className="flex items-center justify-center gap-1.5">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                   <p className="text-xs text-white/80 font-figtree font-medium">For selected job</p>
+                </div>
               </div>
-              <div data-tour="shortlisted" className="text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center mx-auto mb-3">
-                  <UserCheck className="w-8 h-8 text-white" />
+              <div data-tour="shortlisted" className="relative text-center p-6 rounded-2xl bg-emerald-600 overflow-hidden group shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+                <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center mx-auto mb-3">
+                  <UserCheck className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-base font-figtree font-medium mb-1 text-gray-900 dark:text-white">Shortlisted</h3>
+                <h3 className="text-xs uppercase tracking-wider font-bold mb-1 text-white/80">Shortlisted</h3>
                 {isLoadingAnalytics ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-green-600 dark:text-green-400 mx-auto my-2" />
+                  <Loader2 className="w-6 h-6 animate-spin text-white mx-auto my-2" />
                 ) : (
-                  <p className="text-xl font-bold text-green-600 dark:text-green-400 font-figtree">{metrics.shortlistedApplicants}</p>
+                  <p className="text-3xl font-bold text-white font-figtree mb-2">{metrics.shortlistedApplicants}</p>
                 )}
-                <p className="text-xs text-gray-600 dark:text-gray-400 font-figtree font-light">
-                  {metrics.totalApplicants > 0 ? Math.round((metrics.shortlistedApplicants / metrics.totalApplicants) * 100) : 0}% of total
-                </p>
+                <div className="flex items-center justify-center gap-1.5">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                   <p className="text-xs text-white/80 font-figtree font-medium">
+                     {metrics.totalApplicants > 0 ? Math.round((metrics.shortlistedApplicants / metrics.totalApplicants) * 100) : 0}% of total
+                   </p>
+                </div>
               </div>
-              <div data-tour="flagged" className="text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 flex items-center justify-center mx-auto mb-3">
-                  <AlertTriangle className="w-8 h-8 text-white" />
+              <div data-tour="flagged" className="relative text-center p-6 rounded-2xl bg-amber-500 overflow-hidden group shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+                <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center mx-auto mb-3">
+                  <AlertTriangle className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-base font-figtree font-medium mb-1 text-gray-900 dark:text-white">Flagged</h3>
+                <h3 className="text-xs uppercase tracking-wider font-bold mb-1 text-white/80">Flagged</h3>
                 {isLoadingAnalytics ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-yellow-600 dark:text-yellow-400 mx-auto my-2" />
+                  <Loader2 className="w-6 h-6 animate-spin text-white mx-auto my-2" />
                 ) : (
-                  <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400 font-figtree">{metrics.flaggedApplicants}</p>
+                  <p className="text-3xl font-bold text-white font-figtree mb-2">{metrics.flaggedApplicants}</p>
                 )}
-                <p className="text-xs text-gray-600 dark:text-gray-400 font-figtree font-light">
-                  Require review
-                </p>
+                <div className="flex items-center justify-center gap-1.5">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                   <p className="text-xs text-white/80 font-figtree font-medium">Require review</p>
+                </div>
               </div>
-              <div data-tour="rejected" className="text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center mx-auto mb-3">
-                  <UserX className="w-8 h-8 text-white" />
+              <div data-tour="rejected" className="relative text-center p-6 rounded-2xl bg-red-600 overflow-hidden group shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20">
+                <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+                <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center mx-auto mb-3">
+                  <UserX className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-base font-figtree font-medium mb-1 text-gray-900 dark:text-white">Rejected</h3>
+                <h3 className="text-xs uppercase tracking-wider font-bold mb-1 text-white/80">Rejected</h3>
                 {isLoadingAnalytics ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-red-600 dark:text-red-400 mx-auto my-2" />
+                  <Loader2 className="w-6 h-6 animate-spin text-white mx-auto my-2" />
                 ) : (
-                  <p className="text-xl font-bold text-red-600 dark:text-red-400 font-figtree">{metrics.rejectedApplicants}</p>
+                  <p className="text-3xl font-bold text-white font-figtree mb-2">{metrics.rejectedApplicants}</p>
                 )}
-                <p className="text-xs text-gray-600 dark:text-gray-400 font-figtree font-light">
-                  {metrics.totalApplicants > 0 ? Math.round((metrics.rejectedApplicants / metrics.totalApplicants) * 100) : 0}% of total
-                </p>
+                <div className="flex items-center justify-center gap-1.5">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                   <p className="text-xs text-white/80 font-figtree font-medium">
+                     {metrics.totalApplicants > 0 ? Math.round((metrics.rejectedApplicants / metrics.totalApplicants) * 100) : 0}% of total
+                   </p>
+                </div>
               </div>
             </div>
           </CardContent>

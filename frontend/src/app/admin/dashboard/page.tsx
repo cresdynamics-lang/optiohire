@@ -160,7 +160,7 @@ export default function AdminDashboardOverview() {
       value: stats?.users.total || 0,
       subtitle: `${stats?.users.active || 0} active`,
       icon: Users,
-      tone: 'bg-blue-950/40 text-blue-300 border border-blue-800/40',
+      tone: 'bg-slate-800', // Deep Blue/Navy
       link: '/admin/users',
     },
     {
@@ -168,7 +168,7 @@ export default function AdminDashboardOverview() {
       value: stats?.companies || 0,
       subtitle: 'Registered organizations',
       icon: Building2,
-      tone: 'bg-emerald-950/40 text-emerald-300 border border-emerald-800/40',
+      tone: 'bg-red-600', // Crimson
       link: '/admin/companies',
     },
     {
@@ -176,7 +176,7 @@ export default function AdminDashboardOverview() {
       value: stats?.job_postings.total || 0,
       subtitle: `${stats?.job_postings.active || 0} active`,
       icon: Briefcase,
-      tone: 'bg-violet-950/40 text-violet-300 border border-violet-800/40',
+      tone: 'bg-emerald-600', // Green
       link: '/admin/jobs',
     },
     {
@@ -184,7 +184,7 @@ export default function AdminDashboardOverview() {
       value: stats?.applications.total || 0,
       subtitle: `${stats?.applications.shortlisted || 0} shortlisted`,
       icon: FileText,
-      tone: 'bg-amber-950/40 text-amber-300 border border-amber-800/40',
+      tone: 'bg-amber-500', // Yellow/Amber
       link: '/admin/applications',
     },
     {
@@ -192,7 +192,7 @@ export default function AdminDashboardOverview() {
       value: stats?.users.admins || 0,
       subtitle: 'System administrators',
       icon: Shield,
-      tone: 'bg-rose-950/40 text-rose-300 border border-rose-800/40',
+      tone: 'bg-purple-600', // Purple
       link: '/admin?section=admins',
     },
     {
@@ -200,7 +200,7 @@ export default function AdminDashboardOverview() {
       value: stats?.reports || 0,
       subtitle: 'Total reports',
       icon: BarChart3,
-      tone: 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40',
+      tone: 'bg-teal-500', // Teal/Light Blue
       link: '/admin/analytics',
     },
   ]
@@ -254,23 +254,32 @@ export default function AdminDashboardOverview() {
             return (
               <div key={stat.title}>
                 <Link href={stat.link}>
-                  <Card className="group cursor-pointer border border-zinc-800 bg-zinc-900/80 shadow-sm transition-all hover:-translate-y-0.5 hover:border-zinc-700 hover:shadow-lg hover:shadow-black/30">
-                    <CardHeader className="pb-3">
+                  <Card className={`group cursor-pointer border-0 ${stat.tone} shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 overflow-hidden relative`}>
+                    {/* Decorative subtle circles in background to match premium feel */}
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+                    <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 rounded-full bg-white/10 blur-lg"></div>
+                    
+                    <CardHeader className="pb-3 relative z-10">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium text-zinc-400">{stat.title}</CardTitle>
-                        <div className={`rounded-lg p-2 ${stat.tone}`}>
-                          <Icon className="h-5 w-5" />
+                        <div className="flex items-center gap-2">
+                          <div className="rounded-lg p-2 bg-white/20 text-white">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <CardTitle className="text-sm font-bold text-white uppercase tracking-wider">{stat.title}</CardTitle>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="relative z-10">
                       <div className="mb-2 flex items-end justify-between">
-                        <p className="text-3xl font-semibold tracking-tight text-zinc-100">
+                        <p className="text-4xl font-bold tracking-tight text-white">
                           {stat.value.toLocaleString()}
                         </p>
-                        <ArrowRight className="h-4 w-4 text-zinc-500 transition-transform group-hover:translate-x-0.5" />
+                        <ArrowRight className="h-5 w-5 text-white/80 transition-transform group-hover:translate-x-1" />
                       </div>
-                      <p className="text-xs text-zinc-500">{stat.subtitle}</p>
+                      <div className="flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                         <p className="text-xs font-medium text-white/80">{stat.subtitle}</p>
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>

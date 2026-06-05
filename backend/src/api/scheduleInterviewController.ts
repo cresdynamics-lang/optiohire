@@ -264,9 +264,21 @@ export async function updateInterview(req: Request, res: Response) {
         const candidateName = application.candidate_name || 'Candidate'
         const companyName = company.company_name || 'Company'
 
-        // Wait, EmailService does not have sendInterviewUpdate yet! I will add it.
-        // For now, I'll log it.
-        logger.info('Update interview logic succeeded.')
+        await emailService.sendInterviewUpdated(
+          application.email,
+          hrEmail,
+          interviewTime,
+          cleanedJobTitle
+        );
+
+        await emailService.sendHRInterviewUpdated(
+          hrEmail,
+          candidateName,
+          interviewTime,
+          cleanedJobTitle
+        );
+
+        logger.info('Update interview logic succeeded.');
       } catch (err: any) {
         logger.error('Error in update interview background job:', err)
       }

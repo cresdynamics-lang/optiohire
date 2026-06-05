@@ -64,7 +64,7 @@ export default function SecurityLogsPage() {
   const flaggedCount = logs.filter(l => l.action_taken === 'FLAGGED').length
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header */}
@@ -73,8 +73,8 @@ export default function SecurityLogsPage() {
             <div className="flex items-center gap-3">
               <ShieldAlert className="w-8 h-8 text-red-600" />
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Security Audit Logs</h1>
-                <p className="text-sm text-slate-500">Prompt injection detections and CV scan results</p>
+                <h1 className="text-2xl font-bold text-foreground">Security Audit Logs</h1>
+                <p className="text-sm text-muted-foreground">Prompt injection detections and CV scan results</p>
               </div>
             </div>
             <Button variant="outline" onClick={load} disabled={loading}>
@@ -124,12 +124,12 @@ export default function SecurityLogsPage() {
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
+                <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : logs.length === 0 ? (
               <div className="text-center py-12">
                 <ShieldCheck className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                <p className="text-slate-500">No scan logs found — all clear!</p>
+                <p className="text-muted-foreground">No scan logs found — all clear!</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -142,7 +142,7 @@ export default function SecurityLogsPage() {
                       key={log.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="flex items-start gap-4 p-4 rounded-lg border border-slate-200 bg-white hover:shadow-sm transition-shadow"
+                      className="flex items-start gap-4 p-4 rounded-lg border border-border bg-white hover:shadow-sm transition-shadow"
                     >
                       <div className={`rounded-full p-2 ${sevConf.color}`}>
                         <SevIcon className="w-4 h-4" />
@@ -165,7 +165,7 @@ export default function SecurityLogsPage() {
                             Patterns: {log.detected_patterns.join(' | ')}
                           </p>
                         )}
-                        <div className="flex items-center gap-4 mt-1 text-xs text-slate-400">
+                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                           <span>{new Date(log.scan_date).toLocaleString()}</span>
                           {log.ai_score_original != null && <span>AI Score: {log.ai_score_original}</span>}
                           {log.rule_score != null && <span>Rule Score: {log.rule_score}</span>}

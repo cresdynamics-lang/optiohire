@@ -278,13 +278,13 @@ export default function ActivityTrackingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Error Display */}
         {error && (
           <Card className="border-red-700/50 bg-red-900/20">
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+              <div className="flex items-center gap-2 text-red-600 ">
                 <AlertCircle className="w-5 h-5" />
                 <span>{error}</span>
               </div>
@@ -319,7 +319,7 @@ export default function ActivityTrackingPage() {
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value as '7d' | '30d' | '90d' | 'all')}
-              className="px-3 py-2 rounded border border-slate-200 bg-white text-sm text-slate-900"
+              className="px-3 py-2 rounded border border-border bg-white text-sm text-foreground"
             >
               <option value="7d">Last 7 days</option>
               <option value="30d">Last 30 days</option>
@@ -337,7 +337,7 @@ export default function ActivityTrackingPage() {
         {telemetry && !telemetryLoading && (
           <div className="space-y-6">
             {/* Activity Over Time - Line Chart */}
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
@@ -368,7 +368,7 @@ export default function ActivityTrackingPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Action Types Distribution - Pie Chart */}
-              <Card className="border-slate-200 bg-white">
+              <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="w-5 h-5" />
@@ -400,7 +400,7 @@ export default function ActivityTrackingPage() {
               </Card>
 
               {/* Status Code Distribution - Pie Chart */}
-              <Card className="border-slate-200 bg-white">
+              <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="w-5 h-5" />
@@ -434,7 +434,7 @@ export default function ActivityTrackingPage() {
 
             {/* Top Users - Bar Chart */}
             {telemetry.topUsers.length > 0 && (
-              <Card className="border-slate-200 bg-white">
+              <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
@@ -466,7 +466,7 @@ export default function ActivityTrackingPage() {
 
             {/* Response Time Distribution - Bar Chart */}
             {telemetry.responseTimeDistribution.length > 0 && (
-              <Card className="border-slate-200 bg-white">
+              <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="w-5 h-5" />
@@ -490,7 +490,7 @@ export default function ActivityTrackingPage() {
 
             {/* Top Endpoints - Bar Chart */}
             {telemetry.topEndpoints.length > 0 && (
-              <Card className="border-slate-200 bg-white">
+              <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="w-5 h-5" />
@@ -525,57 +525,63 @@ export default function ActivityTrackingPage() {
         {/* Performance Metrics */}
         {metrics && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <Card className="border-slate-200 bg-white">
-              <CardContent className="pt-6">
+            <Card className="border-0 bg-slate-800 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+              <CardContent className="pt-6 relative z-10">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Requests</p>
-                  <p className="text-2xl font-bold">{metrics.total_requests}</p>
+                  <p className="text-xs uppercase tracking-wider font-bold text-white/80 mb-1">Total</p>
+                  <p className="text-2xl font-bold text-white">{metrics.total_requests}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 bg-white">
-              <CardContent className="pt-6">
+            <Card className="border-0 bg-teal-500 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+              <CardContent className="pt-6 relative z-10">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Avg Response</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-xs uppercase tracking-wider font-bold text-white/80 mb-1">Avg</p>
+                  <p className="text-2xl font-bold text-white">
                     {metrics.avg_response_time ? `${Math.round(Number(metrics.avg_response_time))}ms` : 'N/A'}
                   </p>
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
+            <Card className="border-0 bg-purple-600 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+              <CardContent className="pt-6 relative z-10">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Median Response</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-xs uppercase tracking-wider font-bold text-white/80 mb-1">Median</p>
+                  <p className="text-2xl font-bold text-white">
                     {metrics.median_response_time ? `${Math.round(Number(metrics.median_response_time))}ms` : 'N/A'}
                   </p>
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
+            <Card className="border-0 bg-amber-500 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+              <CardContent className="pt-6 relative z-10">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">P95 Response</p>
-                  <p className="text-2xl font-bold text-indigo-600">
+                  <p className="text-xs uppercase tracking-wider font-bold text-white/80 mb-1">P95</p>
+                  <p className="text-2xl font-bold text-white">
                     {metrics.p95_response_time ? `${Math.round(Number(metrics.p95_response_time))}ms` : 'N/A'}
                   </p>
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
+            <Card className="border-0 bg-emerald-600 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+              <CardContent className="pt-6 relative z-10">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Success</p>
-                  <p className="text-2xl font-bold text-green-600">{metrics.success_count}</p>
+                  <p className="text-xs uppercase tracking-wider font-bold text-white/80 mb-1">Success</p>
+                  <p className="text-2xl font-bold text-white">{metrics.success_count}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
+            <Card className="border-0 bg-red-600 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10 blur-md"></div>
+              <CardContent className="pt-6 relative z-10">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Errors</p>
-                  <p className="text-2xl font-bold text-red-600">{metrics.error_count}</p>
+                  <p className="text-xs uppercase tracking-wider font-bold text-white/80 mb-1">Errors</p>
+                  <p className="text-2xl font-bold text-white">{metrics.error_count}</p>
                 </div>
               </CardContent>
             </Card>
@@ -583,14 +589,14 @@ export default function ActivityTrackingPage() {
         )}
 
         {/* Filters */}
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 flex-wrap">
-              <Filter className="w-4 h-4 text-gray-400" />
+              <Filter className="w-4 h-4 text-muted-foreground" />
               <select
                 value={actionFilter}
                 onChange={(e) => setActionFilter(e.target.value)}
-                className="px-3 py-2 rounded border border-slate-200 bg-white text-slate-900"
+                className="px-3 py-2 rounded border border-border bg-white text-foreground"
               >
                 <option value="all">All Actions</option>
                 <option value="api_call">API Calls</option>
@@ -603,7 +609,7 @@ export default function ActivityTrackingPage() {
                 placeholder="Filter by User ID..."
                 value={userIdFilter}
                 onChange={(e) => setUserIdFilter(e.target.value)}
-                className="px-3 py-2 rounded border border-slate-200 bg-white text-slate-900"
+                className="px-3 py-2 rounded border border-border bg-white text-foreground"
               />
               <Button onClick={loadActivities}>Apply Filters</Button>
             </div>
@@ -613,7 +619,7 @@ export default function ActivityTrackingPage() {
         {/* Activities List */}
         <div className="space-y-4">
           {activities.map((activity) => (
-            <Card key={activity.track_id} className="border-slate-200 bg-white">
+            <Card key={activity.track_id} className="border-border bg-white">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -634,13 +640,13 @@ export default function ActivityTrackingPage() {
                         </Badge>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground ">
                       {activity.user_email && (
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
                           <span>{activity.user_email}</span>
                           {activity.user_name && (
-                            <span className="text-gray-500">({activity.user_name})</span>
+                            <span className="text-muted-foreground">({activity.user_name})</span>
                           )}
                         </div>
                       )}
@@ -663,11 +669,11 @@ export default function ActivityTrackingPage() {
         </div>
 
         {activities.length === 0 && (
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardContent className="pt-6">
               <div className="text-center py-12">
-                <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">
+                <Activity className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground ">
                   No activities found
                 </p>
               </div>
@@ -684,7 +690,7 @@ export default function ActivityTrackingPage() {
           >
             Previous
           </Button>
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-muted-foreground ">
             Page {page}
           </span>
           <Button

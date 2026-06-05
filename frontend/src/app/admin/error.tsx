@@ -18,8 +18,8 @@ export default function AdminError({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-slate-200 bg-white">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-border">
         <CardHeader>
           <div className="flex items-center gap-3">
             <AlertCircle className="w-8 h-8 text-red-500" />
@@ -63,7 +63,7 @@ export default function AdminError({
           </div>
 
           <div className="pt-4 border-t">
-            <p className="text-center text-xs text-slate-500">
+            <p className="text-center text-xs text-muted-foreground">
               If this error persists, please contact support or check the browser console for more details.
             </p>
           </div>

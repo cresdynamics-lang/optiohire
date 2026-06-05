@@ -2424,6 +2424,51 @@ OptioHire Admin Team`
     })
   }
 
+  async sendTalentPoolMatchEmail(data: {
+    candidateEmail: string;
+    candidateName: string | null;
+    jobTitle: string;
+    companyName: string;
+    jobUrl: string;
+  }) {
+    const displayName = getCandidateDisplayName(data.candidateName, data.candidateEmail);
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #1e293b; margin: 0;">New Job Match at ${data.companyName}!</h2>
+        </div>
+        <div style="background-color: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hi ${displayName},</p>
+          <p style="color: #334155; font-size: 16px;">Based on your previous applications, our AI has identified you as a strong match for a newly opened role at <strong>${data.companyName}</strong>:</p>
+          <p style="color: #2D2DDD; font-size: 18px; font-weight: bold; text-align: center; margin: 24px 0;">${data.jobTitle}</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.jobUrl}" style="background-color: #2D2DDD; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">View & Apply Now</a>
+          </div>
+          <p style="color: #334155; font-size: 16px; margin-bottom: 0;">Best regards,<br/>The OptioHire AI Team</p>
+        </div>
+      </div>
+    `;
+
+    const text = `Hi ${displayName},
+    
+Based on your previous applications, our AI has identified you as a strong match for a newly opened role at ${data.companyName}:
+
+${data.jobTitle}
+
+View and Apply here: ${data.jobUrl}
+
+Best regards,
+The OptioHire AI Team`;
+
+    await this.sendEmail({
+      to: data.candidateEmail,
+      subject: `New Job Match: ${data.jobTitle} at ${data.companyName}`,
+      html,
+      text,
+      emailType: 'TalentPoolMatch'
+    });
+  }
+
   async sendSupportTicketSeen(userEmail: string, subject: string) {
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
@@ -2496,11 +2541,19 @@ OptioHire Admin Team`
 
   async sendInterviewUpdated(candidateEmail: string, hrEmail: string, meetingTime: string, jobTitle: string) {
     const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2>Interview Updated</h2>
-        <p>Your interview for <strong>${jobTitle}</strong> has been updated.</p>
-        <p>New time: ${new Date(meetingTime).toLocaleString()}</p>
-        <p>Please contact ${hrEmail} if you have any questions.</p>
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #1e293b; margin: 0;">Interview Schedule Updated</h2>
+        </div>
+        <div style="background-color: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hello,</p>
+          <p style="color: #334155; font-size: 16px;">Your interview for the <strong>${jobTitle}</strong> position has been updated.</p>
+          <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; margin: 20px 0;">
+            <p style="color: #166534; margin: 0; font-size: 16px;"><strong>New time:</strong> ${new Date(meetingTime).toLocaleString()}</p>
+          </div>
+          <p style="color: #334155; font-size: 16px;">Please contact ${hrEmail} if you have any questions or need to request another change.</p>
+          <p style="color: #334155; font-size: 16px; margin-bottom: 0;">Best regards,<br/>The OptioHire Team</p>
+        </div>
       </div>
     `;
     await this.sendEmail({
@@ -2514,10 +2567,17 @@ OptioHire Admin Team`
 
   async sendHRInterviewUpdated(hrEmail: string, candidateName: string, meetingTime: string, jobTitle: string) {
     const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2>Interview Updated</h2>
-        <p>The interview with <strong>${candidateName}</strong> for <strong>${jobTitle}</strong> has been updated.</p>
-        <p>New time: ${new Date(meetingTime).toLocaleString()}</p>
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #1e293b; margin: 0;">Interview Updated</h2>
+        </div>
+        <div style="background-color: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hello,</p>
+          <p style="color: #334155; font-size: 16px;">The interview with <strong>${candidateName}</strong> for the <strong>${jobTitle}</strong> role has been updated.</p>
+          <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; margin: 20px 0;">
+            <p style="color: #166534; margin: 0; font-size: 16px;"><strong>New time:</strong> ${new Date(meetingTime).toLocaleString()}</p>
+          </div>
+        </div>
       </div>
     `;
     await this.sendEmail({

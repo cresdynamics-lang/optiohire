@@ -366,6 +366,15 @@ export async function createJobPosting(req: Request, res: Response) {
       }
     }
 
+    // Trigger Talent Pool Matching logic via aiWorker
+    try {
+      const { aiQueue } = await import('../queues/aiQueue.js');
+      await aiQueue.add('talent-pool-match', { jobPostingId });
+      logger.info(`Queued talent pool matching for job: ${jobPostingId}`);
+    } catch (queueErr) {
+      logger.error('Failed to queue talent pool matching:', queueErr);
+    }
+
     return res.status(201).json({
       success: true,
       job_posting_id: jobPostingId,

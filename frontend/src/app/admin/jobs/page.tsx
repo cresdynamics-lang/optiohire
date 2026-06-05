@@ -203,33 +203,33 @@ export default function AdminJobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900 dark:text-white p-6">
+    <div className="min-h-screen bg-transparent text-foreground  p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"
+            className="text-muted-foreground hover:text-foreground  dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Manage Job Postings</h1>
-            <p className="text-slate-600 dark:text-gray-400">View and manage all job postings</p>
+            <p className="text-slate-600 ">View and manage all job postings</p>
           </div>
         </div>
 
         {error && (
-          <Card className="bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/60 mb-6">
+          <Card className="bg-red-50 /40 border-red-200 dark:border-red-800/60 mb-6">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className="text-red-800 dark:text-red-300">{error}</span>
+                <span className="text-red-800 ">{error}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setError(null)}
-                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                  className="text-red-600 hover:text-red-800  dark:hover:text-red-300"
                 >
                   ×
                 </Button>
@@ -239,15 +239,15 @@ export default function AdminJobsPage() {
         )}
 
         {successMessage && (
-          <Card className="bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/60 mb-6">
+          <Card className="bg-green-50 /40 border-green-200 dark:border-green-800/60 mb-6">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className="text-green-800 dark:text-green-300">{successMessage}</span>
+                <span className="text-green-800 ">{successMessage}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSuccessMessage(null)}
-                  className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                  className="text-green-600 hover:text-green-800  dark:hover:text-green-300"
                 >
                   ×
                 </Button>
@@ -256,11 +256,11 @@ export default function AdminJobsPage() {
           </Card>
         )}
 
-        <Card className="border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm mb-6">
+        <Card className="border-border dark:border-gray-800  shadow-sm mb-6">
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 relative min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-gray-500" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground " />
                 <Input
                   placeholder="Search jobs..."
                   value={search}
@@ -268,7 +268,7 @@ export default function AdminJobsPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 pl-10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-gray-500"
+                  className="border-border dark:border-gray-700 bg-white  pl-10 text-foreground  placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
                 />
               </div>
               <select
@@ -277,7 +277,7 @@ export default function AdminJobsPage() {
                   setStatusFilter(e.target.value)
                   setPage(1)
                 }}
-                className="rounded-md border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2 text-slate-900 dark:text-white"
+                className="rounded-md border border-border dark:border-gray-700 bg-white  px-4 py-2 text-foreground "
               >
                 <option value="">All Status</option>
                 <option value="ACTIVE">Active</option>
@@ -295,7 +295,7 @@ export default function AdminJobsPage() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-foreground ">
                 Job Postings ({total})
               </h2>
             </div>
@@ -303,24 +303,24 @@ export default function AdminJobsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {jobs.map((job) => (
                 <Dialog key={job.job_posting_id}>
-                  <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group flex flex-col h-full relative">
+                  <Card className="border border-border dark:border-gray-800  shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group flex flex-col h-full relative">
                     <DialogTrigger asChild>
                       <div className="p-5 flex flex-col h-full w-full text-left outline-none">
                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="bg-slate-100 dark:bg-gray-800 p-1.5 rounded-full text-slate-500 dark:text-gray-400">
+                          <div className="bg-slate-100  p-1.5 rounded-full text-muted-foreground ">
                             <Eye className="w-4 h-4" />
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3 mb-4">
-                          <div className="w-12 h-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-center shrink-0">
-                            <Briefcase className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                          <div className="w-12 h-12 rounded-lg bg-emerald-50 /20 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-center shrink-0">
+                            <Briefcase className="w-6 h-6 text-emerald-600 " />
                           </div>
                           <div className="overflow-hidden">
-                            <h3 className="font-semibold text-slate-900 dark:text-white truncate" title={job.job_title}>
+                            <h3 className="font-semibold text-foreground  truncate" title={job.job_title}>
                               {job.job_title}
                             </h3>
-                            <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500 dark:text-gray-400 truncate" title={job.company_name}>
+                            <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground  truncate" title={job.company_name}>
                               <Building2 className="w-3.5 h-3.5 shrink-0" />
                               <span className="truncate">{job.company_name}</span>
                             </div>
@@ -352,11 +352,11 @@ export default function AdminJobsPage() {
                       
                       <div className="space-y-6 pt-4">
                         <div className="flex items-start gap-4 pb-4 border-b border-slate-100 dark:border-gray-800">
-                          <div className="w-14 h-14 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-center shrink-0">
-                            <Briefcase className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+                          <div className="w-14 h-14 rounded-lg bg-emerald-50 /20 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-center shrink-0">
+                            <Briefcase className="w-7 h-7 text-emerald-600 " />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                            <h3 className="text-xl font-bold text-foreground  mb-2">
                               {job.job_title}
                             </h3>
                             <Badge 
@@ -373,43 +373,43 @@ export default function AdminJobsPage() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
-                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                              <Building2 className="w-4 h-4 text-slate-500" />
+                          <div className="flex items-start gap-3 text-slate-600 ">
+                            <div className="w-8 h-8 rounded-md bg-slate-100  flex items-center justify-center shrink-0">
+                              <Building2 className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <div className="truncate">
-                              <p className="text-[10px] uppercase font-semibold text-slate-400">Company</p>
-                              <p className="text-slate-900 dark:text-white font-medium truncate">{job.company_name}</p>
+                              <p className="text-[10px] uppercase font-semibold text-muted-foreground">Company</p>
+                              <p className="text-foreground  font-medium truncate">{job.company_name}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
-                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                              <Globe className="w-4 h-4 text-slate-500" />
+                          <div className="flex items-start gap-3 text-slate-600 ">
+                            <div className="w-8 h-8 rounded-md bg-slate-100  flex items-center justify-center shrink-0">
+                              <Globe className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <div className="truncate">
-                              <p className="text-[10px] uppercase font-semibold text-slate-400">Domain</p>
-                              <p className="text-slate-900 dark:text-white font-medium truncate">{job.company_domain}</p>
+                              <p className="text-[10px] uppercase font-semibold text-muted-foreground">Domain</p>
+                              <p className="text-foreground  font-medium truncate">{job.company_domain}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
-                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                              <Calendar className="w-4 h-4 text-slate-500" />
+                          <div className="flex items-start gap-3 text-slate-600 ">
+                            <div className="w-8 h-8 rounded-md bg-slate-100  flex items-center justify-center shrink-0">
+                              <Calendar className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase font-semibold text-slate-400">Created</p>
-                              <p className="text-slate-900 dark:text-white font-medium">{new Date(job.created_at).toLocaleDateString()}</p>
+                              <p className="text-[10px] uppercase font-semibold text-muted-foreground">Created</p>
+                              <p className="text-foreground  font-medium">{new Date(job.created_at).toLocaleDateString()}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
-                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                              <Calendar className="w-4 h-4 text-slate-500" />
+                          <div className="flex items-start gap-3 text-slate-600 ">
+                            <div className="w-8 h-8 rounded-md bg-slate-100  flex items-center justify-center shrink-0">
+                              <Calendar className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase font-semibold text-slate-400">Deadline</p>
-                              <p className="text-slate-900 dark:text-white font-medium">
+                              <p className="text-[10px] uppercase font-semibold text-muted-foreground">Deadline</p>
+                              <p className="text-foreground  font-medium">
                                 {job.application_deadline ? new Date(job.application_deadline).toLocaleDateString() : 'N/A'}
                               </p>
                             </div>
@@ -422,7 +422,7 @@ export default function AdminJobsPage() {
                             variant="outline"
                             onClick={() => resendJobEmail(job.job_posting_id)}
                             disabled={sendingEmail === job.job_posting_id}
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50  dark:border-blue-800 dark:hover:bg-blue-900/30"
                           >
                             {sendingEmail === job.job_posting_id ? (
                               <>
@@ -454,8 +454,8 @@ export default function AdminJobsPage() {
 
             {jobs.length === 0 && (
               <div className="py-12 text-center">
-                <Briefcase className="w-16 h-16 text-slate-300 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-slate-500 dark:text-gray-400">No job postings found</p>
+                <Briefcase className="w-16 h-16 text-slate-300  mx-auto mb-4" />
+                <p className="text-muted-foreground ">No job postings found</p>
               </div>
             )}
 
@@ -465,18 +465,18 @@ export default function AdminJobsPage() {
                   variant="outline"
                   disabled={page === 1}
                   onClick={() => setPage(p => p - 1)}
-                  className="border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                  className="border-border dark:border-gray-800 bg-white "
                 >
                   Previous
                 </Button>
-                <span className="flex items-center px-4 text-slate-500 dark:text-gray-400 font-medium">
+                <span className="flex items-center px-4 text-muted-foreground  font-medium">
                   Page {page} of {Math.ceil(total / 20)}
                 </span>
                 <Button
                   variant="outline"
                   disabled={page >= Math.ceil(total / 20)}
                   onClick={() => setPage(p => p + 1)}
-                  className="border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                  className="border-border dark:border-gray-800 bg-white "
                 >
                   Next
                 </Button>

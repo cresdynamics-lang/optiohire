@@ -111,32 +111,32 @@ export default function SystemStatusPage() {
 
   if (loading && !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-10 w-10 text-slate-300 animate-spin" />
-          <p className="text-slate-400 font-medium tracking-widest uppercase text-xs">Initializing Monitor</p>
+          <p className="text-muted-foreground font-medium tracking-widest uppercase text-xs">Initializing Monitor</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-8 md:p-16 text-slate-900 font-sans selection:bg-slate-900 selection:text-white">
+    <div className="min-h-screen bg-background/50 p-8 md:p-16 text-foreground font-sans selection:bg-slate-900 selection:text-white">
       <div className="max-w-4xl mx-auto space-y-20">
         
         {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-200 pb-10">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-10">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <LayoutDashboard className="h-6 w-6 text-slate-900" />
+              <LayoutDashboard className="h-6 w-6 text-foreground" />
               <h1 className="text-3xl font-black uppercase tracking-tight italic">System Status</h1>
             </div>
-            <p className="text-slate-500 text-sm font-medium tracking-wide">Real-time surveillance of background operations</p>
+            <p className="text-muted-foreground text-sm font-medium tracking-wide">Real-time surveillance of background operations</p>
           </div>
           <Button 
             onClick={() => { setLoading(true); fetchData(); }} 
             variant="outline" 
-            className="rounded-xl px-6 h-12 border-slate-200 bg-white hover:bg-slate-900 hover:text-white transition-all duration-300 font-bold uppercase text-xs tracking-widest shadow-sm"
+            className="rounded-xl px-6 h-12 border-border bg-white hover:bg-slate-900 hover:text-white transition-all duration-300 font-bold uppercase text-xs tracking-widest shadow-sm"
             disabled={loading}
           >
             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
@@ -154,7 +154,7 @@ export default function SystemStatusPage() {
         {/* Section 1: Active Services */}
         <div className="space-y-10">
           <div className="flex items-center gap-4">
-            <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Active Operations</h2>
+            <h2 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em]">Active Operations</h2>
             <div className="flex-1 h-px bg-slate-200" />
           </div>
           
@@ -164,14 +164,14 @@ export default function SystemStatusPage() {
               const friendlyName = getFriendlyName(q.key, q.name)
               
               return (
-                <div key={q.key} className="group bg-white flex flex-col md:flex-row items-center gap-8 p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all duration-500">
+                <div key={q.key} className="group bg-white flex flex-col md:flex-row items-center gap-8 p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-border transition-all duration-500">
                   {/* Status Circle */}
                   <div className={`h-4 w-4 rounded-full shrink-0 ${statusColor} transition-all duration-500 group-hover:scale-125`} />
                   
                   <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-6 w-full">
                     <div className="space-y-1">
-                      <p className="text-xl font-black tracking-tight text-slate-800 group-hover:text-slate-900 transition-colors">{friendlyName}</p>
-                      <p className="text-[10px] text-slate-400 font-bold font-mono tracking-widest">{q.key}</p>
+                      <p className="text-xl font-black tracking-tight text-slate-800 group-hover:text-foreground transition-colors">{friendlyName}</p>
+                      <p className="text-[10px] text-muted-foreground font-bold font-mono tracking-widest">{q.key}</p>
                     </div>
 
                     <div className="flex items-center justify-between md:justify-end gap-12 w-full md:w-auto border-t md:border-t-0 pt-6 md:pt-0 border-slate-50">
@@ -182,7 +182,7 @@ export default function SystemStatusPage() {
                         </div>
                         <div className="text-right">
                           <span className="text-[9px] text-slate-300 font-black uppercase block tracking-tighter">Jobs</span>
-                          <span className={`text-base font-bold font-mono ${q.counts.waiting > 0 ? 'text-amber-500' : 'text-slate-900'}`}>{q.counts.waiting + q.counts.active}</span>
+                          <span className={`text-base font-bold font-mono ${q.counts.waiting > 0 ? 'text-amber-500' : 'text-foreground'}`}>{q.counts.waiting + q.counts.active}</span>
                         </div>
                       </div>
 
@@ -190,7 +190,7 @@ export default function SystemStatusPage() {
 
                       <div className="text-right space-y-0.5 min-w-[120px]">
                         <span className="text-[9px] text-slate-300 font-black uppercase block tracking-tighter">Last Pulse</span>
-                        <div className="flex items-center justify-end gap-1.5 text-xs font-bold text-slate-500 tracking-tight">
+                        <div className="flex items-center justify-end gap-1.5 text-xs font-bold text-muted-foreground tracking-tight">
                           <Clock className="h-3 w-3" />
                           <span>{q.last_run_at ? formatDistanceToNow(new Date(q.last_run_at)) + ' ago' : 'OFFLINE'}</span>
                         </div>
@@ -206,11 +206,11 @@ export default function SystemStatusPage() {
         {/* Section 2: History */}
         <div className="space-y-10">
           <div className="flex items-center gap-4">
-            <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Uptime Intelligence</h2>
+            <h2 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em]">Uptime Intelligence</h2>
             <div className="flex-1 h-px bg-slate-200" />
           </div>
           
-          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden p-4">
+          <div className="bg-background rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden p-4">
             {!data?.history || data.history.length === 0 ? (
               <div className="py-20 text-center">
                 <p className="text-xs font-black text-slate-300 uppercase tracking-widest">Awaiting Historical Telemetry</p>
@@ -218,34 +218,34 @@ export default function SystemStatusPage() {
             ) : (
               <div className="flex flex-col divide-y divide-slate-50">
                 {data.history.map((h, i) => (
-                  <div key={`${h.component_key}-${h.check_date}`} className="flex items-center gap-8 py-6 px-6 hover:bg-slate-50/50 transition-all duration-300 group">
+                  <div key={`${h.component_key}-${h.check_date}`} className="flex items-center gap-8 py-6 px-6 hover:bg-background/50 transition-all duration-300 group">
                     <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${getUptimeColor(h.uptime_pct)} group-hover:scale-125 transition-transform duration-300`} />
                     
                     <div className="flex-1 flex items-center justify-between text-xs font-bold tracking-tight">
                       <div className="w-56">
-                        <span className="uppercase text-slate-400 text-[10px] font-black block mb-1 tracking-widest">Component</span>
+                        <span className="uppercase text-muted-foreground text-[10px] font-black block mb-1 tracking-widest">Component</span>
                         <span className="text-slate-800 uppercase font-mono">{getFriendlyName(h.component_key, h.component_key)}</span>
                       </div>
                       
                       <div className="text-center">
-                        <span className="uppercase text-slate-400 text-[10px] font-black block mb-1 tracking-widest">Interval</span>
-                        <span className="text-slate-500 uppercase">{format(new Date(h.check_date), 'MMMM dd')}</span>
+                        <span className="uppercase text-muted-foreground text-[10px] font-black block mb-1 tracking-widest">Interval</span>
+                        <span className="text-muted-foreground uppercase">{format(new Date(h.check_date), 'MMMM dd')}</span>
                       </div>
 
                       <div className="flex gap-8 justify-center min-w-[140px]">
                         <div className="text-center">
-                          <span className="uppercase text-slate-400 text-[10px] font-black block mb-1 tracking-widest text-center">S</span>
+                          <span className="uppercase text-muted-foreground text-[10px] font-black block mb-1 tracking-widest text-center">S</span>
                           <span className="text-green-500 font-mono text-sm">{h.success_count}</span>
                         </div>
                         <div className="text-center">
-                          <span className="uppercase text-slate-400 text-[10px] font-black block mb-1 tracking-widest text-center">E</span>
+                          <span className="uppercase text-muted-foreground text-[10px] font-black block mb-1 tracking-widest text-center">E</span>
                           <span className={`${h.error_count > 0 ? 'text-red-500' : 'text-slate-200'} font-mono text-sm`}>{h.error_count}</span>
                         </div>
                       </div>
 
                       <div className="text-right w-24">
-                        <span className="uppercase text-slate-400 text-[10px] font-black block mb-1 tracking-widest">Stability</span>
-                        <span className={`text-lg font-black font-mono tracking-tighter ${h.uptime_pct < 100 ? 'text-slate-900' : 'text-slate-800'}`}>{h.uptime_pct}%</span>
+                        <span className="uppercase text-muted-foreground text-[10px] font-black block mb-1 tracking-widest">Stability</span>
+                        <span className={`text-lg font-black font-mono tracking-tighter ${h.uptime_pct < 100 ? 'text-foreground' : 'text-slate-800'}`}>{h.uptime_pct}%</span>
                       </div>
                     </div>
                   </div>

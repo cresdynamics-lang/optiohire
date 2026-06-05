@@ -16,6 +16,7 @@ interface MetricCardProps {
     isPositive: boolean
   }
   className?: string
+  tone?: string
   delay?: number
 }
 
@@ -25,6 +26,7 @@ export const MetricCard = memo(function MetricCard({
   icon: Icon, 
   trend, 
   className,
+  tone = 'bg-slate-800',
   delay = 0 
 }: MetricCardProps) {
   return (
@@ -34,18 +36,21 @@ export const MetricCard = memo(function MetricCard({
       transition={{ duration: 0.5, delay }}
     >
       <Card className={cn(
-        "relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_16px_40px_-30px_rgba(15,23,42,0.25)] transition-all duration-300 group hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_24px_58px_-32px_rgba(15,23,42,0.32)] dark:bg-gray-900 dark:border-gray-800",
+        "relative overflow-hidden rounded-2xl border-0 shadow-sm transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20",
+        tone,
         className
       )}>
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/60 to-transparent dark:from-slate-800/35" />
-        <CardContent className="relative p-6">
+        {/* Decorative subtle circles in background */}
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 rounded-full bg-white/10 blur-lg"></div>
+        <CardContent className="relative p-6 z-10">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="font-figtree text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-gray-400">
+              <p className="font-figtree text-xs font-bold uppercase tracking-[0.08em] text-white/80">
                 {title}
               </p>
               <motion.p 
-                className="mt-2 font-figtree text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-[1.65rem]"
+                className="mt-2 font-figtree text-3xl font-bold tracking-tight text-white sm:text-4xl"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.3, delay: delay + 0.2 }}
@@ -53,21 +58,16 @@ export const MetricCard = memo(function MetricCard({
                 {value}
               </motion.p>
               {trend && (
-                <div className="flex items-center gap-1 mt-2">
-                  <span className={cn(
-                    "text-xs font-medium",
-                    trend.isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-                  )}>
-                    {trend.isPositive ? "+" : ""}{trend.value}
-                  </span>
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    {trend.label}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                  <span className="text-xs font-medium text-white/90">
+                    {trend.isPositive ? "+" : ""}{trend.value} {trend.label}
                   </span>
                 </div>
               )}
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-inner shadow-slate-900/5 transition-colors duration-300 group-hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
-              <Icon className="h-6 w-6 shrink-0 text-slate-700 dark:text-slate-200" />
+            <div className="rounded-lg p-2 bg-white/20 text-white transition-colors duration-300 group-hover:bg-white/30">
+              <Icon className="h-6 w-6 shrink-0" />
             </div>
           </div>
         </CardContent>

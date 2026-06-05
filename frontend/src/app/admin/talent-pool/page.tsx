@@ -196,7 +196,7 @@ export default function AdminTalentPoolPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Talent Pool</h1>
-          <p className="text-gray-500">Engage with past candidates using AI-generated personalised emails.</p>
+          <p className="text-muted-foreground">Engage with past candidates using AI-generated personalised emails.</p>
         </div>
         <div className="flex gap-3">
           <Button 
@@ -213,7 +213,7 @@ export default function AdminTalentPoolPage() {
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by name, email, or skills..."
               className="pl-9"
@@ -236,9 +236,9 @@ export default function AdminTalentPoolPage() {
           <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
         </div>
       ) : (
-        <div className="bg-white rounded-lg border shadow-sm overflow-x-auto">
+        <div className="bg-background rounded-lg border shadow-sm overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-500 border-b">
+            <thead className="bg-background text-muted-foreground border-b">
               <tr>
                 <th className="px-6 py-4 w-12">
                   <Checkbox 
@@ -254,7 +254,7 @@ export default function AdminTalentPoolPage() {
             </thead>
             <tbody className="divide-y">
               {filteredTalents.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-50">
+                <tr key={t.id} className="hover:bg-background">
                   <td className="px-6 py-4">
                     <Checkbox 
                       checked={selectedIds.includes(t.id)}
@@ -262,15 +262,15 @@ export default function AdminTalentPoolPage() {
                     />
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{t.candidate_name || 'N/A'}</div>
-                    <div className="text-gray-500">{t.email}</div>
+                    <div className="font-medium text-foreground">{t.candidate_name || 'N/A'}</div>
+                    <div className="text-muted-foreground">{t.email}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-600 max-w-[300px] truncate" title={t.skills_summary}>
+                    <div className="text-sm text-muted-foreground max-w-[300px] truncate" title={t.skills_summary}>
                       {t.skills_summary || 'No skills listed'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500">
+                  <td className="px-6 py-4 text-muted-foreground">
                     {new Date(t.applied_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -287,7 +287,7 @@ export default function AdminTalentPoolPage() {
               ))}
               {filteredTalents.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                     No candidates in the talent pool
                   </td>
                 </tr>

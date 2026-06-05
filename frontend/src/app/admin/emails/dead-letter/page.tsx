@@ -203,7 +203,7 @@ export default function DeadLetterEmailsPage() {
   if (!adminSession && (!user || user.role !== 'admin')) return null
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -230,7 +230,7 @@ export default function DeadLetterEmailsPage() {
           </Card>
         ) : null}
 
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-white">Queue Controls</CardTitle>
             <CardDescription>Filter and bulk re-queue dead-letter emails.</CardDescription>
@@ -261,7 +261,7 @@ export default function DeadLetterEmailsPage() {
           {filteredEmails.map((email) => {
             const selected = selectedIds.includes(email.email_id)
             return (
-              <Card key={email.email_id} className="border-slate-200 bg-white">
+              <Card key={email.email_id} className="border-border bg-white">
                 <CardContent className="pt-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
@@ -274,7 +274,7 @@ export default function DeadLetterEmailsPage() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <AlertTriangle className="w-4 h-4 text-amber-400" />
-                          <p className="font-medium text-white">{email.subject}</p>
+                          <p className="font-medium text-foreground">{email.subject}</p>
                           <Badge variant="outline">{email.email_type}</Badge>
                           <Badge className="bg-red-600 text-white">failed</Badge>
                         </div>
@@ -299,7 +299,7 @@ export default function DeadLetterEmailsPage() {
           })}
 
           {filteredEmails.length === 0 ? (
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardContent className="pt-6 text-neutral-400">No dead-letter emails found.</CardContent>
             </Card>
           ) : null}

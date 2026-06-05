@@ -159,8 +159,8 @@ export default function CandidateDetailPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="min-h-screen bg-background ">
+        <div className="sticky top-0 z-10 bg-background/95 /95 backdrop-blur-md border-b border-border dark:border-gray-800 shadow-sm">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <TopNavigation />
@@ -170,7 +170,7 @@ export default function CandidateDetailPage() {
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-[#2D2DDD]" />
-            <p className="text-gray-600 dark:text-gray-400">Loading candidate details...</p>
+            <p className="text-muted-foreground ">Loading candidate details...</p>
           </div>
         </div>
       </div>
@@ -179,8 +179,8 @@ export default function CandidateDetailPage() {
 
   if (error || !candidate) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="min-h-screen bg-background ">
+        <div className="sticky top-0 z-10 bg-background/95 /95 backdrop-blur-md border-b border-border dark:border-gray-800 shadow-sm">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <TopNavigation />
@@ -193,7 +193,7 @@ export default function CandidateDetailPage() {
               <div className="text-center">
                 <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <p className="text-red-500 text-lg font-semibold mb-2">Failed to load candidate</p>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">{error || 'Candidate not found'}</p>
+                <p className="text-muted-foreground  mb-4">{error || 'Candidate not found'}</p>
                 <Button 
                   onClick={() => {
                     if (jobId) {
@@ -215,9 +215,9 @@ export default function CandidateDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-background ">
       {/* Top Navigation */}
-      <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="sticky top-0 z-10 bg-background/95 /95 backdrop-blur-md border-b border-border dark:border-gray-800 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <TopNavigation />
@@ -248,7 +248,7 @@ export default function CandidateDetailPage() {
             Back to Candidates
           </Button>
           
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground ">
             <Home className="w-4 h-4" />
             <span>/</span>
             <Briefcase className="w-4 h-4" />
@@ -269,8 +269,8 @@ export default function CandidateDetailPage() {
             <div className="flex items-center gap-4">
               {candidate.score !== null && (
                 <div className="text-right">
-                  <div className="text-sm text-gray-500">Score</div>
-                  <div className="text-3xl font-bold text-[#2D2DDD] dark:text-white">
+                  <div className="text-sm text-muted-foreground">Score</div>
+                  <div className="text-3xl font-bold text-[#2D2DDD] ">
                     {Math.round(candidate.score)}
                   </div>
                 </div>
@@ -307,20 +307,20 @@ export default function CandidateDetailPage() {
         </CardHeader>
         <CardContent>
           {(() => {
-            if (!candidate.reasoning) return <p className="text-gray-500 italic">No reasoning provided</p>
+            if (!candidate.reasoning) return <p className="text-muted-foreground italic">No reasoning provided</p>
             
             try {
               const parsed = JSON.parse(candidate.reasoning)
               return (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-2">Overview</h4>
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Overview</h4>
                     <p className="text-sm leading-relaxed">{parsed.overview}</p>
                   </div>
                   
                   {parsed.strengths?.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold uppercase tracking-wider text-green-600 dark:text-green-400 mb-2">Key Strengths</h4>
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-green-600  mb-2">Key Strengths</h4>
                       <ul className="list-disc pl-5 space-y-1">
                         {parsed.strengths.map((s: string, i: number) => (
                           <li key={i} className="text-sm">{s}</li>
@@ -331,7 +331,7 @@ export default function CandidateDetailPage() {
 
                   {parsed.weaknesses?.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-2">Gaps & Concerns</h4>
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-amber-600  mb-2">Gaps & Concerns</h4>
                       <ul className="list-disc pl-5 space-y-1">
                         {parsed.weaknesses.map((w: string, i: number) => (
                           <li key={i} className="text-sm">{w}</li>
@@ -341,8 +341,8 @@ export default function CandidateDetailPage() {
                   )}
 
                   {parsed.recommendation && (
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-lg">
-                      <h4 className="text-sm font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300 mb-1">Recommendation</h4>
+                    <div className="p-4 bg-blue-50 /20 border border-blue-100 dark:border-blue-900/40 rounded-lg">
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-blue-700  mb-1">Recommendation</h4>
                       <p className="text-sm italic">{parsed.recommendation}</p>
                     </div>
                   )}

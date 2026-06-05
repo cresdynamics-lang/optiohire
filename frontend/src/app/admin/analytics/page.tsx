@@ -131,7 +131,7 @@ export default function AdminAnalyticsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-[#2D2DDD]" />
       </div>
     )
@@ -146,7 +146,7 @@ export default function AdminAnalyticsPage() {
   const jobActiveRate = stats?.job_postings.total ? ((stats.job_postings.active / stats.job_postings.total) * 100).toFixed(1) : '0'
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -197,16 +197,23 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="border-slate-200 bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+            <Card className="group border-0 bg-slate-800 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 overflow-hidden relative">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+              <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 rounded-full bg-white/10 blur-lg"></div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                <CardTitle className="text-sm font-bold text-white uppercase tracking-wider">Total Users</CardTitle>
+                <div className="rounded-lg p-2 bg-white/20 text-white">
+                  <Users className="h-4 w-4" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.users.total || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stats?.users.active || 0} active ({activeRate}%)
-                </p>
+              <CardContent className="relative z-10">
+                <div className="text-3xl font-bold text-white mb-1">{stats?.users.total || 0}</div>
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                   <p className="text-xs font-medium text-white/80">
+                     {stats?.users.active || 0} active ({activeRate}%)
+                   </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -216,16 +223,23 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="border-slate-200 bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Companies</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
+            <Card className="group border-0 bg-red-600 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 overflow-hidden relative">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+              <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 rounded-full bg-white/10 blur-lg"></div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                <CardTitle className="text-sm font-bold text-white uppercase tracking-wider">Companies</CardTitle>
+                <div className="rounded-lg p-2 bg-white/20 text-white">
+                  <Building2 className="h-4 w-4" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.companies || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Registered organizations
-                </p>
+              <CardContent className="relative z-10">
+                <div className="text-3xl font-bold text-white mb-1">{stats?.companies || 0}</div>
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                   <p className="text-xs font-medium text-white/80">
+                     Registered organizations
+                   </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -235,16 +249,23 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="border-slate-200 bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Job Postings</CardTitle>
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
+            <Card className="group border-0 bg-emerald-600 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 overflow-hidden relative">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+              <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 rounded-full bg-white/10 blur-lg"></div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                <CardTitle className="text-sm font-bold text-white uppercase tracking-wider">Job Postings</CardTitle>
+                <div className="rounded-lg p-2 bg-white/20 text-white">
+                  <Briefcase className="h-4 w-4" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.job_postings.total || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stats?.job_postings.active || 0} active ({jobActiveRate}%)
-                </p>
+              <CardContent className="relative z-10">
+                <div className="text-3xl font-bold text-white mb-1">{stats?.job_postings.total || 0}</div>
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                   <p className="text-xs font-medium text-white/80">
+                     {stats?.job_postings.active || 0} active ({jobActiveRate}%)
+                   </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -254,16 +275,23 @@ export default function AdminAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="border-slate-200 bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Applications</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
+            <Card className="group border-0 bg-amber-500 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 overflow-hidden relative">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+              <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 rounded-full bg-white/10 blur-lg"></div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                <CardTitle className="text-sm font-bold text-white uppercase tracking-wider">Applications</CardTitle>
+                <div className="rounded-lg p-2 bg-white/20 text-white">
+                  <FileText className="h-4 w-4" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.applications.total || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stats?.applications.shortlisted || 0} shortlisted ({shortlistRate}%)
-                </p>
+              <CardContent className="relative z-10">
+                <div className="text-3xl font-bold text-white mb-1">{stats?.applications.total || 0}</div>
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+                   <p className="text-xs font-medium text-white/80">
+                     {stats?.applications.shortlisted || 0} shortlisted ({shortlistRate}%)
+                   </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -274,7 +302,7 @@ export default function AdminAnalyticsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
@@ -335,7 +363,7 @@ export default function AdminAnalyticsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
@@ -353,19 +381,19 @@ export default function AdminAnalyticsPage() {
               ) : (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="rounded-lg border border-border bg-background p-4">
                       <p className="text-xs text-muted-foreground">Total Scored</p>
                       <p className="text-xl font-semibold">{aiAudit.total}</p>
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="rounded-lg border border-border bg-background p-4">
                       <p className="text-xs text-muted-foreground">Borderline Decisions</p>
                       <p className="text-xl font-semibold text-amber-400">{aiAudit.borderline}</p>
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="rounded-lg border border-border bg-background p-4">
                       <p className="text-xs text-muted-foreground">Sensitive Reasoning Flags</p>
                       <p className="text-xl font-semibold text-red-400">{aiAudit.sensitiveReasoningFlags}</p>
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="rounded-lg border border-border bg-background p-4">
                       <p className="text-xs text-muted-foreground">Missing Reasoning</p>
                       <p className="text-xl font-semibold text-orange-300">{aiAudit.missingReasoning}</p>
                     </div>

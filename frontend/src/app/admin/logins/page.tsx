@@ -99,20 +99,20 @@ export default function AdminLoginsPage() {
       case 'page_view':
         return 'bg-purple-500/20 text-purple-400 border-purple-500/30'
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+        return 'bg-gray-500/20 text-muted-foreground border-gray-500/30'
     }
   }
 
   const getStatusColor = (status: number | null) => {
-    if (!status) return 'bg-gray-500/20 text-gray-400'
+    if (!status) return 'bg-gray-500/20 text-muted-foreground'
     if (status >= 200 && status < 300) return 'bg-green-500/20 text-green-400'
     if (status >= 400 && status < 500) return 'bg-yellow-500/20 text-yellow-400'
     if (status >= 500) return 'bg-red-500/20 text-red-400'
-    return 'bg-gray-500/20 text-gray-400'
+    return 'bg-gray-500/20 text-muted-foreground'
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
@@ -129,11 +129,11 @@ export default function AdminLoginsPage() {
           </div>
         </div>
 
-        <Card className="border-slate-200 bg-white mb-6">
+        <Card className="border-border mb-6">
           <CardContent className="p-4">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 relative min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by email, name, IP address..."
                   value={search}
@@ -141,7 +141,7 @@ export default function AdminLoginsPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="pl-10 border-slate-200 bg-white text-slate-900"
+                  className="pl-10 border-border bg-white text-foreground"
                 />
               </div>
               <select
@@ -150,7 +150,7 @@ export default function AdminLoginsPage() {
                   setActionFilter(e.target.value)
                   setPage(1)
                 }}
-                className="px-4 py-2 rounded-md border border-slate-200 bg-white text-slate-900"
+                className="px-4 py-2 rounded-md border border-border bg-white text-foreground"
               >
                 <option value="login">Logins</option>
                 <option value="logout">Logouts</option>
@@ -177,7 +177,7 @@ export default function AdminLoginsPage() {
           </div>
         ) : (
           <>
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle className="text-white">
                   Activity Logs ({total})
@@ -188,7 +188,7 @@ export default function AdminLoginsPage() {
                   {logins.map((activity) => (
                     <div
                       key={activity.track_id}
-                      className="flex items-start justify-between p-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
+                      className="flex items-start justify-between p-4 rounded-lg border border-border bg-white hover:bg-background transition-colors"
                     >
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3 flex-wrap">
@@ -202,17 +202,17 @@ export default function AdminLoginsPage() {
                             </Badge>
                           )}
                           {activity.user_email && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground ">
                               <User className="h-4 w-4" />
                               <span className="font-medium">{activity.user_email}</span>
                               {activity.user_name && (
-                                <span className="text-gray-500">({activity.user_name})</span>
+                                <span className="text-muted-foreground">({activity.user_name})</span>
                               )}
                             </div>
                           )}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-muted-foreground ">
                           {activity.endpoint && (
                             <div className="flex items-center gap-2">
                               <Monitor className="h-4 w-4" />
@@ -227,7 +227,7 @@ export default function AdminLoginsPage() {
                           )}
                           {activity.response_time_ms !== null && (
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-500">Response:</span>
+                              <span className="text-muted-foreground">Response:</span>
                               <span>{activity.response_time_ms}ms</span>
                             </div>
                           )}
@@ -238,13 +238,13 @@ export default function AdminLoginsPage() {
                         </div>
 
                         {activity.user_agent && (
-                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                          <div className="text-xs text-muted-foreground  mt-2">
                             <span className="font-medium">User Agent:</span> {activity.user_agent}
                           </div>
                         )}
 
                         {activity.session_id && (
-                          <div className="text-xs text-gray-500 dark:text-gray-500">
+                          <div className="text-xs text-muted-foreground ">
                             <span className="font-medium">Session:</span> {activity.session_id.substring(0, 8)}...
                           </div>
                         )}
@@ -254,7 +254,7 @@ export default function AdminLoginsPage() {
                 </div>
 
                 {logins.length === 0 && (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="text-center py-12 text-muted-foreground">
                     <LogIn className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p>No activity logs found</p>
                   </div>
@@ -269,7 +269,7 @@ export default function AdminLoginsPage() {
                     >
                       Previous
                     </Button>
-                    <span className="flex items-center px-4 text-gray-400">
+                    <span className="flex items-center px-4 text-muted-foreground">
                       Page {page} of {Math.ceil(total / 50)}
                     </span>
                     <Button

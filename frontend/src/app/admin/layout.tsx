@@ -10,10 +10,10 @@ import { ThemeToggle } from '@/components/theme-toggle'
 function AdminSidebarFallback() {
   return (
     <div
-      className="fixed inset-y-0 left-0 z-50 flex h-full w-64 -translate-x-full flex-col border-r border-slate-200 bg-white"
+      className="fixed inset-y-0 left-0 z-50 flex h-full w-64 -translate-x-full flex-col border-r border-border bg-background"
       aria-hidden
     >
-      <div className="h-16 border-b border-slate-200" />
+      <div className="h-16 border-b border-border" />
       <div className="flex-1 animate-pulse bg-slate-100" />
     </div>
   )
@@ -40,11 +40,11 @@ class AdminErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3">
               <AlertCircle className="h-6 w-6 text-red-500" />
-              <h2 className="text-xl font-semibold text-slate-900">Something went wrong</h2>
+              <h2 className="text-xl font-semibold text-foreground">Something went wrong</h2>
             </div>
             <p className="mb-4 text-slate-600">
               {this.state.error?.message || 'An unexpected error occurred'}
@@ -107,13 +107,13 @@ export default function AdminLayout({
 
   return (
     <AdminErrorBoundary>
-      <div className="relative min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-slate-50">
+      <div className="relative min-h-screen bg-background  text-foreground ">
         {/* Menu opens the admin nav drawer; sidebar stays hidden until clicked */}
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="fixed top-4 left-4 z-[60] h-11 w-11 shrink-0 rounded-full border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-gray-800"
+          className="fixed top-4 left-4 z-[60] h-11 w-11 shrink-0 rounded-full border-border dark:border-gray-800 bg-white  text-slate-700  shadow-sm hover:bg-background dark:hover:bg-gray-800"
           onClick={() => setNavOpen((o) => !o)}
           aria-expanded={navOpen}
           aria-label={navOpen ? 'Close admin menu' : 'Open admin menu'}
@@ -138,8 +138,8 @@ export default function AdminLayout({
         <Suspense fallback={<AdminSidebarFallback />}>
           <AdminErrorBoundary
             fallback={
-              <div className="fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 bg-white p-4">
-                <p className="text-sm text-slate-500">Sidebar unavailable. Please refresh.</p>
+              <div className="fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-border bg-background p-4">
+                <p className="text-sm text-muted-foreground">Sidebar unavailable. Please refresh.</p>
               </div>
             }
           >
@@ -147,7 +147,7 @@ export default function AdminLayout({
           </AdminErrorBoundary>
         </Suspense>
 
-        <main className="min-h-screen overflow-auto bg-slate-50 dark:bg-gray-950 pt-16">
+        <main className="min-h-screen overflow-auto bg-background  pt-16">
           <AdminErrorBoundary>
             {children}
           </AdminErrorBoundary>

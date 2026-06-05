@@ -52,6 +52,10 @@ export class AIWorker {
   }
 
   private async processJob(job: Job) {
+    if (job.name === 'talent-pool-match') {
+      return await this.processTalentPoolMatch(job)
+    }
+
     const { applicationId } = job.data
     if (!applicationId) {
       logger.warn('⚠️ No applicationId found in job data')
@@ -138,6 +142,76 @@ export class AIWorker {
 
     logger.info(`📧 Sending outcome emails for application: ${applicationId}`)
     await this.sendOutcomeEmails(application, jobPosting, company, aiResult, status)
+  }
+
+  private async processTalentPoolMatch(job: Job) {
+    const { jobPostingId } = job.data
+    if (!jobPostingId) {
+      logger.warn('⚠️ No jobPostingId found in talent-pool-match job data')
+      return
+    }
+
+    const jobPosting = await this.fetchJobPosting(jobPostingId)
+    if (!jobPosting) return
+
+    const company = await this.fetchCompany(jobPosting.company_id)
+    if (!company) return
+
+    logger.info(`🔍 [Talent Pool Match] Step 1: Fast Pass querying past applications for similar title to "${jobPosting.job_title}"`)
+    
+    // Fast Pass: find distinct applicants who applied to roles with similar titles at this company
+    const { rows: candidates } = await query(
+      `SELECT DISTINCT ON (a.email) a.email, a.candidate_name, a.parsed_resume_json
+       FROM applications a
+       JOIN job_postings jp ON a.job_posting_id = jp.job_posting_id
+       WHERE jp.company_id = $1 
+         AND a.job_posting_id != $2
+         AND a.parsed_resume_json IS NOT NULL
+         AND (
+           LOWER(jp.job_title) LIKE '%' || LOWER($3) || '%' 
+           OR LOWER($3) LIKE '%' || LOWER(jp.job_title) || '%'
+         )`,
+      [jobPosting.company_id, jobPostingId, jobPosting.job_title]
+    )
+
+    if (candidates.length === 0) {
+      logger.info(`🔍 [Talent Pool Match] No previous candidates found for similar roles.`)
+      return
+    }
+
+    logger.info(`🔍 [Talent Pool Match] Step 2: AI Deep Scan on ${candidates.length} pre-filtered candidates.`)
+
+    for (const candidate of candidates) {
+      const cvText = candidate.parsed_resume_json?.textContent || ''
+      const technicalInsights = candidate.parsed_resume_json?.technical_insights || []
+      
+      const aiResult = await this.scoreCandidate(
+        cvText, 
+        jobPosting, 
+        company, 
+        candidate.parsed_resume_json, 
+        technicalInsights
+      )
+
+      if (aiResult && aiResult.status === 'SHORTLIST') {
+        logger.info(`🎯 [Talent Pool Match] Candidate ${candidate.email} is a strong match (Score: ${aiResult.score}). Sending Match Email.`)
+        
+        await provisionCandidateAccount({
+          email: candidate.email,
+          candidateName: candidate.candidate_name,
+        }).catch(err => logger.warn(`⚠️ Candidate provisioning failed: ${err.message}`))
+        
+        await emailService.sendTalentPoolMatchEmail({
+          candidateEmail: candidate.email,
+          candidateName: candidate.candidate_name,
+          jobTitle: jobPosting.job_title,
+          companyName: company.company_name,
+          jobUrl: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/apply/${jobPostingId}`
+        }).catch(err => logger.error(`❌ Failed to send Talent Pool Match email: ${err.message}`))
+      }
+    }
+    
+    logger.info(`✅ [Talent Pool Match] Completed scan for job ${jobPostingId}`)
   }
 
   private async fetchApplication(applicationId: string) {

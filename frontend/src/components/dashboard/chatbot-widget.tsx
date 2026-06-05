@@ -344,10 +344,18 @@ export function ChatbotWidget() {
 
   const renderMessageContent = (content: string, colorIndex: number = 0) => {
 
-    // Hide partial JSON blocks during stream
-    if (content.includes('```json') && !content.includes('```', content.indexOf('```json') + 7)) {
-      const beforeJson = content.split('```json')[0].trim()
-      return renderMarkdown(beforeJson)
+    // Hide JSON blocks entirely (whether partial or complete)
+    if (content.includes('```json')) {
+      const parts = content.split('```json')
+      let text = parts[0]
+      for (let i = 1; i < parts.length; i++) {
+        const endIdx = parts[i].indexOf('```')
+        if (endIdx !== -1) {
+          // If the block is closed, append the text after it
+          text += parts[i].substring(endIdx + 3)
+        }
+      }
+      return renderMarkdown(text.trim())
     }
 
     return renderMarkdown(content)
@@ -573,24 +581,6 @@ export function ChatbotWidget() {
                         {chip}
                       </button>
                     ))}
-                    <button
-                      onClick={() => setActiveTab('support')}
-                      className="text-[13px] font-bold text-red-700 border-2 border-red-200 bg-red-50 hover:bg-red-600 hover:border-red-600 hover:text-white px-4 py-2 rounded-full transition-all shadow-sm flex items-center gap-1.5"
-                    >
-                      <Headphones className="w-3.5 h-3.5" />
-                      Contact Support
-                    </button>
-                    <button
-                      onClick={() => {
-                        window.location.href = window.location.pathname.includes('/candidate') 
-                          ? '/dashboard/candidate/help' 
-                          : '/dashboard/help'
-                      }}
-                      className="text-[13px] font-bold text-blue-700 border-2 border-blue-200 bg-blue-50 hover:bg-blue-600 hover:border-blue-600 hover:text-white px-4 py-2 rounded-full transition-all shadow-sm flex items-center gap-1.5"
-                    >
-                      <HelpCircle className="w-3.5 h-3.5" />
-                      Help Center
-                    </button>
                   </div>
                 )}
 

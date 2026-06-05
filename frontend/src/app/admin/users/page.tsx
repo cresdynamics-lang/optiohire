@@ -174,28 +174,28 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-slate-500 hover:text-slate-900"
+            className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Manage Users</h1>
+            <h1 className="text-3xl font-bold text-foreground">Manage Users</h1>
             <p className="text-slate-600">View and manage all system users</p>
           </div>
         </div>
 
-        <Card className="mb-6 border-slate-200 bg-white">
+        <Card className="mb-6 border-border">
           <CardContent className="p-4">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 relative min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search users by email..."
                   value={search}
@@ -203,11 +203,11 @@ export default function AdminUsersPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="pl-10 border-slate-300 bg-white text-slate-900"
+                  className="pl-10 border-border bg-white text-foreground"
                 />
               </div>
               <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1) }}>
-                <SelectTrigger className="w-[150px] border-slate-300 bg-white text-slate-900">
+                <SelectTrigger className="w-[150px] border-border bg-white text-foreground">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
@@ -218,7 +218,7 @@ export default function AdminUsersPage() {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1) }}>
-                <SelectTrigger className="w-[150px] border-slate-300 bg-white text-slate-900">
+                <SelectTrigger className="w-[150px] border-border bg-white text-foreground">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
           </div>
         ) : (
           <>
-            <Card className="border-slate-200 bg-white">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle>Users ({total})</CardTitle>
               </CardHeader>
@@ -262,7 +262,7 @@ export default function AdminUsersPage() {
                     return (
                       <div
                         key={userItem.user_id}
-                        className={`flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                        className={`flex items-center justify-between rounded-lg border border-border bg-background p-4 hover:bg-accent ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                       >
                         <div className="flex items-center gap-3">
                           <input
@@ -306,26 +306,26 @@ export default function AdminUsersPage() {
                               {userItem.is_active ? 'Active' : 'Inactive'}
                             </Badge>
                           </div>
-                          <p className="mt-1 text-sm text-slate-500">
+                          <p className="mt-1 text-sm text-muted-foreground">
                             Created: {new Date(userItem.created_at).toLocaleDateString()}
                           </p>
                           {userItem.name && (
-                            <p className="mt-1 text-sm text-slate-500">
+                            <p className="mt-1 text-sm text-muted-foreground">
                               Name: {userItem.name}
                             </p>
                           )}
                           {userItem.username && (
-                            <p className="mt-1 text-sm text-slate-500">
+                            <p className="mt-1 text-sm text-muted-foreground">
                               Username: @{userItem.username}
                             </p>
                           )}
                           {userItem.company_role && (
-                            <p className="mt-1 text-sm text-slate-500">
+                            <p className="mt-1 text-sm text-muted-foreground">
                               Company Role: {userItem.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                             </p>
                           )}
                           {userItem.company && (
-                            <p className="mt-1 text-sm text-slate-500">
+                            <p className="mt-1 text-sm text-muted-foreground">
                               Company: {userItem.company.company_name}
                             </p>
                           )}
@@ -359,7 +359,7 @@ export default function AdminUsersPage() {
                             </div>
                           )}
                           {userItem.role === 'admin' && userItem.admin_permissions && Object.keys(userItem.admin_permissions).length > 0 && (
-                            <p className="mt-1 text-xs text-slate-500">
+                            <p className="mt-1 text-xs text-muted-foreground">
                               Permissions: {Object.entries(userItem.admin_permissions)
                                 .filter(([_, enabled]) => enabled)
                                 .map(([key, _]) => key.replace('_', ' '))
@@ -369,8 +369,8 @@ export default function AdminUsersPage() {
                         </div>
                         <div className="flex gap-2 flex-wrap">
                           {/* Role Assignment UI */}
-                          <div className="flex items-center gap-2 mr-2 border-r border-slate-200 pr-4">
-                            <span className="text-xs font-medium text-slate-500">Change Role:</span>
+                          <div className="flex items-center gap-2 mr-2 border-r border-border pr-4">
+                            <span className="text-xs font-medium text-muted-foreground">Change Role:</span>
                             <Select 
                               value={userItem.role} 
                               onValueChange={(newRole) => {
@@ -396,7 +396,7 @@ export default function AdminUsersPage() {
                               }}
                               disabled={!!isCurrentUser}
                             >
-                              <SelectTrigger className="w-[110px] h-8 text-xs border-slate-300">
+                              <SelectTrigger className="w-[110px] h-8 text-xs border-border">
                                 <SelectValue placeholder="Select Role" />
                               </SelectTrigger>
                               <SelectContent>
@@ -491,7 +491,7 @@ export default function AdminUsersPage() {
                 </div>
 
                 {users.length === 0 && (
-                  <div className="py-12 text-center text-slate-500">
+                  <div className="py-12 text-center text-muted-foreground">
                     No users found
                   </div>
                 )}
@@ -505,7 +505,7 @@ export default function AdminUsersPage() {
                     >
                       Previous
                     </Button>
-                    <span className="flex items-center px-4 text-slate-500">
+                    <span className="flex items-center px-4 text-muted-foreground">
                       Page {page} of {Math.ceil(total / 20)}
                     </span>
                     <Button

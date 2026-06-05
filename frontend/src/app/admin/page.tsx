@@ -346,12 +346,12 @@ function AdminDashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent p-8 text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-transparent p-8 text-foreground ">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="mb-2 text-3xl font-bold text-slate-900 dark:text-white">
+            <h1 className="mb-2 text-3xl font-bold text-foreground ">
               Admin Management
               {isSeniorAdmin && (
                 <span className="ml-3 px-3 py-1 rounded-full text-sm font-medium bg-primary text-white">
@@ -359,7 +359,7 @@ function AdminDashboardContent() {
                 </span>
               )}
             </h1>
-            <p className="text-slate-500 dark:text-gray-400">
+            <p className="text-muted-foreground ">
               {isSeniorAdmin ? 'Full system access - All rights enabled' : 'Manage users, jobs, applicants, and admins'}
             </p>
           </div>
@@ -385,27 +385,27 @@ function AdminDashboardContent() {
         {/* Admin Profile Section */}
         {currentUser && (
           <div>
-            <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+            <Card className="border border-border dark:border-gray-800  shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-800 shrink-0">
                     <Crown className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+                    <CardTitle className="flex items-center gap-2 text-foreground ">
                       Admin Profile
-                      <span className="rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-300">
+                      <span className="rounded-full bg-blue-100 /40 px-2 py-0.5 text-xs font-medium text-blue-800 ">
                         ADMIN
                       </span>
                     </CardTitle>
-                    <CardDescription className="text-slate-500 dark:text-gray-400">Your administrator account information</CardDescription>
+                    <CardDescription className="text-muted-foreground ">Your administrator account information</CardDescription>
                   </div>
                   {isSecure !== null && (
                     <div
                       className={`ml-auto flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${
                         isSecure
-                          ? 'border border-emerald-200 dark:border-emerald-700/40 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300'
-                          : 'border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300'
+                          ? 'border border-emerald-200 dark:border-emerald-700/40 bg-emerald-50 /30 text-emerald-700 '
+                          : 'border border-amber-200 dark:border-amber-700/40 bg-amber-50 /30 text-amber-700 '
                       }`}
                     >
                       <Shield className="w-3.5 h-3.5" />
@@ -417,46 +417,46 @@ function AdminDashboardContent() {
               <CardContent>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                       <User className="h-4 w-4" />
                       Name
                     </div>
-                    <p className="text-slate-900 dark:text-white">{currentUser.name || 'Not set'}</p>
+                    <p className="text-foreground ">{currentUser.name || 'Not set'}</p>
                   </div>
 
                   {(currentUser as any).username && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                         <User className="h-4 w-4" />
                         Username
                       </div>
-                      <p className="font-mono text-slate-900 dark:text-white">@{(currentUser as any).username}</p>
+                      <p className="font-mono text-foreground ">@{(currentUser as any).username}</p>
                     </div>
                   )}
 
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                       <Mail className="h-4 w-4" />
                       Email
                     </div>
-                    <p className="text-slate-900 dark:text-white truncate">{currentUser.email}</p>
+                    <p className="text-foreground  truncate">{currentUser.email}</p>
                   </div>
 
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                       <Shield className="h-4 w-4" />
                       Role
                     </div>
-                    <p className="capitalize text-slate-900 dark:text-white">{currentUser.role}</p>
+                    <p className="capitalize text-foreground ">{currentUser.role}</p>
                   </div>
 
                   {(currentUser as any).companyRole && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                         <Key className="h-4 w-4" />
                         Company Role
                       </div>
-                      <p className="capitalize text-slate-900 dark:text-white">
+                      <p className="capitalize text-foreground ">
                         {(currentUser as any).companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                       </p>
                     </div>
@@ -464,11 +464,11 @@ function AdminDashboardContent() {
 
                   {(currentUser as any).created_at && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                         <Calendar className="h-4 w-4" />
                         Member Since
                       </div>
-                      <p className="text-slate-900 dark:text-white">
+                      <p className="text-foreground ">
                         {new Date((currentUser as any).created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -476,31 +476,31 @@ function AdminDashboardContent() {
 
                   {(currentUser as any).companyName && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                         <Building2 className="h-4 w-4" />
                         Organization
                       </div>
-                      <p className="text-slate-900 dark:text-white truncate">{(currentUser as any).companyName}</p>
+                      <p className="text-foreground  truncate">{(currentUser as any).companyName}</p>
                     </div>
                   )}
 
                   {(currentUser as any).companyEmail && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                         <Mail className="h-4 w-4" />
                         Company Email
                       </div>
-                      <p className="text-slate-900 dark:text-white truncate">{(currentUser as any).companyEmail}</p>
+                      <p className="text-foreground  truncate">{(currentUser as any).companyEmail}</p>
                     </div>
                   )}
 
                   {(currentUser as any).hrEmail && (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                         <Mail className="h-4 w-4" />
                         HR Email
                       </div>
-                      <p className="text-slate-900 dark:text-white truncate">{(currentUser as any).hrEmail}</p>
+                      <p className="text-foreground  truncate">{(currentUser as any).hrEmail}</p>
                     </div>
                   )}
 
@@ -521,15 +521,15 @@ function AdminDashboardContent() {
 
         {/* Search - Only show for users section */}
         {activeSection === 'users' && (
-          <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+          <Card className="border border-border dark:border-gray-800  shadow-sm">
             <CardContent className="pt-6">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-gray-500" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground " />
                 <Input
                   placeholder="Search by email, name, or company..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 pl-10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-gray-500"
+                  className="border-border dark:border-gray-700 bg-white  pl-10 text-foreground  placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
                 />
               </div>
             </CardContent>
@@ -538,9 +538,9 @@ function AdminDashboardContent() {
 
         {/* Error */}
         {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/40 p-4">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-            <p className="text-red-800 dark:text-red-300">{error}</p>
+          <div className="flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800/60 bg-red-50 /40 p-4">
+            <AlertTriangle className="h-5 w-5 text-red-600 " />
+            <p className="text-red-800 ">{error}</p>
           </div>
         )}
 
@@ -548,7 +548,7 @@ function AdminDashboardContent() {
         {activeSection === 'users' || activeSection === 'admins' ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-foreground ">
                 {activeSection === 'admins' ? 'All Admins' : 'All Users'} ({filteredUsers.length})
               </h2>
             </div>
@@ -556,11 +556,11 @@ function AdminDashboardContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredUsers.map((user) => (
                 <Dialog key={user.user_id}>
-                  <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group flex flex-col h-full relative">
+                  <Card className="border border-border dark:border-gray-800  shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group flex flex-col h-full relative">
                     <DialogTrigger asChild>
                       <div className="p-5 flex flex-col h-full w-full text-left outline-none">
                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="bg-slate-100 dark:bg-gray-800 p-1.5 rounded-full text-slate-500 dark:text-gray-400">
+                          <div className="bg-slate-100  p-1.5 rounded-full text-muted-foreground ">
                             <Eye className="w-4 h-4" />
                           </div>
                         </div>
@@ -570,17 +570,17 @@ function AdminDashboardContent() {
                             <Users className="w-5 h-5 text-white" />
                           </div>
                           <div className="overflow-hidden">
-                            <h3 className="font-semibold text-slate-900 dark:text-white truncate" title={user.name || 'No Name'}>
+                            <h3 className="font-semibold text-foreground  truncate" title={user.name || 'No Name'}>
                               {user.name || 'No Name'}
                             </h3>
-                            <p className="text-xs text-slate-500 dark:text-gray-400 truncate" title={user.email}>
+                            <p className="text-xs text-muted-foreground  truncate" title={user.email}>
                               {user.email}
                             </p>
                           </div>
                         </div>
 
                         {user.company && (
-                          <div className="mt-auto mb-3 text-xs flex items-center gap-1.5 text-slate-600 dark:text-gray-400 truncate">
+                          <div className="mt-auto mb-3 text-xs flex items-center gap-1.5 text-slate-600  truncate">
                             <Building2 className="w-3.5 h-3.5 shrink-0" />
                             <span className="truncate">{user.company.company_name}</span>
                           </div>
@@ -589,15 +589,15 @@ function AdminDashboardContent() {
                         <div className="flex flex-wrap gap-2 mt-auto">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide uppercase ${
                             user.is_active 
-                              ? 'border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' 
-                              : 'border border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300'
+                              ? 'border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 /40 text-emerald-700 ' 
+                              : 'border border-red-200 dark:border-red-800/40 bg-red-50 /40 text-red-700 '
                           }`}>
                             {user.is_active ? 'Active' : 'Inactive'}
                           </span>
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide uppercase ${
                             user.role === 'admin'
-                              ? 'border border-primary/30 dark:border-primary/40 bg-primary/10 dark:bg-primary/20 text-primary dark:text-[#8f97ff]'
-                              : 'border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
+                              ? 'border border-primary/30 dark:border-primary/40 bg-primary/10 /20 text-primary dark:text-[#8f97ff]'
+                              : 'border border-blue-200 dark:border-blue-800/40 bg-blue-50 /40 text-blue-700 '
                           }`}>
                             {user.role}
                           </span>
@@ -620,11 +620,11 @@ function AdminDashboardContent() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-3 mb-2">
-                              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                              <h3 className="text-xl font-bold text-foreground ">
                                 {user.name || 'No Name'}
                               </h3>
                               {(user as any).username && (
-                                <span className="font-mono text-sm text-slate-500 dark:text-gray-400">
+                                <span className="font-mono text-sm text-muted-foreground ">
                                   @{(user as any).username}
                                 </span>
                               )}
@@ -632,15 +632,15 @@ function AdminDashboardContent() {
                             <div className="flex flex-wrap gap-2">
                               <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                 user.is_active 
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300' 
-                                  : 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300'
+                                  ? 'bg-emerald-100 text-emerald-800 /50 ' 
+                                  : 'bg-red-100 text-red-800 /50 '
                               }`}>
                                 {user.is_active ? 'Active' : 'Inactive'}
                               </span>
                               <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                 user.role === 'admin'
-                                  ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-[#8f97ff]'
-                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300'
+                                  ? 'bg-primary/10 text-primary /20 dark:text-[#8f97ff]'
+                                  : 'bg-blue-100 text-blue-800 /50 '
                               }`}>
                                 {user.role}
                               </span>
@@ -649,55 +649,55 @@ function AdminDashboardContent() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div className="flex items-center gap-3 text-slate-600 dark:text-gray-400">
-                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                              <Mail className="w-4 h-4 text-slate-500" />
+                          <div className="flex items-center gap-3 text-slate-600 ">
+                            <div className="w-8 h-8 rounded-md bg-slate-100  flex items-center justify-center shrink-0">
+                              <Mail className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <div className="truncate">
-                              <p className="text-[10px] uppercase font-semibold text-slate-400">Email</p>
-                              <p className="text-slate-900 dark:text-white font-medium truncate">{user.email}</p>
+                              <p className="text-[10px] uppercase font-semibold text-muted-foreground">Email</p>
+                              <p className="text-foreground  font-medium truncate">{user.email}</p>
                             </div>
                           </div>
 
                           {(user as any).username && (
-                            <div className="flex items-center gap-3 text-slate-600 dark:text-gray-400">
-                              <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                                <User className="w-4 h-4 text-slate-500" />
+                            <div className="flex items-center gap-3 text-slate-600 ">
+                              <div className="w-8 h-8 rounded-md bg-slate-100  flex items-center justify-center shrink-0">
+                                <User className="w-4 h-4 text-muted-foreground" />
                               </div>
                               <div className="truncate">
-                                <p className="text-[10px] uppercase font-semibold text-slate-400">Username</p>
-                                <p className="font-mono text-slate-900 dark:text-white truncate">@{user.username}</p>
+                                <p className="text-[10px] uppercase font-semibold text-muted-foreground">Username</p>
+                                <p className="font-mono text-foreground  truncate">@{user.username}</p>
                               </div>
                             </div>
                           )}
 
                           {user.company_role && (
-                            <div className="flex items-center gap-3 text-slate-600 dark:text-gray-400">
-                              <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                                <Key className="w-4 h-4 text-slate-500" />
+                            <div className="flex items-center gap-3 text-slate-600 ">
+                              <div className="w-8 h-8 rounded-md bg-slate-100  flex items-center justify-center shrink-0">
+                                <Key className="w-4 h-4 text-muted-foreground" />
                               </div>
                               <div className="truncate">
-                                <p className="text-[10px] uppercase font-semibold text-slate-400">Company Role</p>
-                                <p className="text-slate-900 dark:text-white font-medium capitalize">{user.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
+                                <p className="text-[10px] uppercase font-semibold text-muted-foreground">Company Role</p>
+                                <p className="text-foreground  font-medium capitalize">{user.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
                               </div>
                             </div>
                           )}
 
-                          <div className="flex items-center gap-3 text-slate-600 dark:text-gray-400">
-                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                              <Calendar className="w-4 h-4 text-slate-500" />
+                          <div className="flex items-center gap-3 text-slate-600 ">
+                            <div className="w-8 h-8 rounded-md bg-slate-100  flex items-center justify-center shrink-0">
+                              <Calendar className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase font-semibold text-slate-400">Joined</p>
-                              <p className="text-slate-900 dark:text-white font-medium">{new Date(user.created_at).toLocaleDateString()}</p>
+                              <p className="text-[10px] uppercase font-semibold text-muted-foreground">Joined</p>
+                              <p className="text-foreground  font-medium">{new Date(user.created_at).toLocaleDateString()}</p>
                             </div>
                           </div>
                         </div>
 
                         {/* Password Display */}
-                        <div className="rounded-lg border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-950/60 p-4">
+                        <div className="rounded-lg border border-border dark:border-gray-800 bg-background /60 p-4">
                           <div className="flex items-center justify-between mb-2">
-                            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-gray-300">
+                            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 ">
                               <Shield className="w-4 h-4" />
                               Password Hash (Admin View)
                             </label>
@@ -714,34 +714,34 @@ function AdminDashboardContent() {
                               )}
                             </Button>
                           </div>
-                          <div className="font-mono text-xs text-slate-500 dark:text-gray-400 break-all bg-white dark:bg-gray-900 p-2 rounded border border-slate-200 dark:border-gray-800">
+                          <div className="font-mono text-xs text-muted-foreground  break-all bg-background  p-2 rounded border border-border dark:border-gray-800">
                             {showPasswords[user.user_id] ? user.password_hash : '••••••••••••••••••••••••••••••••'}
                           </div>
                         </div>
 
                         {/* Company Details */}
                         {user.company && (
-                          <div className="rounded-lg border border-blue-200 dark:border-blue-900/40 bg-blue-50 dark:bg-blue-950/30 p-4">
-                            <div className="flex items-center gap-2 mb-4 text-blue-800 dark:text-blue-300">
+                          <div className="rounded-lg border border-blue-200 dark:border-blue-900/40 bg-blue-50 /30 p-4">
+                            <div className="flex items-center gap-2 mb-4 text-blue-800 ">
                               <Building2 className="w-5 h-5" />
                               <h4 className="font-semibold">Company Details</h4>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <p className="text-slate-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">Organization</p>
-                                <p className="font-medium text-slate-900 dark:text-white truncate">{user.company.company_name}</p>
+                                <p className="text-muted-foreground  text-xs uppercase tracking-wider mb-1">Organization</p>
+                                <p className="font-medium text-foreground  truncate">{user.company.company_name}</p>
                               </div>
                               <div>
-                                <p className="text-slate-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">Company Email</p>
-                                <p className="font-medium text-slate-900 dark:text-white truncate">{user.company.company_email}</p>
+                                <p className="text-muted-foreground  text-xs uppercase tracking-wider mb-1">Company Email</p>
+                                <p className="font-medium text-foreground  truncate">{user.company.company_email}</p>
                               </div>
                               <div>
-                                <p className="text-slate-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">HR Email</p>
-                                <p className="font-medium text-slate-900 dark:text-white truncate">{user.company.hr_email}</p>
+                                <p className="text-muted-foreground  text-xs uppercase tracking-wider mb-1">HR Email</p>
+                                <p className="font-medium text-foreground  truncate">{user.company.hr_email}</p>
                               </div>
                               <div>
-                                <p className="text-slate-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">Hiring Manager Email</p>
-                                <p className="font-medium text-slate-900 dark:text-white truncate">{user.company.hiring_manager_email}</p>
+                                <p className="text-muted-foreground  text-xs uppercase tracking-wider mb-1">Hiring Manager Email</p>
+                                <p className="font-medium text-foreground  truncate">{user.company.hiring_manager_email}</p>
                               </div>
                             </div>
                           </div>
@@ -852,17 +852,17 @@ function AdminDashboardContent() {
           
           {filteredUsers.length === 0 && (
             <div className="text-center py-12">
-              <Users className="w-16 h-16 text-slate-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-slate-500 dark:text-gray-400">
+              <Users className="w-16 h-16 text-slate-300  mx-auto mb-4" />
+              <p className="text-muted-foreground ">
                 {activeSection === 'admins' ? 'No admins found' : 'No users found'}
               </p>
             </div>
           )}
         </div>
         ) : (
-          <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+          <Card className="border border-border dark:border-gray-800  shadow-sm">
             <CardContent className="pt-6">
-              <p className="py-8 text-center text-slate-500 dark:text-gray-400">
+              <p className="py-8 text-center text-muted-foreground ">
                 Navigate to the specific section using the navigation buttons above.
               </p>
             </CardContent>
@@ -876,7 +876,7 @@ function AdminDashboardContent() {
 export default function AdminDashboard() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-gray-950">
+      <div className="flex min-h-screen items-center justify-center bg-background ">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     }>

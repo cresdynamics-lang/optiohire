@@ -63,26 +63,26 @@ export default function CandidateDecisionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-background ">
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Candidate Decisions</h1>
-          <div className="flex bg-white rounded-lg p-1 border shadow-sm">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground ">Candidate Decisions</h1>
+          <div className="flex bg-background rounded-lg p-1 border shadow-sm">
             <button
               onClick={() => setFilter('ALL')}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-[#2D2DDD] text-white' : 'text-gray-600 hover:text-gray-900'}`}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-[#2D2DDD] text-white' : 'text-muted-foreground hover:text-foreground'}`}
             >
               All
             </button>
             <button
               onClick={() => setFilter('HIRED')}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'HIRED' ? 'bg-green-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'HIRED' ? 'bg-green-600 text-white' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Hired
             </button>
             <button
               onClick={() => setFilter('REJECTED')}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'REJECTED' ? 'bg-red-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'REJECTED' ? 'bg-red-600 text-white' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Rejected
             </button>
@@ -115,7 +115,7 @@ export default function CandidateDecisionsPage() {
                 <TableBody>
                   {filteredDecisions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         No decisions found matching the filter.
                       </TableCell>
                     </TableRow>
@@ -124,11 +124,11 @@ export default function CandidateDecisionsPage() {
                       <TableRow key={decision.id}>
                         <TableCell>
                           <div className="font-medium">{decision.candidate_name || 'Unknown'}</div>
-                          <div className="text-sm text-gray-500">{decision.email}</div>
+                          <div className="text-sm text-muted-foreground">{decision.email}</div>
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">{decision.jobTitle}</div>
-                          <div className="text-sm text-gray-500">{decision.companyName}</div>
+                          <div className="text-sm text-muted-foreground">{decision.companyName}</div>
                         </TableCell>
                         <TableCell>
                           {decision.status === 'HIRED' ? (
@@ -140,7 +140,7 @@ export default function CandidateDecisionsPage() {
                         <TableCell className="max-w-xs truncate text-sm">
                           {decision.reasoning || '-'}
                         </TableCell>
-                        <TableCell className="text-sm text-gray-500">
+                        <TableCell className="text-sm text-muted-foreground">
                           {new Date(decision.updated_at).toLocaleDateString()}
                         </TableCell>
                       </TableRow>

@@ -142,9 +142,9 @@ export default function UserDetailsPage() {
 
   if (error || !userDetails) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8">
+      <div className="min-h-screen bg-background p-8">
         <div className="max-w-4xl mx-auto">
-          <Card className="border-slate-200 bg-white">
+          <Card className="border-border">
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-red-300">
                 <AlertTriangle className="w-5 h-5" />
@@ -162,7 +162,7 @@ export default function UserDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -193,7 +193,7 @@ export default function UserDetailsPage() {
         </div>
 
         {/* User Info Card */}
-        <Card className="border-slate-200 bg-white">
+        <Card className="border-border">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -228,7 +228,7 @@ export default function UserDetailsPage() {
                   <Mail className="w-4 h-4" />
                   Email
                 </div>
-                <p className="text-white">{userDetails.email}</p>
+                <p className="text-foreground">{userDetails.email}</p>
               </div>
               
               {userDetails.username && (
@@ -237,7 +237,7 @@ export default function UserDetailsPage() {
                     <User className="w-4 h-4" />
                     Username
                   </div>
-                  <p className="text-white font-mono">@{userDetails.username}</p>
+                  <p className="text-foreground font-mono">@{userDetails.username}</p>
                 </div>
               )}
               
@@ -246,27 +246,27 @@ export default function UserDetailsPage() {
                   <Shield className="w-4 h-4" />
                   Role
                 </div>
-                <p className="text-white capitalize">{userDetails.role}</p>
+                <p className="text-foreground capitalize">{userDetails.role}</p>
               </div>
               
               {userDetails.company_role && (
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                     <Key className="w-4 h-4" />
                     Company Role
                   </div>
-                  <p className="text-white capitalize">
+                  <p className="text-foreground capitalize">
                     {userDetails.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                   </p>
                 </div>
               )}
               
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ">
                   <Calendar className="w-4 h-4" />
                   Member Since
                 </div>
-                <p className="text-white">
+                <p className="text-foreground">
                   {new Date(userDetails.created_at).toLocaleDateString()}
                 </p>
               </div>
@@ -286,20 +286,20 @@ export default function UserDetailsPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Organization Name</div>
-                  <p className="text-white">{userDetails.company.company_name}</p>
+                  <div className="text-sm font-medium text-muted-foreground ">Organization Name</div>
+                  <p className="text-foreground">{userDetails.company.company_name}</p>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Company Email</div>
-                  <p className="text-white">{userDetails.company.company_email}</p>
+                  <div className="text-sm font-medium text-muted-foreground ">Company Email</div>
+                  <p className="text-foreground">{userDetails.company.company_email}</p>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-600 dark:text-gray-400">HR Email</div>
-                  <p className="text-white">{userDetails.company.hr_email}</p>
+                  <div className="text-sm font-medium text-muted-foreground ">HR Email</div>
+                  <p className="text-foreground">{userDetails.company.hr_email}</p>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Hiring Manager Email</div>
-                  <p className="text-white">{userDetails.company.hiring_manager_email}</p>
+                  <div className="text-sm font-medium text-muted-foreground ">Hiring Manager Email</div>
+                  <p className="text-foreground">{userDetails.company.hiring_manager_email}</p>
                 </div>
               </div>
             </CardContent>
@@ -311,7 +311,7 @@ export default function UserDetailsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground ">
                   Job Posts
                 </CardTitle>
               </CardHeader>
@@ -322,7 +322,7 @@ export default function UserDetailsPage() {
                     <div className="text-2xl font-bold text-white">
                       {userDetails.stats.job_posts_count}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Total Jobs</div>
+                    <div className="text-xs text-muted-foreground ">Total Jobs</div>
                   </div>
                 </div>
               </CardContent>
@@ -330,7 +330,7 @@ export default function UserDetailsPage() {
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground ">
                   Applicants
                 </CardTitle>
               </CardHeader>
@@ -341,7 +341,7 @@ export default function UserDetailsPage() {
                     <div className="text-2xl font-bold text-white">
                       {userDetails.stats.applicants_count}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Total Applicants</div>
+                    <div className="text-xs text-muted-foreground ">Total Applicants</div>
                   </div>
                 </div>
               </CardContent>
@@ -349,7 +349,7 @@ export default function UserDetailsPage() {
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground ">
                   Interviews
                 </CardTitle>
               </CardHeader>
@@ -360,7 +360,7 @@ export default function UserDetailsPage() {
                     <div className="text-2xl font-bold text-white">
                       {userDetails.stats.interviews_count}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Scheduled</div>
+                    <div className="text-xs text-muted-foreground ">Scheduled</div>
                   </div>
                 </div>
               </CardContent>
@@ -368,7 +368,7 @@ export default function UserDetailsPage() {
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground ">
                   Meetings
                 </CardTitle>
               </CardHeader>
@@ -379,7 +379,7 @@ export default function UserDetailsPage() {
                     <div className="text-2xl font-bold text-white">
                       {userDetails.stats.meetings_count}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Total Meetings</div>
+                    <div className="text-xs text-muted-foreground ">Total Meetings</div>
                   </div>
                 </div>
               </CardContent>
