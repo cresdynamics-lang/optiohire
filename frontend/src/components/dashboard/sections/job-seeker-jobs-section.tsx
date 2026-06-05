@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Briefcase, Sparkles, TrendingUp, Upload, FileText, Link2, CheckCircle2, Clock3, AlertTriangle, XCircle, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useAuth } from '@/hooks/use-auth'
 
 type CandidateJob = {
@@ -307,7 +308,7 @@ export function JobSeekerJobsSection() {
           {applications.length === 0 ? (
             <p className="text-sm text-slate-600">No applications submitted yet.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {applications.slice(0, 8).map((application) => {
                 const status = (application.ai_status || 'PENDING').toUpperCase()
                 const statusUi =
@@ -320,96 +321,132 @@ export function JobSeekerJobsSection() {
                         : { label: 'Submitted', icon: Clock3, className: 'bg-slate-100 text-slate-700 border-slate-200' }
                 const StatusIcon = statusUi.icon
                 return (
-                  <div
-                    key={application.application_id}
-                    className="rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-900">{application.job_title}</p>
-                        <p className="text-xs text-slate-500">
-                          {application.company_name || 'Employer'} - {new Date(application.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {typeof application.ai_score === 'number' ? (
-                          <span className="text-xs font-medium text-slate-600">Score: {Math.round(application.ai_score)}</span>
-                        ) : null}
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${statusUi.className}`}>
-                          <StatusIcon className="h-3.5 w-3.5" />
-                          {statusUi.label}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setExpandedApplicationId(
-                              expandedApplicationId === application.application_id ? null : application.application_id
-                            )
-                          }
-                          className="h-8 border-slate-300 px-2"
-                        >
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform ${
-                              expandedApplicationId === application.application_id ? 'rotate-180' : ''
-                            }`}
-                          />
-                        </Button>
-                      </div>
-                    </div>
+                  <Dialog key={application.application_id}>
+                    <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md hover:border-[#2D2DDD]/40 transition-all cursor-pointer group flex flex-col h-full relative">
+                      <DialogTrigger asChild>
+                        <div className="p-5 flex flex-col h-full w-full text-left outline-none">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <StatusIcon className="h-5 w-5 text-slate-500" />
+                            </div>
+                            <div className="overflow-hidden">
+                              <p className="font-semibold text-slate-900 dark:text-white truncate" title={application.job_title}>
+                                {application.job_title}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-gray-400 truncate" title={application.company_name || 'Employer'}>
+                                {application.company_name || 'Employer'} - {new Date(application.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
 
-                    {expandedApplicationId === application.application_id ? (
-                      <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                        <p>
-                          <span className="font-semibold text-slate-700">Resume:</span>{' '}
-                          {application.resume_url ? (
-                            <a
-                              href={application.resume_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-slate-800 underline"
-                            >
-                              Open resume/document
-                            </a>
-                          ) : (
-                            'Not provided'
+                          <div className="mt-auto flex flex-wrap items-center gap-2">
+                            {typeof application.ai_score === 'number' ? (
+                              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Score: {Math.round(application.ai_score)}</span>
+                            ) : null}
+                            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusUi.className}`}>
+                              <StatusIcon className="h-3 w-3" />
+                              {statusUi.label}
+                            </span>
+                          </div>
+                        </div>
+                      </DialogTrigger>
+
+                      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Application Details</DialogTitle>
+                        </DialogHeader>
+                        <div className="mt-4 grid gap-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 p-5 text-sm text-slate-700 dark:text-slate-300">
+                          <div className="flex justify-between items-start border-b border-slate-200 dark:border-gray-800 pb-4 mb-2">
+                            <div>
+                              <h3 className="font-bold text-lg text-slate-900 dark:text-white">{application.job_title}</h3>
+                              <p className="text-slate-500">{application.company_name || 'Employer'}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${statusUi.className}`}>
+                                <StatusIcon className="h-3.5 w-3.5" />
+                                {statusUi.label}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-[100px_1fr] gap-2">
+                              <span className="font-semibold text-slate-900 dark:text-white">Resume:</span>
+                              {application.resume_url ? (
+                                <a href={application.resume_url} target="_blank" rel="noopener noreferrer" className="text-[#2D2DDD] hover:underline flex items-center gap-1">
+                                  <FileText className="w-4 h-4" /> Open Document
+                                </a>
+                              ) : (
+                                <span className="text-slate-500">Not provided</span>
+                              )}
+                            </div>
+                            
+                            {application.parsed_resume_json?.document?.name && (
+                              <div className="grid grid-cols-[100px_1fr] gap-2">
+                                <span className="font-semibold text-slate-900 dark:text-white">Document:</span>
+                                <span className="truncate">{application.parsed_resume_json.document.name}</span>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-[100px_1fr] gap-2">
+                              <span className="font-semibold text-slate-900 dark:text-white">LinkedIn:</span>
+                              {application.parsed_resume_json?.links?.linkedinUrl ? (
+                                <a href={application.parsed_resume_json.links.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-[#2D2DDD] hover:underline truncate">
+                                  {application.parsed_resume_json.links.linkedinUrl}
+                                </a>
+                              ) : (
+                                <span className="text-slate-500">Not provided</span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-[100px_1fr] gap-2">
+                              <span className="font-semibold text-slate-900 dark:text-white">GitHub:</span>
+                              {application.parsed_resume_json?.links?.githubUrl ? (
+                                <a href={application.parsed_resume_json.links.githubUrl} target="_blank" rel="noopener noreferrer" className="text-[#2D2DDD] hover:underline truncate">
+                                  {application.parsed_resume_json.links.githubUrl}
+                                </a>
+                              ) : (
+                                <span className="text-slate-500">Not provided</span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-[100px_1fr] gap-2">
+                              <span className="font-semibold text-slate-900 dark:text-white">Portfolio:</span>
+                              {application.parsed_resume_json?.links?.otherUrl ? (
+                                <a href={application.parsed_resume_json.links.otherUrl} target="_blank" rel="noopener noreferrer" className="text-[#2D2DDD] hover:underline truncate">
+                                  {application.parsed_resume_json.links.otherUrl}
+                                </a>
+                              ) : (
+                                <span className="text-slate-500">Not provided</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {application.parsed_resume_json?.note && (
+                            <div className="mt-2 pt-4 border-t border-slate-200 dark:border-gray-800">
+                              <span className="block font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                                <FileText className="w-4 h-4" /> Your Note
+                              </span>
+                              <p className="bg-white dark:bg-gray-900 p-3 rounded-lg border border-slate-200 dark:border-gray-800">
+                                {application.parsed_resume_json.note}
+                              </p>
+                            </div>
                           )}
-                        </p>
-                        {application.parsed_resume_json?.document?.name ? (
-                          <p>
-                            <span className="font-semibold text-slate-700">Document:</span>{' '}
-                            {application.parsed_resume_json.document.name}
-                          </p>
-                        ) : null}
-                        <p>
-                          <span className="font-semibold text-slate-700">LinkedIn:</span>{' '}
-                          {application.parsed_resume_json?.links?.linkedinUrl || 'Not provided'}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-slate-700">GitHub:</span>{' '}
-                          {application.parsed_resume_json?.links?.githubUrl || 'Not provided'}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-slate-700">Other link:</span>{' '}
-                          {application.parsed_resume_json?.links?.otherUrl || 'Not provided'}
-                        </p>
-                        {application.parsed_resume_json?.note ? (
-                          <p>
-                            <span className="font-semibold text-slate-700">Candidate note:</span>{' '}
-                            {application.parsed_resume_json.note}
-                          </p>
-                        ) : null}
-                        {application.reasoning ? (
-                          <p>
-                            <span className="font-semibold text-slate-700">Watcher reasoning:</span>{' '}
-                            {application.reasoning.slice(0, 220)}
-                            {application.reasoning.length > 220 ? '...' : ''}
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
+
+                          {application.reasoning && (
+                            <div className="mt-2 pt-4 border-t border-slate-200 dark:border-gray-800">
+                              <span className="block font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-[#2D2DDD]" /> Watcher Reasoning
+                              </span>
+                              <p className="bg-[#2D2DDD]/5 dark:bg-[#2D2DDD]/10 p-3 rounded-lg text-slate-800 dark:text-slate-200 leading-relaxed border border-[#2D2DDD]/10">
+                                {application.reasoning}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Card>
+                  </Dialog>
                 )
               })}
             </div>

@@ -7,7 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Briefcase, Search, ArrowLeft, Trash2, Mail } from 'lucide-react'
+import { Briefcase, Search, ArrowLeft, Trash2, Mail, Eye, Calendar, Globe, Building2 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
 
 interface JobPosting {
   job_posting_id: string
@@ -195,33 +203,33 @@ export default function AdminJobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 p-6">
+    <div className="min-h-screen bg-transparent text-slate-900 dark:text-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-slate-600 hover:text-slate-900"
+            className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Manage Job Postings</h1>
-            <p className="text-slate-600">View and manage all job postings</p>
+            <p className="text-slate-600 dark:text-gray-400">View and manage all job postings</p>
           </div>
         </div>
 
         {error && (
-          <Card className="bg-red-900/20 border-red-500 mb-6">
+          <Card className="bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/60 mb-6">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className="text-red-400">{error}</span>
+                <span className="text-red-800 dark:text-red-300">{error}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setError(null)}
-                  className="text-red-400 hover:text-red-300"
+                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                 >
                   ×
                 </Button>
@@ -231,15 +239,15 @@ export default function AdminJobsPage() {
         )}
 
         {successMessage && (
-          <Card className="bg-green-900/20 border-green-500 mb-6">
+          <Card className="bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/60 mb-6">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className="text-green-400">{successMessage}</span>
+                <span className="text-green-800 dark:text-green-300">{successMessage}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSuccessMessage(null)}
-                  className="text-green-400 hover:text-green-300"
+                  className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
                 >
                   ×
                 </Button>
@@ -248,11 +256,11 @@ export default function AdminJobsPage() {
           </Card>
         )}
 
-        <Card className="border-slate-200 bg-white mb-6">
+        <Card className="border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm mb-6">
           <CardContent className="p-4">
-            <div className="flex gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 relative min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-gray-500" />
                 <Input
                   placeholder="Search jobs..."
                   value={search}
@@ -260,7 +268,7 @@ export default function AdminJobsPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="border-slate-200 bg-white pl-10 text-slate-900"
+                  className="border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 pl-10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-gray-500"
                 />
               </div>
               <select
@@ -269,7 +277,7 @@ export default function AdminJobsPage() {
                   setStatusFilter(e.target.value)
                   setPage(1)
                 }}
-                className="rounded-md border border-slate-200 bg-white px-4 py-2 text-slate-900"
+                className="rounded-md border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2 text-slate-900 dark:text-white"
               >
                 <option value="">All Status</option>
                 <option value="ACTIVE">Active</option>
@@ -286,21 +294,40 @@ export default function AdminJobsPage() {
           </div>
         ) : (
           <>
-            <Card className="border-slate-200 bg-white">
-              <CardHeader>
-                <CardTitle>Job Postings ({total})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {jobs.map((job) => (
-                    <div
-                      key={job.job_posting_id}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100"
-                    >
-                      <div className="flex-1">
-                        <div className="mb-2 flex items-center gap-3">
-                          <Briefcase className="h-5 w-5 text-green-600" />
-                          <span className="font-semibold text-lg">{job.job_title}</span>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                Job Postings ({total})
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {jobs.map((job) => (
+                <Dialog key={job.job_posting_id}>
+                  <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group flex flex-col h-full relative">
+                    <DialogTrigger asChild>
+                      <div className="p-5 flex flex-col h-full w-full text-left outline-none">
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-slate-100 dark:bg-gray-800 p-1.5 rounded-full text-slate-500 dark:text-gray-400">
+                            <Eye className="w-4 h-4" />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-center shrink-0">
+                            <Briefcase className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+                          <div className="overflow-hidden">
+                            <h3 className="font-semibold text-slate-900 dark:text-white truncate" title={job.job_title}>
+                              {job.job_title}
+                            </h3>
+                            <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500 dark:text-gray-400 truncate" title={job.company_name}>
+                              <Building2 className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">{job.company_name}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mt-auto">
                           <Badge 
                             variant={
                               job.status?.toUpperCase() === 'ACTIVE' ? 'active' :
@@ -308,87 +335,153 @@ export default function AdminJobsPage() {
                               job.status?.toUpperCase() === 'CLOSED' ? 'closed' :
                               'default'
                             }
+                            className="text-[10px] tracking-wider font-semibold"
                           >
                             {job.status?.toUpperCase() || 'ACTIVE'}
                           </Badge>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
-                          <div>
-                            <span className="text-gray-500">Company:</span> {job.company_name}
+                      </div>
+                    </DialogTrigger>
+
+                    {/* Expandable Details Modal */}
+                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Job Details</DialogTitle>
+                        <DialogDescription>Full job posting information and administrative actions</DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-6 pt-4">
+                        <div className="flex items-start gap-4 pb-4 border-b border-slate-100 dark:border-gray-800">
+                          <div className="w-14 h-14 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-center shrink-0">
+                            <Briefcase className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
                           </div>
-                          <div>
-                            <span className="text-gray-500">Domain:</span> {job.company_domain}
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Created:</span> {new Date(job.created_at).toLocaleDateString()}
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Deadline:</span> {job.application_deadline ? new Date(job.application_deadline).toLocaleDateString() : 'N/A'}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                              {job.job_title}
+                            </h3>
+                            <Badge 
+                              variant={
+                                job.status?.toUpperCase() === 'ACTIVE' ? 'active' :
+                                job.status?.toUpperCase() === 'DRAFT' ? 'draft' :
+                                job.status?.toUpperCase() === 'CLOSED' ? 'closed' :
+                                'default'
+                              }
+                            >
+                              {job.status?.toUpperCase() || 'ACTIVE'}
+                            </Badge>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => resendJobEmail(job.job_posting_id)}
-                          disabled={sendingEmail === job.job_posting_id}
-                          className="text-blue-400 border-blue-400 hover:bg-blue-900/20"
-                        >
-                          {sendingEmail === job.job_posting_id ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-1" />
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="h-4 w-4 mr-1" />
-                              Resend Email
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => deleteJob(job.job_posting_id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
 
-                {jobs.length === 0 && (
-                  <div className="text-center py-12 text-gray-400">
-                    No job postings found
-                  </div>
-                )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Building2 className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div className="truncate">
+                              <p className="text-[10px] uppercase font-semibold text-slate-400">Company</p>
+                              <p className="text-slate-900 dark:text-white font-medium truncate">{job.company_name}</p>
+                            </div>
+                          </div>
 
-                {total > 20 && (
-                  <div className="flex justify-center gap-2 mt-6">
-                    <Button
-                      variant="outline"
-                      disabled={page === 1}
-                      onClick={() => setPage(p => p - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <span className="flex items-center px-4 text-gray-400">
-                      Page {page} of {Math.ceil(total / 20)}
-                    </span>
-                    <Button
-                      variant="outline"
-                      disabled={page >= Math.ceil(total / 20)}
-                      onClick={() => setPage(p => p + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Globe className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div className="truncate">
+                              <p className="text-[10px] uppercase font-semibold text-slate-400">Domain</p>
+                              <p className="text-slate-900 dark:text-white font-medium truncate">{job.company_domain}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Calendar className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase font-semibold text-slate-400">Created</p>
+                              <p className="text-slate-900 dark:text-white font-medium">{new Date(job.created_at).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Calendar className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase font-semibold text-slate-400">Deadline</p>
+                              <p className="text-slate-900 dark:text-white font-medium">
+                                {job.application_deadline ? new Date(job.application_deadline).toLocaleDateString() : 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions Row */}
+                        <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-100 dark:border-gray-800">
+                          <Button
+                            variant="outline"
+                            onClick={() => resendJobEmail(job.job_posting_id)}
+                            disabled={sendingEmail === job.job_posting_id}
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30"
+                          >
+                            {sendingEmail === job.job_posting_id ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin mr-2" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Resend Email
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            className="ml-auto"
+                            onClick={() => deleteJob(job.job_posting_id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Card>
+                </Dialog>
+              ))}
+            </div>
+
+            {jobs.length === 0 && (
+              <div className="py-12 text-center">
+                <Briefcase className="w-16 h-16 text-slate-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-slate-500 dark:text-gray-400">No job postings found</p>
+              </div>
+            )}
+
+            {total > 20 && (
+              <div className="flex justify-center gap-2 mt-8">
+                <Button
+                  variant="outline"
+                  disabled={page === 1}
+                  onClick={() => setPage(p => p - 1)}
+                  className="border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                >
+                  Previous
+                </Button>
+                <span className="flex items-center px-4 text-slate-500 dark:text-gray-400 font-medium">
+                  Page {page} of {Math.ceil(total / 20)}
+                </span>
+                <Button
+                  variant="outline"
+                  disabled={page >= Math.ceil(total / 20)}
+                  onClick={() => setPage(p => p + 1)}
+                  className="border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

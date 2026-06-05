@@ -6,8 +6,15 @@ import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Building2, Search, ArrowLeft, Trash2, Eye } from 'lucide-react'
-
+import { Building2, Search, ArrowLeft, Trash2, Eye, Mail, Globe, Calendar, Briefcase, FileText } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
 interface Company {
   company_id: string
   company_name: string
@@ -143,28 +150,28 @@ export default function AdminCompaniesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-transparent p-6 text-slate-900 dark:text-white">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
-            className="text-slate-500 hover:text-slate-900"
+            className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Manage Companies</h1>
-            <p className="text-slate-600">View and manage all companies</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Manage Companies</h1>
+            <p className="text-slate-600 dark:text-gray-400">View and manage all companies</p>
           </div>
         </div>
 
-        <Card className="mb-6 border-slate-200 bg-white">
+        <Card className="mb-6 border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
           <CardContent className="p-4">
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 relative min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-gray-500" />
                 <Input
                   placeholder="Search companies by name, domain, or email..."
                   value={search}
@@ -172,7 +179,7 @@ export default function AdminCompaniesPage() {
                     setSearch(e.target.value)
                     setPage(1)
                   }}
-                  className="pl-10 border-slate-300 bg-white text-slate-900"
+                  className="pl-10 border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-gray-500"
                 />
               </div>
             </div>
@@ -180,15 +187,15 @@ export default function AdminCompaniesPage() {
         </Card>
 
         {error && (
-          <Card className="bg-red-900/20 border-red-500 mb-6">
+          <Card className="bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/60 mb-6">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className="text-red-400">{error}</span>
+                <span className="text-red-800 dark:text-red-300">{error}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setError(null)}
-                  className="text-red-400 hover:text-red-300"
+                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                 >
                   ×
                 </Button>
@@ -203,98 +210,192 @@ export default function AdminCompaniesPage() {
           </div>
         ) : (
           <>
-            <Card className="border-slate-200 bg-white">
-              <CardHeader>
-                <CardTitle>Companies ({total})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {companies.map((company) => (
-                    <div
-                      key={company.company_id}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Building2 className="h-5 w-5 text-blue-400" />
-                          <span className="font-semibold text-lg">{company.company_name}</span>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                Companies ({total})
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {companies.map((company) => (
+                <Dialog key={company.company_id}>
+                  <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group flex flex-col h-full relative">
+                    <DialogTrigger asChild>
+                      <div className="p-5 flex flex-col h-full w-full text-left outline-none">
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-slate-100 dark:bg-gray-800 p-1.5 rounded-full text-slate-500 dark:text-gray-400">
+                            <Eye className="w-4 h-4" />
+                          </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
-                          <div>
-                            <span className="text-slate-500">Domain:</span> {company.company_domain}
+
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 flex items-center justify-center shrink-0">
+                            <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <div>
-                            <span className="text-slate-500">Email:</span> {company.company_email || 'N/A'}
+                          <div className="overflow-hidden">
+                            <h3 className="font-semibold text-slate-900 dark:text-white truncate" title={company.company_name}>
+                              {company.company_name}
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-gray-400 truncate" title={company.company_domain}>
+                              {company.company_domain}
+                            </p>
                           </div>
-                          <div>
-                            <span className="text-slate-500">HR Email:</span> {company.hr_email}
-                          </div>
-                          <div>
-                            <span className="text-slate-500">Created:</span> {new Date(company.created_at).toLocaleDateString()}
-                          </div>
+                        </div>
+
+                        <div className="mt-auto grid grid-cols-2 gap-2 text-xs">
                           {typeof company.jobs_count === 'number' && (
-                            <div>
-                              <span className="text-slate-500">Jobs:</span> {company.jobs_count}
+                            <div className="flex items-center gap-1.5 text-slate-600 dark:text-gray-400 border border-slate-100 dark:border-gray-800 rounded-md p-2 bg-slate-50 dark:bg-gray-800/50">
+                              <Briefcase className="w-3.5 h-3.5 text-slate-400 dark:text-gray-500" />
+                              <span className="font-medium">{company.jobs_count}</span> Jobs
                             </div>
                           )}
                           {typeof company.applications_count === 'number' && (
-                            <div>
-                              <span className="text-slate-500">Applications:</span> {company.applications_count}
+                            <div className="flex items-center gap-1.5 text-slate-600 dark:text-gray-400 border border-slate-100 dark:border-gray-800 rounded-md p-2 bg-slate-50 dark:bg-gray-800/50">
+                              <FileText className="w-3.5 h-3.5 text-slate-400 dark:text-gray-500" />
+                              <span className="font-medium">{company.applications_count}</span> Apps
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => router.push(`/admin/companies/${company.company_id}`)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Details
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => deleteCompany(company.company_id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
+                    </DialogTrigger>
+
+                    {/* Expandable Details Modal */}
+                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Company Details</DialogTitle>
+                        <DialogDescription>Full company information and administrative actions</DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-6 pt-4">
+                        <div className="flex items-start gap-4 pb-4 border-b border-slate-100 dark:border-gray-800">
+                          <div className="w-14 h-14 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 flex items-center justify-center shrink-0">
+                            <Building2 className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+                              {company.company_name}
+                            </h3>
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-gray-400 text-sm">
+                              <Globe className="w-4 h-4" />
+                              <span>{company.company_domain}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Mail className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div className="truncate">
+                              <p className="text-[10px] uppercase font-semibold text-slate-400">Primary Email</p>
+                              <p className="text-slate-900 dark:text-white font-medium truncate">{company.company_email || 'N/A'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Mail className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div className="truncate">
+                              <p className="text-[10px] uppercase font-semibold text-slate-400">HR Email</p>
+                              <p className="text-slate-900 dark:text-white font-medium truncate">{company.hr_email}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Mail className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div className="truncate">
+                              <p className="text-[10px] uppercase font-semibold text-slate-400">Hiring Manager Email</p>
+                              <p className="text-slate-900 dark:text-white font-medium truncate">{company.hiring_manager_email || 'N/A'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 text-slate-600 dark:text-gray-400">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Calendar className="w-4 h-4 text-slate-500" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase font-semibold text-slate-400">Registered</p>
+                              <p className="text-slate-900 dark:text-white font-medium">{new Date(company.created_at).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          {typeof company.jobs_count === 'number' && (
+                            <div className="rounded-lg border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 p-4 text-center">
+                              <Briefcase className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+                              <p className="text-2xl font-bold text-slate-900 dark:text-white">{company.jobs_count}</p>
+                              <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Jobs Posted</p>
+                            </div>
+                          )}
+                          {typeof company.applications_count === 'number' && (
+                            <div className="rounded-lg border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 p-4 text-center">
+                              <FileText className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+                              <p className="text-2xl font-bold text-slate-900 dark:text-white">{company.applications_count}</p>
+                              <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Applications</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actions Row */}
+                        <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-100 dark:border-gray-800">
+                          <Button
+                            onClick={() => router.push(`/admin/companies/${company.company_id}`)}
+                            className="bg-primary hover:bg-blue-700"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Dashboard
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            className="ml-auto"
+                            onClick={() => deleteCompany(company.company_id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Company
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    </DialogContent>
+                  </Card>
+                </Dialog>
+              ))}
+            </div>
 
-                {companies.length === 0 && (
-                  <div className="py-12 text-center text-slate-500">
-                    No companies found
-                  </div>
-                )}
+            {companies.length === 0 && (
+              <div className="py-12 text-center">
+                <Building2 className="w-16 h-16 text-slate-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-slate-500 dark:text-gray-400">No companies found</p>
+              </div>
+            )}
 
-                {total > 20 && (
-                  <div className="flex justify-center gap-2 mt-6">
-                    <Button
-                      variant="outline"
-                      disabled={page === 1}
-                      onClick={() => setPage(p => p - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <span className="flex items-center px-4 text-slate-500">
-                      Page {page} of {Math.ceil(total / 20)}
-                    </span>
-                    <Button
-                      variant="outline"
-                      disabled={page >= Math.ceil(total / 20)}
-                      onClick={() => setPage(p => p + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {total > 20 && (
+              <div className="flex justify-center gap-2 mt-8">
+                <Button
+                  variant="outline"
+                  disabled={page === 1}
+                  onClick={() => setPage(p => p - 1)}
+                  className="border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                >
+                  Previous
+                </Button>
+                <span className="flex items-center px-4 text-slate-500 dark:text-gray-400 font-medium">
+                  Page {page} of {Math.ceil(total / 20)}
+                </span>
+                <Button
+                  variant="outline"
+                  disabled={page >= Math.ceil(total / 20)}
+                  onClick={() => setPage(p => p + 1)}
+                  className="border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -20,6 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog'
 
 interface Candidate extends CandidateRowType {
@@ -512,141 +513,166 @@ export default function ShortlistedPage() {
               </div>
             </div>
           ) : (
-          <div 
-            className="overflow-x-auto [&::-webkit-scrollbar]:h-[2px] [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2D2DDD] [&::-webkit-scrollbar-thumb]:rounded-full"
-            style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: '#2D2DDD transparent'
-            }}
-          >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <input
-                      type="checkbox"
-                      checked={candidates.length > 0 && selectedIds.size === candidates.length}
-                      onChange={toggleSelectAll}
-                      className="rounded border-gray-300 accent-[#2D2DDD]"
-                    />
-                  </TableHead>
-                  <TableHead className="w-20">Rank</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="w-24 text-center">Score</TableHead>
-                  <TableHead className="w-32">Status</TableHead>
-                  <TableHead className="w-10">LinkedIn</TableHead>
-                  <TableHead className="min-w-[200px]">Score Reason</TableHead>
-                  <TableHead className="w-32">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {candidates.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                      No candidates yet on the job post
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  candidates.map((candidate) => {
-                    const linkedInUrl = getLinkedInUrl(candidate)
-                    return (
-                    <TableRow 
-                      key={candidate.id}
-                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                      onClick={() => handleRowClick(candidate)}
-                    >
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(candidate.id)}
-                          onChange={() => toggleSelect(candidate.id)}
-                          className="rounded border-gray-300 accent-[#2D2DDD]"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center">
-                          {candidate.rank ? getRankIcon(candidate.rank) : '-'}
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/50 p-3 rounded-xl border border-slate-200 dark:border-gray-800">
+              <input
+                type="checkbox"
+                id="select-all"
+                checked={candidates.length > 0 && selectedIds.size === candidates.length}
+                onChange={toggleSelectAll}
+                className="rounded border-gray-300 accent-[#2D2DDD] w-4 h-4 cursor-pointer"
+              />
+              <label htmlFor="select-all" className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                Select All ({selectedIds.size} selected)
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {candidates.length === 0 ? (
+                <div className="col-span-full text-center py-16">
+                  <User className="w-12 h-12 text-slate-300 dark:text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-medium text-slate-900 dark:text-white mb-2">No candidates found</h3>
+                  <p className="text-slate-500 dark:text-gray-400">There are no candidates on this job post yet.</p>
+                </div>
+              ) : (
+                candidates.map((candidate) => {
+                  const linkedInUrl = getLinkedInUrl(candidate)
+                  return (
+                    <Dialog key={candidate.id}>
+                      <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md hover:border-[#2D2DDD]/40 transition-all cursor-pointer group flex flex-col h-full relative">
+                        <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(candidate.id)}
+                            onChange={() => toggleSelect(candidate.id)}
+                            className="rounded border-gray-300 accent-[#2D2DDD] w-4 h-4 cursor-pointer"
+                          />
                         </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {cleanCandidateName(candidate.candidate_name)}
-                      </TableCell>
-                      <TableCell className="text-gray-600 dark:text-gray-400">
-                        {candidate.email}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {candidate.score !== null && candidate.score !== undefined && typeof candidate.score === 'number' ? (
-                          <span className="font-semibold text-[#2D2DDD] dark:text-white">
-                            {Number(candidate.score).toFixed(1)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(candidate.status)}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        {linkedInUrl ? (
-                          <a
-                            href={linkedInUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                            title="View LinkedIn Profile"
-                          >
-                            <Linkedin className="w-5 h-5" />
-                          </a>
-                        ) : (
-                          <span className="text-gray-300"><Linkedin className="w-4 h-4" /></span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-600 dark:text-gray-400">
-                        {renderReasoning(candidate.reasoning)}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex flex-col gap-2">
-                        {candidate.status !== 'HIRED' && candidate.status !== 'REJECTED' && (
-                          candidate.interview_status === 'SCHEDULED' || candidate.interview_time ? (
-                            <>
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
-                                onClick={() => handleScheduleClick(candidate)}
-                              >
-                                ✏️ Edit Interview
+                        
+                        <DialogTrigger asChild>
+                          <div className="p-5 flex flex-col h-full w-full text-left outline-none pt-8">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                {candidate.rank ? getRankIcon(candidate.rank) : <User className="w-5 h-5 text-gray-400" />}
+                              </div>
+                              <div className="overflow-hidden">
+                                <h3 className="font-semibold text-slate-900 dark:text-white truncate" title={cleanCandidateName(candidate.candidate_name)}>
+                                  {cleanCandidateName(candidate.candidate_name)}
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-gray-400 truncate" title={candidate.email}>
+                                  {candidate.email}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between mt-auto mb-3">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-medium text-slate-500 dark:text-gray-400">Score:</span>
+                                {candidate.score !== null && candidate.score !== undefined && typeof candidate.score === 'number' ? (
+                                  <span className="font-bold text-[#2D2DDD] dark:text-white">
+                                    {Number(candidate.score).toFixed(1)}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </div>
+                              {getStatusBadge(candidate.status)}
+                            </div>
+                          </div>
+                        </DialogTrigger>
+
+                        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Candidate Details</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-6 py-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                {candidate.rank ? getRankIcon(candidate.rank) : <User className="w-8 h-8 text-gray-400" />}
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold">{cleanCandidateName(candidate.candidate_name)}</h3>
+                                <p className="text-slate-500">{candidate.email}</p>
+                              </div>
+                              <div className="ml-auto">
+                                {linkedInUrl && (
+                                  <a href={linkedInUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                                    <Linkedin className="w-4 h-4" /> LinkedIn
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="p-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50">
+                                <span className="text-sm text-slate-500 block mb-1">Status</span>
+                                {getStatusBadge(candidate.status)}
+                              </div>
+                              <div className="p-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50">
+                                <span className="text-sm text-slate-500 block mb-1">AI Score</span>
+                                <span className="font-bold text-xl text-[#2D2DDD] dark:text-white">
+                                  {candidate.score !== null && candidate.score !== undefined && typeof candidate.score === 'number' 
+                                    ? Number(candidate.score).toFixed(1) 
+                                    : '-'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-lg flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-[#2D2DDD]" />
+                                AI Reasoning
+                              </h4>
+                              <div className="p-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                                {renderReasoning(candidate.reasoning)}
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-gray-800">
+                              {candidate.status !== 'HIRED' && candidate.status !== 'REJECTED' && (
+                                candidate.interview_status === 'SCHEDULED' || candidate.interview_time ? (
+                                  <>
+                                    <Button
+                                      className="flex-1 bg-green-600 hover:bg-green-700 text-white shadow-none"
+                                      onClick={() => handleScheduleClick(candidate)}
+                                    >
+                                      ✏️ Edit Interview
+                                    </Button>
+                                    <Button variant="outline" className="flex-1 border-green-500 text-green-600 hover:bg-green-50" onClick={() => handleUpdateStatus(candidate.id, 'HIRED')}>
+                                      Mark as Hired
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Button
+                                    className="flex-1 bg-[#2D2DDD] hover:bg-[#2525BB] text-white shadow-none"
+                                    onClick={() => handleScheduleClick(candidate)}
+                                  >
+                                    Schedule Interview
+                                  </Button>
+                                )
+                              )}
+                              {candidate.status !== 'HIRED' && candidate.status !== 'REJECTED' && (
+                                <Button variant="outline" className="flex-1 border-red-500 text-red-600 hover:bg-red-50" onClick={() => {
+                                  setCandidateToReject(candidate)
+                                  setIsRejectModalOpen(true)
+                                }}>
+                                  Reject
+                                </Button>
+                              )}
+                              
+                              <Button variant="outline" className="flex-1" onClick={() => handleRowClick(candidate)}>
+                                <User className="w-4 h-4 mr-2" />
+                                Full Profile
                               </Button>
-                              <Button size="sm" variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 w-full" onClick={() => handleUpdateStatus(candidate.id, 'HIRED')}>
-                                Mark as Hired
-                              </Button>
-                            </>
-                          ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => handleScheduleClick(candidate)}
-                              className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
-                            >
-                              Schedule Interview
-                            </Button>
-                          )
-                        )}
-                        {candidate.status !== 'HIRED' && candidate.status !== 'REJECTED' && (
-                          <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50 w-full" onClick={() => {
-                            setCandidateToReject(candidate)
-                            setIsRejectModalOpen(true)
-                          }}>
-                            Reject
-                          </Button>
-                        )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    )
-                  })
-                )}
-              </TableBody>
-            </Table>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Card>
+                    </Dialog>
+                  )
+                })
+              )}
+            </div>
           </div>
           )}
         </CardContent>

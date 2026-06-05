@@ -4,7 +4,8 @@ import { Suspense, Component, ReactNode, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, Menu, RefreshCw, X } from 'lucide-react'
+import { AlertCircle, Menu, RefreshCw, X, Moon, Sun } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 function AdminSidebarFallback() {
   return (
@@ -106,19 +107,24 @@ export default function AdminLayout({
 
   return (
     <AdminErrorBoundary>
-      <div className="relative min-h-screen bg-slate-50 text-slate-900">
+      <div className="relative min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-slate-50">
         {/* Menu opens the admin nav drawer; sidebar stays hidden until clicked */}
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="fixed top-4 left-4 z-[60] h-11 w-11 shrink-0 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+          className="fixed top-4 left-4 z-[60] h-11 w-11 shrink-0 rounded-full border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-gray-800"
           onClick={() => setNavOpen((o) => !o)}
           aria-expanded={navOpen}
           aria-label={navOpen ? 'Close admin menu' : 'Open admin menu'}
         >
           {navOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
+
+        {/* Theme Toggle in Admin Header */}
+        <div className="fixed top-4 right-4 z-[60]">
+          <ThemeToggle />
+        </div>
 
         {navOpen ? (
           <button
@@ -141,7 +147,7 @@ export default function AdminLayout({
           </AdminErrorBoundary>
         </Suspense>
 
-        <main className="min-h-screen overflow-auto bg-slate-50 pt-16">
+        <main className="min-h-screen overflow-auto bg-slate-50 dark:bg-gray-950 pt-16">
           <AdminErrorBoundary>
             {children}
           </AdminErrorBoundary>
