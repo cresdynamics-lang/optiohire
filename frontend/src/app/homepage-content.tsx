@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useRef, useState, useEffect } from 'react'
 import { Building2, Clock, Briefcase, ArrowRight } from 'lucide-react'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 
 type InteractiveCardProps = {
   title: string
@@ -106,15 +107,24 @@ export default function HomePageContent() {
   const [featuredJobs, setFeaturedJobs] = useState<Job[]>([])
   const [loadingJobs, setLoadingJobs] = useState(true)
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
+  const { executeRecaptcha } = useGoogleReCaptcha()
 
   const handleImgError = (id: string) => {
     setImgErrors((prev) => ({ ...prev, [id]: true }))
   }
 
   useEffect(() => {
+    if (!executeRecaptcha) return
     const fetchJobs = async () => {
       try {
-        const res = await fetch('/api/jobs')
+        let captchaToken = ''
+        if (executeRecaptcha) {
+          captchaToken = await executeRecaptcha('homepage_featured_jobs')
+        }
+
+        const res = await fetch('/api/jobs', {
+          headers: captchaToken ? { 'X-Captcha-Token': captchaToken } : {}
+        })
         const data = await res.json()
         if (res.ok && data.jobs) {
           setFeaturedJobs(data.jobs.slice(0, 4))
@@ -126,7 +136,7 @@ export default function HomePageContent() {
       }
     }
     fetchJobs()
-  }, [])
+  }, [executeRecaptcha])
 
   return (
     <div className="pb-20">

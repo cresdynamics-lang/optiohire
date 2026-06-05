@@ -238,6 +238,7 @@ export default function JobsPage() {
   const { executeRecaptcha } = useGoogleReCaptcha()
 
   useEffect(() => {
+    if (!executeRecaptcha) return
     const fetchJobs = async () => {
       try {
         let captchaToken = ''

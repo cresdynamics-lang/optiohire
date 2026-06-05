@@ -7,8 +7,8 @@ Disallow: /auth/
 Disallow: /api/
 
 # Host
-Host: http://localhost:3000
+Host: https://optiohire.com
 
 # Sitemaps
-Sitemap: http://localhost:3000/sitemap.xml
-Sitemap: http://localhost:3000/server-sitemap.xml
+Sitemap: https://optiohire.com/sitemap.xml
+Sitemap: https://optiohire.com/server-sitemap.xml
