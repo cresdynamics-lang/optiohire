@@ -11,6 +11,7 @@ import { ContributionService } from '../services/contributionService.js'
 import { provisionCandidateAccount } from '../services/candidateProvisioningService.js'
 import { healthMonitor } from '../utils/healthMonitor.js'
 import path from 'path'
+import { cache, cacheKeys } from '../utils/redis.js'
 
 const applicationRepo = new ApplicationRepository()
 const cvParser = new CVParser()
@@ -116,8 +117,6 @@ export class AIWorker {
       logger.error(`❌ AI scoring returned no result for application: ${applicationId}`)
       return
     }
-
-import { cache, cacheKeys } from '../utils/redis.js'
 
     logger.info(`✅ Score: ${aiResult.score}, Status: ${aiResult.status} for application: ${applicationId}`)
 
