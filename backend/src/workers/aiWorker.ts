@@ -270,7 +270,7 @@ export class AIWorker {
       if (aiResult.status === 'SHORTLIST') {
         await emailService.sendShortlistEmail(emailArgs)
       } else if (aiResult.status === 'REJECTED') {
-        await emailService.sendRejectionEmail(emailArgs)
+        await emailService.sendRejectionEmail({ ...emailArgs, rejectSource: 'SYSTEM' })
       } else if (aiResult.status === 'FLAGGED') {
         // Redundant since the initial "Application Received" already says the application is under review.
         // await emailService.sendFlagReviewEmail(emailArgs)

@@ -157,7 +157,7 @@ export class MaintenanceWorker {
 
     for (const app of rows) {
       try {
-        const args = { candidateEmail: app.email, candidateName: app.candidate_name, jobTitle: app.job_title, companyName: app.company_name, companyEmail: app.company_email, companyDomain: app.company_domain }
+        const args = { candidateEmail: app.email, candidateName: app.candidate_name, jobTitle: app.job_title, companyName: app.company_name, companyEmail: app.company_email, companyDomain: app.company_domain, rejectSource: 'SYSTEM' as const }
         if (app.ai_status === 'SHORTLIST') await emailService.sendShortlistEmail(args)
         else if (app.ai_status === 'REJECT') await emailService.sendRejectionEmail(args)
         else if (app.ai_status === 'FLAG') await emailService.sendFlagReviewEmail(args)

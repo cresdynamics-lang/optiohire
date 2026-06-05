@@ -513,6 +513,7 @@ Company Email: ${hrEmail}`
     candidateLoginUrl?: string | null
     candidateTemporaryPassword?: string | null
     isNewCandidateAccount?: boolean
+    rejectSource?: 'SYSTEM' | 'HR'
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -579,7 +580,8 @@ Please change your password after your first login for security.
         text += dashboardBlockText
       }
     } else {
-      html = `
+      if (data.rejectSource === 'SYSTEM') {
+        html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -591,16 +593,11 @@ Please change your password after your first login for security.
 <body>
   <div class="container">
     <p>Dear ${candidateName},</p>
-    
-    <p>Thank you for taking the time to apply for the <strong>${jobTitle}</strong> position - <strong>${companyName}</strong> and for your interest in joining our team. We truly appreciate the effort you put into your application and the time you invested in the selection process.</p>
-    
-    <p>After careful consideration and review of all candidates, we regret to inform you that we will not be moving forward with your application at this time. This decision was not easy, as we received a high number of strong applications, including yours.</p>
-    
-    <p>Although you were not selected for this role, we encourage you to apply for future opportunities that match your skills and experience. Your profile is impressive, and we believe you may be a strong fit for upcoming positions within <strong>${companyName}</strong>.</p>
-    
-    <p>If you have any questions or would like feedback regarding your application, please feel free to contact us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
-    
-    <p>We sincerely appreciate your interest in our company and wish you the very best in your job search and future career endeavors.</p>
+    <p>Thank you for taking the time to apply for the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>. We appreciate the effort you put into your application.</p>
+    <p>After an initial review of your profile against the core requirements of this role, we regret to inform you that we will not be moving forward with your application at this time.</p>
+    <p>However, we were impressed by your background and have <strong>added your profile to our exclusive Talent Pool</strong>. This means our team will keep you in mind for future opportunities that better match your skills and experience within <strong>${companyName}</strong>.</p>
+    <p>If you have any questions, please feel free to contact us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
+    <p>We sincerely appreciate your interest in our company and wish you the very best in your job search.</p>
     ${dashboardBlock}
     <p>Kind regards,<br>
     <strong>Company Name:</strong> ${companyName}<br>
@@ -608,24 +605,68 @@ Please change your password after your first login for security.
   </div>
 </body>
 </html>
-    `
+        `
 
-      text = `Dear ${candidateName},
+        text = `Dear ${candidateName},
 
-Thank you for taking the time to apply for the ${jobTitle} position - ${companyName} and for your interest in joining our team. We truly appreciate the effort you put into your application and the time you invested in the selection process.
+Thank you for taking the time to apply for the ${jobTitle} position at ${companyName}. We appreciate the effort you put into your application.
 
-After careful consideration and review of all candidates, we regret to inform you that we will not be moving forward with your application at this time. This decision was not easy, as we received a high number of strong applications, including yours.
+After an initial review of your profile against the core requirements of this role, we regret to inform you that we will not be moving forward with your application at this time.
 
-Although you were not selected for this role, we encourage you to apply for future opportunities that match your skills and experience. Your profile is impressive, and we believe you may be a strong fit for upcoming positions within ${companyName}.
+However, we were impressed by your background and have added your profile to our exclusive Talent Pool. This means our team will keep you in mind for future opportunities that better match your skills and experience within ${companyName}.
 
-If you have any questions or would like feedback regarding your application, please feel free to contact us at ${hrEmail}.
+If you have any questions, please feel free to contact us at ${hrEmail}.
 
-We sincerely appreciate your interest in our company and wish you the very best in your job search and future career endeavors.
+We sincerely appreciate your interest in our company and wish you the very best in your job search.
 ${dashboardBlockText}
 Kind regards,
 
 Company Name: ${companyName}
 Company Email: ${hrEmail}`
+      } else {
+        html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Dear ${candidateName},</p>
+    <p>Thank you for taking the time to apply for the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>. We truly appreciate the effort you put into your application and the time you invested in the selection process.</p>
+    <p>After a detailed review by our HR team, we regret to inform you that we will not be moving forward with your application at this time. This decision was not easy, as we received a high number of strong applications.</p>
+    <p>However, your profile is impressive, and we have <strong>added you to our exclusive Talent Pool</strong>. We encourage you to apply for future opportunities, and we will proactively reach out if a role opens up that aligns perfectly with your expertise.</p>
+    <p>If you have any questions or would like feedback regarding your application, please feel free to contact us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
+    <p>We sincerely appreciate your interest in our company and wish you the very best in your future career endeavors.</p>
+    ${dashboardBlock}
+    <p>Kind regards,<br>
+    <strong>Company Name:</strong> ${companyName}<br>
+    <strong>Company Email:</strong> ${hrEmail}</p>
+  </div>
+</body>
+</html>
+        `
+
+        text = `Dear ${candidateName},
+
+Thank you for taking the time to apply for the ${jobTitle} position at ${companyName}. We truly appreciate the effort you put into your application and the time you invested in the selection process.
+
+After a detailed review by our HR team, we regret to inform you that we will not be moving forward with your application at this time. This decision was not easy, as we received a high number of strong applications.
+
+However, your profile is impressive, and we have added you to our exclusive Talent Pool. We encourage you to apply for future opportunities, and we will proactively reach out if a role opens up that aligns perfectly with your expertise.
+
+If you have any questions or would like feedback regarding your application, please feel free to contact us at ${hrEmail}.
+
+We sincerely appreciate your interest in our company and wish you the very best in your future career endeavors.
+${dashboardBlockText}
+Kind regards,
+
+Company Name: ${companyName}
+Company Email: ${hrEmail}`
+      }
     }
 
     // Use applicationsoptiohire@gmail.com for all candidate emails

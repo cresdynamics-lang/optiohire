@@ -133,7 +133,8 @@ export async function checkAndSendMissingEmails(req: Request, res: Response) {
             companyName: companyData?.company_name || app.company_name,
             companyId: app.company_id,
             companyEmail: companyData?.company_email || app.company_email,
-            companyDomain: companyData?.company_domain || app.company_domain
+            companyDomain: companyData?.company_domain || app.company_domain,
+            rejectSource: 'SYSTEM'
           })
           results.sent++
           logger.info(`✅ [ADMIN] Rejection email sent successfully to ${app.email}`)
