@@ -113,7 +113,8 @@ export async function getDashboardAnalytics(req: any, res: Response) {
       job_title: string,
       total_apps: string,
       hired_apps: string,
-      avg_score: string
+      avg_score: string,
+      avg_days_to_hire: string
     }>(
       `SELECT * FROM mv_job_performance_stats WHERE company_id = $1`,
       [companyId]
@@ -176,7 +177,7 @@ export async function getDashboardAnalytics(req: any, res: Response) {
 
     // 5. Generate AI Insights
     try {
-      const prompt = \`
+      const prompt = `
 You are an expert HR Analyst for OptioHire. 
 Analyze the following recruitment data for a company and provide 3-4 actionable insights.
 Instead of plain text, you MUST return ONLY a valid JSON array of objects. 
@@ -188,10 +189,10 @@ Each object must have the following structure:
 }
 
 Data:
-Funnel: \${JSON.stringify(funnel)}
-Job Health: \${JSON.stringify(jobRankings)}
-Velocity: \${JSON.stringify(payload.velocity)}
-\`
+Funnel: ${JSON.stringify(funnel)}
+Job Health: ${JSON.stringify(jobRankings)}
+Velocity: ${JSON.stringify(payload.velocity)}
+`
       const systemPrompt = "You are an HR Analytics AI. Provide insights strictly as a JSON array of objects."
       const insightsText = await openRouterService.generateText(prompt, undefined, {
         systemPrompt,
@@ -199,7 +200,7 @@ Velocity: \${JSON.stringify(payload.velocity)}
         temperature: 0.3
       })
       
-      const match = insightsText.match(/\\[.*\\]/s)
+      const match = insightsText.match(/\[.*\]/s)
       if (match) {
         payload.aiInsights = JSON.parse(match[0])
       } else {
