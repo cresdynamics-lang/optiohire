@@ -7,9 +7,10 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Mail, CheckCircle, KeyRound } from 'lucide-react'
+import { ArrowLeft, Mail, CheckCircle, KeyRound, Loader2 } from 'lucide-react'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { useRef } from 'react'
+import { useOtpResend } from '@/hooks/use-otp-resend'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -30,6 +31,9 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
+  const { cooldown, canResend, startCooldown } = useOtpResend(30)
 
   const emailForm = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -38,6 +42,41 @@ export default function ForgotPasswordPage() {
   const codeForm = useForm<VerifyCodeFormData>({
     resolver: zodResolver(verifyCodeSchema),
   })
+
+  const handleResendCode = async () => {
+    if (!email || !canResend || !executeRecaptcha) return
+    
+    setResendLoading(true)
+    setResendMessage(null)
+    setError(null)
+    
+    try {
+      const token = await executeRecaptcha('forgot_password_resend')
+      if (!token) throw new Error('Failed to obtain recaptcha token')
+
+      const apiUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/api/auth/forgot-password`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/forgot-password`
+        
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, captchaToken: token }),
+      })
+
+      if (response.ok) {
+        setResendMessage('New code sent. Check your email.')
+        startCooldown()
+      } else {
+        const result = await response.json().catch(() => ({}))
+        setResendMessage(result.error || 'Failed to resend code.')
+      }
+    } catch (err) {
+      setResendMessage('Could not resend. Try again.')
+    } finally {
+      setResendLoading(false)
+    }
+  }
 
   const onSubmitEmail = async (data: ForgotPasswordFormData) => {
     if (!executeRecaptcha) {
@@ -86,6 +125,7 @@ export default function ForgotPasswordPage() {
       setTimeout(() => {
         setStep('code')
         setSuccess(false)
+        startCooldown() // Start cooldown after first success
       }, 2000)
     } catch (err) {
       console.error('Forgot password error:', err)
@@ -256,7 +296,7 @@ export default function ForgotPasswordPage() {
                       <input
                         type="text"
                         id="code"
-                        placeholder="Enter 6-digit code"
+                        placeholder="000000"
                         maxLength={6}
                         {...codeForm.register('code')}
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-figtree bg-white text-gray-900 placeholder-gray-500 text-sm text-center text-2xl tracking-widest"
@@ -277,14 +317,39 @@ export default function ForgotPasswordPage() {
                       <p className="text-sm text-red-600 font-figtree">{error}</p>
                     </div>
                   )}
+                  
+                  {resendMessage && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-700 font-figtree">{resendMessage}</p>
+                    </div>
+                  )}
 
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
-                  >
-                    {isLoading ? 'Verifying...' : 'Verify Code'}
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      disabled={resendLoading || isLoading || cooldown > 0}
+                      className="flex-1 py-3 px-4 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 font-figtree text-sm"
+                    >
+                      {resendLoading ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Sending…</span>
+                        </div>
+                      ) : cooldown > 0 ? (
+                        `Resend in ${cooldown}s`
+                      ) : (
+                        'Resend code'
+                      )}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="flex-1 bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-figtree text-sm"
+                    >
+                      {isLoading ? 'Verifying...' : 'Verify Code'}
+                    </button>
+                  </div>
 
                   <div className="text-center space-y-2">
                     <button
@@ -292,6 +357,7 @@ export default function ForgotPasswordPage() {
                       onClick={() => {
                         setStep('email')
                         setError(null)
+                        setResendMessage(null)
                         codeForm.reset()
                       }}
                       className="text-sm text-blue-600 hover:text-blue-700 font-medium font-figtree"

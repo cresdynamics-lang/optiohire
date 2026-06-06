@@ -51,7 +51,8 @@ jobs:
           # Use .env.production for the build (bakes NEXT_PUBLIC_ vars into JS bundle)
           cp .env.production .env.local
           npm ci --legacy-peer-deps
-          npm run build
+          # Run the full quality build (types + lint + standalone)
+          npm run build:prod
           # Fix standalone missing CSS/Assets
           cp -r public .next/standalone/ 2>/dev/null || true
           cp -r .next/static .next/standalone/.next/ 2>/dev/null || true

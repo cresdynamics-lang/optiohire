@@ -71,6 +71,15 @@ export async function submitPublicApplication(req: Request, res: Response) {
 
     const companyId = jobRows[0].company_id
 
+    // Anti-Spam: Limit per email (max 5 applications per 24h)
+    const { rows: dailyCount } = await query<{ count: string }>(
+      `SELECT COUNT(*) FROM applications WHERE email = $1 AND created_at > NOW() - INTERVAL '24 hours'`,
+      [email.toLowerCase()]
+    )
+    if (Number(dailyCount[0].count) >= 5) {
+      return res.status(429).json({ error: 'Too many applications from this email. Please try again tomorrow.' })
+    }
+
     const { rows: existing } = await query(
       'SELECT application_id FROM applications WHERE job_posting_id = $1 AND email = $2',
       [job_posting_id, email.toLowerCase()]

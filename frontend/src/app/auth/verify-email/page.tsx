@@ -7,7 +7,8 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Mail, CheckCircle, KeyRound } from 'lucide-react'
+import { ArrowLeft, CheckCircle, KeyRound, Loader2 } from 'lucide-react'
+import { useOtpResend } from '@/hooks/use-otp-resend'
 
 const verifyEmailSchema = z.object({
   code: z
@@ -27,6 +28,7 @@ function VerifyEmailContent() {
   const [success, setSuccess] = useState(false)
   const [resendMessage, setResendMessage] = useState<string | null>(null)
   const [resendLoading, setResendLoading] = useState(false)
+  const { cooldown, canResend, startCooldown } = useOtpResend(30)
 
   const form = useForm<VerifyEmailFormData>({
     resolver: zodResolver(verifyEmailSchema)
@@ -38,7 +40,7 @@ function VerifyEmailContent() {
   }, [searchParams])
 
   const handleResendCode = async () => {
-    if (!email) return
+    if (!email || !canResend) return
     setResendLoading(true)
     setResendMessage(null)
     setError(null)
@@ -55,6 +57,7 @@ function VerifyEmailContent() {
       const result = await response.json()
       if (response.ok && !result?.codeSaved) {
         setResendMessage('New code sent. Check your email.')
+        startCooldown()
       } else if (response.ok && result?.codeSaved) {
         setResendMessage('Code could not be sent. Check backend email config (Resend/SMTP).')
       } else {
@@ -195,15 +198,24 @@ function VerifyEmailContent() {
                 <button
                   type="button"
                   onClick={handleResendCode}
-                  disabled={resendLoading || isLoading}
-                  className="flex-1 py-3 px-4 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 font-figtree"
+                  disabled={resendLoading || isLoading || cooldown > 0}
+                  className="flex-1 py-3 px-4 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 font-figtree text-sm"
                 >
-                  {resendLoading ? 'Sending…' : 'Resend code'}
+                  {resendLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Sending…</span>
+                    </div>
+                  ) : cooldown > 0 ? (
+                    `Resend in ${cooldown}s`
+                  ) : (
+                    'Resend code'
+                  )}
                 </button>
                 <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-figtree"
+                className="flex-1 bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-figtree text-sm"
               >
                 {isLoading ? 'Verifying…' : 'Confirm email'}
               </button>
