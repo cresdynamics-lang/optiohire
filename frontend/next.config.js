@@ -78,7 +78,8 @@ const nextConfig = {
       { source: '/api/hr/:path*', destination: 'http://127.0.0.1:3001/api/hr/:path*' },
       { source: '/api/candidate/:path*', destination: 'http://127.0.0.1:3001/api/candidate/:path*' },
       { source: '/api/admin/:path*', destination: 'http://127.0.0.1:3001/api/admin/:path*' },
-      { source: '/api/demos/:path*', destination: 'http://127.0.0.1:3001/api/demos/:path*' }
+      { source: '/api/demos/:path*', destination: 'http://127.0.0.1:3001/api/demos/:path*' },
+      { source: '/api/contact', destination: 'http://127.0.0.1:3001/contact' }
     ]
   },
 
