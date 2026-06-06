@@ -2,16 +2,17 @@ import 'dotenv/config'
 import { query } from '../db/index.js'
 import { scoreCandidate } from '../services/ai/screening.js'
 import { runNightlyTalentPoolScan } from './talentPoolScanner.js'
+import { refreshAnalyticsViews } from '../api/dashboardAnalyticsController.js'
 
 export async function runDailyScoring(): Promise<void> {
   // Score any applications without ai_status
   const { rows: pending } = await query(
-    `select a.application_id, a.job_posting_id, a.parsed_resume_json,
+    \`select a.application_id, a.job_posting_id, a.parsed_resume_json,
             j.job_title, j.job_description, j.responsibilities, j.skills_required
      from applications a
      join job_postings j on j.job_posting_id = a.job_posting_id
      where a.ai_status is null
-     limit 100`
+     limit 100\`
   )
 
   for (const row of pending as any[]) {
@@ -24,15 +25,18 @@ export async function runDailyScoring(): Promise<void> {
     })
 
     await query(
-      `update applications
+      \`update applications
        set ai_score = $1, ai_status = $2, reasoning = $3
-       where application_id = $4 and ai_status is null`,
+       where application_id = $4 and ai_status is null\`,
       [score, status, reasoning, row.application_id]
     )
   }
 
   // Run the AI talent pool scan
   await runNightlyTalentPoolScan()
+
+  // Refresh materialized views for analytics
+  await refreshAnalyticsViews()
 }
 
 // If executed directly: node dist/cron/daily.js

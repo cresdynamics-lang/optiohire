@@ -3,6 +3,7 @@ import { query } from '../db/index.js'
 import { authenticate } from '../middleware/auth.js'
 import { EmailService } from '../services/emailService.js'
 import { logger } from '../utils/logger.js'
+import { refreshAnalyticsViews } from './dashboardAnalyticsController.js'
 // GET /api/hr/candidates?jobId=...
 export async function getCandidatesByJob(req: Request, res: Response) {
   try {
