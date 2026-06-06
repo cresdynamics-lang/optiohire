@@ -122,7 +122,7 @@ export default function ContactPage() {
       setStatus('idle')
       const token = await executeRecaptcha('contact_form')
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/contact`, {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

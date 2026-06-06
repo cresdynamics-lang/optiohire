@@ -32,8 +32,7 @@ export default function DemoPage() {
       setStatus('idle')
       const token = await executeRecaptcha('demo_request')
 
-      const backend = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '')
-      const response = await fetch(`${backend}/contact`, {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...values, topic: values.topic || 'Demo Request', captchaToken: token }),
