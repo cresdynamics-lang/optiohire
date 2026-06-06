@@ -4,8 +4,8 @@ import { authenticate, requireHR } from '../middleware/auth.js'
 import rateLimit from 'express-rate-limit'
 
 const applyLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 3, // 3 requests per 5 minutes
   message: { error: 'Too many applications submitted. Please try again later.' }
 })
 

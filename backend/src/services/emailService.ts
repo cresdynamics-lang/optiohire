@@ -1758,6 +1758,27 @@ The OptioHire Team
   }) {
     const emailType = data.emailType || 'general'
     const recipientName = data.recipientName || null
+
+    // Anti-Spam: Frequency Cap (1 email of same type per recipient every 2 minutes)
+    try {
+      const { query } = await import('../db/index.js')
+      const { rows: recentEmails } = await query(
+        `SELECT COUNT(*) FROM email_logs 
+         WHERE recipient_email = $1 
+         AND email_type = $2 
+         AND status = 'sent' 
+         AND created_at > NOW() - INTERVAL '2 minutes'`,
+        [data.to.toLowerCase(), emailType]
+      )
+      
+      if (Number(recentEmails[0].count) > 0) {
+        logger.warn(`Email frequency cap reached for ${data.to} (${emailType}). Skipping.`)
+        return // Skip sending
+      }
+    } catch (freqErr) {
+      logger.error('Failed to check email frequency cap:', freqErr)
+      // Proceed with sending if check fails
+    }
     
     // Log email attempt
     let emailLogId: string | null = data.existingEmailLogId || null
