@@ -36,6 +36,7 @@ jobs:
             npm run build
             
             echo "=== Running Database Migrations ==="
+            npm run db:schema
             npx tsx migrate-prod.ts
 
       - name: Setup Node.js
