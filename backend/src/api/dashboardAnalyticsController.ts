@@ -5,6 +5,27 @@ import { logger } from '../utils/logger.js'
 
 import { cache, cacheKeys } from '../utils/redis.js'
 
+/**
+ * Refreshes the materialized views used for dashboard analytics.
+ * This can be called after significant changes or via cron.
+ */
+export async function refreshAnalyticsViews() {
+  try {
+    // CONCURRENTLY allows reading while refreshing (requires a unique index on the view)
+    await query('REFRESH MATERIALIZED VIEW CONCURRENTLY mv_company_funnel_stats')
+    await query('REFRESH MATERIALIZED VIEW CONCURRENTLY mv_job_performance_stats')
+    logger.info('✅ Dashboard analytics materialized views refreshed')
+  } catch (err) {
+    // Fallback if unique index isn't ready or other issue
+    try {
+      await query('REFRESH MATERIALIZED VIEW mv_company_funnel_stats')
+      await query('REFRESH MATERIALIZED VIEW mv_job_performance_stats')
+    } catch (fallbackErr) {
+      logger.error('❌ Failed to refresh analytics views:', fallbackErr)
+    }
+  }
+}
+
 export async function getDashboardAnalytics(req: any, res: Response) {
   try {
     const userId = req.userId
@@ -55,63 +76,46 @@ export async function getDashboardAnalytics(req: any, res: Response) {
       return res.json(cached)
     }
 
-    // 1. Candidate Funnel (Counts by ai_status)
-    const { rows: funnelRows } = await query<{ ai_status: string | null, count: string }>(
-      `SELECT ai_status, COUNT(*) as count 
-       FROM applications 
-       WHERE company_id = $1 
-       GROUP BY ai_status`,
+    // NEW: Use Materialized View for Candidate Funnel & Global Stats
+    const { rows: funnelRows } = await query<{ 
+      total_applied: string, 
+      shortlisted: string, 
+      hired: string, 
+      rejected: string, 
+      flagged: string,
+      avg_days_to_hire: string 
+    }>(
+      `SELECT * FROM mv_company_funnel_stats WHERE company_id = $1`,
       [companyId]
     )
+
+    const stats = funnelRows[0] || {
+      total_applied: '0',
+      shortlisted: '0',
+      hired: '0',
+      rejected: '0',
+      flagged: '0',
+      avg_days_to_hire: '0'
+    }
 
     const funnel = {
-      applied: 0,
-      shortlisted: 0,
-      interviewing: 0,
-      offered: 0,
-      hired: 0,
-      rejected: 0,
-      flagged: 0
+      applied: parseInt(stats.total_applied, 10),
+      shortlisted: parseInt(stats.shortlisted, 10),
+      interviewing: 0, // Not currently tracked in view
+      offered: 0,      // Not currently tracked in view
+      hired: parseInt(stats.hired, 10),
+      rejected: parseInt(stats.rejected, 10),
+      flagged: parseInt(stats.flagged, 10)
     }
 
-    for (const row of funnelRows) {
-      const count = parseInt(row.count, 10)
-      funnel.applied += count
-      const status = (row.ai_status || '').toUpperCase()
-      if (status === 'SHORTLIST') funnel.shortlisted += count
-      if (status === 'HIRED') funnel.hired += count
-      if (status === 'REJECT' || status === 'REJECTED') funnel.rejected += count
-      if (status === 'FLAG') funnel.flagged += count
-    }
-
-    // 2. Time-to-Hire
-    const { rows: timeToHireRows } = await query<{ job_title: string, avg_days: string }>(
-      `SELECT 
-         j.job_title, 
-         AVG(EXTRACT(EPOCH FROM (a.hired_at - a.created_at)) / 86400)::numeric(10,1) as avg_days
-       FROM applications a
-       JOIN job_postings j ON a.job_posting_id = j.job_posting_id
-       WHERE a.company_id = $1 AND a.ai_status = 'HIRED' AND a.hired_at IS NOT NULL
-       GROUP BY j.job_title`,
-      [companyId]
-    )
-
-    // 3. Job Health & Ranking
+    // NEW: Use Materialized View for Job Performance
     const { rows: jobHealthRows } = await query<{
       job_title: string,
       total_apps: string,
       hired_apps: string,
       avg_score: string
     }>(
-      `SELECT 
-         j.job_title,
-         COUNT(a.application_id) as total_apps,
-         SUM(CASE WHEN a.ai_status = 'HIRED' THEN 1 ELSE 0 END) as hired_apps,
-         AVG(a.ai_score)::numeric(10,1) as avg_score
-       FROM job_postings j
-       LEFT JOIN applications a ON j.job_posting_id = a.job_posting_id
-       WHERE j.company_id = $1
-       GROUP BY j.job_title`,
+      `SELECT * FROM mv_job_performance_stats WHERE company_id = $1`,
       [companyId]
     )
 
@@ -122,10 +126,8 @@ export async function getDashboardAnalytics(req: any, res: Response) {
       
       const hireRate = total > 0 ? (hired / total) * 100 : 0
       
-      // Custom formula for Health Score (0-100)
-      // Volume matters up to 50 applicants, Hire Rate up to 20%, Score matters
       const volumeScore = Math.min((total / 50) * 100, 100) * 0.3
-      const qualityScore = score * 0.4 // ai_score is 0-100
+      const qualityScore = score * 0.4
       const rateScore = Math.min((hireRate / 20) * 100, 100) * 0.3
       
       const healthScore = Math.round(volumeScore + qualityScore + rateScore)
@@ -144,7 +146,7 @@ export async function getDashboardAnalytics(req: any, res: Response) {
       }
     }).sort((a, b) => b.healthScore - a.healthScore)
 
-    // 4. Hiring Velocity (Last 6 months)
+    // 4. Hiring Velocity (Last 6 months) - Optimized with index
     const { rows: velocityRows } = await query<{ month: string, applications: string, hires: string }>(
       `SELECT 
          to_char(date_trunc('month', created_at), 'Mon YYYY') as month,
@@ -159,7 +161,10 @@ export async function getDashboardAnalytics(req: any, res: Response) {
 
     const payload = {
       funnel,
-      timeToHire: timeToHireRows.map(r => ({ jobTitle: r.job_title, avgDays: parseFloat(r.avg_days || '0') })),
+      timeToHire: jobHealthRows.map(r => ({ 
+        jobTitle: r.job_title, 
+        avgDays: parseFloat(r.avg_days_to_hire || '0') 
+      })),
       jobRankings,
       velocity: velocityRows.map(r => ({
         month: r.month,
@@ -171,7 +176,7 @@ export async function getDashboardAnalytics(req: any, res: Response) {
 
     // 5. Generate AI Insights
     try {
-      const prompt = `
+      const prompt = \`
 You are an expert HR Analyst for OptioHire. 
 Analyze the following recruitment data for a company and provide 3-4 actionable insights.
 Instead of plain text, you MUST return ONLY a valid JSON array of objects. 
@@ -183,11 +188,10 @@ Each object must have the following structure:
 }
 
 Data:
-Funnel: ${JSON.stringify(funnel)}
-Time to Hire: ${JSON.stringify(payload.timeToHire)}
-Job Health: ${JSON.stringify(jobRankings)}
-Velocity: ${JSON.stringify(payload.velocity)}
-`
+Funnel: \${JSON.stringify(funnel)}
+Job Health: \${JSON.stringify(jobRankings)}
+Velocity: \${JSON.stringify(payload.velocity)}
+\`
       const systemPrompt = "You are an HR Analytics AI. Provide insights strictly as a JSON array of objects."
       const insightsText = await openRouterService.generateText(prompt, undefined, {
         systemPrompt,
@@ -195,8 +199,7 @@ Velocity: ${JSON.stringify(payload.velocity)}
         temperature: 0.3
       })
       
-      // Attempt to parse the JSON array
-      const match = insightsText.match(/\[.*\]/s)
+      const match = insightsText.match(/\\[.*\\]/s)
       if (match) {
         payload.aiInsights = JSON.parse(match[0])
       } else {

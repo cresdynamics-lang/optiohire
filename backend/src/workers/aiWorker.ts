@@ -12,6 +12,7 @@ import { provisionCandidateAccount } from '../services/candidateProvisioningServ
 import { healthMonitor } from '../utils/healthMonitor.js'
 import path from 'path'
 import { cache, cacheKeys } from '../utils/redis.js'
+import { refreshAnalyticsViews } from '../api/dashboardAnalyticsController.js'
 
 const applicationRepo = new ApplicationRepository()
 const cvParser = new CVParser()
@@ -138,6 +139,8 @@ export class AIWorker {
     // Invalidate dashboard cache
     if (jobPosting.company_id) {
       await cache.del(cacheKeys.dashboardOverview(jobPosting.company_id))
+      // Trigger background refresh of materialized views
+      refreshAnalyticsViews().catch(e => logger.error('Failed to refresh views in worker:', e))
     }
 
     logger.info(`📧 Sending outcome emails for application: ${applicationId}`)
