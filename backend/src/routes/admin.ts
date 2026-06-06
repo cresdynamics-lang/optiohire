@@ -142,6 +142,10 @@ import { getEnhancedStats, getTimeSeriesAnalytics } from '../api/adminAnalyticsC
 router.get('/analytics/enhanced', getEnhancedStats)
 router.get('/analytics/timeseries', getTimeSeriesAnalytics)
 
+// AI Usage Analytics
+import { getAiUsageSummary } from '../api/adminAiUsageController.js'
+router.get('/ai-usage', getAiUsageSummary)
+
 // Debugging Tools
 import {
   getQueryLogs,

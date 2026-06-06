@@ -21,6 +21,9 @@ const companySetupSchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
   company_email: z.string().email('Please enter a valid email address'),
   hr_email: z.string().email('Please enter a valid HR email address'),
+  website_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  linkedin_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  twitter_url: z.string().url('Invalid URL').optional().or(z.literal('')),
   job_title: z.string().min(1, 'Job title is required'),
   job_description: z.string().min(10, 'Job description must be at least 10 characters'),
   required_skills: z.array(z.string()).min(1, 'At least one skill is required'),
@@ -141,7 +144,10 @@ export default function CompanySetupPage() {
           company_domain: data.company_email.split('@')[1] || 'example.com',
           company_email: data.company_email,
           hr_email: data.hr_email,
-          hiring_manager_email: data.company_email
+          hiring_manager_email: data.company_email,
+          website_url: data.website_url || null,
+          linkedin_url: data.linkedin_url || null,
+          twitter_url: data.twitter_url || null
         })
       })
       const companyJson = await companyResp.json().catch(() => ({}))
@@ -263,6 +269,58 @@ export default function CompanySetupPage() {
                     {errors.hr_email && (
                       <p className="text-sm text-red-500">{errors.hr_email.message}</p>
                     )}
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-4 mt-6">
+                    <LinkIcon className="w-5 h-5 text-white" />
+                    <h3 className="text-xl font-figtree font-semibold">Online Channels (Optional)</h3>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="website_url" className="text-sm font-medium">
+                        Website
+                      </Label>
+                      <Input
+                        id="website_url"
+                        placeholder="https://company.com"
+                        {...register('website_url')}
+                        className="h-12"
+                      />
+                      {errors.website_url && (
+                        <p className="text-sm text-red-500">{errors.website_url.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="linkedin_url" className="text-sm font-medium">
+                        LinkedIn
+                      </Label>
+                      <Input
+                        id="linkedin_url"
+                        placeholder="https://linkedin.com/company/..."
+                        {...register('linkedin_url')}
+                        className="h-12"
+                      />
+                      {errors.linkedin_url && (
+                        <p className="text-sm text-red-500">{errors.linkedin_url.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="twitter_url" className="text-sm font-medium">
+                        Twitter / X
+                      </Label>
+                      <Input
+                        id="twitter_url"
+                        placeholder="https://twitter.com/..."
+                        {...register('twitter_url')}
+                        className="h-12"
+                      />
+                      {errors.twitter_url && (
+                        <p className="text-sm text-red-500">{errors.twitter_url.message}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 

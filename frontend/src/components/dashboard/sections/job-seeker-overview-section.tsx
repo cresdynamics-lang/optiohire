@@ -23,7 +23,7 @@ export function JobSeekerOverviewSection() {
             <Sparkles className="h-3 w-3" />
             Candidate workspace
           </span>
-          <h1 className="mt-5 text-balance text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
+          <h1 className="mt-5 text-balance text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl ">
             Welcome back{firstName ? `, ${firstName}` : ''}
           </h1>
           <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-slate-600 dark:text-slate-400">

@@ -319,7 +319,7 @@ export default function SignupQueuePage() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Signup Queue Management
             </h1>
             <p className="text-neutral-400">
@@ -478,7 +478,7 @@ export default function SignupQueuePage() {
         {/* Signups List */}
         <div className="space-y-4">
           {signups.map((signup) => (
-            <Card key={signup.queue_id} className="border-border bg-white">
+            <Card key={signup.queue_id} className="border-border bg-card">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
                   {statusFilter === 'pending' && (
@@ -491,7 +491,7 @@ export default function SignupQueuePage() {
                   )}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-4">
-                      <h3 className="text-lg font-semibold text-white">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {signup.name || 'No Name'}
                       </h3>
                       <Badge
@@ -600,7 +600,7 @@ export default function SignupQueuePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <textarea
-                  className="w-full rounded border border-border bg-white p-2 text-foreground"
+                  className="w-full rounded border border-border bg-background p-2 text-foreground"
                   rows={4}
                   placeholder="Enter rejection reason..."
                   value={rejectReason}

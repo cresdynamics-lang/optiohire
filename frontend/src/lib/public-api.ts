@@ -69,6 +69,9 @@ export async function submitApplication(data: {
   resume_url: string
   cover_letter?: string
   phone?: string
+  github_url?: string
+  linkedin_url?: string
+  portfolio_url?: string
   captchaToken?: string
 }) {
   const response = await fetch(`${getBaseUrl()}/api/applications/public-submit`, {

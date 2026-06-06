@@ -92,7 +92,7 @@ export function PerformanceDashboard() {
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <h1 className="mb-2 text-2xl font-figtree font-extralight text-[#2D2DDD] md:text-3xl dark:text-white">
+            <h1 className="mb-2 text-2xl font-figtree font-extralight text-[#2D2DDD] md:text-3xl ">
               Performance Dashboard
             </h1>
             <p className="text-base font-figtree font-light text-gray-600 md:text-lg dark:text-gray-400">
@@ -178,7 +178,7 @@ export function PerformanceDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Avg Response Time</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{metrics.overview.avgResponseTime5min.toFixed(2)}ms</p>
+                  <p className="text-xl font-bold text-foreground">{metrics.overview.avgResponseTime5min.toFixed(2)}ms</p>
                   <p className="text-xs text-muted-foreground">Last 5 minutes</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -200,7 +200,7 @@ export function PerformanceDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{metrics.overview.successRate5min.toFixed(1)}%</p>
+                  <p className="text-xl font-bold text-foreground">{metrics.overview.successRate5min.toFixed(1)}%</p>
                   <p className="text-xs text-muted-foreground">Last 5 minutes</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
@@ -222,7 +222,7 @@ export function PerformanceDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Operations</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{metrics.overview.totalOperations}</p>
+                  <p className="text-xl font-bold text-foreground">{metrics.overview.totalOperations}</p>
                   <p className="text-xs text-muted-foreground">All time</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-[#2D2DDD]/10 flex items-center justify-center">
@@ -244,7 +244,7 @@ export function PerformanceDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Slow Operations</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{metrics.overview.slowOperations}</p>
+                  <p className="text-xl font-bold text-foreground">{metrics.overview.slowOperations}</p>
                   <p className="text-xs text-muted-foreground">&gt; 1 second</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">

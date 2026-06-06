@@ -125,7 +125,7 @@ export function JobsSection() {
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Hiring</p>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Job postings</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Job postings</h1>
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
@@ -138,7 +138,7 @@ export function JobsSection() {
       {/* View Toggle Row */}
       {!isLoading && jobs.length > 0 && (
         <div className="flex justify-end mb-[-12px]">
-          <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800">
+          <div className="flex bg-slate-100 /50 p-1 rounded-xl border border-slate-200/50 ">
             <Button 
               variant="ghost" 
               size="sm" 
@@ -177,13 +177,13 @@ export function JobsSection() {
                 className="group relative"
               >
                 <Card 
-                  className="cursor-pointer border-slate-200 bg-white transition-all hover:border-[#2D2DDD]/30 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 overflow-hidden"
+                  className="cursor-pointer border-slate-200 bg-white transition-all hover:border-[#2D2DDD]/30 hover:shadow-md   overflow-hidden"
                   onClick={() => handleViewDetails(job.id)}
                 >
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-bold text-xl text-slate-900 dark:text-white group-hover:text-[#2D2DDD] transition-colors">
+                        <h3 className="font-bold text-xl text-foreground group-hover:text-[#2D2DDD] transition-colors">
                           {job.job_title}
                         </h3>
                         <Badge variant={job.status?.toLowerCase() as any} className="text-[10px] px-2 py-0">
@@ -213,11 +213,11 @@ export function JobsSection() {
                       </div>
                     </div>
 
-                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-6 max-w-3xl leading-relaxed">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-6 max-w-3xl leading-relaxed">
                       {job.job_description || 'No description provided for this position.'}
                     </p>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-50 ">
                       <div className="flex flex-wrap items-center gap-6 text-slate-400">
                         <div className="flex items-center gap-2" title="Total Applicants">
                           <Users className="w-4 h-4" />
@@ -255,9 +255,9 @@ export function JobsSection() {
           <Pagination />
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden  ">
           <Table>
-            <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+            <TableHeader className="bg-muted">
               <TableRow>
                 <TableHead className="font-bold">Job Title</TableHead>
                 <TableHead className="text-center font-bold">Applicants</TableHead>
@@ -289,7 +289,7 @@ export function JobsSection() {
       {jobToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setJobToDelete(null)} />
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full shadow-xl">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-background rounded-2xl p-6 max-w-md w-full shadow-xl">
             <h3 className="text-xl font-bold mb-2 text-red-600">Delete Job Posting?</h3>
             <p className="text-slate-500 mb-6">Are you sure you want to delete <strong>{jobToDelete.job_title}</strong>? This action cannot be undone.</p>
             <div className="flex justify-end gap-3">

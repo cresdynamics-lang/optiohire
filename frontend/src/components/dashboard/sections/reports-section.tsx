@@ -326,7 +326,7 @@ export function ReportsSection() {
         <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-6">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">Insights</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl ">
               Reports & analytics
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base dark:text-gray-400">
@@ -358,31 +358,31 @@ export function ReportsSection() {
         <>
           {/* Top Level KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50">
+            <Card className="shadow-sm border-border bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50">
               <CardContent className="p-6 flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-slate-500 mb-2">
                   <Clock className="w-4 h-4" />
                   <span className="text-sm font-medium">Avg Time to Hire</span>
                 </div>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">
+                <div className="text-3xl font-bold text-foreground">
                   {avgTimeToHire} <span className="text-base font-normal text-slate-500">days</span>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50">
+            <Card className="shadow-sm border-border bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50">
               <CardContent className="p-6 flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-slate-500 mb-2">
                   <Target className="w-4 h-4" />
                   <span className="text-sm font-medium">Total Applications</span>
                 </div>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">
+                <div className="text-3xl font-bold text-foreground">
                   {stats.funnel.applied}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-green-50 dark:from-slate-900 dark:to-green-900/10">
+            <Card className="shadow-sm border-border bg-gradient-to-br from-white to-green-50 dark:from-slate-900 dark:to-green-900/10">
               <CardContent className="p-6 flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-green-600 dark:text-green-500 mb-2">
                   <UserCheck className="w-4 h-4" />
@@ -394,7 +394,7 @@ export function ReportsSection() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/10">
+            <Card className="shadow-sm border-border bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-900/10">
               <CardContent className="p-6 flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-blue-600 dark:text-blue-500 mb-2">
                   <Activity className="w-4 h-4" />
@@ -415,10 +415,10 @@ export function ReportsSection() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.05 }}
       >
-        <Card className="bg-white border border-slate-200 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.42)] dark:bg-slate-900 dark:border-slate-700">
+        <Card className="bg-white border border-slate-200 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.42)]  ">
           <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="text-lg sm:text-xl font-figtree font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+              <CardTitle className="text-lg sm:text-xl font-figtree font-semibold text-foreground flex items-center gap-3">
                 <FileText className="w-5 h-5 text-slate-700 dark:text-slate-200" />
                 Job Performance Overview
               </CardTitle>
@@ -426,7 +426,7 @@ export function ReportsSection() {
                 Horizontal stacked comparison of shortlisted, flagged, and rejected applicants per job.
               </p>
             </div>
-            <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full bg-slate-100 border border-slate-300 p-1 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full bg-slate-100 border border-slate-300 p-1 shadow-sm  ">
               {[
                 { id: '7d', label: 'Last 7 days' },
                 { id: '30d', label: 'Last 30 days' },
@@ -455,7 +455,7 @@ export function ReportsSection() {
                 </p>
               </div>
             ) : (
-              <div className="h-full w-full rounded-xl bg-slate-50 border border-slate-200 p-3 sm:p-4 shadow-inner dark:bg-slate-950/40 dark:border-slate-800/80">
+              <div className="h-full w-full rounded-xl bg-slate-50 border border-slate-200 p-3 sm:p-4 shadow-inner dark:bg-slate-950/40 /80">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
                     data={chartData}
@@ -554,7 +554,7 @@ export function ReportsSection() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.12 }}
       >
-        <Card className="border border-slate-200 bg-white shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)] dark:border-slate-700 dark:bg-slate-900">
+        <Card className="border border-slate-200 bg-white shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]  ">
           <CardHeader>
             <CardTitle className="text-xl font-figtree font-semibold flex items-center gap-3">
               <FileText className="w-5 h-5 text-slate-700 dark:text-slate-200" />
@@ -575,7 +575,7 @@ export function ReportsSection() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.05 }}
                     >
-                    <Card className="border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900 h-full flex flex-col">
+                    <Card className="border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl   h-full flex flex-col">
                       <CardContent className="p-5 flex flex-col flex-1">
                         <div className="mb-4">
                           <h3 className="text-base font-semibold font-figtree line-clamp-2 min-h-[40px]">
@@ -588,9 +588,9 @@ export function ReportsSection() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 mb-4">
-                          <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 text-center dark:border-slate-800 dark:bg-slate-800/50">
+                          <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 text-center  /50">
                             <span className="block text-[10px] uppercase font-bold text-slate-500 mb-0.5">Total</span>
-                            <span className="block text-lg font-bold text-slate-900 dark:text-white">{item.totals.total}</span>
+                            <span className="block text-lg font-bold text-foreground">{item.totals.total}</span>
                           </div>
                           <div className="rounded-lg border border-green-100 bg-green-50 p-2 text-center dark:border-green-900/20 dark:bg-green-900/10">
                             <span className="block text-[10px] uppercase font-bold text-green-600 mb-0.5">Shortlisted</span>
@@ -611,7 +611,7 @@ export function ReportsSection() {
                             type="button"
                             variant="outline" 
                             size="sm" 
-                            className="w-full h-9 border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                            className="w-full h-9 border-slate-200 hover:bg-slate-50  dark:hover:bg-slate-800"
                             onClick={() => {
                               setSelectedJobPosting(item.job)
                               setIsReportModalOpen(true)
@@ -635,7 +635,7 @@ export function ReportsSection() {
         <>
           {/* Charts Row 1 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+            <Card className="shadow-sm border-border">
               <CardHeader>
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <PieChart className="w-4 h-4" /> Candidate Funnel
@@ -666,7 +666,7 @@ export function ReportsSection() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+            <Card className="shadow-sm border-border">
               <CardHeader>
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <TrendingUp className="w-4 h-4" /> Hiring Velocity
@@ -693,15 +693,15 @@ export function ReportsSection() {
           </div>
 
           {/* Job Health Rankings */}
-          <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden">
-            <CardHeader className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+          <Card className="shadow-sm border-border overflow-hidden">
+            <CardHeader className="bg-slate-50  border-b border-border">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Activity className="w-4 h-4" /> Job Health Scores
               </CardTitle>
             </CardHeader>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-900 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <thead className="text-xs text-slate-500 uppercase bg-slate-50  dark:text-slate-400 border-b border-border">
                   <tr>
                     <th className="px-6 py-3 font-medium">Job Title</th>
                     <th className="px-6 py-3 font-medium text-right">Applicants</th>
@@ -717,8 +717,8 @@ export function ReportsSection() {
                     </tr>
                   )}
                   {stats.jobRankings.map((job, idx) => (
-                    <tr key={idx} className="bg-white dark:bg-slate-950 border-b dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900">
-                      <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{job.jobTitle}</td>
+                    <tr key={idx} className="bg-white dark:bg-slate-950 border-b  hover:bg-slate-50 dark:hover:bg-slate-900">
+                      <td className="px-6 py-4 font-medium text-foreground">{job.jobTitle}</td>
                       <td className="px-6 py-4 text-right">{job.totalApplicants}</td>
                       <td className="px-6 py-4 text-right">{job.hireRate}%</td>
                       <td className="px-6 py-4 text-right">

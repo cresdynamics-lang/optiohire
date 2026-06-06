@@ -17,7 +17,7 @@ export function JobSeekerProfileSection() {
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">
             Candidate account
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white">My profile</h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl ">My profile</h1>
           <p className="mt-3 max-w-lg text-pretty text-sm leading-relaxed text-slate-600 dark:text-slate-400">
             Manage how employers reach you. Employer-only tools such as company setup and job postings stay out of
             this workspace by design.
@@ -28,7 +28,7 @@ export function JobSeekerProfileSection() {
       <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_22px_70px_-48px_rgba(15,23,42,0.38)] dark:border-gray-800 dark:bg-gray-900/85">
         <CardHeader className="border-b border-slate-100 pb-6 dark:border-gray-800">
           <CardTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 shadow-inner dark:bg-slate-800 dark:text-slate-200">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 shadow-inner  dark:text-slate-200">
               <User className="h-5 w-5" />
             </span>
             Account details
@@ -63,17 +63,17 @@ export function JobSeekerProfileSection() {
           </div>
           {user?.name && (
             <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/50">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 Name
               </p>
-              <p className="mt-1 text-slate-900 dark:text-white">{user.name}</p>
+              <p className="mt-1 text-foreground">{user.name}</p>
             </div>
           )}
           <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/50">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Email
             </p>
-            <p className="mt-1 flex items-center gap-2 text-slate-900 dark:text-white">
+            <p className="mt-1 flex items-center gap-2 text-foreground">
               <Mail className="h-4 w-4 shrink-0 text-slate-400" />
               <span className="break-all">{user?.email || '—'}</span>
             </p>

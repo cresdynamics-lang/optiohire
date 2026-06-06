@@ -61,17 +61,17 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto"
           >
-            <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_30px_90px_-56px_rgba(15,23,42,0.45)] dark:border-slate-700 dark:bg-slate-900">
+            <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_30px_90px_-56px_rgba(15,23,42,0.45)]  ">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-figtree font-semibold text-slate-900 dark:text-white">
+                  <CardTitle className="text-xl font-figtree font-semibold text-foreground">
                     Job Details
                   </CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={onClose}
-                    className="h-8 w-8 p-0 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    className="h-8 w-8 p-0 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600  dark:text-slate-200 dark:hover:bg-slate-700"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -82,7 +82,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h1 className="text-xl md:text-2xl font-figtree font-semibold mb-2 text-gray-900 dark:text-white">
+                    <h1 className="text-xl md:text-2xl font-figtree font-semibold mb-2 text-foreground">
                       {jobPosting.job_title}
                     </h1>
                     <Badge 
@@ -122,7 +122,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
 
                 {/* Job Description */}
                 <div className="space-y-3">
-                  <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-figtree font-semibold text-foreground">
                     Job Description
                   </h3>
                   <p className="text-gray-700 dark:text-gray-200 font-figtree font-light leading-relaxed">
@@ -132,7 +132,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
 
                 {/* Required Skills */}
                 <div className="space-y-3">
-                  <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-figtree font-semibold text-foreground">
                     Required Skills
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -147,7 +147,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
                 {/* Interview Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {jobPosting.application_deadline && (
-                    <Card className="border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                    <Card className="border border-slate-200 bg-slate-50  ">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3 mb-3">
                           <Clock className="w-5 h-5 text-slate-700 dark:text-slate-200" />
@@ -161,7 +161,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
                   )}
 
                   {jobPosting.interview_start_time && (
-                  <Card className="border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                  <Card className="border border-slate-200 bg-slate-50  ">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <Calendar className="w-5 h-5 text-slate-700 dark:text-slate-200" />
@@ -175,7 +175,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
                   )}
 
                   {jobPosting.interview_meeting_link && (
-                    <Card className="border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                    <Card className="border border-slate-200 bg-slate-50  ">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3 mb-3">
                           <ExternalLink className="w-5 h-5 text-slate-700 dark:text-slate-200" />
@@ -196,7 +196,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
 
                 {/* Additional Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card className="border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                  <Card className="border border-slate-200 bg-slate-50  ">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <Briefcase className="w-5 h-5 text-slate-700 dark:text-slate-200" />
@@ -208,7 +208,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
                     </CardContent>
                   </Card>
 
-                  <Card className="border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                  <Card className="border border-slate-200 bg-slate-50  ">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <Users className="w-5 h-5 text-slate-700 dark:text-slate-200" />

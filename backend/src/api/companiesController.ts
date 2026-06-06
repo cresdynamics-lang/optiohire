@@ -6,7 +6,7 @@ import type { AuthRequest } from '../middleware/auth.js'
 
 export async function createCompany(req: Request, res: Response) {
   try {
-    const { company_name, company_domain, company_email, hr_email, hiring_manager_email } = req.body || {}
+    const { company_name, company_domain, company_email, hr_email, hiring_manager_email, website_url, linkedin_url, twitter_url } = req.body || {}
     const domain = company_domain || (company_email && company_email.includes('@') ? company_email.split('@')[1] : null)
     if (!company_name || !hr_email || !hiring_manager_email) {
       return res.status(400).json({ error: 'Missing required fields: company_name, hr_email, hiring_manager_email' })
@@ -38,6 +38,31 @@ export async function createCompany(req: Request, res: Response) {
       cols.push('company_email')
       vals.push(`$${n}`)
       params.push(company_email || hr_email)
+      n++
+    }
+    
+    // Social links
+    const socialCols = await query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'companies' AND column_name IN ('website_url', 'linkedin_url', 'twitter_url')`
+    ).then(r => r.rows.map(row => row.column_name))
+
+    if (socialCols.includes('website_url')) {
+      cols.push('website_url')
+      vals.push(`$${n}`)
+      params.push(website_url || null)
+      n++
+    }
+    if (socialCols.includes('linkedin_url')) {
+      cols.push('linkedin_url')
+      vals.push(`$${n}`)
+      params.push(linkedin_url || null)
+      n++
+    }
+    if (socialCols.includes('twitter_url')) {
+      cols.push('twitter_url')
+      vals.push(`$${n}`)
+      params.push(twitter_url || null)
+      n++
     }
     const { rows } = await query<{ company_id: string }>(
       `insert into companies (${cols.join(', ')}) values (${vals.join(', ')}) returning company_id`,

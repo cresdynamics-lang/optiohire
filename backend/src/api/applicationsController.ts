@@ -46,7 +46,7 @@ import { cache, cacheKeys } from '../utils/redis.js'
 
 export async function submitPublicApplication(req: Request, res: Response) {
   try {
-    const { job_posting_id, candidate_name, email, resume_url, cover_letter, phone, captchaToken } = req.body || {}
+    const { job_posting_id, candidate_name, email, resume_url, cover_letter, phone, captchaToken, github_url, linkedin_url, portfolio_url } = req.body || {}
 
     // Verify captcha
     const isCaptchaValid = await verifyCaptcha(captchaToken)
@@ -87,10 +87,10 @@ export async function submitPublicApplication(req: Request, res: Response) {
     if (existing.length > 0) return res.status(409).json({ error: 'Already applied' })
 
     const { rows: newApp } = await query<{ application_id: string }>(
-      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json)
-       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json, github_url, linkedin_url, portfolio_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10)
        RETURNING application_id`,
-      [job_posting_id, companyId, candidate_name, email.toLowerCase(), phone || null, resume_url, JSON.stringify({ cover_letter: cover_letter || null })]
+      [job_posting_id, companyId, candidate_name, email.toLowerCase(), phone || null, resume_url, JSON.stringify({ cover_letter: cover_letter || null }), github_url || null, linkedin_url || null, portfolio_url || null]
     )
 
     const applicationId = newApp[0].application_id
@@ -135,7 +135,7 @@ export async function submitPublicApplication(req: Request, res: Response) {
 // Submit a direct candidate application from the web portal
 export async function submitWebApplication(req: Request, res: Response) {
   try {
-    const { job_posting_id, candidate_name, email, phone, resume_url, cover_letter } = req.body || {}
+    const { job_posting_id, candidate_name, email, phone, resume_url, cover_letter, github_url, linkedin_url, portfolio_url } = req.body || {}
     
     if (!job_posting_id || !email || !candidate_name) {
       return res.status(400).json({ error: 'Job ID, name, and email are required' })
@@ -158,10 +158,10 @@ export async function submitWebApplication(req: Request, res: Response) {
 
     // Create candidate application row
     const { rows: ins } = await query<{ application_id: string }>(
-      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json)
-       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json, github_url, linkedin_url, portfolio_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10)
        RETURNING application_id`,
-      [job_posting_id, company_id, candidate_name, email.toLowerCase(), phone || null, resume_url || null, JSON.stringify({ cover_letter: cover_letter || null })]
+      [job_posting_id, company_id, candidate_name, email.toLowerCase(), phone || null, resume_url || null, JSON.stringify({ cover_letter: cover_letter || null }), github_url || null, linkedin_url || null, portfolio_url || null]
     )
 
     const applicationId = ins[0].application_id

@@ -750,7 +750,7 @@ export function OverviewSection() {
             <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-2">
               <h1
                 data-tour="dashboard-overview-title"
-                className="min-w-0 flex-1 text-xl font-semibold text-gray-900 sm:flex-none sm:text-2xl md:text-3xl dark:text-white"
+                className="min-w-0 flex-1 text-xl font-semibold text-gray-900 sm:flex-none sm:text-2xl md:text-3xl "
               >
                 {getGreeting()}, {getDisplayName()}
               </h1>
@@ -765,7 +765,7 @@ export function OverviewSection() {
                 Take Tour
               </Button>
             </div>
-            <p className="text-xs sm:text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+            <p className="text-xs sm:text-sm uppercase tracking-wide text-muted-foreground mb-1">
               {getCompanyLabel()} • dashboard overview
             </p>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
@@ -774,15 +774,15 @@ export function OverviewSection() {
                 : `You have ${metrics.activeJobs} active job${metrics.activeJobs === 1 ? '' : 's'} at ${getCompanyLabel()} and ${metrics.totalApplicants} applicant${metrics.totalApplicants === 1 ? '' : 's'} on the selected role.`}
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700   dark:text-slate-200">
                 <Target className="h-3.5 w-3.5" />
                 Shortlist rate: {candidateConversionRate}%
               </div>
-              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700   dark:text-slate-200">
                 <AlertTriangle className="h-3.5 w-3.5" />
                 Flagged: {flaggedRate}%
               </div>
-              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700   dark:text-slate-200">
                 <UserX className="h-3.5 w-3.5" />
                 Rejected: {rejectionRate}%
               </div>
@@ -803,7 +803,7 @@ export function OverviewSection() {
                   type="button"
                   variant="outline"
                   disabled={isLoading || jobPostings.length === 0}
-                  className="h-11 min-h-[44px] w-full min-w-0 max-w-full justify-start border border-slate-300 sm:h-10 sm:min-h-0 sm:min-w-[200px] sm:max-w-[280px] dark:border-slate-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-gray-800 hover:!text-slate-900 dark:hover:!text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-shadow"
+                  className="h-11 min-h-[44px] w-full min-w-0 max-w-full justify-start border border-slate-300 sm:h-10 sm:min-h-0 sm:min-w-[200px] sm:max-w-[280px]  bg-background text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-gray-800 hover:!text-slate-900 dark:hover:!text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-shadow"
                 >
                   <Briefcase className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="min-w-0 flex-1 truncate text-left text-sm font-figtree font-medium sm:max-w-[150px] sm:flex-none">
@@ -908,7 +908,7 @@ export function OverviewSection() {
           <CardHeader className="pb-4">
             <div className="flex-1 min-w-0">
               <CardTitle 
-                className="text-xl font-figtree font-extralight flex items-center gap-3 text-gray-900 dark:text-white mb-2"
+                className="text-xl font-figtree font-extralight flex items-center gap-3 text-foreground mb-2"
               >
                 <Users className="w-5 h-5 text-[#2D2DDD] flex-shrink-0" />
                 {getSelectedJobTitle()
@@ -1003,7 +1003,7 @@ export function OverviewSection() {
         className="pt-4"
       >
         <div className="mb-6">
-          <h2 className="text-xl font-figtree font-semibold flex items-center gap-3 text-gray-900 dark:text-white">
+          <h2 className="text-xl font-figtree font-semibold flex items-center gap-3 text-foreground">
             <BarChart3 className="w-5 h-5 text-[#2D2DDD]" />
             Quick Actions
           </h2>
@@ -1027,10 +1027,10 @@ export function OverviewSection() {
                   <Icon className="h-6 w-6 text-[#2D2DDD]" />
                 </div>
                 <div className="flex w-full items-center justify-between gap-2">
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white">{action.title}</h3>
+                  <h3 className="text-base font-bold text-foreground">{action.title}</h3>
                   <ArrowUpRight className="h-4 w-4 text-slate-400 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1 dark:text-slate-500" />
                 </div>
-                <p className="mt-2 text-sm text-left text-gray-500 dark:text-gray-400 line-clamp-2">
+                <p className="mt-2 text-sm text-left text-muted-foreground line-clamp-2">
                   {action.description}
                 </p>
               </button>

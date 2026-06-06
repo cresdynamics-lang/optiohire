@@ -65,7 +65,7 @@ function renderMarkdown(text: string) {
       elements.push(
         <ul key={`list-${i}`} className="list-disc pl-4 my-1 space-y-0.5">
           {items.map((item, idx) => (
-            <li key={idx} className="text-[13px] text-gray-800 dark:text-gray-200">{renderInline(item)}</li>
+            <li key={idx} className="text-[13px] text-foreground">{renderInline(item)}</li>
           ))}
         </ul>
       )
@@ -74,7 +74,7 @@ function renderMarkdown(text: string) {
 
     // Normal paragraph
     elements.push(
-      <p key={i} className="text-[13px] leading-relaxed text-gray-800 dark:text-gray-200">
+      <p key={i} className="text-[13px] leading-relaxed text-foreground">
         {renderInline(line)}
       </p>
     )
@@ -405,9 +405,9 @@ export function ChatbotWidget() {
       {/* Floating Action Button */}
       {!isOpen && (
         <div className="fixed bottom-6 right-6 z-[120] flex flex-col items-end gap-3 animate-in slide-in-from-bottom-5 fade-in duration-500">
-          <div className="bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200 text-sm px-4 py-2 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 dark:border-slate-700 relative flex items-center gap-2 animate-bounce cursor-pointer" onClick={() => setIsOpen(true)}>
+          <div className="bg-white dark:bg-gray-800 text-foreground text-sm px-4 py-2 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100  relative flex items-center gap-2 animate-bounce cursor-pointer" onClick={() => setIsOpen(true)}>
             <span className="font-medium">✨ Need help? Ask AI!</span>
-            <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white dark:bg-gray-800 border-b border-r border-slate-100 dark:border-slate-700 transform rotate-45"></div>
+            <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white dark:bg-gray-800 border-b border-r border-slate-100  transform rotate-45"></div>
           </div>
           <button
             type="button"
@@ -433,12 +433,12 @@ export function ChatbotWidget() {
       {/* Slide-out Drawer */}
       {isOpen && (
         <div
-          className={`fixed top-0 right-0 h-full z-[130] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl transition-all duration-300 flex flex-col ${
+          className={`fixed top-0 right-0 h-full z-[130] bg-background border-l border-gray-200 dark:border-gray-800 shadow-2xl transition-all duration-300 flex flex-col ${
             isExpanded ? 'w-[800px] max-w-[90vw]' : 'w-[400px] max-w-[85vw]'
           }`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-800 bg-background text-foreground">
             <div className="flex items-center gap-4">
               {/* OptioHire Logo - standing on its own, large */}
               <img
@@ -450,7 +450,7 @@ export function ChatbotWidget() {
                 <p className="text-lg font-extrabold leading-tight tracking-tight">OptioHire Agent</p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">AI-powered HR assistant</p>
+                  <p className="text-xs text-muted-foreground font-medium">AI-powered HR assistant</p>
                 </div>
               </div>
             </div>
@@ -560,7 +560,7 @@ export function ChatbotWidget() {
                           className="w-10 h-10 object-contain drop-shadow-sm"
                         />
                       </div>
-                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-bl-sm shadow-sm">
+                      <div className="bg-white dark:bg-gray-800 border border-border rounded-2xl rounded-bl-sm shadow-sm">
                         <TypingDots />
                       </div>
                     </div>
@@ -584,14 +584,14 @@ export function ChatbotWidget() {
                   </div>
                 )}
 
-                <div className="border-t border-gray-200 dark:border-gray-800 p-5 bg-white dark:bg-gray-900">
+                <div className="border-t border-gray-200 dark:border-gray-800 p-5 bg-background">
                   <div className="flex items-end gap-3 relative">
                     <textarea
                       rows={isExpanded ? 3 : 1}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      className="flex-1 resize-none rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3.5 pr-14 text-[15px] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/40 transition-shadow"
+                      className="flex-1 resize-none rounded-xl border-2 border-border bg-gray-50 dark:bg-gray-800 p-3.5 pr-14 text-[15px] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/40 transition-shadow"
                       placeholder="Ask the agent anything..."
                     />
                     <Button
@@ -614,7 +614,7 @@ export function ChatbotWidget() {
 
             {/* Support Ticket Tab */}
             {activeTab === 'support' && (
-              <div className="flex-1 p-6 flex flex-col h-full bg-white dark:bg-gray-900">
+              <div className="flex-1 p-6 flex flex-col h-full bg-background">
                 <div className="mb-6 flex flex-col items-center text-center">
                   <div className="w-14 h-14 bg-[#f0f0ff] text-[#2D2DDD] rounded-full flex items-center justify-center mb-3 shadow-sm border border-[#d0d0ff]">
                     <HelpCircle className="w-7 h-7" />
@@ -627,7 +627,7 @@ export function ChatbotWidget() {
 
                 <div className="flex-1 flex flex-col">
                   <textarea
-                    className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D2DDD]/40 mb-4 bg-gray-50 dark:bg-gray-800 placeholder-gray-400"
+                    className="flex-1 resize-none rounded-xl border border-border p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D2DDD]/40 mb-4 bg-gray-50 dark:bg-gray-800 placeholder-gray-400"
                     placeholder="Describe your issue here..."
                     value={supportMessage}
                     onChange={(e) => setSupportMessage(e.target.value)}

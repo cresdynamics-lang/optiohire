@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Building2, Clock, Calendar, CheckCircle2,
-  Briefcase, ChevronRight, Share2, Bookmark, AlertCircle, Sparkles
+  Briefcase, ChevronRight, Share2, Bookmark, AlertCircle, Sparkles, Globe, Linkedin, Twitter
 } from 'lucide-react'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 
@@ -23,6 +23,9 @@ interface Job {
   company_email: string
   company_logo_url: string | null
   job_poster_url?: string | null
+  website_url?: string | null
+  linkedin_url?: string | null
+  twitter_url?: string | null
 }
 
 function timeAgo(dateStr: string) {
@@ -366,6 +369,27 @@ export default function JobDetailPage() {
                   <p className="text-xs text-slate-500">{job.company_email}</p>
                 </div>
               </div>
+              
+              {/* Social Links */}
+              {(job.website_url || job.linkedin_url || job.twitter_url) && (
+                <div className="flex gap-4 pt-4 border-t border-slate-100">
+                  {job.website_url && (
+                    <a href={job.website_url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-600 transition-colors" title="Website">
+                      <Globe className="h-5 w-5" />
+                    </a>
+                  )}
+                  {job.linkedin_url && (
+                    <a href={job.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-700 transition-colors" title="LinkedIn">
+                      <Linkedin className="h-5 w-5" />
+                    </a>
+                  )}
+                  {job.twitter_url && (
+                    <a href={job.twitter_url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors" title="Twitter / X">
+                      <Twitter className="h-5 w-5" />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Browse more */}

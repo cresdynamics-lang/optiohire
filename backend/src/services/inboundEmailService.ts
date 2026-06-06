@@ -6,6 +6,10 @@ import { ApplicationRepository } from '../repositories/applicationRepository.js'
 import { aiQueue } from '../queues/aiQueue.js';
 import { saveFile } from '../utils/storage.js';
 import { randomUUID } from 'crypto';
+import { provisionCandidateAccount } from './candidateProvisioningService.js';
+import { EmailService } from './emailService.js';
+
+const emailService = new EmailService();
 
 const defaultResendService = new ResendService();
 
@@ -113,9 +117,17 @@ export class ResendInboundService {
         logger.error(`[ResendInbound] Error listing attachments for email ${emailId}:`, err);
       }
 
-      // Get company ID
-      const { rows: jobs } = await this.query<{ company_id: string }>('SELECT company_id FROM job_postings WHERE job_posting_id = $1', [jobId]);
+      // Get company ID and job details
+      const { rows: jobs } = await this.query<{ company_id: string, job_title: string, company_name: string }>(
+        `SELECT jp.company_id, jp.job_title, c.company_name 
+         FROM job_postings jp
+         LEFT JOIN companies c ON jp.company_id = c.company_id
+         WHERE jp.job_posting_id = $1`, 
+        [jobId]
+      );
       const companyId = jobs[0]?.company_id;
+      const jobTitle = jobs[0]?.job_title;
+      const companyName = jobs[0]?.company_name;
 
       if (!companyId) {
         logger.error(`[ResendInbound] Company not found for matched job ID: ${jobId}`);
@@ -138,6 +150,27 @@ export class ResendInboundService {
       const application = applicationRows[0];
 
       logger.info(`[ResendInbound] Application created: ${application?.application_id}. Enqueueing for AI processing...`);
+
+      // Provision candidate account and send the welcome email
+      if (application) {
+        try {
+          const provisioned = await provisionCandidateAccount({ email: candidateEmail.toLowerCase(), candidateName: candidateName });
+          const frontendUrl = process.env.FRONTEND_URL || 'https://optiohire.com';
+          
+          await emailService.sendCandidateApplicationReceivedEmail({
+            candidateEmail: candidateEmail.toLowerCase(),
+            candidateName: candidateName,
+            jobTitle: jobTitle || 'Job Position',
+            companyName: companyName || 'OptioHire',
+            candidateLoginUrl: `${frontendUrl}/auth/signin`,
+            candidateTemporaryPassword: provisioned.temporaryPassword,
+            isNewCandidateAccount: provisioned.isNewAccount
+          });
+          logger.info(`[ResendInbound] Sent Application Received email to ${candidateEmail}`);
+        } catch (err) {
+          logger.warn(`[ResendInbound] Failed to send candidate application email: ${err}`);
+        }
+      }
 
       // Add to BullMQ
       if (application) {

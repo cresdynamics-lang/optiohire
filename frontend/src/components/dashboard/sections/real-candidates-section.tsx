@@ -165,7 +165,7 @@ export function RealCandidatesSection() {
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <h1 className="mb-2 text-2xl font-figtree font-extralight text-[#2D2DDD] md:text-3xl dark:text-white">
+            <h1 className="mb-2 text-2xl font-figtree font-extralight text-[#2D2DDD] md:text-3xl ">
               Real Candidates from N8N
             </h1>
             <p className="text-base font-figtree font-light text-gray-600 md:text-lg dark:text-gray-400">

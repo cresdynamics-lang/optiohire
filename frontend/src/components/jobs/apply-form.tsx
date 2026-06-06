@@ -20,6 +20,9 @@ const formSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z.string().optional(),
   cover_letter: z.string().optional(),
+  github_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  linkedin_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  portfolio_url: z.string().url('Invalid URL').optional().or(z.literal('')),
 })
 
 interface ApplyFormProps {
@@ -43,6 +46,9 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
       email: '',
       phone: '',
       cover_letter: '',
+      github_url: '',
+      linkedin_url: '',
+      portfolio_url: '',
     },
   })
 
@@ -127,6 +133,9 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
         resume_url: uploadResult.url,
         cover_letter: values.cover_letter,
         phone: values.phone,
+        github_url: values.github_url || undefined,
+        linkedin_url: values.linkedin_url || undefined,
+        portfolio_url: values.portfolio_url || undefined,
         captchaToken: token,
       })
 
@@ -213,6 +222,49 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
               <FormLabel>Phone Number (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="+1 (555) 000-0000" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="linkedin_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>LinkedIn Profile (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://linkedin.com/in/..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="github_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>GitHub Profile (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://github.com/..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="portfolio_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Portfolio Website (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="https://yourportfolio.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

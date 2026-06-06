@@ -156,7 +156,7 @@ export function TemplatesSection() {
         transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
         className="gpu-accelerated"
       >
-        <h1 className="text-2xl md:text-3xl font-figtree font-extralight mb-2 text-[#2D2DDD] dark:text-white">
+        <h1 className="text-2xl md:text-3xl font-figtree font-extralight mb-2 text-[#2D2DDD] ">
           Email Templates
         </h1>
         <p className="text-base md:text-lg font-figtree font-light text-gray-600 dark:text-gray-400">
@@ -167,12 +167,12 @@ export function TemplatesSection() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Editor Area */}
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
             <div className="p-6 pb-0">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-semibold text-foreground">
                       Template Designer
                     </h2>
                     {currentTemplate.is_custom ? (

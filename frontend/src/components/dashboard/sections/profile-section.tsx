@@ -407,7 +407,7 @@ export function ProfileSection() {
                     <User className="h-8 w-8 text-slate-700 dark:text-slate-200 sm:h-10 sm:w-10" />
                   </div>
                   <div className="min-w-0">
-                    <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
+                    <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl ">
                       {getGreeting()},{' '}
                       {user?.name || user?.email?.split('@')[0] || 'User'}
                     </h1>
@@ -424,7 +424,7 @@ export function ProfileSection() {
                     {user?.companyRole && (
                       <p className="text-sm text-slate-600 dark:text-gray-400">
                         Role:{' '}
-                        <span className="font-semibold capitalize text-slate-900 dark:text-white">
+                        <span className="font-semibold capitalize text-foreground">
                           {user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                         </span>
                       </p>
@@ -438,7 +438,7 @@ export function ProfileSection() {
                       <Mail className="h-4 w-4 text-slate-500 dark:text-gray-400" />
                       <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Email</span>
                     </div>
-                    <p className="break-all text-sm font-medium text-slate-900 dark:text-white">{user?.email || 'N/A'}</p>
+                    <p className="break-all text-sm font-medium text-foreground">{user?.email || 'N/A'}</p>
                   </div>
                   
                   {(user?.companyName || company?.company_name) && (
@@ -447,7 +447,7 @@ export function ProfileSection() {
                         <Building2 className="h-4 w-4 text-slate-500 dark:text-gray-400" />
                         <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Company</span>
                       </div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">{user?.companyName || company?.company_name}</p>
+                      <p className="text-sm font-medium text-foreground">{user?.companyName || company?.company_name}</p>
                       <p className="mt-1 text-xs text-slate-500 dark:text-gray-500">As entered during signup</p>
                     </div>
                   )}
@@ -458,7 +458,7 @@ export function ProfileSection() {
                         <Key className="h-4 w-4 text-slate-500 dark:text-gray-400" />
                         <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Role in company</span>
                       </div>
-                      <p className="text-sm font-medium capitalize text-slate-900 dark:text-white">{user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
+                      <p className="text-sm font-medium capitalize text-foreground">{user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
                     </div>
                   )}
                   
@@ -467,7 +467,7 @@ export function ProfileSection() {
                       <Clock className="h-4 w-4 text-slate-500 dark:text-gray-400" />
                       <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Member since</span>
                     </div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    <p className="text-sm font-medium text-foreground">
                       {user?.created_at 
                         ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
                         : 'N/A'}
@@ -480,12 +480,12 @@ export function ProfileSection() {
                 <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 p-4 text-center dark:border-gray-700 dark:bg-gray-800/60">
                   <Shield className="mx-auto mb-2 h-6 w-6 text-slate-700 dark:text-slate-200" />
                   <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Security</p>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Protected</p>
+                  <p className="text-sm font-semibold text-foreground">Protected</p>
                 </div>
                 <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 p-4 text-center dark:border-gray-700 dark:bg-gray-800/60">
                   <Award className="mx-auto mb-2 h-6 w-6 text-slate-700 dark:text-slate-200" />
                   <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Status</p>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Active</p>
+                  <p className="text-sm font-semibold text-foreground">Active</p>
                 </div>
               </div>
             </div>
@@ -515,9 +515,9 @@ export function ProfileSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile Information Card */}
-        <Card className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
-          <CardHeader className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700">
-            <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
+        <Card className="bg-background border border-border shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
+          <CardHeader className="bg-slate-50 /70 border-b border-border">
+            <CardTitle className="flex items-center gap-3 text-foreground">
                 <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
@@ -578,13 +578,13 @@ export function ProfileSection() {
                 </div>
               )}
 
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+              <div className="pt-4 border-t border-border space-y-3">
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex items-center gap-3">
                     <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <span className="text-sm text-gray-700 dark:text-gray-300">Account Created</span>
                   </div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-sm font-medium text-foreground">
                     {user?.created_at 
                       ? new Date(user.created_at).toLocaleDateString('en-US', { 
                           year: 'numeric', 
@@ -612,7 +612,7 @@ export function ProfileSection() {
                       <Key className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       <span className="text-sm text-gray-700 dark:text-gray-300">Role</span>
                     </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                    <span className="text-sm font-medium text-foreground capitalize">
                       {user.role}
                     </span>
                   </div>
@@ -623,9 +623,9 @@ export function ProfileSection() {
         </Card>
 
         {/* Company Information Card */}
-        <Card className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
-          <CardHeader className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700">
-            <CardTitle className="flex items-center justify-between text-gray-900 dark:text-white">
+        <Card className="bg-background border border-border shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
+          <CardHeader className="bg-slate-50 /70 border-b border-border">
+            <CardTitle className="flex items-center justify-between text-foreground">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-white" />
@@ -681,7 +681,7 @@ export function ProfileSection() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                    <p className="text-base font-semibold text-foreground truncate">
                       {company.company_name}
                     </p>
                     <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
@@ -696,10 +696,10 @@ export function ProfileSection() {
                 {/* When not editing: show read-only profile fields */}
                 {!isEditingCompany ? (
                   <div className="space-y-4">
-                <div className="flex items-center gap-2 p-3 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg mb-2">
+                <div className="flex items-center gap-2 p-3 bg-slate-100  border border-slate-300  rounded-lg mb-2">
                       <Mail className="w-5 h-5 text-slate-700 dark:text-slate-200 flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        <p className="text-sm font-semibold text-foreground">
                           Email for applications & candidate contact
                         </p>
                         <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 break-all">
@@ -713,26 +713,26 @@ export function ProfileSection() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Company name</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        <p className="text-xs uppercase text-muted-foreground">Company name</p>
+                        <p className="text-sm font-medium text-foreground">
                           {formData.company_name || company.company_name}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Company email</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                        <p className="text-xs uppercase text-muted-foreground">Company email</p>
+                        <p className="text-sm font-medium text-foreground break-all">
                           {formData.company_email || company.company_email}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">HR email</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                        <p className="text-xs uppercase text-muted-foreground">HR email</p>
+                        <p className="text-sm font-medium text-foreground break-all">
                           {formData.hr_email || company.hr_email}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">Hiring manager email</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white break-all">
+                        <p className="text-xs uppercase text-muted-foreground">Hiring manager email</p>
+                        <p className="text-sm font-medium text-foreground break-all">
                           {user?.hiringManagerEmail || '—'}
                         </p>
                       </div>
@@ -753,7 +753,7 @@ export function ProfileSection() {
                           value={formData.company_name}
                           onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                           placeholder="Enter company name"
-                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                          className="bg-white dark:bg-gray-800 text-foreground border-gray-300 dark:border-gray-600"
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-500">As entered during account creation</p>
                       </div>
@@ -786,7 +786,7 @@ export function ProfileSection() {
                             value={formData.company_email}
                             onChange={(e) => setFormData({ ...formData, company_email: e.target.value })}
                             placeholder="company@example.com"
-                            className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                            className="pl-10 bg-white dark:bg-gray-800 text-foreground border-gray-300 dark:border-gray-600"
                           />
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-500">Used as sender for candidate emails (shortlist, rejection).</p>
@@ -804,7 +804,7 @@ export function ProfileSection() {
                             value={formData.hr_email}
                             onChange={(e) => setFormData({ ...formData, hr_email: e.target.value })}
                             placeholder="hr@example.com"
-                            className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                            className="pl-10 bg-white dark:bg-gray-800 text-foreground border-gray-300 dark:border-gray-600"
                           />
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-500">
@@ -873,9 +873,9 @@ export function ProfileSection() {
       </div>
 
       {/* Security Settings */}
-      <Card className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
-        <CardHeader className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700">
-          <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
+      <Card className="bg-background border border-border shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
+        <CardHeader className="bg-slate-50 /70 border-b border-border">
+          <CardTitle className="flex items-center gap-3 text-foreground">
             <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
               <Lock className="w-5 h-5 text-white" />
             </div>
@@ -887,9 +887,9 @@ export function ProfileSection() {
         </CardHeader>
         <CardContent className="p-6">
           {!showPasswordForm ? (
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-border">
               <div>
-                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                <h4 className="text-base font-semibold text-foreground mb-1 flex items-center gap-2">
                   <Key className="w-4 h-4" />
                   Password
                 </h4>
@@ -916,7 +916,7 @@ export function ProfileSection() {
                     value={passwordData.currentPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                     placeholder="Enter current password"
-                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white pr-10 border-gray-300 dark:border-gray-600"
+                    className="bg-white dark:bg-gray-800 text-foreground pr-10 border-gray-300 dark:border-gray-600"
                   />
                   <button
                     type="button"
@@ -937,7 +937,7 @@ export function ProfileSection() {
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                     placeholder="Enter new password (min. 6 characters)"
-                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white pr-10 border-gray-300 dark:border-gray-600"
+                    className="bg-white dark:bg-gray-800 text-foreground pr-10 border-gray-300 dark:border-gray-600"
                   />
                   <button
                     type="button"
@@ -958,7 +958,7 @@ export function ProfileSection() {
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                     placeholder="Confirm new password"
-                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white pr-10 border-gray-300 dark:border-gray-600"
+                    className="bg-white dark:bg-gray-800 text-foreground pr-10 border-gray-300 dark:border-gray-600"
                   />
                   <button
                     type="button"
@@ -1005,9 +1005,9 @@ export function ProfileSection() {
       </Card>
 
       {/* Account Actions */}
-      <Card className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
-        <CardHeader className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-700">
-          <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
+      <Card className="bg-background border border-border shadow-[0_22px_55px_-42px_rgba(15,23,42,0.35)]">
+        <CardHeader className="bg-slate-50 /70 border-b border-border">
+          <CardTitle className="flex items-center gap-3 text-foreground">
             <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
               <LogOut className="w-5 h-5 text-white" />
             </div>
@@ -1018,9 +1018,9 @@ export function ProfileSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between p-5 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-5 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-border">
             <div>
-              <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">Sign Out</h4>
+              <h4 className="text-base font-semibold text-foreground mb-1">Sign Out</h4>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Sign out of your account and return to the login page
               </p>
@@ -1039,7 +1039,7 @@ export function ProfileSection() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="bg-white dark:bg-gray-900 border-2 border-red-300 dark:border-red-800 shadow-xl">
+      <Card className="bg-background border-2 border-red-300 dark:border-red-800 shadow-xl">
         <CardHeader className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-b border-red-200 dark:border-red-800">
           <CardTitle className="flex items-center gap-3 text-red-700 dark:text-red-400">
             <div className="w-10 h-10 rounded-lg bg-red-600 flex items-center justify-center">

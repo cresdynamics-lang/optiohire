@@ -204,10 +204,10 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           >
-            <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_30px_90px_-56px_rgba(15,23,42,0.45)] dark:border-slate-700 dark:bg-slate-900">
+            <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_30px_90px_-56px_rgba(15,23,42,0.45)]  ">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-figtree font-semibold text-slate-900 dark:text-white">
+                  <CardTitle className="text-xl font-figtree font-semibold text-foreground">
                     Create New Job Posting
                   </CardTitle>
                   <Button
@@ -225,46 +225,46 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Company Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-figtree font-semibold text-foreground">
                       Company Information
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="company_name" className="text-gray-900 dark:text-white">Company Name</Label>
+                        <Label htmlFor="company_name" className="text-foreground">Company Name</Label>
                         <Input
                           id="company_name"
                           value={formData.company_name}
                           onChange={(e) => handleInputChange('company_name', e.target.value)}
                           placeholder="Enter company name"
-                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
+                          className="bg-white dark:bg-gray-800 text-foreground border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
                           required
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="company_email" className="text-gray-900 dark:text-white">Company Email</Label>
+                        <Label htmlFor="company_email" className="text-foreground">Company Email</Label>
                         <Input
                           id="company_email"
                           type="email"
                           value={formData.company_email}
                           onChange={(e) => handleInputChange('company_email', e.target.value)}
                           placeholder="company@example.com"
-                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
+                          className="bg-white dark:bg-gray-800 text-foreground border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
                           required
                         />
                       </div>
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="hr_email" className="text-gray-900 dark:text-white">HR Email</Label>
+                      <Label htmlFor="hr_email" className="text-foreground">HR Email</Label>
                       <Input
                         id="hr_email"
                         type="email"
                         value={formData.hr_email}
                         onChange={(e) => handleInputChange('hr_email', e.target.value)}
                         placeholder="hr@example.com"
-                        className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
+                        className="bg-white dark:bg-gray-800 text-foreground border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
                         required
                       />
                     </div>
@@ -272,12 +272,12 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
 
                   {/* Job Details */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-figtree font-semibold text-foreground">
                       Job Details
                     </h3>
                     
                     <div className="space-y-2">
-                      <Label className="text-gray-900 dark:text-white">Job Poster (Optional)</Label>
+                      <Label className="text-foreground">Job Poster (Optional)</Label>
                       <ImageUpload
                         value={formData.job_poster_url}
                         onChange={(url) => handleInputChange('job_poster_url', url || '')}
@@ -286,13 +286,13 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="job_title" className="text-gray-900 dark:text-white">Job Title</Label>
+                      <Label htmlFor="job_title" className="text-foreground">Job Title</Label>
                       <Input
                         id="job_title"
                         value={formData.job_title}
                         onChange={(e) => handleInputChange('job_title', e.target.value)}
                         placeholder="e.g., Senior Software Engineer"
-                        className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
+                        className="bg-white dark:bg-gray-800 text-foreground border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
                         required
                       />
                       <p className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
@@ -302,7 +302,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="job_description" className="text-gray-900 dark:text-white">
+                      <Label htmlFor="job_description" className="text-foreground">
                         Job Description <span className="text-gray-500 text-sm">(min 50 characters)</span>
                       </Label>
                       <Textarea
@@ -311,7 +311,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                         onChange={(e) => handleInputChange('job_description', e.target.value)}
                         placeholder="Describe the role, responsibilities, and requirements... (at least 50 characters)"
                         rows={4}
-                        className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
+                        className="bg-white dark:bg-gray-800 text-foreground border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
                         required
                         minLength={50}
                       />
@@ -324,7 +324,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                     
                     {/* Skills */}
                     <div className="space-y-2">
-                      <Label className="text-gray-900 dark:text-white">
+                      <Label className="text-foreground">
                         Required Skills <span className="text-gray-500 text-sm">(at least 1 required)</span>
                       </Label>
                       <div className="flex gap-2">
@@ -333,7 +333,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                           onChange={(e) => setNewSkill(e.target.value)}
                           placeholder="Add a skill"
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
+                          className="bg-white dark:bg-gray-800 text-foreground border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin"
                         />
                         <Button type="button" onClick={addSkill} variant="outline" className="border-slate-900 bg-slate-900 text-white shadow-none hover:border-slate-800 hover:bg-slate-800 dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200">
                           <Plus className="w-4 h-4" />
@@ -362,13 +362,13 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
 
                   {/* Application Deadline */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-lg font-figtree font-semibold text-foreground flex items-center gap-2">
                       <Clock className="w-5 h-5 text-slate-700 dark:text-slate-200" />
                       Application Deadline
                     </h3>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="application_deadline" className="text-gray-900 dark:text-white">Deadline Date & Time</Label>
+                      <Label htmlFor="application_deadline" className="text-foreground">Deadline Date & Time</Label>
                       <SingleDateTimePicker
                         value={formData.application_deadline}
                         onChange={(value) => handleInputChange('application_deadline', value)}
@@ -380,7 +380,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
 
                   {/* Meeting Links */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-figtree font-semibold text-foreground">
                       Meeting Links
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -388,14 +388,14 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                     </p>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="interview_meeting_link" className="text-gray-900 dark:text-white">Default Meeting Link (Optional)</Label>
+                      <Label htmlFor="interview_meeting_link" className="text-foreground">Default Meeting Link (Optional)</Label>
                       <div className="flex gap-2">
                         <Input
                           id="interview_meeting_link"
                           value={formData.interview_meeting_link}
                           onChange={(e) => handleInputChange('interview_meeting_link', e.target.value)}
                           placeholder="https://meet.google.com/..."
-                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin flex-1"
+                          className="bg-white dark:bg-gray-800 text-foreground border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 hover:border-[#2D2DDD] focus-visible:border-[#2D2DDD] dark:focus-visible:border-gray-600 focus-visible:outline-none focus-visible:ring-0 border-focus-thin flex-1"
                         />
                         <Button
                           type="button"
@@ -409,10 +409,10 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                           <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden />
                         </Button>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         This will be used as the default meeting link when scheduling interviews for shortlisted candidates
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <Video className="w-3.5 h-3.5 flex-shrink-0" />
                         Click &quot;Google Meet&quot; to open a new meeting in another tab. Copy the meeting link from that tab and paste it above.
                       </p>
@@ -437,7 +437,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                   )}
 
                   {/* Submit Buttons */}
-                  <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-end gap-3 pt-6 border-t border-border">
                     <Button 
                       type="button" 
                       variant="outline" 
@@ -465,19 +465,19 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
       
       {/* Success Confirmation Dialog */}
       <Dialog key="create-job-success-dialog" open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <DialogContent className="sm:max-w-md bg-background text-foreground">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <DialogTitle className="text-xl font-figtree text-gray-900 dark:text-white">
+              <DialogTitle className="text-xl font-figtree text-foreground">
                 Job Created Successfully!
               </DialogTitle>
             </div>
             <DialogDescription className="text-base text-gray-700 dark:text-gray-200 pt-2">
               <span className="mb-2 block text-gray-900 dark:text-gray-100">
-                The job posting <strong className="font-semibold text-gray-900 dark:text-white">"{createdJobInfo?.jobTitle}"</strong> has been successfully created for <strong className="font-semibold text-gray-900 dark:text-white">{createdJobInfo?.companyName}</strong>.
+                The job posting <strong className="font-semibold text-foreground">"{createdJobInfo?.jobTitle}"</strong> has been successfully created for <strong className="font-semibold text-foreground">{createdJobInfo?.companyName}</strong>.
               </span>
               
               {/* Copy Actions */}
@@ -485,7 +485,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                 <div className="flex flex-col gap-1.5">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Share Link</span>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 truncate rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300">
+                    <div className="flex-1 truncate rounded-lg bg-slate-50  border border-border px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300">
                       {typeof window !== 'undefined' ? `${window.location.origin}/apply/${createdJobInfo?.jobId}` : ''}
                     </div>
                     <Button
@@ -503,7 +503,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                 <div className="flex flex-col gap-1.5">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Application Email</span>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 truncate rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300">
+                    <div className="flex-1 truncate rounded-lg bg-slate-50  border border-border px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300">
                       {APPLICATION_INBOX_EMAIL}
                     </div>
                     <Button
@@ -519,7 +519,7 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                 </div>
               </div>
 
-              <span className="mt-6 block text-sm text-gray-600 dark:text-gray-300 border-t border-slate-100 dark:border-slate-800 pt-4">
+              <span className="mt-6 block text-sm text-gray-600 dark:text-gray-300 border-t border-slate-100  pt-4">
                 A confirmation email with next steps has been sent. Candidates should use subject format: <strong>{createdJobInfo?.jobTitle || 'Job Title'} - {createdJobInfo?.companyName || 'Company Name'}</strong>.
               </span>
             </DialogDescription>

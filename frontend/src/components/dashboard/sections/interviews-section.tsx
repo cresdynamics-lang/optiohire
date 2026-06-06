@@ -188,7 +188,7 @@ export function InterviewsSection() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent dark:from-slate-800/50" aria-hidden />
         <div className="relative">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">Scheduling</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl ">
             Interviews
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base dark:text-gray-400">
@@ -240,21 +240,21 @@ export function InterviewsSection() {
                   <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 shadow-lg shadow-slate-500/20 dark:bg-slate-100">
                     <Calendar className="w-6 h-6 text-white dark:text-slate-900" />
                   </div>
-                  <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Total</h3>
+                  <h3 className="text-sm font-figtree font-medium mb-1 text-foreground">Total</h3>
                   <p className="font-figtree text-xl font-bold text-slate-900 dark:text-slate-100">{stats.total || interviews.length}</p>
                 </div>
                 <div className="text-center">
                   <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 shadow-lg shadow-blue-500/20 dark:bg-blue-500">
                     <Clock className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Upcoming</h3>
+                  <h3 className="text-sm font-figtree font-medium mb-1 text-foreground">Upcoming</h3>
                   <p className="font-figtree text-xl font-bold text-blue-600 dark:text-blue-400">{stats.upcoming || upcomingInterviews.length}</p>
                 </div>
                 <div className="text-center">
-                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 shadow-lg dark:bg-slate-800">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 shadow-lg ">
                     <Clock className="w-6 h-6 text-slate-600 dark:text-slate-400" />
                   </div>
-                  <h3 className="text-sm font-figtree font-medium mb-1 text-gray-900 dark:text-white">Past</h3>
+                  <h3 className="text-sm font-figtree font-medium mb-1 text-foreground">Past</h3>
                   <p className="font-figtree text-xl font-bold text-slate-600 dark:text-slate-400">{stats.past || pastInterviews.length}</p>
                 </div>
                 <div 
@@ -311,7 +311,7 @@ export function InterviewsSection() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.1 }}
                       >
-                        <Card className="border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                        <Card className="border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl  ">
                           <CardContent className="p-4 sm:p-6">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                               <div className="flex-1">
@@ -358,7 +358,7 @@ export function InterviewsSection() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => interview.google_calendar_link && window.open(interview.google_calendar_link, '_blank')}
-                                    className="min-h-[44px] touch-manipulation rounded-xl bg-slate-100 text-slate-900 hover:bg-slate-200 sm:min-h-0 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                                    className="min-h-[44px] touch-manipulation rounded-xl bg-slate-100 text-slate-900 hover:bg-slate-200 sm:min-h-0  dark:text-slate-100 dark:hover:bg-slate-700"
                                   >
                                     <ExternalLink className="w-4 h-4 mr-1" />
                                     Calendar
@@ -414,13 +414,13 @@ export function InterviewsSection() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.1 }}
                     >
-                      <Card className="border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+                      <Card className="border border-slate-200 bg-slate-50  dark:bg-slate-950">
                         <CardContent className="p-4 sm:p-5">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="flex-1">
                               <div className="mb-2 flex flex-wrap items-center gap-2 gap-y-2">
                                 <h3 className="text-base font-semibold font-figtree text-slate-700 dark:text-slate-300">{interview.job_title}</h3>
-                                <Badge variant="secondary" className="bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                                <Badge variant="secondary" className="bg-slate-200 text-slate-600  dark:text-slate-400">
                                   Completed
                                 </Badge>
                               </div>

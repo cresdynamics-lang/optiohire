@@ -112,31 +112,31 @@ export function AnalyticsDashboard() {
 
       {/* Top Level KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+        <Card className="shadow-sm border-border">
           <CardContent className="p-6 flex flex-col justify-center">
             <div className="flex items-center gap-2 text-slate-500 mb-2">
               <Clock className="w-4 h-4" />
               <span className="text-sm font-medium">Avg Time to Hire</span>
             </div>
-            <div className="text-3xl font-bold text-slate-900 dark:text-white">
+            <div className="text-3xl font-bold text-foreground">
               {avgTimeToHire} <span className="text-base font-normal text-slate-500">days</span>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+        <Card className="shadow-sm border-border">
           <CardContent className="p-6 flex flex-col justify-center">
             <div className="flex items-center gap-2 text-slate-500 mb-2">
               <Target className="w-4 h-4" />
               <span className="text-sm font-medium">Total Applications</span>
             </div>
-            <div className="text-3xl font-bold text-slate-900 dark:text-white">
+            <div className="text-3xl font-bold text-foreground">
               {stats.funnel.applied}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+        <Card className="shadow-sm border-border">
           <CardContent className="p-6 flex flex-col justify-center">
             <div className="flex items-center gap-2 text-slate-500 mb-2">
               <UserCheck className="w-4 h-4 text-green-500" />
@@ -148,7 +148,7 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+        <Card className="shadow-sm border-border">
           <CardContent className="p-6 flex flex-col justify-center">
             <div className="flex items-center gap-2 text-slate-500 mb-2">
               <Activity className="w-4 h-4 text-blue-500" />
@@ -163,7 +163,7 @@ export function AnalyticsDashboard() {
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+        <Card className="shadow-sm border-border">
           <CardHeader>
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <TrendingUp className="w-4 h-4" /> Hiring Velocity
@@ -187,7 +187,7 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+        <Card className="shadow-sm border-border">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Candidate Funnel</CardTitle>
           </CardHeader>
@@ -217,15 +217,15 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Job Health Rankings */}
-      <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden">
-        <CardHeader className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <Card className="shadow-sm border-border overflow-hidden">
+        <CardHeader className="bg-slate-50  border-b border-border">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Activity className="w-4 h-4" /> Job Health Scores
           </CardTitle>
         </CardHeader>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-900 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <thead className="text-xs text-slate-500 uppercase bg-slate-50  dark:text-slate-400 border-b border-border">
               <tr>
                 <th className="px-6 py-3 font-medium">Job Title</th>
                 <th className="px-6 py-3 font-medium text-right">Applicants</th>
@@ -241,8 +241,8 @@ export function AnalyticsDashboard() {
                 </tr>
               )}
               {stats.jobRankings.map((job, idx) => (
-                <tr key={idx} className="bg-white dark:bg-slate-950 border-b dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900">
-                  <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{job.jobTitle}</td>
+                <tr key={idx} className="bg-white dark:bg-slate-950 border-b  hover:bg-slate-50 dark:hover:bg-slate-900">
+                  <td className="px-6 py-4 font-medium text-foreground">{job.jobTitle}</td>
                   <td className="px-6 py-4 text-right">{job.totalApplicants}</td>
                   <td className="px-6 py-4 text-right">{job.hireRate}%</td>
                   <td className="px-6 py-4 text-right">

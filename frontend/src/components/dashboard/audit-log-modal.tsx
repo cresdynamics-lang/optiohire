@@ -71,11 +71,11 @@ export function AuditLogModal({ isOpen, onClose, applicationId }: AuditLogModalP
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
         >
-          <Card className="bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 flex-1 overflow-hidden flex flex-col">
-            <CardHeader className="pb-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+          <Card className="bg-background shadow-2xl border border-gray-200 dark:border-gray-800 flex-1 overflow-hidden flex flex-col">
+            <CardHeader className="pb-4 border-b border-border shrink-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl font-figtree font-extralight text-[#2D2DDD] dark:text-white flex items-center gap-2">
+                  <CardTitle className="text-xl font-figtree font-extralight text-[#2D2DDD]  flex items-center gap-2">
                     <BrainCircuit className="w-5 h-5" />
                     AI Scoring Audit Log
                   </CardTitle>
@@ -109,7 +109,7 @@ export function AuditLogModal({ isOpen, onClose, applicationId }: AuditLogModalP
                   <div className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
                     <div className="flex-1">
                       <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Final Reasoning</h3>
-                      <p className="text-gray-800 dark:text-gray-200 font-figtree">{data.final_reasoning}</p>
+                      <p className="text-foreground font-figtree">{data.final_reasoning}</p>
                     </div>
                     <div className="text-center px-6 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <div className="text-3xl font-light text-[#2D2DDD]">{data.final_score}</div>

@@ -189,8 +189,8 @@ export function EditJobSection() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8 dark:bg-slate-800/50 dark:border-slate-800">
+        <Card className="border border-slate-200 bg-white shadow-sm   overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8 /50 ">
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle className="text-2xl font-bold font-figtree">Edit Job Posting</CardTitle>
@@ -275,7 +275,7 @@ export function EditJobSection() {
                     id="status"
                     value={formData.status || 'active'}
                     onChange={(e) => handleInputChange('status', e.target.value)}
-                    className="flex h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
+                    className="flex h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50  dark:bg-slate-950 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
                   >
                     <option value="active">Active</option>
                     <option value="paused">Paused</option>

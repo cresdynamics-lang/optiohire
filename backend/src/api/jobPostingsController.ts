@@ -430,7 +430,7 @@ export async function getPublicJobPostings(req: Request, res: Response) {
     if (cached) return res.json(cached)
 
     const { rows: jobs } = await query(
-      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
        WHERE jp.status = 'ACTIVE'
@@ -460,7 +460,7 @@ export async function getPublicJobPostingById(req: Request, res: Response) {
     if (cached) return res.json(cached)
 
     const { rows: jobs } = await query(
-      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.responsibilities, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url, c.company_domain
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.responsibilities, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url, c.company_domain, c.website_url, c.linkedin_url, c.twitter_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
        WHERE jp.job_posting_id = $1 AND jp.status = 'ACTIVE'
@@ -489,7 +489,7 @@ export async function getPublicCompanyJobPostings(req: Request, res: Response) {
 
     const { companyId } = req.params
     const { rows: jobs } = await query(
-      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
        WHERE jp.company_id = $1 AND jp.status = 'ACTIVE'
@@ -498,7 +498,7 @@ export async function getPublicCompanyJobPostings(req: Request, res: Response) {
     )
 
     const { rows: companyRows } = await query(
-      `SELECT company_name, company_logo_url FROM companies WHERE company_id = $1 LIMIT 1`,
+      `SELECT company_name, company_logo_url, website_url, linkedin_url, twitter_url FROM companies WHERE company_id = $1 LIMIT 1`,
       [companyId]
     )
 

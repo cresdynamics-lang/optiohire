@@ -269,8 +269,8 @@ export function CreateJobSection() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border-slate-700 dark:bg-slate-900 overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8 dark:bg-slate-800/50 dark:border-slate-800">
+        <Card className="border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]   overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8 /50 ">
             <CardTitle className="text-2xl font-bold font-figtree">New Job Posting</CardTitle>
             <p className="text-slate-500 mt-1">Fill in the details below to create a new role and start receiving applications.</p>
           </CardHeader>
@@ -382,7 +382,7 @@ export function CreateJobSection() {
                       Add
                     </Button>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-4 min-h-[40px] p-4 bg-slate-50 rounded-xl dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700">
+                  <div className="flex flex-wrap gap-2 mt-4 min-h-[40px] p-4 bg-slate-50 rounded-xl /50 border border-dashed border-border">
                     {formData.required_skills.map((skill, index) => (
                       <Badge
                         key={`skill-${index}`}
@@ -414,7 +414,7 @@ export function CreateJobSection() {
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-4">
                       <Label htmlFor="poster_upload" className={`cursor-pointer ${isUploadingPoster ? 'pointer-events-none opacity-70' : ''}`}>
-                        <div className="flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-800 transition-colors px-6 py-3 rounded-xl shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <div className="flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 /50  dark:hover:bg-slate-800 transition-colors px-6 py-3 rounded-xl shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
                           {isUploadingPoster ? (
                             <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
                           ) : (
@@ -438,7 +438,7 @@ export function CreateJobSection() {
                       )}
                     </div>
                     {isUploadingPoster && (
-                      <div className="w-full bg-slate-100 rounded-full h-2 mt-2 max-w-xs dark:bg-slate-800 overflow-hidden">
+                      <div className="w-full bg-slate-100 rounded-full h-2 mt-2 max-w-xs  overflow-hidden">
                         <div 
                           className="bg-indigo-600 h-2 rounded-full transition-all duration-300 ease-out" 
                           style={{ width: `${uploadProgress}%` }}
@@ -469,7 +469,7 @@ export function CreateJobSection() {
               </div>
 
               {/* Configuration */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-4 border-t border-slate-100 ">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
                     <Clock className="h-5 w-5" />
@@ -524,7 +524,7 @@ export function CreateJobSection() {
               )}
 
               {/* Footer Actions */}
-              <div className="flex items-center justify-end gap-4 pt-10 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-4 pt-10 border-t border-slate-100 ">
                 <Button 
                   type="button" 
                   variant="ghost" 

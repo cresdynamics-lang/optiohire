@@ -243,7 +243,7 @@ export function SettingsSection() {
         transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
         className="gpu-accelerated"
       >
-        <h1 className="text-2xl md:text-3xl font-figtree font-extralight mb-2 text-[#2D2DDD] dark:text-white">
+        <h1 className="text-2xl md:text-3xl font-figtree font-extralight mb-2 text-[#2D2DDD] ">
           Settings
         </h1>
         <p className="text-base md:text-lg font-figtree font-light text-gray-600 dark:text-gray-400">
@@ -253,9 +253,9 @@ export function SettingsSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Account Information */}
-        <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+        <Card className="bg-background border border-gray-200 dark:border-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
+            <CardTitle className="flex items-center gap-3 text-foreground">
               <User className="w-5 h-5 text-[#2D2DDD]" />
               Account Information
             </CardTitle>
@@ -288,7 +288,7 @@ export function SettingsSection() {
                 className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-mono text-xs"
               />
             </div>
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="pt-4 border-t border-border">
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Account created: {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
               </p>
@@ -297,9 +297,9 @@ export function SettingsSection() {
         </Card>
 
         {/* Company Information */}
-        <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+        <Card className="bg-background border border-gray-200 dark:border-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
+            <CardTitle className="flex items-center gap-3 text-foreground">
               <Building2 className="w-5 h-5 text-[#2D2DDD]" />
               Company Information
             </CardTitle>
@@ -322,7 +322,7 @@ export function SettingsSection() {
                     value={formData.company_name}
                     onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                     placeholder="Enter company name"
-                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="bg-white dark:bg-gray-800 text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
@@ -335,7 +335,7 @@ export function SettingsSection() {
                       value={formData.company_email}
                       onChange={(e) => setFormData({ ...formData, company_email: e.target.value })}
                       placeholder="company@example.com"
-                      className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="pl-10 bg-white dark:bg-gray-800 text-foreground"
                     />
                   </div>
                 </div>
@@ -349,7 +349,7 @@ export function SettingsSection() {
                       value={formData.hr_email}
                       onChange={(e) => setFormData({ ...formData, hr_email: e.target.value })}
                       placeholder="hr@example.com"
-                      className="pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="pl-10 bg-white dark:bg-gray-800 text-foreground"
                     />
                   </div>
                 </div>
@@ -395,9 +395,9 @@ export function SettingsSection() {
       </div>
 
       {/* Notification Preferences */}
-      <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <Card className="bg-background border border-gray-200 dark:border-gray-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
+          <CardTitle className="flex items-center gap-3 text-foreground">
             <Bell className="w-5 h-5 text-[#2D2DDD]" />
             Notification Preferences
           </CardTitle>
@@ -411,7 +411,7 @@ export function SettingsSection() {
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-gray-500" />
                 <div>
-                  <Label className="text-gray-900 dark:text-white font-medium">Email Notifications</Label>
+                  <Label className="text-foreground font-medium">Email Notifications</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Receive email notifications for important events</p>
                 </div>
               </div>
@@ -425,7 +425,7 @@ export function SettingsSection() {
               <div className="flex items-center gap-3">
                 <FileText className="w-4 h-4 text-gray-500" />
                 <div>
-                  <Label className="text-gray-900 dark:text-white font-medium">Report Notifications</Label>
+                  <Label className="text-foreground font-medium">Report Notifications</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Get notified when reports are generated</p>
                 </div>
               </div>
@@ -439,7 +439,7 @@ export function SettingsSection() {
               <div className="flex items-center gap-3">
                 <User className="w-4 h-4 text-gray-500" />
                 <div>
-                  <Label className="text-gray-900 dark:text-white font-medium">Application Notifications</Label>
+                  <Label className="text-foreground font-medium">Application Notifications</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Notify when new applications are received</p>
                 </div>
               </div>
@@ -453,7 +453,7 @@ export function SettingsSection() {
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-gray-500" />
                 <div>
-                  <Label className="text-gray-900 dark:text-white font-medium">Interview Reminders</Label>
+                  <Label className="text-foreground font-medium">Interview Reminders</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Receive reminders for scheduled interviews</p>
                 </div>
               </div>
@@ -467,7 +467,7 @@ export function SettingsSection() {
               <div className="flex items-center gap-3">
                 <BarChart3 className="w-4 h-4 text-gray-500" />
                 <div>
-                  <Label className="text-gray-900 dark:text-white font-medium">Weekly Summary</Label>
+                  <Label className="text-foreground font-medium">Weekly Summary</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Receive weekly summary of activities</p>
                 </div>
               </div>
@@ -481,7 +481,7 @@ export function SettingsSection() {
               <div className="flex items-center gap-3">
                 <Settings className="w-4 h-4 text-gray-500" />
                 <div>
-                  <Label className="text-gray-900 dark:text-white font-medium">Auto-Generate Reports</Label>
+                  <Label className="text-foreground font-medium">Auto-Generate Reports</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Automatically generate reports after deadlines</p>
                 </div>
               </div>
@@ -491,8 +491,8 @@ export function SettingsSection() {
               />
             </div>
 
-            <div className="space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Label className="text-gray-900 dark:text-white font-medium">Notification Frequency</Label>
+            <div className="space-y-2 pt-4 border-t border-border">
+              <Label className="text-foreground font-medium">Notification Frequency</Label>
               <Select
                 value={preferences.notification_frequency}
                 onValueChange={(value: 'realtime' | 'hourly' | 'daily' | 'weekly') => 
@@ -509,7 +509,7 @@ export function SettingsSection() {
                   <SelectItem value="weekly">Weekly</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 How often to receive batched notifications
               </p>
             </div>
@@ -533,9 +533,9 @@ export function SettingsSection() {
       </Card>
 
       {/* Webhook Configuration */}
-      <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <Card className="bg-background border border-gray-200 dark:border-gray-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
+          <CardTitle className="flex items-center gap-3 text-foreground">
             <Settings className="w-5 h-5 text-[#2D2DDD]" />
             Webhook Integration
           </CardTitle>

@@ -322,7 +322,7 @@ export function JobSeekerJobsSection() {
                 const StatusIcon = statusUi.icon
                 return (
                   <Dialog key={application.application_id}>
-                    <Card className="border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md hover:border-[#2D2DDD]/40 transition-all cursor-pointer group flex flex-col h-full relative">
+                    <Card className="border border-slate-200 dark:border-gray-800 bg-background shadow-sm hover:shadow-md hover:border-[#2D2DDD]/40 transition-all cursor-pointer group flex flex-col h-full relative">
                       <DialogTrigger asChild>
                         <div className="p-5 flex flex-col h-full w-full text-left outline-none">
                           <div className="flex items-center gap-3 mb-4">
@@ -330,7 +330,7 @@ export function JobSeekerJobsSection() {
                               <StatusIcon className="h-5 w-5 text-slate-500" />
                             </div>
                             <div className="overflow-hidden">
-                              <p className="font-semibold text-slate-900 dark:text-white truncate" title={application.job_title}>
+                              <p className="font-semibold text-foreground truncate" title={application.job_title}>
                                 {application.job_title}
                               </p>
                               <p className="text-xs text-slate-500 dark:text-gray-400 truncate" title={application.company_name || 'Employer'}>
@@ -358,7 +358,7 @@ export function JobSeekerJobsSection() {
                         <div className="mt-4 grid gap-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 p-5 text-sm text-slate-700 dark:text-slate-300">
                           <div className="flex justify-between items-start border-b border-slate-200 dark:border-gray-800 pb-4 mb-2">
                             <div>
-                              <h3 className="font-bold text-lg text-slate-900 dark:text-white">{application.job_title}</h3>
+                              <h3 className="font-bold text-lg text-foreground">{application.job_title}</h3>
                               <p className="text-slate-500">{application.company_name || 'Employer'}</p>
                             </div>
                             <div className="text-right">
@@ -371,7 +371,7 @@ export function JobSeekerJobsSection() {
 
                           <div className="space-y-3">
                             <div className="grid grid-cols-[100px_1fr] gap-2">
-                              <span className="font-semibold text-slate-900 dark:text-white">Resume:</span>
+                              <span className="font-semibold text-foreground">Resume:</span>
                               {application.resume_url ? (
                                 <a href={application.resume_url} target="_blank" rel="noopener noreferrer" className="text-[#2D2DDD] hover:underline flex items-center gap-1">
                                   <FileText className="w-4 h-4" /> Open Document
@@ -383,13 +383,13 @@ export function JobSeekerJobsSection() {
                             
                             {application.parsed_resume_json?.document?.name && (
                               <div className="grid grid-cols-[100px_1fr] gap-2">
-                                <span className="font-semibold text-slate-900 dark:text-white">Document:</span>
+                                <span className="font-semibold text-foreground">Document:</span>
                                 <span className="truncate">{application.parsed_resume_json.document.name}</span>
                               </div>
                             )}
 
                             <div className="grid grid-cols-[100px_1fr] gap-2">
-                              <span className="font-semibold text-slate-900 dark:text-white">LinkedIn:</span>
+                              <span className="font-semibold text-foreground">LinkedIn:</span>
                               {application.parsed_resume_json?.links?.linkedinUrl ? (
                                 <a href={application.parsed_resume_json.links.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-[#2D2DDD] hover:underline truncate">
                                   {application.parsed_resume_json.links.linkedinUrl}
@@ -400,7 +400,7 @@ export function JobSeekerJobsSection() {
                             </div>
 
                             <div className="grid grid-cols-[100px_1fr] gap-2">
-                              <span className="font-semibold text-slate-900 dark:text-white">GitHub:</span>
+                              <span className="font-semibold text-foreground">GitHub:</span>
                               {application.parsed_resume_json?.links?.githubUrl ? (
                                 <a href={application.parsed_resume_json.links.githubUrl} target="_blank" rel="noopener noreferrer" className="text-[#2D2DDD] hover:underline truncate">
                                   {application.parsed_resume_json.links.githubUrl}
@@ -411,7 +411,7 @@ export function JobSeekerJobsSection() {
                             </div>
 
                             <div className="grid grid-cols-[100px_1fr] gap-2">
-                              <span className="font-semibold text-slate-900 dark:text-white">Portfolio:</span>
+                              <span className="font-semibold text-foreground">Portfolio:</span>
                               {application.parsed_resume_json?.links?.otherUrl ? (
                                 <a href={application.parsed_resume_json.links.otherUrl} target="_blank" rel="noopener noreferrer" className="text-[#2D2DDD] hover:underline truncate">
                                   {application.parsed_resume_json.links.otherUrl}
@@ -424,10 +424,10 @@ export function JobSeekerJobsSection() {
 
                           {application.parsed_resume_json?.note && (
                             <div className="mt-2 pt-4 border-t border-slate-200 dark:border-gray-800">
-                              <span className="block font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                              <span className="block font-semibold text-foreground mb-1 flex items-center gap-2">
                                 <FileText className="w-4 h-4" /> Your Note
                               </span>
-                              <p className="bg-white dark:bg-gray-900 p-3 rounded-lg border border-slate-200 dark:border-gray-800">
+                              <p className="bg-background p-3 rounded-lg border border-slate-200 dark:border-gray-800">
                                 {application.parsed_resume_json.note}
                               </p>
                             </div>
@@ -435,10 +435,10 @@ export function JobSeekerJobsSection() {
 
                           {application.reasoning && (
                             <div className="mt-2 pt-4 border-t border-slate-200 dark:border-gray-800">
-                              <span className="block font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                              <span className="block font-semibold text-foreground mb-1 flex items-center gap-2">
                                 <Sparkles className="w-4 h-4 text-[#2D2DDD]" /> Watcher Reasoning
                               </span>
-                              <p className="bg-[#2D2DDD]/5 dark:bg-[#2D2DDD]/10 p-3 rounded-lg text-slate-800 dark:text-slate-200 leading-relaxed border border-[#2D2DDD]/10">
+                              <p className="bg-[#2D2DDD]/5 dark:bg-[#2D2DDD]/10 p-3 rounded-lg text-foreground leading-relaxed border border-[#2D2DDD]/10">
                                 {application.reasoning}
                               </p>
                             </div>

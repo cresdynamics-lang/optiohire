@@ -175,7 +175,7 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
               >
                 {isJobSeeker ? 'Job seeker' : 'Employer'}
               </span>
-              <h2 className="truncate text-[15px] font-semibold tracking-tight text-slate-900 dark:text-white">
+              <h2 className="truncate text-[15px] font-semibold tracking-tight text-foreground">
                 {displayOrgName}
               </h2>
               <p className="truncate text-[11px] font-medium text-slate-500 dark:text-gray-400">
@@ -255,7 +255,7 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
                {user?.name ? user.name.charAt(0).toUpperCase() : <Settings className="h-5 w-5" />}
              </div>
              <div className="flex-1 min-w-0">
-               <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
+               <p className="truncate text-sm font-medium text-foreground">
                  {user?.name || 'HR Professional'}
                </p>
                <p className="truncate text-xs text-slate-500 dark:text-gray-400">

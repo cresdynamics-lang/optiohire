@@ -207,8 +207,8 @@ export default function DeadLetterEmailsPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Dead-letter Emails</h1>
-            <p className="text-neutral-400">Failed emails that need manual intervention or re-queue.</p>
+            <h1 className="text-3xl font-bold text-foreground">Dead-letter Emails</h1>
+            <p className="text-muted-foreground">Failed emails that need manual intervention or re-queue.</p>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/admin/emails">
@@ -232,7 +232,7 @@ export default function DeadLetterEmailsPage() {
 
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-white">Queue Controls</CardTitle>
+            <CardTitle className="text-foreground">Queue Controls</CardTitle>
             <CardDescription>Filter and bulk re-queue dead-letter emails.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -261,7 +261,7 @@ export default function DeadLetterEmailsPage() {
           {filteredEmails.map((email) => {
             const selected = selectedIds.includes(email.email_id)
             return (
-              <Card key={email.email_id} className="border-border bg-white">
+              <Card key={email.email_id} className="border-border bg-card">
                 <CardContent className="pt-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
@@ -276,16 +276,16 @@ export default function DeadLetterEmailsPage() {
                           <AlertTriangle className="w-4 h-4 text-amber-400" />
                           <p className="font-medium text-foreground">{email.subject}</p>
                           <Badge variant="outline">{email.email_type}</Badge>
-                          <Badge className="bg-red-600 text-white">failed</Badge>
+                          <Badge variant="destructive">failed</Badge>
                         </div>
-                        <p className="text-sm text-neutral-400">{email.recipient_email}</p>
-                        <p className="text-xs text-neutral-500">
+                        <p className="text-sm text-muted-foreground">{email.recipient_email}</p>
+                        <p className="text-xs text-muted-foreground">
                           retries: {email.metadata?.retry_count ?? 0}
                           {email.metadata?.next_retry_at ? ` | next retry: ${new Date(email.metadata.next_retry_at).toLocaleString()}` : ''}
                           {` | created: ${new Date(email.created_at).toLocaleString()}`}
                         </p>
                         {email.error_message ? (
-                          <p className="text-xs text-red-300">Error: {email.error_message}</p>
+                          <p className="text-xs text-destructive">Error: {email.error_message}</p>
                         ) : null}
                       </div>
                     </div>
@@ -300,7 +300,7 @@ export default function DeadLetterEmailsPage() {
 
           {filteredEmails.length === 0 ? (
             <Card className="border-border">
-              <CardContent className="pt-6 text-neutral-400">No dead-letter emails found.</CardContent>
+              <CardContent className="pt-6 text-muted-foreground">No dead-letter emails found.</CardContent>
             </Card>
           ) : null}
         </div>

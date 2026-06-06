@@ -276,7 +276,7 @@ export default function EmailManagementPage() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Email Management
             </h1>
             <p className="text-neutral-400">
@@ -360,7 +360,7 @@ export default function EmailManagementPage() {
         {/* Dead-letter Queue */}
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-white">Dead-letter queue</CardTitle>
+            <CardTitle className="text-foreground">Dead-letter queue</CardTitle>
             <CardDescription>
               Failed emails that exhausted retries or were marked non-retryable.
             </CardDescription>
@@ -421,7 +421,7 @@ export default function EmailManagementPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 rounded border border-border bg-white text-foreground"
+                  className="px-3 py-2 rounded border border-border bg-background text-foreground"
                 >
                   <option value="all">All Status</option>
                   <option value="sent">Sent</option>
@@ -433,7 +433,7 @@ export default function EmailManagementPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-3 py-2 rounded border border-border bg-white text-foreground"
+                  className="px-3 py-2 rounded border border-border bg-background text-foreground"
                 >
                   <option value="all">All Types</option>
                   <option value="password_reset">Password Reset</option>
@@ -450,12 +450,12 @@ export default function EmailManagementPage() {
         {/* Emails List */}
         <div className="space-y-4">
           {emails.map((email) => (
-            <Card key={email.email_id} className="border-border bg-white">
+            <Card key={email.email_id} className="border-border bg-card">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-white">
+                      <h3 className="font-semibold text-foreground">
                         {email.subject}
                       </h3>
                       {getStatusBadge(email.status)}

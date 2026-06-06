@@ -109,7 +109,7 @@ export function TalentProfileSection() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl">Talent Profile Dashboard</h1>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Talent Profile Dashboard</h1>
         <p className="text-slate-600 mt-1">Track your skills, close gaps, and get hired.</p>
       </div>
 
@@ -138,7 +138,7 @@ export function TalentProfileSection() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-muted-foreground font-medium mb-1">Verified Skills</p>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                <h2 className="text-3xl font-bold text-foreground">
                   {data.skills.filter(s => s.is_verified).length}
                 </h2>
               </div>
@@ -154,7 +154,7 @@ export function TalentProfileSection() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-muted-foreground font-medium mb-1">Perfect Job Matches</p>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                <h2 className="text-3xl font-bold text-foreground">
                   {data.recommendations.length}
                 </h2>
               </div>

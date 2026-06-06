@@ -222,7 +222,7 @@ export default function SystemSettingsPage() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               System Settings & Flow Control
             </h1>
             <p className="text-neutral-400">
@@ -279,7 +279,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'settings' && (
           <div className="space-y-4">
             {generalSettings.map((setting) => (
-              <Card key={setting.setting_id} className="border-border bg-white">
+              <Card key={setting.setting_id} className="border-border bg-card">
                 <CardHeader>
                   <CardTitle className="text-lg">{setting.setting_key}</CardTitle>
                   {setting.description && (
@@ -358,7 +358,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'features' && (
           <div className="space-y-4">
             {featureFlags.map((flag) => (
-              <Card key={flag.setting_id} className="border-border bg-white">
+              <Card key={flag.setting_id} className="border-border bg-card">
                 <CardHeader>
                   <CardTitle className="text-lg">{flag.setting_key}</CardTitle>
                   {flag.description && (
@@ -407,7 +407,7 @@ export default function SystemSettingsPage() {
         {activeTab === 'workflows' && (
           <div className="space-y-4">
             {workflows.map((workflow) => (
-              <Card key={workflow.workflow_id} className="border-border bg-white">
+              <Card key={workflow.workflow_id} className="border-border bg-card">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>

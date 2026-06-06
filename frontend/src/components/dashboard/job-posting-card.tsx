@@ -112,7 +112,7 @@ export function JobPostingCard({ jobPosting, onViewDetails, delay = 0 }: JobPost
             {analytics && (
               <div className="grid grid-cols-3 gap-2 border-t pt-4 sm:gap-4">
                 <div className="text-center">
-                  <p className="text-xl font-bold text-[#2D2DDD] dark:text-white font-figtree">
+                  <p className="text-xl font-bold text-[#2D2DDD]  font-figtree">
                     {analytics.total_applicants}
                   </p>
                   <p className="text-[11px] text-gray-600 sm:text-xs dark:text-gray-400">Total</p>

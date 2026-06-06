@@ -407,8 +407,29 @@ Please change your password after your first login for security.
         interview_time: data.interviewTime
       }
       subject = parseTemplate(customTemplate.subject, vars)
-      html = parseTemplate(customTemplate.body_html, vars)
-      text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+      
+      // Ensure custom template body has HTML formatting
+      let rawHtml = parseTemplate(customTemplate.body_html, vars)
+      if (rawHtml && !rawHtml.includes('<p>') && !rawHtml.includes('<br>')) {
+        rawHtml = rawHtml.replace(/\n/g, '<br>')
+      }
+      
+      html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    ${rawHtml}
+  </div>
+</body>
+</html>`
+      text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : rawHtml.replace(/<[^>]*>/g, '')
       
       // Append dashboard block to custom template
       if (dashboardBlock) {
@@ -571,8 +592,29 @@ Please change your password after your first login for security.
         hr_email: hrEmail
       }
       subject = parseTemplate(customTemplate.subject, vars)
-      html = parseTemplate(customTemplate.body_html, vars)
-      text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : html.replace(/<[^>]*>/g, '')
+      
+      // Ensure custom template body has HTML formatting
+      let rawHtml = parseTemplate(customTemplate.body_html, vars)
+      if (rawHtml && !rawHtml.includes('<p>') && !rawHtml.includes('<br>')) {
+        rawHtml = rawHtml.replace(/\n/g, '<br>')
+      }
+      
+      html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    ${rawHtml}
+  </div>
+</body>
+</html>`
+      text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : rawHtml.replace(/<[^>]*>/g, '')
       
       // Append dashboard block to custom template
       if (dashboardBlock) {
@@ -999,8 +1041,8 @@ HireBit System
     .div-label hr { flex: 1; border: none; border-top: 1px solid #e2e8f0; }
     .div-label span { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #94a3b8; white-space: nowrap; }
     .share-intro { font-size: 14px; color: #475569; line-height: 1.7; margin-bottom: 18px; }
-    .share-box { background: #fafaf9; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 22px 24px; margin-bottom: 10px; position: relative; }
-    .share-box-tag { position: absolute; top: -11px; left: 18px; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; }
+    .share-box { background: #fdf2f8; border: 1.5px dashed #fbcfe8; border-radius: 12px; padding: 22px 24px; margin-bottom: 10px; position: relative; }
+    .share-box-tag { position: absolute; top: -11px; left: 18px; background: #fce7f3; border: 1px solid #fbcfe8; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; color: #db2777; letter-spacing: 0.08em; text-transform: uppercase; }
     .share-text { font-size: 13.5px; color: #334155; line-height: 1.8; }
     .share-text p { margin-bottom: 12px; }
     .share-text p:last-child { margin-bottom: 0; }
@@ -1074,7 +1116,7 @@ HireBit System
       <span class="share-box-tag">Copy &amp; share this</span>
       <div class="share-text">
         <p>We are hiring for a <strong>${cleanedJobTitle}</strong> at <strong>${companyName}</strong>!</p>
-        <p>To apply, send an email to <strong>${APPLICATION_INBOX_EMAIL}</strong> or <strong>jobs@optiohire.com</strong> and follow these exact steps:</p>
+        <p>To apply, send an email to <strong>applicationsoptiohire@gmail.com</strong> or <strong>jobs@optiohire.com</strong> and follow these exact steps:</p>
         <ul class="share-steps">
           <li>
             <span class="sli-num">1</span>
@@ -1136,7 +1178,7 @@ Copy and paste this to LinkedIn, WhatsApp, or your network:
 ---
 We are hiring for a ${cleanedJobTitle} at ${companyName}!
 
-To apply, send an email to ${APPLICATION_INBOX_EMAIL} or jobs@optiohire.com and follow these steps:
+To apply, send an email to applicationsoptiohire@gmail.com or jobs@optiohire.com and follow these steps:
 
 1. Your email subject MUST be exactly: ${recommendedSubject}
 2. In the body, write a short cover letter explaining why you are a great fit.

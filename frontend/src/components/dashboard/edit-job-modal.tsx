@@ -88,10 +88,10 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           >
-            <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_30px_90px_-56px_rgba(15,23,42,0.45)] dark:border-slate-700 dark:bg-slate-900">
+            <Card className="overflow-hidden border border-slate-200 bg-white shadow-[0_30px_90px_-56px_rgba(15,23,42,0.45)]  ">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-figtree font-semibold text-slate-900 dark:text-white">
+                  <CardTitle className="text-xl font-figtree font-semibold text-foreground">
                     Edit Job Posting
                   </CardTitle>
                   <Button
@@ -109,12 +109,12 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Job Details */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-figtree font-semibold text-foreground">
                       Job Details
                     </h3>
                     
                     <div className="space-y-2">
-                      <Label className="text-gray-900 dark:text-white">Job Poster (Optional)</Label>
+                      <Label className="text-foreground">Job Poster (Optional)</Label>
                       <ImageUpload
                         value={formData.job_poster_url}
                         onChange={(url) => handleInputChange('job_poster_url', url || '')}
@@ -130,7 +130,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                         onChange={(e) => handleInputChange('job_title', e.target.value)}
                         placeholder="e.g., Senior Software Engineer"
                         required
-                        className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
+                        className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600   dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                       />
                     </div>
                     
@@ -143,7 +143,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                         placeholder="Describe the role, responsibilities, and requirements..."
                         rows={4}
                         required
-                        className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
+                        className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600   dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                       />
                     </div>
                     
@@ -156,7 +156,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                           onChange={(e) => setNewSkill(e.target.value)}
                           placeholder="Add a skill"
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                          className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
+                          className="border border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600   dark:placeholder:text-slate-400 dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                         />
                         <Button 
                           type="button" 
@@ -194,7 +194,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                         id="status"
                         value={formData.status || 'active'}
                         onChange={(e) => handleInputChange('status', e.target.value as 'active' | 'paused' | 'closed')}
-                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-0 focus:border-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-slate-200"
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:ring-0 focus:border-slate-900 dark:border-slate-600   dark:focus:border-slate-200"
                       >
                         <option value="active">Active</option>
                         <option value="paused">Paused</option>
@@ -205,7 +205,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
 
                   {/* Application Deadline */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-lg font-figtree font-semibold text-foreground flex items-center gap-2">
                       <Clock className="w-5 h-5 text-slate-700 dark:text-slate-200" />
                       Application Deadline
                     </h3>
@@ -217,14 +217,14 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                         type="datetime-local"
                         value={formData.application_deadline ? new Date(formData.application_deadline).toISOString().slice(0, 16) : ''}
                         onChange={(e) => handleInputChange('application_deadline', e.target.value)}
-                        className="border border-slate-300 bg-white text-slate-900 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
+                        className="border border-slate-300 bg-white text-slate-900 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600   dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                       />
                     </div>
                   </div>
 
                   {/* Interview Details */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-figtree font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-figtree font-semibold text-foreground">
                       Interview Details
                     </h3>
                     
@@ -236,7 +236,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                           value={formData.interview_meeting_link || ''}
                           onChange={(e) => handleInputChange('interview_meeting_link', e.target.value)}
                           placeholder="https://meet.google.com/..."
-                          className="flex-1 border border-slate-300 bg-white text-slate-900 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
+                          className="flex-1 border border-slate-300 bg-white text-slate-900 hover:border-slate-400 focus-visible:border-slate-900 focus-visible:ring-0 dark:border-slate-600   dark:hover:border-slate-500 dark:focus-visible:border-slate-200"
                         />
                         <Button
                           type="button"
@@ -250,7 +250,7 @@ export function EditJobModal({ isOpen, onClose, jobPosting, onSave }: EditJobMod
                           <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden />
                         </Button>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         Open Google Meet to start a new meeting, then copy the link and paste it above.
                       </p>
                     </div>

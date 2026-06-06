@@ -49,7 +49,7 @@ export function RejectedInterviewsModal({
             rejectedCandidates.map((candidate) => (
               <div
                 key={candidate.application_id}
-                className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900"
+                className="rounded-lg border border-slate-200 bg-slate-50 p-4  "
               >
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div>
@@ -65,7 +65,7 @@ export function RejectedInterviewsModal({
                     Rejected by AI
                   </Badge>
                 </div>
-                <div className="mt-3 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950 p-3 rounded border border-slate-100 dark:border-slate-800">
+                <div className="mt-3 text-sm text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950 p-3 rounded border border-slate-100 ">
                   <span className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">Reasoning:</span>
                   {candidate.reasoning || 'No specific reason provided.'}
                 </div>

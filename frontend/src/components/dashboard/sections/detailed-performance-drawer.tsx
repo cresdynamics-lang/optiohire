@@ -19,7 +19,7 @@ interface DetailedPerformanceDrawerProps {
 export function DetailedPerformanceDrawer({ open, onOpenChange, insights }: DetailedPerformanceDrawerProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
-      <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto border-l border-slate-200 dark:border-slate-800 shadow-2xl z-[100]">
+      <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto border-l border-border shadow-2xl z-[100]">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-2xl font-bold flex items-center gap-2">
             <Bot className="w-6 h-6 text-indigo-600" />

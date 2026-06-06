@@ -190,11 +190,11 @@ export function ApplicantReportModal({ isOpen, onClose, jobPosting }: ApplicantR
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden"
           >
-            <Card className="bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800">
-              <CardHeader className="pb-4 border-b border-gray-200 dark:border-gray-700">
+            <Card className="bg-background shadow-2xl border border-gray-200 dark:border-gray-800">
+              <CardHeader className="pb-4 border-b border-border">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-xl font-figtree font-extralight text-[#2D2DDD] dark:text-white mb-1">
+                    <CardTitle className="text-xl font-figtree font-extralight text-[#2D2DDD]  mb-1">
                       Applicant Report
                     </CardTitle>
                     <p className="text-sm font-figtree font-light text-gray-600 dark:text-gray-400 truncate">
@@ -264,28 +264,28 @@ export function ApplicantReportModal({ isOpen, onClose, jobPosting }: ApplicantR
                   <div className="overflow-x-auto max-h-[calc(90vh-200px)]">
                     <table className="w-full border-collapse min-w-[800px]">
                       <thead>
-                        <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-gray-900 dark:text-white uppercase tracking-wider">
+                        <tr className="bg-gray-50 dark:bg-gray-800 border-b border-border">
+                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-foreground uppercase tracking-wider">
                             APPLICANT NAME
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-gray-900 dark:text-white uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-foreground uppercase tracking-wider">
                             APPLICANT EMAIL
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-gray-900 dark:text-white uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-foreground uppercase tracking-wider">
                             MATCH SCORE
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-gray-900 dark:text-white uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-foreground uppercase tracking-wider">
                             REASONING
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-gray-900 dark:text-white uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-foreground uppercase tracking-wider">
                             STATUS
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-gray-900 dark:text-white uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-semibold font-figtree text-foreground uppercase tracking-wider">
                             ACTIONS
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                      <tbody className="bg-background divide-y divide-gray-200 dark:divide-gray-700">
                         {applicants.map((applicant, index) => (
                           <motion.tr
                             key={applicant.id}
@@ -294,7 +294,7 @@ export function ApplicantReportModal({ isOpen, onClose, jobPosting }: ApplicantR
                             transition={{ delay: index * 0.05 }}
                             className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                           >
-                            <td className="px-4 py-3 text-sm font-figtree font-medium text-gray-900 dark:text-white">
+                            <td className="px-4 py-3 text-sm font-figtree font-medium text-foreground">
                               {applicant.name || 'N/A'}
                             </td>
                             <td className="px-4 py-3 text-sm font-figtree font-light text-gray-700 dark:text-gray-300">

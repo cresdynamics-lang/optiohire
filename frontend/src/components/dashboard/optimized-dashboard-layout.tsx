@@ -44,14 +44,14 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
 // Shown only while auth is unknown (no token yet in client tree) — not a spinner
 const DashboardChromeSkeleton = () => (
   <div className="flex min-h-screen flex-col lg:flex-row">
-    <div className="hidden h-screen w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] shrink-0 animate-pulse border-r border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900 lg:block" />
+    <div className="hidden h-screen w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] shrink-0 animate-pulse border-r border-slate-200 bg-slate-100   lg:block" />
     <div className="min-w-0 flex-1">
-      <div className="h-14 animate-pulse border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950" />
+      <div className="h-14 animate-pulse border-b border-slate-200 bg-white  dark:bg-slate-950" />
       <div className="mx-auto max-w-[1440px] space-y-4 p-4 md:p-8">
-        <div className="h-40 animate-pulse rounded-2xl bg-slate-200/80 dark:bg-slate-800/80" />
+        <div className="h-40 animate-pulse rounded-2xl bg-slate-200/80 /80" />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-200/70 dark:bg-slate-800/70" />
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-200/70 /70" />
           ))}
         </div>
       </div>
@@ -67,12 +67,12 @@ const SectionLoader = ({ sectionName }: { sectionName: string }) => (
       {[0, 1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-24 animate-pulse rounded-xl bg-slate-200/70 dark:bg-slate-800/70"
+          className="h-24 animate-pulse rounded-xl bg-slate-200/70 /70"
           style={{ animationDelay: `${i * 75}ms` }}
         />
       ))}
     </div>
-    <div className="h-40 animate-pulse rounded-2xl bg-slate-200/60 dark:bg-slate-800/60" />
+    <div className="h-40 animate-pulse rounded-2xl bg-slate-200/60 /60" />
   </div>
 )
 
@@ -695,7 +695,7 @@ function DashboardContent() {
         id="dashboard-sidebar"
         role="navigation"
         aria-label="Dashboard navigation"
-        className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] max-h-[100dvh] w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] flex-shrink-0 border-r border-slate-200/90 bg-white shadow-xl shadow-slate-900/10 transform transition-transform duration-300 ease-out supports-[padding:max(0px)]:pl-[env(safe-area-inset-left)] dark:border-slate-800 dark:bg-slate-950 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] max-h-[100dvh] w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] flex-shrink-0 border-r border-slate-200/90 bg-white shadow-xl shadow-slate-900/10 transform transition-transform duration-300 ease-out supports-[padding:max(0px)]:pl-[env(safe-area-inset-left)]  dark:bg-slate-950 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
         }`}
       >
@@ -711,7 +711,7 @@ function DashboardContent() {
       
       <main className="min-w-0 flex-1 overflow-auto bg-transparent">
         {/* Top bar: wayfinding + notifications */}
-        <div className="sticky top-0 z-10 border-b border-slate-200/90 bg-white/95 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-900/[0.06] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
+        <div className="sticky top-0 z-10 border-b border-slate-200/90 bg-white/95 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-900/[0.06] backdrop-blur-xl  dark:bg-slate-950/90">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#2D2DDD]/35 to-transparent" aria-hidden />
           <div className="relative flex items-center justify-between gap-2 p-3 sm:gap-3 sm:p-4 md:px-6 md:py-4">
             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -719,7 +719,7 @@ function DashboardContent() {
                 <button
                   type="button"
                   onClick={() => setIsSidebarOpen((open) => !open)}
-                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:scale-[0.98]   dark:text-slate-200 dark:hover:bg-slate-800"
                   aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
                   aria-expanded={isSidebarOpen}
                   aria-controls="dashboard-sidebar"
@@ -752,7 +752,7 @@ function DashboardContent() {
                     asChild
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 shrink-0 rounded-xl border-slate-200 sm:hidden dark:border-slate-700"
+                    className="h-10 w-10 shrink-0 rounded-xl border-slate-200 sm:hidden "
                     aria-label="Job postings"
                   >
                     <Link href="/dashboard/jobs" prefetch={false}>
@@ -792,9 +792,9 @@ function DashboardContent() {
                   align="end"
                   sideOffset={8}
                 >
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                  <div className="p-4 border-b border-border bg-background">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                      <h3 className="font-semibold text-foreground">Notifications</h3>
                       {notifications.length > 0 && (
                         <Button
                           type="button"
@@ -808,11 +808,11 @@ function DashboardContent() {
                       )}
                     </div>
                   </div>
-                  <div className="max-h-[400px] overflow-y-auto bg-white dark:bg-gray-900">
+                  <div className="max-h-[400px] overflow-y-auto bg-background">
                     {notifications.length === 0 ? (
                       <div className="p-8 text-center">
                         <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-sm text-gray-500 dark:text-gray-400">No notifications</p>
+                        <p className="text-sm text-muted-foreground">No notifications</p>
                       </div>
                     ) : (
                       <div className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -833,7 +833,7 @@ function DashboardContent() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1">
-                                    <p className={`text-sm font-medium text-gray-900 dark:text-white ${
+                                    <p className={`text-sm font-medium text-foreground ${
                                       notification.read ? 'opacity-60' : ''
                                     }`}>
                                       {notification.title}
