@@ -42,6 +42,9 @@ interface CompanyData {
   created_at: string
   company_logo_url?: string | null
   company_location?: string
+  website_url?: string | null
+  linkedin_url?: string | null
+  twitter_url?: string | null
 }
 
 export function ProfileSection() {
@@ -66,6 +69,9 @@ export function ProfileSection() {
     hiring_manager_email: '',
     company_logo_url: '',
     company_location: '',
+    website_url: '',
+    linkedin_url: '',
+    twitter_url: '',
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -107,6 +113,9 @@ export function ProfileSection() {
         hiring_manager_email: user.hiringManagerEmail || '',
         company_logo_url: (user as any).companyLogoUrl || '',
         company_location: (user as any).companyLocation || '',
+        website_url: (user as any).websiteUrl || '',
+        linkedin_url: (user as any).linkedinUrl || '',
+        twitter_url: (user as any).twitterUrl || '',
       })
       setIsLoading(false)
       
@@ -155,6 +164,9 @@ export function ProfileSection() {
             hiring_manager_email: userData.hiring_manager_email || userData.hiringManagerEmail || '',
             company_logo_url: userData.companyLogoUrl || '',
             company_location: userData.companyLocation || '',
+            website_url: userData.websiteUrl || '',
+            linkedin_url: userData.linkedinUrl || '',
+            twitter_url: userData.twitterUrl || '',
           })
         }
       }
@@ -197,6 +209,9 @@ export function ProfileSection() {
             hiring_manager_email: userData.hiring_manager_email || userData.hiringManagerEmail || '',
             company_logo_url: userData.companyLogoUrl || '',
             company_location: userData.companyLocation || '',
+            website_url: userData.websiteUrl || '',
+            linkedin_url: userData.linkedinUrl || '',
+            twitter_url: userData.twitterUrl || '',
           })
         }
       }
@@ -258,6 +273,9 @@ export function ProfileSection() {
           company_email: formData.company_email,
           hr_email: formData.hr_email,
           company_logo_url: formData.company_logo_url || null,
+          website_url: formData.website_url || null,
+          linkedin_url: formData.linkedin_url || null,
+          twitter_url: formData.twitter_url || null,
         })
       })
 
@@ -736,6 +754,30 @@ export function ProfileSection() {
                           {user?.hiringManagerEmail || '—'}
                         </p>
                       </div>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase text-muted-foreground">Website</p>
+                        <p className="text-sm font-medium text-foreground break-all">
+                          {formData.website_url ? (
+                            <a href={formData.website_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{formData.website_url}</a>
+                          ) : '—'}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase text-muted-foreground">LinkedIn</p>
+                        <p className="text-sm font-medium text-foreground break-all">
+                          {formData.linkedin_url ? (
+                            <a href={formData.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{formData.linkedin_url}</a>
+                          ) : '—'}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase text-muted-foreground">Twitter</p>
+                        <p className="text-sm font-medium text-foreground break-all">
+                          {formData.twitter_url ? (
+                            <a href={formData.twitter_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{formData.twitter_url}</a>
+                          ) : '—'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -810,6 +852,42 @@ export function ProfileSection() {
                         <p className="text-xs text-gray-500 dark:text-gray-500">
                           This address receives applications and is shown in candidate emails.
                         </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="website_url" className="text-gray-700 dark:text-gray-300">Website URL</Label>
+                        <Input
+                          id="website_url"
+                          type="url"
+                          value={formData.website_url || ''}
+                          onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
+                          placeholder="https://example.com"
+                          className="bg-white dark:bg-gray-800 text-foreground border-gray-300 dark:border-gray-600"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="linkedin_url" className="text-gray-700 dark:text-gray-300">LinkedIn URL</Label>
+                        <Input
+                          id="linkedin_url"
+                          type="url"
+                          value={formData.linkedin_url || ''}
+                          onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                          placeholder="https://linkedin.com/company/your-company"
+                          className="bg-white dark:bg-gray-800 text-foreground border-gray-300 dark:border-gray-600"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="twitter_url" className="text-gray-700 dark:text-gray-300">Twitter URL</Label>
+                        <Input
+                          id="twitter_url"
+                          type="url"
+                          value={formData.twitter_url || ''}
+                          onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
+                          placeholder="https://twitter.com/your-company"
+                          className="bg-white dark:bg-gray-800 text-foreground border-gray-300 dark:border-gray-600"
+                        />
                       </div>
 
                       <ImageUpload

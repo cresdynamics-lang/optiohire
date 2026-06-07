@@ -25,6 +25,11 @@ import {
 } from '../api/queueMonitoringController.js'
 import { getCandidateDecisions } from '../api/adminCandidatesController.js'
 import {
+  rescoreApplication,
+  bulkRescoreApplications,
+  overrideDecision
+} from '../api/adminAuditActionsController.js'
+import {
   checkAndSendMissingEmails,
   getEmailCheckStats,
   getMissingEmailDetails
@@ -96,6 +101,9 @@ router.delete('/job-postings/:jobId', deleteJobPosting)
 router.get('/applications', getAllApplications)
 router.delete('/applications/:applicationId', deleteApplication)
 router.get('/candidate-decisions', getCandidateDecisions)
+router.post('/audit/rescore', rescoreApplication)
+router.post('/audit/bulk-rescore', bulkRescoreApplications)
+router.post('/audit/override', overrideDecision)
 
 // Signup Queue Management
 router.get('/users/pending', getPendingSignups)

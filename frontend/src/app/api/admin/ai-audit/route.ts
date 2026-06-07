@@ -12,14 +12,12 @@ export async function GET(request: NextRequest) {
 
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
     const { searchParams } = new URL(request.url)
-    const page = searchParams.get('page') || '1'
-    const limit = searchParams.get('limit') || '20'
-    const jobId = searchParams.get('job_id')
-    const companyId = searchParams.get('company_id')
-
-    const qs = new URLSearchParams({ page, limit })
-    if (jobId) qs.set('job_id', jobId)
-    if (companyId) qs.set('company_id', companyId)
+    const qs = new URLSearchParams()
+    searchParams.forEach((value, key) => {
+      qs.set(key, value)
+    })
+    if (!qs.has('page')) qs.set('page', '1')
+    if (!qs.has('limit')) qs.set('limit', '20')
 
     const res = await fetch(`${backendUrl}/api/admin/ai-audit?${qs.toString()}`, {
       headers: {

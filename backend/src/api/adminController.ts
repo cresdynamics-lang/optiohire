@@ -1165,7 +1165,7 @@ export async function getSystemStats(req: Request, res: Response) {
 
 export async function getAIAuditTrail(req: Request, res: Response) {
   try {
-    const { page = '1', limit = '50', job_id = '', company_id = '' } = req.query
+    const { page = '1', limit = '50', job_id = '', company_id = '', decision = '' } = req.query
     const pageNum = Math.max(1, Number(page) || 1)
     const limitNum = Math.min(200, Math.max(1, Number(limit) || 50))
     const offset = (pageNum - 1) * limitNum
@@ -1182,6 +1182,15 @@ export async function getAIAuditTrail(req: Request, res: Response) {
       conditions.push(`a.company_id = $${i++}`)
       params.push(company_id)
     }
+    if (decision) {
+      const normalizedDecision = String(decision).toUpperCase()
+      if (normalizedDecision === 'PENDING') {
+        conditions.push(`a.ai_status IS NULL`)
+      } else if (['SHORTLIST', 'FLAG', 'REJECT'].includes(normalizedDecision)) {
+        conditions.push(`UPPER(a.ai_status) = $${i++}`)
+        params.push(normalizedDecision)
+      }
+    }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
@@ -1197,6 +1206,9 @@ export async function getAIAuditTrail(req: Request, res: Response) {
       job_title: string | null
       company_id: string
       company_name: string | null
+      ai_audit_log: any
+      resume_url: string | null
+      parsed_resume_json: any
     }>(
       `SELECT
          a.application_id,
@@ -1206,10 +1218,13 @@ export async function getAIAuditTrail(req: Request, res: Response) {
          a.reasoning,
          a.candidate_name,
          a.email,
+         a.resume_url,
+         a.parsed_resume_json,
          a.job_posting_id,
          jp.job_title,
          a.company_id,
-         c.company_name
+         c.company_name,
+         a.ai_audit_log
        FROM applications a
        LEFT JOIN job_postings jp ON jp.job_posting_id = a.job_posting_id
        LEFT JOIN companies c ON c.company_id = a.company_id
@@ -1232,6 +1247,14 @@ export async function getAIAuditTrail(req: Request, res: Response) {
       const mentionsSensitiveAttribute = sensitiveReasoningPattern.test(reasoning)
       const score = row.ai_score !== null && row.ai_score !== undefined ? Number(row.ai_score) : null
       const status = (row.ai_status || 'PENDING').toUpperCase()
+      const audit = row.ai_audit_log || {}
+      const parsedResume = row.parsed_resume_json || {}
+      const candidateLinks = {
+        linkedin: row.parsed_resume_json?.linkedin || row.parsed_resume_json?.links?.linkedinUrl || row.parsed_resume_json?.linkedin_url || null,
+        github: row.parsed_resume_json?.github || row.parsed_resume_json?.links?.githubUrl || row.parsed_resume_json?.github_url || null,
+        portfolio: row.parsed_resume_json?.portfolio || row.parsed_resume_json?.links?.otherUrl || row.parsed_resume_json?.portfolio_url || null,
+        other: row.parsed_resume_json?.other_links || row.parsed_resume_json?.links?.otherUrl || null,
+      }
 
       return {
         application_id: row.application_id,
@@ -1239,6 +1262,8 @@ export async function getAIAuditTrail(req: Request, res: Response) {
         candidate: {
           name: row.candidate_name || null,
           email: row.email,
+          resume_url: row.resume_url || null,
+          links: candidateLinks,
         },
         job: {
           job_posting_id: row.job_posting_id,
@@ -1250,13 +1275,25 @@ export async function getAIAuditTrail(req: Request, res: Response) {
           score,
           status,
           reasoning,
+          ai_status: row.ai_status || null,
+        },
+        ai_audit_log: audit,
+        auditMeta: {
+          model_used: audit.model_used || audit.model || audit.scoring_model || null,
+          scored_at: audit.scored_at || audit.timestamp || audit.created_at || null,
+          weights_used: audit.weights_used || audit.weights || null,
+          candidate_links: candidateLinks,
+          contribution_verification:
+            audit.contribution_verification ||
+            audit.technical_insights ||
+            parsedResume.technical_insights ||
+            null,
+          admin_override: audit.admin_override || null,
         },
         fairnessFlags: {
           reasoning_mentions_sensitive_attribute: mentionsSensitiveAttribute,
-          borderline_decision:
-            score !== null &&
-            ((score >= 45 && score <= 55) || (score >= 75 && score <= 85)),
-          missing_reasoning: reasoning.trim().length === 0,
+          borderline_decision: score !== null && score >= 75 && score <= 85,
+          missing_reasoning: status !== 'PENDING' && !reasoning.trim(),
         },
       }
     })

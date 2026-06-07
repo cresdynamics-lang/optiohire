@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { 
   Mail, 
   CheckCircle, 
@@ -19,7 +20,8 @@ import {
   AlertTriangle,
   Filter,
   Search,
-  ArrowLeft
+  ArrowLeft,
+  Eye
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -41,6 +43,11 @@ interface EmailLog {
     is_retry_eligible?: boolean
     next_retry_at?: string | null
     manually_requeued_at?: string
+    html?: string
+    text?: string
+    from?: string
+    context?: Record<string, any>
+    [key: string]: any
   }
 }
 
@@ -67,6 +74,7 @@ export default function EmailManagementPage() {
   const [error, setError] = useState<string | null>(null)
   const [deadLetters, setDeadLetters] = useState<EmailLog[]>([])
   const [deadLettersLoading, setDeadLettersLoading] = useState(false)
+  const [previewEmail, setPreviewEmail] = useState<EmailLog | null>(null)
 
   useEffect(() => {
     // Check for admin session first
@@ -505,6 +513,15 @@ export default function EmailManagementPage() {
                       Resend
                     </Button>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPreviewEmail(email)}
+                    className="ml-2"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -547,6 +564,57 @@ export default function EmailManagementPage() {
           </div>
         )}
       </div>
+      <Dialog open={!!previewEmail} onOpenChange={(open) => !open && setPreviewEmail(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Email Audit Preview</DialogTitle>
+            <DialogDescription>
+              Read-only view of the stored email body and delivery context.
+            </DialogDescription>
+          </DialogHeader>
+          {previewEmail && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-border bg-background p-4 text-sm">
+                <div><span className="font-semibold">Subject:</span> {previewEmail.subject}</div>
+                <div><span className="font-semibold">Type:</span> {previewEmail.email_type}</div>
+                <div><span className="font-semibold">To:</span> {previewEmail.recipient_email}</div>
+                <div><span className="font-semibold">From:</span> {previewEmail.metadata?.from || 'Not recorded'}</div>
+                <div><span className="font-semibold">Provider:</span> {previewEmail.provider}</div>
+                <div><span className="font-semibold">Status:</span> {previewEmail.status}</div>
+                <div><span className="font-semibold">Created:</span> {new Date(previewEmail.created_at).toLocaleString()}</div>
+                {previewEmail.sent_at && <div><span className="font-semibold">Sent:</span> {new Date(previewEmail.sent_at).toLocaleString()}</div>}
+              </div>
+              {previewEmail.metadata?.html ? (
+                <div className="rounded-lg border border-border bg-white">
+                  <div className="border-b border-border px-4 py-2 text-sm font-semibold text-slate-700">HTML body</div>
+                  <iframe
+                    title="Email HTML preview"
+                    sandbox=""
+                    srcDoc={previewEmail.metadata.html}
+                    className="h-[520px] w-full bg-white"
+                  />
+                </div>
+              ) : previewEmail.metadata?.text ? (
+                <pre className="max-h-[520px] overflow-auto rounded-lg border border-border bg-slate-50 p-4 text-sm whitespace-pre-wrap">
+                  {previewEmail.metadata.text}
+                </pre>
+              ) : (
+                <div className="rounded-lg border border-border bg-slate-50 p-4 text-sm text-muted-foreground">
+                  No stored email body was found in this log entry.
+                </div>
+              )}
+              {previewEmail.metadata && (
+                <details className="rounded-lg border border-border bg-background p-4">
+                  <summary className="cursor-pointer text-sm font-semibold">Raw metadata</summary>
+                  <pre className="mt-3 max-h-64 overflow-auto text-xs whitespace-pre-wrap">
+                    {JSON.stringify(previewEmail.metadata, null, 2)}
+                  </pre>
+                </details>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

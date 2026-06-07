@@ -725,6 +725,144 @@ Company Email: ${hrEmail}`
   }
 
   /**
+   * RECONSIDERATION: Send a beautiful encouraging email when an admin rescores an application.
+   */
+  async sendReconsiderationEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    jobTitle: string
+    companyName: string
+    missingSkills?: string[]
+    companyEmail?: string | null
+    companyDomain?: string | null
+    candidateLoginUrl?: string | null
+    candidateTemporaryPassword?: string | null
+    isNewCandidateAccount?: boolean
+  }) {
+    const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
+    const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
+    const companyName = data.companyName || '[Company Name]'
+    const jobTitle = data.jobTitle || '[Job Title]'
+
+    const subject = `Good News: Re-evaluation of Your Application for ${jobTitle} at ${companyName}`
+
+    // Build candidate dashboard block if new account was provisioned
+    const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
+    const dashboardBlock = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+    <div style="margin-top: 24px; padding: 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e40af;">🎯 Your Candidate Dashboard is Ready</p>
+      <p style="margin: 0 0 12px 0; font-size: 14px; color: #334155;">We've created a personal dashboard for you where you can track your application status, build your skills profile, and explore more opportunities.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 100px;">Email:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600;">${data.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-size: 13px; color: #64748b;">Password:</td>
+          <td style="padding: 6px 0; font-size: 13px; color: #0f1c2e; font-weight: 600; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">${data.candidateTemporaryPassword}</td>
+        </tr>
+      </table>
+      <a href="${loginUrl}" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Log In to Your Dashboard →</a>
+      <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Please change your password after your first login for security.</p>
+    </div>`
+      : ''
+
+    const dashboardBlockText = data.isNewCandidateAccount && data.candidateTemporaryPassword
+      ? `
+
+--- YOUR CANDIDATE DASHBOARD ---
+We've created a personal dashboard for you to track your application.
+
+Email: ${data.candidateEmail}
+Temporary Password: ${data.candidateTemporaryPassword}
+Log in at: ${loginUrl}
+
+Please change your password after your first login for security.
+---------------------------------`
+      : ''
+
+    let missingSkillsHtml = ''
+    let missingSkillsText = ''
+
+    if (data.missingSkills && data.missingSkills.length > 0) {
+      missingSkillsHtml = `
+      <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border-left: 4px solid #3b82f6; border-radius: 4px;">
+        <p style="margin: 0 0 10px 0; font-weight: 600; color: #0f172a;">Areas for Growth</p>
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #475569;">To further strengthen your profile, we identified a few skills that could be beneficial to develop:</p>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155;">
+          ${data.missingSkills.map(s => `<li>${s}</li>`).join('')}
+        </ul>
+      </div>`
+      
+      missingSkillsText = `
+Areas for Growth:
+To further strengthen your profile, we identified a few skills that could be beneficial to develop:
+${data.missingSkills.map(s => `- ${s}`).join('\n')}
+`
+    }
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: 'Inter', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f9fafb; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    .header { text-align: center; margin-bottom: 30px; }
+    .badge { display: inline-block; background-color: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    h1 { color: #0f172a; font-size: 20px; margin-top: 15px; }
+    p { color: #334155; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">Application Update</span>
+      <h1>Profile Re-evaluated</h1>
+    </div>
+    <p>Dear ${candidateName},</p>
+    <p>We have wonderful news! Our team has recently conducted a secondary review of your application for the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>.</p>
+    <p>We are pleased to inform you that upon closer inspection, we see great potential in your profile and would love to keep you actively moving forward in our talent pool consideration.</p>
+    ${missingSkillsHtml}
+    <p>Your passion and background are inspiring, and we want to ensure you have the best possible chance to succeed. We will be in touch if your profile aligns with the next steps.</p>
+    <p>If you have any questions, please feel free to reach out to us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
+    ${dashboardBlock}
+    <p style="margin-top: 30px;">Warm regards,<br>
+    <strong>The Team at ${companyName}</strong><br>
+    <a href="mailto:${hrEmail}" style="color: #64748b; font-size: 13px;">${hrEmail}</a></p>
+  </div>
+</body>
+</html>
+    `
+
+    const text = `Dear ${candidateName},
+
+We have wonderful news! Our team has recently conducted a secondary review of your application for the ${jobTitle} position at ${companyName}.
+
+We are pleased to inform you that upon closer inspection, we see great potential in your profile and would love to keep you actively moving forward in our talent pool consideration.
+${missingSkillsText}
+Your passion and background are inspiring, and we want to ensure you have the best possible chance to succeed. We will be in touch if your profile aligns with the next steps.
+
+If you have any questions, please feel free to reach out to us at ${hrEmail}.
+${dashboardBlockText}
+Warm regards,
+The Team at ${companyName}
+${hrEmail}`
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'applicationsoptiohire@gmail.com'
+    
+    await this.sendEmail({
+      to: data.candidateEmail,
+      from: fromEmail,
+      subject,
+      text,
+      html,
+      emailType: 'reconsideration'
+    })
+  }
+
+  /**
    * FLAG band (51–79): candidate is not rejected or shortlisted yet — HR review in progress.
    */
   async sendFlagReviewEmail(data: {

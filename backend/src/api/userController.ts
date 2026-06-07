@@ -71,6 +71,9 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
     let hiringManagerEmail: string | null = null
     let companyLogoUrl: string | null = null
     let companyLocation: string | null = null
+    let websiteUrl: string | null = null
+    let linkedinUrl: string | null = null
+    let twitterUrl: string | null = null
     
     if (user.role !== 'admin') {
       try {
@@ -83,75 +86,85 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
         
         if (checkColumn.rows.length > 0) {
           // Determine if company_logo_url column exists
-          let companySelectFields = 'company_id, company_name, company_email, hr_email, hiring_manager_email'
-          try {
-            const { rows: companyCols } = await query(
-              `SELECT column_name 
-               FROM information_schema.columns 
-               WHERE table_name = 'companies' AND column_name = 'company_logo_url'`
-            )
-            const hasLogoColumn = companyCols.some((r: any) => r.column_name === 'company_logo_url')
-            if (hasLogoColumn) {
-              companySelectFields += ', company_logo_url'
+            let companySelectFields = 'company_id, company_name, company_email, hr_email, hiring_manager_email'
+            try {
+              const { rows: companyCols } = await query(
+                `SELECT column_name 
+                 FROM information_schema.columns 
+                 WHERE table_name = 'companies' AND column_name IN ('company_logo_url', 'company_location', 'website_url', 'linkedin_url', 'twitter_url')`
+              )
+              const hasLogoColumn = companyCols.some((r: any) => r.column_name === 'company_logo_url')
+              if (hasLogoColumn) companySelectFields += ', company_logo_url'
+              const hasLocationColumn = companyCols.some((r: any) => r.column_name === 'company_location')
+              if (hasLocationColumn) companySelectFields += ', company_location'
+              const hasWebsiteColumn = companyCols.some((r: any) => r.column_name === 'website_url')
+              if (hasWebsiteColumn) companySelectFields += ', website_url'
+              const hasLinkedinColumn = companyCols.some((r: any) => r.column_name === 'linkedin_url')
+              if (hasLinkedinColumn) companySelectFields += ', linkedin_url'
+              const hasTwitterColumn = companyCols.some((r: any) => r.column_name === 'twitter_url')
+              if (hasTwitterColumn) companySelectFields += ', twitter_url'
+            } catch (e) {
+              // If this check fails, continue without extra fields
             }
-            const hasLocationColumn = companyCols.some((r: any) => r.column_name === 'company_location')
-            if (hasLocationColumn) {
-              companySelectFields += ', company_location'
-            }
-          } catch (e) {
-            // If this check fails, continue without extra fields
-          }
 
-          // user_id column exists, check by user_id
-          const companyCheck = await query<any>(
-            `SELECT ${companySelectFields} FROM companies WHERE user_id = $1 LIMIT 1`,
-            [userId]
-          )
-          hasCompany = companyCheck.rows.length > 0
-          if (hasCompany) {
-            companyId = companyCheck.rows[0]?.company_id || null
-            companyName = companyCheck.rows[0]?.company_name || null
-            companyEmail = companyCheck.rows[0]?.company_email || null
-            hrEmail = companyCheck.rows[0]?.hr_email || null
-            hiringManagerEmail = companyCheck.rows[0]?.hiring_manager_email || null
-            companyLogoUrl = (companyCheck.rows[0] as any)?.company_logo_url || null
-            companyLocation = (companyCheck.rows[0] as any)?.company_location || null
-          }
+            // user_id column exists, check by user_id
+            const companyCheck = await query<any>(
+              `SELECT ${companySelectFields} FROM companies WHERE user_id = $1 LIMIT 1`,
+              [userId]
+            )
+            hasCompany = companyCheck.rows.length > 0
+            if (hasCompany) {
+              companyId = companyCheck.rows[0]?.company_id || null
+              companyName = companyCheck.rows[0]?.company_name || null
+              companyEmail = companyCheck.rows[0]?.company_email || null
+              hrEmail = companyCheck.rows[0]?.hr_email || null
+              hiringManagerEmail = companyCheck.rows[0]?.hiring_manager_email || null
+              companyLogoUrl = (companyCheck.rows[0] as any)?.company_logo_url || null
+              companyLocation = (companyCheck.rows[0] as any)?.company_location || null
+              websiteUrl = (companyCheck.rows[0] as any)?.website_url || null
+              linkedinUrl = (companyCheck.rows[0] as any)?.linkedin_url || null
+              twitterUrl = (companyCheck.rows[0] as any)?.twitter_url || null
+            }
         } else {
           // Fallback: check by email (hr_email or company_email)
-          let companySelectFields = 'company_id, company_name, company_email, hr_email, hiring_manager_email'
-          try {
-            const { rows: companyCols } = await query(
-              `SELECT column_name 
-               FROM information_schema.columns 
-               WHERE table_name = 'companies' AND column_name = 'company_logo_url'`
-            )
-            const hasLogoColumn = companyCols.some((r: any) => r.column_name === 'company_logo_url')
-            if (hasLogoColumn) {
-              companySelectFields += ', company_logo_url'
+            let companySelectFields = 'company_id, company_name, company_email, hr_email, hiring_manager_email'
+            try {
+              const { rows: companyCols } = await query(
+                `SELECT column_name 
+                 FROM information_schema.columns 
+                 WHERE table_name = 'companies' AND column_name IN ('company_logo_url', 'company_location', 'website_url', 'linkedin_url', 'twitter_url')`
+              )
+              const hasLogoColumn = companyCols.some((r: any) => r.column_name === 'company_logo_url')
+              if (hasLogoColumn) companySelectFields += ', company_logo_url'
+              const hasLocationColumn = companyCols.some((r: any) => r.column_name === 'company_location')
+              if (hasLocationColumn) companySelectFields += ', company_location'
+              const hasWebsiteColumn = companyCols.some((r: any) => r.column_name === 'website_url')
+              if (hasWebsiteColumn) companySelectFields += ', website_url'
+              const hasLinkedinColumn = companyCols.some((r: any) => r.column_name === 'linkedin_url')
+              if (hasLinkedinColumn) companySelectFields += ', linkedin_url'
+              const hasTwitterColumn = companyCols.some((r: any) => r.column_name === 'twitter_url')
+              if (hasTwitterColumn) companySelectFields += ', twitter_url'
+            } catch (e) {
+              // Ignore extra fields if check fails
             }
-            const hasLocationColumn = companyCols.some((r: any) => r.column_name === 'company_location')
-            if (hasLocationColumn) {
-              companySelectFields += ', company_location'
-            }
-          } catch (e) {
-            // Ignore extra fields if check fails
-          }
 
-          const companyCheck = await query<any>(
-            `SELECT ${companySelectFields} FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
-            [user.email]
-          )
-          hasCompany = companyCheck.rows.length > 0
-          if (hasCompany) {
-            companyId = companyCheck.rows[0]?.company_id || null
-            companyName = companyCheck.rows[0]?.company_name || null
-            companyEmail = companyCheck.rows[0]?.company_email || null
-            hrEmail = companyCheck.rows[0]?.hr_email || null
-            hiringManagerEmail = companyCheck.rows[0]?.hiring_manager_email || null
-            companyLogoUrl = (companyCheck.rows[0] as any)?.company_logo_url || null
-            companyLocation = (companyCheck.rows[0] as any)?.company_location || null
-          }
+            const companyCheck = await query<any>(
+              `SELECT ${companySelectFields} FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
+              [user.email]
+            )
+            hasCompany = companyCheck.rows.length > 0
+            if (hasCompany) {
+              companyId = companyCheck.rows[0]?.company_id || null
+              companyName = companyCheck.rows[0]?.company_name || null
+              companyEmail = companyCheck.rows[0]?.company_email || null
+              hrEmail = companyCheck.rows[0]?.hr_email || null
+              hiringManagerEmail = companyCheck.rows[0]?.hiring_manager_email || null
+              companyLogoUrl = (companyCheck.rows[0] as any)?.company_logo_url || null
+              companyLocation = (companyCheck.rows[0] as any)?.company_location || null
+              websiteUrl = (companyCheck.rows[0] as any)?.website_url || null
+              linkedinUrl = (companyCheck.rows[0] as any)?.linkedin_url || null
+              twitterUrl = (companyCheck.rows[0] as any)?.twitter_url || null
+            }
         }
       } catch (err) {
         console.error('Error checking company:', err)
@@ -173,8 +186,11 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       hiringManagerEmail = null
       companyLogoUrl = null
       companyLocation = null
+      websiteUrl = null
+      linkedinUrl = null
+      twitterUrl = null
     }
-
+    
     const userData = {
       id: user.user_id,
       user_id: user.user_id,
@@ -192,16 +208,17 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       hrEmail,
       hiring_manager_email: hiringManagerEmail,
       companyLogoUrl,
-      companyLocation
+      companyLocation,
+      websiteUrl,
+      linkedinUrl,
+      twitterUrl
     }
 
-    // Cache user data for 5 minutes
     await cache.set(cacheKey, userData, 300)
-
     return res.json(userData)
   } catch (err) {
-    console.error('Error getting user profile:', err)
-    return res.status(500).json({ error: 'Failed to get user profile' })
+    console.error('Get current user error:', err)
+    return res.status(500).json({ error: 'Failed to fetch user profile' })
   }
 }
 
@@ -213,7 +230,7 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    const { company_name, company_email, hr_email, company_logo_url, company_location } = req.body || {}
+    const { company_name, company_email, hr_email, company_logo_url, company_location, website_url, linkedin_url, twitter_url } = req.body || {}
 
     if (!company_name || !company_email || !hr_email) {
       return res.status(400).json({ error: 'Company name, company email, and HR email are required' })
@@ -272,20 +289,25 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
     // Extract domain from company_email
     const companyDomain = company_email.split('@')[1] || null
 
-    // Determine if company_logo_url and company_location columns exist
+    // Determine if columns exist
     let hasLogoColumn = false
     let hasLocationColumn = false
+    let hasWebsiteColumn = false
+    let hasLinkedinColumn = false
+    let hasTwitterColumn = false
     try {
       const { rows: logoCols } = await query(
         `SELECT column_name 
          FROM information_schema.columns 
-         WHERE table_name = 'companies' AND column_name IN ('company_logo_url', 'company_location')`
+         WHERE table_name = 'companies' AND column_name IN ('company_logo_url', 'company_location', 'website_url', 'linkedin_url', 'twitter_url')`
       )
       hasLogoColumn = logoCols.some((r: any) => r.column_name === 'company_logo_url')
       hasLocationColumn = logoCols.some((r: any) => r.column_name === 'company_location')
+      hasWebsiteColumn = logoCols.some((r: any) => r.column_name === 'website_url')
+      hasLinkedinColumn = logoCols.some((r: any) => r.column_name === 'linkedin_url')
+      hasTwitterColumn = logoCols.some((r: any) => r.column_name === 'twitter_url')
     } catch (e) {
-      hasLogoColumn = false
-      hasLocationColumn = false
+      // Defaults to false
     }
 
     // Update company
@@ -302,6 +324,24 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
     if (hasLocationColumn) {
       updateQuery += `, company_location = $${paramCount}`
       queryParams.push(company_location || null)
+      paramCount++
+    }
+    
+    if (hasWebsiteColumn) {
+      updateQuery += `, website_url = $${paramCount}`
+      queryParams.push(website_url || null)
+      paramCount++
+    }
+    
+    if (hasLinkedinColumn) {
+      updateQuery += `, linkedin_url = $${paramCount}`
+      queryParams.push(linkedin_url || null)
+      paramCount++
+    }
+    
+    if (hasTwitterColumn) {
+      updateQuery += `, twitter_url = $${paramCount}`
+      queryParams.push(twitter_url || null)
       paramCount++
     }
 
@@ -321,7 +361,10 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
         company_email,
         hr_email,
         company_logo_url: hasLogoColumn ? (company_logo_url || null) : undefined,
-        company_location: hasLocationColumn ? (company_location || null) : undefined
+        company_location: hasLocationColumn ? (company_location || null) : undefined,
+        website_url: hasWebsiteColumn ? (website_url || null) : undefined,
+        linkedin_url: hasLinkedinColumn ? (linkedin_url || null) : undefined,
+        twitter_url: hasTwitterColumn ? (twitter_url || null) : undefined
       }
     })
   } catch (err) {
