@@ -14,6 +14,25 @@ export async function getActivityTelemetry(req: Request, res: Response) {
   try {
     const { startDate, endDate, groupBy = 'day' } = req.query
 
+    const tableCheck = await query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'time_tracking'
+      ) AS exists
+    `)
+
+    if (!tableCheck.rows[0]?.exists) {
+      return res.json({
+        timeSeries: [],
+        actionTypes: [],
+        statusCodes: [],
+        topUsers: [],
+        responseTimeDistribution: [],
+        topEndpoints: [],
+        warning: 'time_tracking table has not been migrated yet',
+      })
+    }
+
     let dateFilter = ''
     const params: any[] = []
     

@@ -1,6 +1,12 @@
 import { Router } from 'express'
 import { authenticate, requireCandidate } from '../middleware/auth.js'
-import { getCandidateDashboard, getLearningRoadmap, uploadCertificate } from '../api/candidateController.js'
+import {
+  completeMission,
+  getCandidateDashboard,
+  getLearningRoadmap,
+  submitMockInterview,
+  uploadCertificate,
+} from '../api/candidateController.js'
 import { uploadCandidateDocumentMiddleware } from '../api/uploadController.js'
 
 const router = Router()
@@ -11,5 +17,7 @@ router.use(requireCandidate) // Ensure user is a candidate
 router.get('/dashboard', getCandidateDashboard)
 router.get('/roadmap', getLearningRoadmap)
 router.post('/certificate', uploadCandidateDocumentMiddleware.single('certificate'), uploadCertificate)
+router.post('/missions/:missionId/complete', completeMission)
+router.post('/mock-interview', submitMockInterview)
 
 export default router

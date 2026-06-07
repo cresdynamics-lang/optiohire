@@ -144,6 +144,28 @@ CREATE TRIGGER trg_candidate_missions_updated_at
   EXECUTE FUNCTION update_candidate_missions_updated_at();
 
 -- ============================================================================
+-- CANDIDATE MOCK INTERVIEW SESSIONS
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS candidate_interview_sessions (
+  session_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
+  interview_type text NOT NULL,
+  target_role text,
+  level text,
+  overall_score integer NOT NULL DEFAULT 0,
+  clarity_score integer NOT NULL DEFAULT 0,
+  relevance_score integer NOT NULL DEFAULT 0,
+  depth_score integer NOT NULL DEFAULT 0,
+  feedback text,
+  recommendations jsonb DEFAULT '[]'::jsonb,
+  transcript jsonb DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_candidate_interview_sessions_profile ON candidate_interview_sessions(profile_id);
+CREATE INDEX IF NOT EXISTS idx_candidate_interview_sessions_created ON candidate_interview_sessions(created_at DESC);
+
+-- ============================================================================
 -- COMMENTS
 -- ============================================================================
 COMMENT ON TABLE candidate_profiles IS 'Core profile data for candidates/candidates tied to user accounts';
@@ -151,3 +173,4 @@ COMMENT ON TABLE candidate_skills IS 'Skills acquired by a candidate, proficienc
 COMMENT ON TABLE certificate_approvals IS 'Admin queue for reviewing and approving uploaded certificates';
 COMMENT ON TABLE job_recommendations IS 'AI-generated job recommendations based on skill matches';
 COMMENT ON TABLE candidate_missions IS 'Daily learning tasks assigned to candidates to bridge skill gaps';
+COMMENT ON TABLE candidate_interview_sessions IS 'Mock interview practice sessions and structured feedback for candidate talent profiles';

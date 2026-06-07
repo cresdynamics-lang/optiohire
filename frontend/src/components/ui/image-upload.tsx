@@ -62,8 +62,7 @@ export function ImageUpload({
       const formData = new FormData()
       formData.append('image', file)
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/upload/company-logo`, {
+      const response = await fetch('/api/upload/company-logo', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

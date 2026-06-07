@@ -7,6 +7,22 @@ export class SkillAnalysisService {
   private jobRepo = new JobPostingRepository()
   private candidateRepo = new CandidateProfileRepository()
 
+  private parseSkills(value: any): string[] {
+    if (!value) return []
+    if (Array.isArray(value)) return value.map(String).filter(Boolean)
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value)
+        if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean)
+      } catch {}
+      return value
+        .split(',')
+        .map((skill) => skill.trim())
+        .filter(Boolean)
+    }
+    return []
+  }
+
   /**
    * Analyzes active jobs to find the most common skills that the candidate is missing.
    */
@@ -28,9 +44,7 @@ export class SkillAnalysisService {
     // Count skills from jobs
     const skillCounts: Record<string, number> = {}
     for (const job of jobs) {
-      const reqSkills: string[] = typeof job.skills_required === 'string' 
-        ? JSON.parse(job.skills_required) 
-        : (job.skills_required || [])
+      const reqSkills = this.parseSkills(job.skills_required)
       
       for (const skill of reqSkills) {
         const s = skill.trim().toLowerCase()
@@ -77,15 +91,16 @@ export class SkillAnalysisService {
 
     // Fetch active jobs
     const { rows: jobs } = await query(`
-      SELECT id, job_title, required_skills 
+      SELECT job_posting_id, job_title, skills_required
       FROM job_postings 
-      WHERE status = 'ACTIVE'
+      WHERE UPPER(COALESCE(status, 'ACTIVE')) = 'ACTIVE'
+        AND (application_deadline IS NULL OR application_deadline::date >= CURRENT_DATE)
+      ORDER BY created_at DESC
+      LIMIT 100
     `)
 
     for (const job of jobs) {
-      const reqSkills: string[] = typeof job.required_skills === 'string' 
-        ? JSON.parse(job.required_skills) 
-        : (job.required_skills || [])
+      const reqSkills = this.parseSkills(job.skills_required)
       
       let matchCount = 0
       const missing: string[] = []
@@ -111,7 +126,7 @@ export class SkillAnalysisService {
             match_score = EXCLUDED.match_score,
             match_reason = EXCLUDED.match_reason,
             missing_skills = EXCLUDED.missing_skills
-        `, [profileId, job.id, matchScore, reason, JSON.stringify(missing)])
+        `, [profileId, job.job_posting_id, matchScore, reason, JSON.stringify(missing)])
       }
     }
   }

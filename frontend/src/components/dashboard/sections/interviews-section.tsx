@@ -154,10 +154,12 @@ export function InterviewsSection() {
     loadInterviews()
 
     const interval = setInterval(() => {
+      // Skip background polling if user is actively interacting with modals
+      if (isRejectedModalOpen || selectedInterviewForEdit) return
       loadInterviews({ silent: true })
     }, 30000)
     return () => clearInterval(interval)
-  }, [loadInterviews])
+  }, [loadInterviews, isRejectedModalOpen, selectedInterviewForEdit])
 
   const formatInterviewDate = (dateString: string) => {
     const date = new Date(dateString)

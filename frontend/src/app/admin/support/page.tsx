@@ -38,27 +38,27 @@ export default function AdminSupportTicketsPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      
-      const [ticketsRes, demosRes] = await Promise.all([
-        fetch(`${backendUrl}/api/admin/support-tickets`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch(`${backendUrl}/api/demos/admin`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      // Fetch tickets and demos in parallel; handle each failure independently
+      const [ticketsRes, demosRes] = await Promise.allSettled([
+        fetch('/api/admin/support-tickets', { headers }),
+        fetch('/api/demos/admin', { headers })
       ])
 
-      if (!ticketsRes.ok || !demosRes.ok) {
-        throw new Error('Failed to fetch data')
+      if (ticketsRes.status === 'fulfilled' && ticketsRes.value.ok) {
+        const d = await ticketsRes.value.json()
+        setTickets(d.tickets || [])
       }
 
-      const ticketsData = await ticketsRes.json()
-      const demosData = await demosRes.json()
-
-      setTickets(ticketsData.tickets || [])
-      setDemos(demosData.demos || [])
+      if (demosRes.status === 'fulfilled' && demosRes.value.ok) {
+        const d = await demosRes.value.json()
+        setDemos(d.demos || [])
+      } else if (demosRes.status === 'rejected') {
+        console.warn('Failed to load demos:', demosRes.reason)
+      }
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -72,9 +72,8 @@ export default function AdminSupportTicketsPage() {
 
   const markTicketSeen = async (id: string) => {
     try {
-      const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const res = await fetch(`${backendUrl}/api/admin/support-tickets/${id}/seen`, {
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      const res = await fetch(`/api/admin/support-tickets/${id}/seen`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -87,9 +86,8 @@ export default function AdminSupportTicketsPage() {
 
   const markDemoSeen = async (id: string) => {
     try {
-      const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const res = await fetch(`${backendUrl}/api/demos/admin/${id}/seen`, {
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      const res = await fetch(`/api/demos/admin/${id}/seen`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` }
       })

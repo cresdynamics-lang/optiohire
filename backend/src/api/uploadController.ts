@@ -102,9 +102,13 @@ export async function uploadCompanyLogo(req: Request, res: Response) {
 
     // Return the URL or path
     // If it's a local path, convert to URL
-    const publicUrl = fileUrl.startsWith('http') 
-      ? fileUrl 
-      : `https://optiohire.com/storage/${filename}`
+    const publicBaseUrl =
+      process.env.PUBLIC_APP_URL ||
+      process.env.FRONTEND_URL ||
+      `${req.protocol}://${req.get('host')}`
+    const publicUrl = fileUrl.startsWith('http')
+      ? fileUrl
+      : `${publicBaseUrl.replace(/\/$/, '')}/storage/${filename}`
 
     return res.json({
       success: true,

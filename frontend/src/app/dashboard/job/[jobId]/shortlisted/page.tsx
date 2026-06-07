@@ -199,11 +199,13 @@ export default function ShortlistedPage() {
     if (!jobId || !user || user.role === 'admin') return
     const tick = () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+      // Skip polling if any modal/action is open to avoid disrupting HR operations
+      if (isModalOpen || isMessageModalOpen || isRejectModalOpen) return
       fetchCandidates()
     }
     const interval = setInterval(tick, 10000)
     return () => clearInterval(interval)
-  }, [jobId, user?.id, user?.role, fetchCandidates])
+  }, [jobId, user?.id, user?.role, fetchCandidates, isModalOpen, isMessageModalOpen, isRejectModalOpen])
 
   const handleScheduleClick = useCallback((candidate: Candidate) => {
     setSelectedCandidate(candidate)

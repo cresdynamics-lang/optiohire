@@ -59,9 +59,7 @@ export function TemplatesSection() {
     try {
       setIsLoading(true)
       const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      
-      const res = await fetch(`${backendUrl}/api/templates`, {
+      const res = await fetch('/api/templates', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -100,9 +98,7 @@ export function TemplatesSection() {
     
     try {
       const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      
-      const res = await fetch(`${backendUrl}/api/templates`, {
+      const res = await fetch('/api/templates', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

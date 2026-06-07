@@ -175,11 +175,12 @@ export function ChatbotWidget() {
     }
   }, [])
 
-  // Listen for the "open-hr-assistant" event dispatched by the overview card
+  // Listen for the "open-hr-assistant" event dispatched by dashboard help cards
   useEffect(() => {
-    const handleOpenChatbot = () => {
+    const handleOpenChatbot = (event: Event) => {
+      const tab = (event as CustomEvent<{ tab?: 'chat' | 'support' }>).detail?.tab
       setIsOpen(true)
-      setActiveTab('chat')
+      setActiveTab(tab === 'support' ? 'support' : 'chat')
     }
     document.addEventListener('open-hr-assistant', handleOpenChatbot)
     return () => {

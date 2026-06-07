@@ -136,8 +136,7 @@ export function ProfileSection() {
         return
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/user/me`, {
+      const response = await fetch('/api/user/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -183,8 +182,7 @@ export function ProfileSection() {
       const token = localStorage.getItem('token')
       if (!token) return
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/user/me`, {
+      const response = await fetch('/api/user/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -261,8 +259,7 @@ export function ProfileSection() {
         throw new Error('Not authenticated')
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/user/company`, {
+      const response = await fetch('/api/user/company', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -296,7 +293,7 @@ export function ProfileSection() {
       })
 
       // Refresh user data to update the user object in auth context
-      const userResponse = await fetch(`${backendUrl}/api/user/me`, {
+      const userResponse = await fetch('/api/user/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -263,11 +263,11 @@ export default function AdminHelpPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4">
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 View Full Documentation
               </Button>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => router.push('/admin/support')} className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" />
                 Contact Support
               </Button>

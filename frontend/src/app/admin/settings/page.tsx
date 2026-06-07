@@ -75,11 +75,10 @@ export default function SystemSettingsPage() {
   const loadSettings = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/settings`, {
+      const response = await fetch('/api/admin/settings', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -99,11 +98,10 @@ export default function SystemSettingsPage() {
 
   const loadWorkflows = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) return
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/workflows`, {
+      const response = await fetch('/api/admin/workflows', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -122,11 +120,10 @@ export default function SystemSettingsPage() {
   const updateSetting = async (settingKey: string, value: any) => {
     try {
       setSaving(settingKey)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/settings/${settingKey}`, {
+      const response = await fetch(`/api/admin/settings/${settingKey}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -148,11 +145,10 @@ export default function SystemSettingsPage() {
   const updateFeatureFlag = async (flagKey: string, value: boolean) => {
     try {
       setSaving(flagKey)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/settings/feature-flags/${flagKey}`, {
+      const response = await fetch(`/api/admin/settings/feature-flags/${flagKey}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -174,11 +170,10 @@ export default function SystemSettingsPage() {
   const updateWorkflow = async (workflowId: string, updates: Partial<Workflow>) => {
     try {
       setSaving(workflowId)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       if (!token) throw new Error('Not authenticated')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
-      const response = await fetch(`${backendUrl}/api/admin/workflows/${workflowId}`, {
+      const response = await fetch(`/api/admin/workflows/${workflowId}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

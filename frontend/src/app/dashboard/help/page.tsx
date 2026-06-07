@@ -210,11 +210,11 @@ export default function HRHelpPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4">
-              <Button onClick={() => document.dispatchEvent(new Event('open-hr-assistant'))} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+              <Button onClick={() => document.dispatchEvent(new CustomEvent('open-hr-assistant', { detail: { tab: 'chat' } }))} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white">
                 <Star className="w-4 h-4" />
                 Ask AI Agent
               </Button>
-              <Button variant="outline" onClick={() => document.dispatchEvent(new Event('open-hr-assistant'))} className="flex items-center gap-2 ">
+              <Button variant="outline" onClick={() => document.dispatchEvent(new CustomEvent('open-hr-assistant', { detail: { tab: 'support' } }))} className="flex items-center gap-2 ">
                 <MessageSquare className="w-4 h-4" />
                 Contact Support
               </Button>
