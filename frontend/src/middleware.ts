@@ -31,8 +31,15 @@ export function middleware(request: NextRequest) {
   // Check if we have a mapping for this subdomain
   const targetPath = SUBDOMAIN_MAPPING[subdomain]
   
+  // 1. If on the main domain (no subdomain mapping) and accessing /admin, redirect to console subdomain
+  if (!targetPath && url.pathname.startsWith('/admin')) {
+    const consoleUrl = new URL(url.pathname, `https://console.optiohire.com`)
+    return NextResponse.redirect(consoleUrl)
+  }
+
+  // 2. If on a mapped subdomain (like console.), handle the rewrite
   if (targetPath) {
-    // 1. Skip static assets and internal Next.js routes
+    // Skip static assets and internal Next.js routes
     if (
       url.pathname.startsWith('/_next') ||
       url.pathname.startsWith('/api') ||
@@ -43,22 +50,15 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    // 2. Prevent infinite recursion if the path already starts with the target
+    // Prevent infinite recursion if the path already starts with the target
     if (url.pathname.startsWith(targetPath)) {
       return NextResponse.next()
     }
 
-    // 3. Rewrite the path
-    // e.g., console.optiohire.com/ -> /admin
-    // e.g., console.optiohire.com/users -> /admin/users
+    // Rewrite the path
     const newPath = `${targetPath}${url.pathname === '/' ? '' : url.pathname}`
-    
-    // Create the rewrite
     const response = NextResponse.rewrite(new URL(newPath, request.url))
-    
-    // Optional: Add a header to let the app know it's being accessed via a subdomain
     response.headers.set('x-optiohire-subdomain', subdomain)
-    
     return response
   }
 
