@@ -2,19 +2,37 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 /**
- * OptioHire Middleware
- * Handles hybrid routing for admin.optiohire.com and optiohire.com/admin
+ * OptioHire Multi-Subdomain Middleware
+ * 
+ * Scalable mapping for different subdomains to internal paths.
+ * Example: console.optiohire.com -> optiohire.com/admin
  */
+
+const SUBDOMAIN_MAPPING: Record<string, string> = {
+  'console': '/admin',
+  'admin': '/admin',
+  // Add more subdomains here in the future
+  // 'partners': '/partners',
+  // 'talent': '/talent-pool',
+}
+
 export function middleware(request: NextRequest) {
   const url = request.nextUrl
   const hostname = request.headers.get('host') || ''
-
-  // Define admin subdomain (adjust if needed for your environment)
-  const adminSubdomain = 'console.optiohire.com'
   
-  // If the request is coming from console.optiohire.com
-  if (hostname === adminSubdomain || hostname.startsWith('console.')) {
-    // Skip static assets, API routes, and files
+  // Extract subdomain (e.g., "console" from "console.optiohire.com")
+  const subdomain = hostname.split('.')[0].toLowerCase()
+
+  // Skip logic if it's the main domain, www, or an IP
+  if (!subdomain || subdomain === 'www' || subdomain === 'optiohire' || hostname.includes('localhost')) {
+    return NextResponse.next()
+  }
+
+  // Check if we have a mapping for this subdomain
+  const targetPath = SUBDOMAIN_MAPPING[subdomain]
+  
+  if (targetPath) {
+    // 1. Skip static assets and internal Next.js routes
     if (
       url.pathname.startsWith('/_next') ||
       url.pathname.startsWith('/api') ||
@@ -25,26 +43,28 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    // If the path already starts with /admin, we allow it to pass through
-    // but we could also rewrite /admin/xxx to /xxx to make URLs cleaner on the subdomain
-    // For now, let's just ensure that / -> /admin and /dashboard -> /admin/dashboard
-    if (url.pathname.startsWith('/admin')) {
+    // 2. Prevent infinite recursion if the path already starts with the target
+    if (url.pathname.startsWith(targetPath)) {
       return NextResponse.next()
     }
 
-    // Rewrite / to /admin
-    if (url.pathname === '/') {
-      return NextResponse.rewrite(new URL('/admin', request.url))
-    }
-
-    // Rewrite everything else to /admin/path (e.g., /users -> /admin/users)
-    return NextResponse.rewrite(new URL(`/admin${url.pathname}`, request.url))
+    // 3. Rewrite the path
+    // e.g., console.optiohire.com/ -> /admin
+    // e.g., console.optiohire.com/users -> /admin/users
+    const newPath = `${targetPath}${url.pathname === '/' ? '' : url.pathname}`
+    
+    // Create the rewrite
+    const response = NextResponse.rewrite(new URL(newPath, request.url))
+    
+    // Optional: Add a header to let the app know it's being accessed via a subdomain
+    response.headers.set('x-optiohire-subdomain', subdomain)
+    
+    return response
   }
 
   return NextResponse.next()
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
     /*

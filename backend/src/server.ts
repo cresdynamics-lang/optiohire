@@ -75,8 +75,16 @@ app.use(compression({
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
-    return callback(new Error(`CORS blocked origin: ${origin}`))
+    if (!origin) return callback(null, true)
+    
+    // Check if origin is in the explicitly allowed list
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    
+    // Dynamic check for all subdomains of optiohire.com
+    const isSubdomain = origin.endsWith('.optiohire.com') || origin === 'https://optiohire.com'
+    if (isSubdomain) return callback(null, true)
+    
+    return callback(new Error(`CORS blocked origin: \${origin}`))
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Email'],
