@@ -110,64 +110,6 @@ jobs:
             pm2 start server.js --name optiohire-frontend
             pm2 save
 
-            echo "=== Writing Nginx config ==="
-            cat > /etc/nginx/sites-available/optiohire << 'NGINXEOF'
-            server {
-                listen 80;
-                listen 443 ssl;
-                server_name www.optiohire.com;
-                ssl_certificate /etc/letsencrypt/live/optiohire.com-0001/fullchain.pem;
-                ssl_certificate_key /etc/letsencrypt/live/optiohire.com-0001/privkey.pem;
-                include /etc/letsencrypt/options-ssl-nginx.conf;
-                ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-                return 301 https://optiohire.com$request_uri;
-            }
-            server {
-                listen 80;
-                server_name optiohire.com;
-                return 301 https://optiohire.com$request_uri;
-            }
-            server {
-                listen 443 ssl;
-                server_name optiohire.com;
-                ssl_certificate /etc/letsencrypt/live/optiohire.com-0001/fullchain.pem;
-                ssl_certificate_key /etc/letsencrypt/live/optiohire.com-0001/privkey.pem;
-                include /etc/letsencrypt/options-ssl-nginx.conf;
-                ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-                location ^~ /storage/ {
-                    proxy_pass http://127.0.0.1:3001;
-                    proxy_http_version 1.1;
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                }
-                location ^~ /_next/static {
-                    proxy_pass http://127.0.0.1:3000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Host $host;
-                    add_header Cache-Control "public, max-age=31536000, immutable";
-                }
-                location / {
-                    proxy_pass http://127.0.0.1:3000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                    proxy_read_timeout 60s;
-                }
-            }
-            NGINXEOF
-            sed -i 's/^            //' /etc/nginx/sites-available/optiohire
-            ln -sf /etc/nginx/sites-available/optiohire /etc/nginx/sites-enabled/optiohire
-            rm -f /etc/nginx/sites-enabled/default
-
-            echo "=== Testing and reloading Nginx ==="
-            nginx -t && systemctl reload nginx
-
             echo "=== Deployment complete ==="
             pm2 list
 
