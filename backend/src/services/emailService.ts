@@ -5,6 +5,9 @@ import path from 'path'
 import { cleanJobTitle } from '../utils/jobTitle.js'
 import { SendGridService } from './sendGridService.js'
 import { ResendService } from './resendService.js'
+import { MailtrapService } from './mailtrapService.js'
+import { MailjetService } from './mailjetService.js'
+import { RollingWindow } from '../utils/rollingWindow.js'
 import { APPLICATION_INBOX_EMAIL, getRecommendedApplicationSubject } from '../config/applicationInbox.js'
 import { query } from '../db/index.js'
 import { parseTemplate } from '../utils/templateParser.js'
@@ -30,31 +33,100 @@ export class EmailService {
   private transporter: nodemailer.Transporter | null = null
   private sendGridService: SendGridService | null = null
   private resendService: ResendService | null = null
+  private mailtrapService: MailtrapService | null = null
+  private mailjetService: MailjetService | null = null
+
   private useSendGrid: boolean
   private useResend: boolean
+  private useMailtrap: boolean
+  private useMailjet: boolean
 
   private logFile: string
+  private providers: Array<{
+    name: string
+    send: (data: any) => Promise<any>
+    verify: () => Promise<boolean>
+    window: RollingWindow
+    limit: number
+  }> = []
 
   constructor() {
     this.logFile = path.join(process.cwd(), 'logs', 'email.log')
-    // Priority: Resend > SendGrid > SMTP
+    
+    // Initialize services based on environment variables
     this.useResend = process.env.USE_RESEND === 'true' || !!process.env.RESEND_API_KEY
-    this.useSendGrid = !this.useResend && (process.env.USE_SENDGRID === 'true' || !!process.env.SENDGRID_API_KEY)
+    this.useSendGrid = process.env.USE_SENDGRID === 'true' || !!process.env.SENDGRID_API_KEY
+    this.useMailtrap = process.env.USE_MAILTRAP === 'true' || !!process.env.MAILTRAP_API_TOKEN
+    this.useMailjet = process.env.USE_MAILJET === 'true' || !!process.env.MAILJET_API_KEY
     
     if (this.useResend) {
       this.resendService = new ResendService()
-      logger.info('Email service: Using Resend API (recommended - domain verification support)')
-      // Also initialize SMTP as fallback in case Resend fails
-      this.initSMTP()
-    } else if (this.useSendGrid) {
-      this.sendGridService = new SendGridService()
-      logger.info('Email service: Using SendGrid API (HTTPS - no firewall issues)')
-      // Also initialize SMTP as fallback in case SendGrid fails
-      this.initSMTP()
-    } else {
-      // Use SMTP as primary
-      this.initSMTP()
+      this.providers.push({
+        name: 'resend',
+        send: (data) => this.resendService!.sendEmail(data, data.useSecondaryKey),
+        verify: () => this.resendService!.verifyConnection(),
+        window: new RollingWindow(60000),
+        limit: Number(process.env.RESEND_RATE_LIMIT || 100)
+      })
+      logger.info('Email service: Resend API initialized')
     }
+
+    if (this.useSendGrid) {
+      this.sendGridService = new SendGridService()
+      this.providers.push({
+        name: 'sendgrid',
+        send: (data) => this.sendGridService!.sendEmail(data),
+        verify: () => this.sendGridService!.verifyConnection(),
+        window: new RollingWindow(60000),
+        limit: Number(process.env.SENDGRID_RATE_LIMIT || 100)
+      })
+      logger.info('Email service: SendGrid API initialized')
+    }
+
+    if (this.useMailtrap) {
+      this.mailtrapService = new MailtrapService()
+      this.providers.push({
+        name: 'mailtrap',
+        send: (data) => this.mailtrapService!.sendEmail(data),
+        verify: () => this.mailtrapService!.verifyConnection(),
+        window: new RollingWindow(60000),
+        limit: Number(process.env.MAILTRAP_RATE_LIMIT || 50)
+      })
+      logger.info('Email service: Mailtrap API initialized')
+    }
+
+    if (this.useMailjet) {
+      this.mailjetService = new MailjetService()
+      this.providers.push({
+        name: 'mailjet',
+        send: (data) => this.mailjetService!.sendEmail(data),
+        verify: () => this.mailjetService!.verifyConnection(),
+        window: new RollingWindow(60000),
+        limit: Number(process.env.MAILJET_RATE_LIMIT || 50)
+      })
+      logger.info('Email service: Mailjet API initialized')
+    }
+
+    // Always initialize SMTP as a final fallback
+    this.initSMTP()
+    this.providers.push({
+      name: 'smtp',
+      send: (data) => this.transporter!.sendMail({
+        from: data.from || DEFAULT_FROM_EMAIL,
+        to: data.to,
+        subject: data.subject,
+        html: data.html,
+        text: data.text
+      }),
+      verify: () => this.transporter!.verify().then(() => true).catch(() => false),
+      window: new RollingWindow(60000),
+      limit: Number(process.env.SMTP_RATE_LIMIT || 20)
+    })
+
+    // Verify connections on startup (non-blocking)
+    this.verifyConnection().catch(err => {
+      logger.warn('Email service connection verification failed:', err.message)
+    })
   }
 
   private initSMTP() {
@@ -65,85 +137,71 @@ export class EmailService {
 
     // Warn if credentials are missing
     if (!mailUser || !mailPass) {
-      logger.warn('Email service initialized without authentication credentials. Emails will fail to send.')
-      logger.warn('Please set MAIL_USER/SMTP_USER and MAIL_PASS/SMTP_PASS environment variables.')
-      logger.warn('For Gmail, you must use an App Password (not your regular password).')
-      logger.warn('Generate one at: https://myaccount.google.com/apppasswords')
+      logger.warn('Email service: SMTP initialized without authentication credentials.')
     }
 
-    // Try port 465 (SSL) first, fallback to 587 (TLS)
     const mailPort = parseInt(process.env.MAIL_PORT || process.env.SMTP_PORT || '465', 10)
     const useSecure = mailPort === 465
     
     this.transporter = nodemailer.createTransport({
       host: mailHost,
       port: mailPort,
-      secure: useSecure, // true for 465 (SSL), false for 587 (TLS)
+      secure: useSecure,
       auth: mailUser && mailPass ? {
         user: mailUser,
         pass: mailPass
       } : undefined,
-      // Increase timeouts and add retry options
-      connectionTimeout: 30000, // 30 seconds
+      connectionTimeout: 30000,
       greetingTimeout: 30000,
       socketTimeout: 30000,
-      // Add TLS options for better compatibility
       tls: {
-        rejectUnauthorized: false // Allow self-signed certificates if needed
+        rejectUnauthorized: false
       }
-    })
-
-    // Setup email log file
-    this.logFile = path.join(process.cwd(), 'logs', 'email.log')
-    this.ensureLogDirectory()
-
-    // Verify connection on startup (non-blocking)
-    this.verifyConnection().catch(err => {
-      logger.warn('Email service connection verification failed:', err.message)
     })
   }
 
   /**
-   * Verify email service connection (Resend, SendGrid, or SMTP)
+   * Verify all configured email services
    */
   async verifyConnection(): Promise<boolean> {
-    if (this.useResend && this.resendService) {
-      return await this.resendService.verifyConnection()
-    }
-    
-    if (this.useSendGrid && this.sendGridService) {
-      return await this.sendGridService.verifyConnection()
+    const results = await Promise.all(this.providers.map(async p => {
+      const ok = await p.verify()
+      if (ok) logger.info(`Email service: ${p.name} connection verified`)
+      else logger.warn(`Email service: ${p.name} connection failed`)
+      return ok
+    }))
+    return results.some(r => r === true)
+  }
+
+  /**
+   * Select the best available provider based on rolling window stats and rate limits
+   */
+  private pickProvider(): any {
+    // Sort providers by health (success rate) and then by current usage vs limit
+    const availableProviders = this.providers.filter(p => {
+      const stats = p.window.getStats()
+      return stats.isHealthy && p.window.canAccept(p.limit)
+    })
+
+    if (availableProviders.length === 0) {
+      // If all providers are unhealthy or at limit, return the one with the best success rate
+      // or just fallback to SMTP (last in list)
+      return this.providers[this.providers.length - 1]
     }
 
-    // Verify SMTP connection
-    if (!this.transporter) {
-      return false
-    }
-
-    try {
-      await this.transporter.verify()
-      logger.info('Email service: SMTP connection verified successfully')
-      return true
-    } catch (error: any) {
-      const errorMsg = error?.message || String(error)
-      logger.error('Email service: SMTP connection verification failed:', errorMsg)
+    // Sort by success rate descending, then by usage percentage ascending
+    return availableProviders.sort((a, b) => {
+      const aStats = a.window.getStats()
+      const bStats = b.window.getStats()
       
-      if (errorMsg?.includes('Authentication Required') || error?.responseCode === 530) {
-        logger.error('Gmail requires an App Password. Please:')
-        logger.error('1. Enable 2-Step Verification on your Google account')
-        logger.error('2. Go to https://myaccount.google.com/apppasswords')
-        logger.error('3. Generate an App Password for "Mail"')
-        logger.error('4. Set MAIL_PASS or SMTP_PASS environment variable to the 16-character App Password')
-        logger.error('')
-        logger.error('OR use SendGrid (no firewall issues):')
-        logger.error('1. Sign up at https://sendgrid.com')
-        logger.error('2. Get API key from https://app.sendgrid.com/settings/api_keys')
-        logger.error('3. Set SENDGRID_API_KEY in .env')
-        logger.error('4. Set USE_SENDGRID=true in .env')
+      if (bStats.successRate !== aStats.successRate) {
+        return bStats.successRate - aStats.successRate
       }
       
-      return false
-    }
+      const aUsage = aStats.total / a.limit
+      const bUsage = bStats.total / b.limit
+      return aUsage - bUsage
+    })[0]
   }
 
   private async ensureLogDirectory() {
@@ -1932,7 +1990,7 @@ The OptioHire Team
     replyTo?: string
     emailType?: string
     recipientName?: string
-    useSecondaryKey?: boolean // Use secondary Resend key for notifications (thanks for joining, welcome, etc.)
+    useSecondaryKey?: boolean
     skipLogInsert?: boolean
     existingEmailLogId?: string | null
   }) {
@@ -1953,11 +2011,10 @@ The OptioHire Team
       
       if (Number(recentEmails[0].count) > 0) {
         logger.warn(`Email frequency cap reached for ${data.to} (${emailType}). Skipping.`)
-        return // Skip sending
+        return
       }
     } catch (freqErr) {
       logger.error('Failed to check email frequency cap:', freqErr)
-      // Proceed with sending if check fails
     }
     
     // Log email attempt
@@ -1967,14 +2024,13 @@ The OptioHire Team
         const { query } = await import('../db/index.js')
         const { rows } = await query(
           `INSERT INTO email_logs (recipient_email, recipient_name, subject, email_type, status, provider, metadata)
-           VALUES ($1, $2, $3, $4, 'pending', $5, $6)
+           VALUES ($1, $2, $3, $4, 'pending', 'rolling_window', $5)
            RETURNING email_id`,
           [
             data.to,
             recipientName,
             data.subject,
             emailType,
-            this.useResend ? 'resend' : (this.useSendGrid ? 'sendgrid' : 'smtp'),
             JSON.stringify({
               html: data.html,
               text: data.text,
@@ -1993,30 +2049,29 @@ The OptioHire Team
       }
     }
 
-    // Priority 1: Use Resend if configured (recommended - domain verification support)
-    if (this.useResend && this.resendService) {
+    let success = false
+    let lastError = ''
+    const triedProviders = new Set<string>()
+    const maxAttempts = Math.min(3, this.providers.length)
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const provider = this.pickProvider()
+      if (!provider || triedProviders.has(provider.name)) break
+      
+      triedProviders.add(provider.name)
+      
       try {
-        // Use secondary key for notification emails (thanks for joining, welcome, password reset, etc.)
-        const useSecondary = data.useSecondaryKey === true || 
-          ['password_reset', 'welcome', 'activation', 'notification', 'thanks'].includes(emailType.toLowerCase())
+        await provider.send(data)
+        provider.window.record(true)
+        success = true
         
-        const result = await this.resendService.sendEmail({
-          to: data.to,
-          subject: data.subject,
-          html: data.html,
-          text: data.text,
-          from: data.from,
-          fromName: data.fromName,
-          replyTo: data.replyTo
-        }, useSecondary)
-        
-        // Update email log - Resend service handles success internally
         if (emailLogId) {
           try {
             const { query } = await import('../db/index.js')
             await query(
               `UPDATE email_logs
                SET status = 'sent',
+                   provider = $2,
                    error_message = NULL,
                    sent_at = now(),
                    metadata = jsonb_set(
@@ -2026,120 +2081,25 @@ The OptioHire Team
                      true
                    )
                WHERE email_id = $1`,
-              [emailLogId]
+              [emailLogId, provider.name]
             )
           } catch (updateError) {
             logger.error('Failed to update email log:', updateError)
           }
         }
-        return
+
+        logger.info(`Email sent via ${provider.name} to ${data.to}: ${data.subject}`)
+        await this.logEmail(data.to, data.subject, 'sent', `via ${provider.name}`)
+        break
       } catch (error: any) {
-        const errorMsg = error?.message || String(error)
-        logger.warn(`Resend failed (e.g. domain not verified), falling back to SendGrid or SMTP: ${errorMsg}`)
-        // So we can fall back to SMTP when Resend fails (e.g. sending from @gmail.com)
-        if (!this.transporter) {
-          logger.info('Initializing SMTP transporter for fallback...')
-          this.initSMTP()
-          // Verify SMTP was initialized
-          if (!this.transporter) {
-            logger.error('SMTP transporter initialization failed - email sending will fail')
-          } else {
-            logger.info('SMTP transporter initialized successfully for fallback')
-          }
-        }
-        // Fallback to SendGrid or SMTP below
+        lastError = error?.message || String(error)
+        provider.window.record(false)
+        logger.warn(`Email via ${provider.name} failed: ${lastError}. Trying next provider...`)
       }
     }
 
-    // Priority 2: Use SendGrid if configured (no firewall issues)
-    if (this.useSendGrid && this.sendGridService) {
-      try {
-        await this.sendGridService.sendEmail({
-          to: data.to,
-          subject: data.subject,
-          html: data.html,
-          text: data.text,
-          from: data.from,
-          fromName: data.fromName
-        })
-        return
-      } catch (error: any) {
-        logger.error(`SendGrid failed, falling back to SMTP: ${error.message}`)
-        // Fallback to SMTP if SendGrid fails
-        if (!this.transporter) {
-          this.initSMTP()
-        }
-      }
-    }
-
-    // Use SMTP (fallback or if SendGrid not configured)
-    try {
-      const from = data.from || DEFAULT_FROM_EMAIL
-      
-      // Verify transporter is configured - initialize if not already done
-      if (!this.transporter) {
-        logger.info('SMTP transporter not initialized, initializing now...')
-        this.initSMTP()
-        if (!this.transporter) {
-          throw new Error('Email transporter not initialized - SMTP configuration may be missing')
-        }
-      }
-
-      // Verify authentication is configured
-      const mailUser = process.env.MAIL_USER || process.env.SMTP_USER
-      const mailPass = process.env.MAIL_PASS || process.env.SMTP_PASS
-      
-      if (!mailUser || !mailPass) {
-        logger.error('Email authentication not configured. MAIL_USER/SMTP_USER and MAIL_PASS/SMTP_PASS environment variables must be set.')
-        throw new Error('Email authentication not configured. Please set MAIL_USER/SMTP_USER and MAIL_PASS/SMTP_PASS environment variables. For Gmail, use an App Password (not your regular password).')
-      }
-      
-      const result = await this.transporter.sendMail({
-        from,
-        to: data.to,
-        subject: data.subject,
-        html: data.html,
-        text: data.text
-      })
-
-      // Update email log
-      if (emailLogId) {
-        try {
-          const { query } = await import('../db/index.js')
-          await query(
-            `UPDATE email_logs
-             SET status = 'sent',
-                 provider_message_id = $1,
-                 error_message = NULL,
-                 sent_at = now(),
-                 metadata = jsonb_set(
-                   jsonb_set(COALESCE(metadata, '{}'::jsonb), '{is_retry_eligible}', 'false'::jsonb, true),
-                   '{next_retry_at}',
-                   'null'::jsonb,
-                   true
-                 )
-             WHERE email_id = $2`,
-            [result.messageId || null, emailLogId]
-          )
-        } catch (updateError) {
-          logger.error('Failed to update email log:', updateError)
-        }
-      }
-
-      logger.info(`Email sent to ${data.to}: ${data.subject}`)
-      await this.logEmail(data.to, data.subject, 'sent')
-    } catch (error: any) {
-      const errorMsg = error?.message || String(error)
-      logger.error(`Failed to send email to ${data.to}:`, error)
-      
-      // Provide helpful error message for authentication failures
-      if (error?.responseCode === 530 || errorMsg?.includes('Authentication Required')) {
-        logger.error('SMTP Authentication Error: Gmail requires an App Password. Please:')
-        logger.error('1. Go to https://myaccount.google.com/apppasswords')
-        logger.error('2. Generate an App Password for "Mail"')
-        logger.error('3. Set MAIL_PASS or SMTP_PASS environment variable to the generated App Password (not your regular password)')
-        logger.error('4. Ensure MAIL_USER or SMTP_USER is set to your Gmail address')
-      }
+    if (!success) {
+      logger.error(`All email providers failed to send to ${data.to}: ${lastError}`)
       
       if (emailLogId) {
         try {
@@ -2182,15 +2142,14 @@ The OptioHire Team
                    true
                  )
              WHERE email_id = $1`,
-            [emailLogId, errorMsg, nextRetryCount, canRetry, nextRetryAt, new Date().toISOString()]
+            [emailLogId, lastError, nextRetryCount, canRetry, nextRetryAt, new Date().toISOString()]
           )
         } catch (updateErr) {
           logger.error('Failed to persist retry metadata in email_logs:', updateErr)
         }
       }
 
-      await this.logEmail(data.to, data.subject, 'failed', errorMsg)
-      // Do not throw error here to fail gracefully and prevent job crashes
+      await this.logEmail(data.to, data.subject, 'failed', lastError)
       logger.warn(`Gracefully handled email failure to ${data.to}`);
     }
   }
