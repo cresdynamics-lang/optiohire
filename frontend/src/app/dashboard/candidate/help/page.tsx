@@ -214,6 +214,16 @@ export default function CandidateHelpPage() {
             <p>
               To significantly increase your chances of being shortlisted by the AI, ensure your <strong>Talent Profile</strong> is fully complete. The AI evaluates your profile against job requirements, so missing skills or unverified experiences may result in a lower match score. Keep your CV uploaded and certificates up to date!
             </p>
+
+            <a
+              href="https://guide.optiohire.com/?view=docs&page=find-jobs"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+            >
+              <Book className="w-4 h-4" />
+              View full guide
+            </a>
           </CardContent>
         </Card>
       </div>

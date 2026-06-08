@@ -209,7 +209,7 @@ export default function HRHelpPage() {
             <CardDescription>Reach out to the support team or your AI Agent</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 items-center">
               <Button onClick={() => document.dispatchEvent(new CustomEvent('open-hr-assistant', { detail: { tab: 'chat' } }))} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white">
                 <Star className="w-4 h-4" />
                 Ask AI Agent
@@ -218,6 +218,16 @@ export default function HRHelpPage() {
                 <MessageSquare className="w-4 h-4" />
                 Contact Support
               </Button>
+
+              <Link
+                href="https://guide.optiohire.com/?view=docs&page=interviews"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Book className="w-4 h-4" />
+                View full guide
+              </Link>
             </div>
           </CardContent>
         </Card>

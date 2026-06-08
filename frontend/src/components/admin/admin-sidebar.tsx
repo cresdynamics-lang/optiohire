@@ -86,6 +86,7 @@ const navigationGroups: NavGroup[] = [
       { name: 'Activity', href: '/admin/activity', icon: Activity },
       { name: 'Support Tickets', href: '/admin/support', icon: HelpCircle },
       { name: 'Security Logs', href: '/admin/security-logs', icon: ShieldAlert },
+      { name: 'Guide (Full Docs)', href: 'https://guide.optiohire.com/?view=docs&page=home', icon: HelpCircle },
     ]
   }
 ]

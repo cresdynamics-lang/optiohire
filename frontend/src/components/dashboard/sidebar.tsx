@@ -62,6 +62,12 @@ const sidebarItems = [
     icon: HelpCircle,
     href: '/dashboard/help',
   },
+  {
+    id: 'guide',
+    label: 'Guide (Full Docs)',
+    icon: HelpCircle,
+    href: 'https://guide.optiohire.com/?view=docs&page=home',
+  },
 ]
 
 const jobSeekerSidebarItems = [
