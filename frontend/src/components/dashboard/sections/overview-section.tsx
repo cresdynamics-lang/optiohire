@@ -616,8 +616,8 @@ export function OverviewSection() {
       title: 'Manage Jobs',
       description: 'Create or update active roles',
       icon: Briefcase,
-      onHover: () => router.prefetch('/dashboard/jobs'),
-      onClick: () => router.push('/dashboard/jobs'),
+      onHover: () => router.prefetch('/hr/jobs'),
+      onClick: () => router.push('/hr/jobs'),
     },
     {
       key: 'candidates',
@@ -626,16 +626,16 @@ export function OverviewSection() {
       icon: Users,
       onHover: () => {
         if (jobPostings.length > 0) {
-          router.prefetch(`/dashboard/job/${jobPostings[0].id}/shortlisted`)
+          router.prefetch(`/hr/job/${jobPostings[0].id}/shortlisted`)
         } else {
-          router.prefetch('/dashboard/jobs')
+          router.prefetch('/hr/jobs')
         }
       },
       onClick: () => {
         if (jobPostings.length > 0) {
-          router.push(`/dashboard/job/${jobPostings[0].id}/shortlisted`)
+          router.push(`/hr/job/${jobPostings[0].id}/shortlisted`)
         } else {
-          router.push('/dashboard/jobs')
+          router.push('/hr/jobs')
         }
       },
     },
@@ -644,16 +644,16 @@ export function OverviewSection() {
       title: 'Open Reports',
       description: 'Track hiring insights and outcomes',
       icon: BarChart3,
-      onHover: () => router.prefetch('/dashboard/reports'),
-      onClick: () => router.push('/dashboard/reports'),
+      onHover: () => router.prefetch('/hr/reports'),
+      onClick: () => router.push('/hr/reports'),
     },
     {
       key: 'post',
       title: 'Post New Job',
       description: 'Launch a role and start sourcing',
       icon: Plus,
-      onHover: () => router.prefetch('/dashboard/jobs'),
-      onClick: () => router.push('/dashboard/jobs'),
+      onHover: () => router.prefetch('/hr/jobs'),
+      onClick: () => router.push('/hr/jobs'),
     },
   ]
 

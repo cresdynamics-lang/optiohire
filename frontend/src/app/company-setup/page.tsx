@@ -73,12 +73,12 @@ export default function CompanySetupPage() {
       normalizedRole === 'jobseeker'
 
     if (isJobSeeker) {
-      router.replace('/dashboard')
+      router.replace('/candidate')
       return
     }
 
     if (user?.hasCompany && user?.companyId) {
-      router.replace('/dashboard')
+      router.replace('/hr')
     }
   }, [user?.companyRole, user?.role, user?.hasCompany, user?.companyId, router])
 
@@ -177,7 +177,7 @@ export default function CompanySetupPage() {
       }
 
       // Success - redirect to dashboard
-      router.push('/dashboard')
+      router.push('/hr')
     } catch (err: any) {
       const errorMessage = err?.message || err?.error || 'An unexpected error occurred. Please try again.'
       setError(errorMessage)

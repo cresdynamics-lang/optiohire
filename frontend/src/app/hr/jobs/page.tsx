@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { OptimizedDashboardLayout } from '@/components/dashboard/optimized-dashboard-layout'
 
-export default function InterviewsPage() {
+export default function JobsPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const normalizedCompanyRole = user?.companyRole?.toLowerCase()
@@ -15,13 +15,17 @@ export default function InterviewsPage() {
     normalizedCompanyRole === 'jobseeker'
 
   useEffect(() => {
+    if (user && isJobSeeker) {
+      router.replace('/candidate/jobs')
+      return
+    }
     if (loading && !user) return
     // STRICT: Admin should NOT access HR dashboard
     if (user && user.role === 'admin') {
       router.push('/admin')
       return
     }
-    // Keep `/dashboard/interviews` available for job seekers: they now have a dedicated candidate interviews experience.
+    // Keep `/dashboard/jobs` available for job seekers: they now have a dedicated candidate jobs experience.
   }, [user, loading, router, isJobSeeker])
 
   if (user?.role === 'admin') {

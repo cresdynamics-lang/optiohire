@@ -11,7 +11,7 @@ interface ConditionalLayoutProps {
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname()
 
-  const isDashboard = pathname?.startsWith('/dashboard') || false
+  const isDashboard = pathname?.startsWith('/dashboard') || pathname?.startsWith('/candidate') || pathname?.startsWith('/hr') || false
   const isAuth = pathname?.startsWith('/auth') || false
   const isAdmin = pathname?.startsWith('/admin') || false
   const isPrivacy = pathname === '/privacy' || false

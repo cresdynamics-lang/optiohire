@@ -110,7 +110,7 @@ export function JobDetailsModal({ isOpen, onClose, jobPosting, onEdit }: JobDeta
                       variant="outline"
                       onClick={() => {
                         onClose()
-                        router.push(`/dashboard/jobs/${jobPosting.id}/edit`)
+                        router.push(`/hr/jobs/${jobPosting.id}/edit`)
                       }}
                       className="flex items-center gap-2 border-slate-900 bg-slate-900 text-white hover:border-slate-800 hover:bg-slate-800 dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 shadow-none hover:shadow-none"
                     >

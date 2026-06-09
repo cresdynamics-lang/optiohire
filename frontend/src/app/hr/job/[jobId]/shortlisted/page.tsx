@@ -218,7 +218,7 @@ export default function ShortlistedPage() {
       return
     }
     try {
-      router.push(`/dashboard/job/${jobId}/candidate/${candidate.id}`)
+      router.push(`/hr/job/${jobId}/candidate/${candidate.id}`)
     } catch (error) {
       console.error('Navigation error:', error)
       setError('Failed to navigate to candidate details')
@@ -459,7 +459,7 @@ export default function ShortlistedPage() {
           <Button
             onClick={() => {
               try {
-                router.push('/dashboard/jobs')
+                router.push('/hr/jobs')
               } catch (error) {
                 console.error('Navigation error:', error)
               }
