@@ -184,10 +184,6 @@ function SignUpForm() {
     setError(null)
   }
 
-  const handleAdminSelect = () => {
-    router.push('/admin/login')
-  }
-
   const nextStep = () => {
     setStep((prev) => Math.min(prev + 1, 4))
     setError(null)
@@ -309,22 +305,6 @@ function SignUpForm() {
                       <div>
                         <h3 className="headline-platform !font-semibold">I'm an Employer</h3>
                         <p className="text-sm text-gray-600 font-figtree">Post jobs and find candidates</p>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleAdminSelect}
-                    className="w-full p-4 border-2 border-slate-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <h3 className="headline-platform !font-semibold">I'm an Admin</h3>
-                        <p className="text-sm text-gray-600 font-figtree">Manage the platform and users</p>
                       </div>
                     </div>
                   </button>
