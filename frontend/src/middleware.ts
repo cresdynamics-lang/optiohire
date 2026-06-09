@@ -44,7 +44,6 @@ export function middleware(request: NextRequest) {
     if (
       url.pathname.startsWith('/_next') ||
       url.pathname.startsWith('/api') ||
-      url.pathname.startsWith('/auth') ||
       url.pathname.startsWith('/assets') ||
       url.pathname.startsWith('/icon') ||
       url.pathname.includes('.')
