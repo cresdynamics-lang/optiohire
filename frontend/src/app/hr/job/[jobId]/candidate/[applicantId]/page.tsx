@@ -197,9 +197,9 @@ export default function CandidateDetailPage() {
                 <Button 
                   onClick={() => {
                     if (jobId) {
-                      router.push(`/dashboard/job/${jobId}/shortlisted`)
+                      router.push(`/hr/job/${jobId}/shortlisted`)
                     } else {
-                      router.push('/dashboard/jobs')
+                      router.push('/hr/jobs')
                     }
                   }}
                   className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
@@ -232,14 +232,14 @@ export default function CandidateDetailPage() {
             onClick={() => {
               if (!jobId) {
                 console.error('Missing jobId for navigation')
-                router.push('/dashboard/jobs')
+                router.push('/hr/jobs')
                 return
               }
               try {
-                router.push(`/dashboard/job/${jobId}/shortlisted`)
+                router.push(`/hr/job/${jobId}/shortlisted`)
               } catch (error) {
                 console.error('Navigation error:', error)
-                router.push('/dashboard/jobs')
+                router.push('/hr/jobs')
               }
             }}
             className="flex items-center gap-2 bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"

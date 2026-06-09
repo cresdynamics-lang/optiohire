@@ -48,7 +48,7 @@ export default function SignInPage() {
       } else {
         // Send candidates directly to Jobs for faster perceived load.
         const token = localStorage.getItem('token')
-        let target = '/dashboard'
+        let target = '/hr'
         if (token) {
           try {
             const payloadBase64 = token.split('.')[1]
@@ -56,8 +56,10 @@ export default function SignInPage() {
               const padded = payloadBase64.padEnd(payloadBase64.length + ((4 - (payloadBase64.length % 4)) % 4), '=')
               const payload = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')))
               const role = String(payload?.company_role || payload?.companyRole || payload?.role || '').toLowerCase()
-              if (role === 'candidate' || role === 'job_seeker' || role === 'jobseeker') {
-                target = '/dashboard/jobs'
+              if (role === 'admin') {
+                target = '/admin'
+              } else if (role === 'candidate' || role === 'job_seeker' || role === 'jobseeker') {
+                target = '/candidate/jobs'
               }
             }
           } catch {

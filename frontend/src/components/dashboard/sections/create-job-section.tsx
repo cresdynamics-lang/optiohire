@@ -258,7 +258,7 @@ export function CreateJobSection() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/jobs')} className="rounded-full">
+        <Button variant="ghost" size="sm" onClick={() => router.push('/hr/jobs')} className="rounded-full">
           <ChevronLeft className="mr-1 h-4 w-4" />
           Back to Jobs
         </Button>
@@ -528,7 +528,7 @@ export function CreateJobSection() {
                 <Button 
                   type="button" 
                   variant="ghost" 
-                  onClick={() => router.push('/dashboard/jobs')}
+                  onClick={() => router.push('/hr/jobs')}
                   disabled={isSubmitting}
                   className="px-8"
                 >
@@ -621,7 +621,7 @@ export function CreateJobSection() {
             <Button
               onClick={() => {
                 setShowSuccessDialog(false)
-                router.push('/dashboard/jobs')
+                router.push('/hr/jobs')
               }}
               className="w-full bg-slate-900 text-white h-12 rounded-xl mt-4"            >
               Return to Dashboard

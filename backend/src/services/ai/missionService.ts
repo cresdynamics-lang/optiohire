@@ -48,7 +48,7 @@ export class MissionService {
             <p style="margin-bottom: 0; color: #475569;">${description}</p>
           </div>
           <p>Log in to your OptioHire Dashboard to mark this mission as completed and track your progress!</p>
-          <a href="https://optiohire.com/dashboard/candidate" style="display: inline-block; background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Dashboard</a>
+          <a href="https://optiohire.com/candidate" style="display: inline-block; background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Dashboard</a>
         </div>
       `
       

@@ -45,11 +45,15 @@ function GoogleCallbackContent() {
         localStorage.setItem('token', data.token)
         const user = data.user
         const isCandidate = user.company_role === 'candidate'
+        if (isCandidate) {
+          router.replace('/candidate')
+          return
+        }
         if (!isCandidate && !user.hasCompany && !user.companyId) {
           router.replace('/company-setup')
           return
         }
-        router.replace('/dashboard')
+        router.replace('/hr')
       })
       .catch(() => setError('Network error. Please try again.'))
   }, [searchParams, router])

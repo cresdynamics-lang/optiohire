@@ -8,9 +8,21 @@ import { OptimizedDashboardLayout } from '@/components/dashboard/optimized-dashb
 export default function ProfilePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+  const normalizedRole = user?.role?.toLowerCase()
+  const isJobSeeker =
+    normalizedCompanyRole === 'candidate' ||
+    normalizedCompanyRole === 'job_seeker' ||
+    normalizedCompanyRole === 'jobseeker' ||
+    normalizedRole === 'candidate' ||
+    normalizedRole === 'job_seeker' ||
+    normalizedRole === 'jobseeker'
 
   useEffect(() => {
-    if (loading && !user) return
+    if (user && isJobSeeker) {
+      router.replace('/candidate/settings')
+      return
+    }
     // STRICT: Admin should NOT access HR dashboard
     if (user && user.role === 'admin') {
       router.push('/admin')

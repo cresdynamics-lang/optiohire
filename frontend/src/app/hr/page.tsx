@@ -34,9 +34,17 @@ export default function DashboardPage() {
       return
     }
 
-    // Redirect employer to HR portal
-    if (user && !isJobSeeker && user.role !== 'admin') {
-      router.replace('/hr')
+    // Job seekers should land on their dashboard overview (handled by OptimizedDashboardLayout)
+    // Require company setup before dashboard (employers only; job seekers skip)
+    if (
+      user &&
+      user.role !== 'admin' &&
+      !isJobSeeker &&
+      user.companyRole &&
+      user.hasCompany === false &&
+      !user.companyId
+    ) {
+      router.replace('/company-setup')
       return
     }
     

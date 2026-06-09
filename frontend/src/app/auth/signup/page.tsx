@@ -122,7 +122,7 @@ function SignUpForm() {
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
         return
       }
-      router.push('/dashboard')
+      router.push('/hr')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
@@ -170,7 +170,7 @@ function SignUpForm() {
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
         return
       }
-      router.push('/dashboard/candidate')
+      router.push('/candidate')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)

@@ -452,28 +452,28 @@ const LazyTalentProfileSection = dynamic(
 
 function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
   const p = pathname || ''
-  if (p.startsWith('/dashboard/profile')) {
+  if (p.startsWith('/hr/profile') || p.startsWith('/candidate/settings')) {
     return isJobSeeker
       ? { eyebrow: 'Candidate', title: 'My profile' }
       : { eyebrow: 'Workspace', title: 'Profile & company' }
   }
-  if (p.startsWith('/dashboard/candidate')) {
+  if (p.startsWith('/candidate/profile')) {
     return { eyebrow: 'Candidate workspace', title: 'Talent Profile' }
   }
-  if (p.startsWith('/dashboard/jobs/new')) {
+  if (p.startsWith('/hr/jobs/new')) {
     return { eyebrow: 'Hiring', title: 'Create new job' }
   }
-  if (p.includes('/edit') && p.startsWith('/dashboard/jobs/')) {
+  if (p.includes('/edit') && p.startsWith('/hr/jobs/')) {
     return { eyebrow: 'Hiring', title: 'Edit job posting' }
   }
-  if (p.startsWith('/dashboard/jobs')) {
+  if (p.startsWith('/hr/jobs') || p.startsWith('/candidate/jobs')) {
     return isJobSeeker
       ? { eyebrow: 'Candidate workspace', title: 'Jobs' }
       : { eyebrow: 'Hiring', title: 'Job postings' }
   }
-  if (p.startsWith('/dashboard/reports')) return { eyebrow: 'Hiring', title: 'Reports & analytics' }
-  if (p.startsWith('/dashboard/templates')) return { eyebrow: 'Workspace', title: 'Email Templates' }
-  if (p.startsWith('/dashboard/interviews')) {
+  if (p.startsWith('/hr/reports')) return { eyebrow: 'Hiring', title: 'Reports & analytics' }
+  if (p.startsWith('/hr/templates')) return { eyebrow: 'Workspace', title: 'Email Templates' }
+  if (p.startsWith('/hr/interviews') || p.startsWith('/candidate/interviews')) {
     return isJobSeeker
       ? { eyebrow: 'Candidate workspace', title: 'Interviews' }
       : { eyebrow: 'Hiring', title: 'Interviews' }
@@ -543,39 +543,39 @@ function DashboardContent() {
 
   // Sync active section with URL pathname
   useEffect(() => {
-    if (pathname === '/dashboard' || pathname === '/dashboard/') {
+    if (pathname === '/dashboard' || pathname === '/dashboard/' || pathname === '/hr' || pathname === '/hr/' || pathname === '/candidate' || pathname === '/candidate/') {
       setActiveSection('overview')
       return
     }
-    if (pathname === '/dashboard/candidate' || pathname?.startsWith('/dashboard/candidate/')) {
+    if (pathname === '/dashboard/candidate' || pathname?.startsWith('/dashboard/candidate/') || pathname === '/candidate/profile' || pathname?.startsWith('/candidate/profile/')) {
       setActiveSection('talent-profile')
       return
     }
-    if (pathname === '/dashboard/profile' || pathname?.startsWith('/dashboard/profile/')) {
+    if (pathname === '/dashboard/profile' || pathname?.startsWith('/dashboard/profile/') || pathname === '/hr/profile' || pathname?.startsWith('/hr/profile/') || pathname === '/candidate/settings' || pathname?.startsWith('/candidate/settings/')) {
       setActiveSection('profile')
       return
     }
-    if (pathname === '/dashboard/jobs/new') {
+    if (pathname === '/dashboard/jobs/new' || pathname === '/hr/jobs/new') {
       setActiveSection('create-job')
       return
     }
-    if (pathname?.includes('/edit') && pathname?.startsWith('/dashboard/jobs/')) {
+    if (pathname?.includes('/edit') && (pathname?.startsWith('/dashboard/jobs/') || pathname?.startsWith('/hr/jobs/'))) {
       setActiveSection('edit-job')
       return
     }
-    if (pathname === '/dashboard/jobs' || pathname?.startsWith('/dashboard/jobs/')) {
+    if (pathname === '/dashboard/jobs' || pathname?.startsWith('/dashboard/jobs/') || pathname === '/hr/jobs' || pathname?.startsWith('/hr/jobs/') || pathname === '/candidate/jobs' || pathname?.startsWith('/candidate/jobs/')) {
       setActiveSection('jobs')
       return
     }
-    if (pathname === '/dashboard/interviews' || pathname?.startsWith('/dashboard/interviews/')) {
+    if (pathname === '/dashboard/interviews' || pathname?.startsWith('/dashboard/interviews/') || pathname === '/hr/interviews' || pathname?.startsWith('/hr/interviews/') || pathname === '/candidate/interviews' || pathname?.startsWith('/candidate/interviews/')) {
       setActiveSection('interviews')
       return
     }
-    if (!isJobSeeker && (pathname === '/dashboard/reports' || pathname?.startsWith('/dashboard/reports/'))) {
+    if (!isJobSeeker && (pathname === '/dashboard/reports' || pathname?.startsWith('/dashboard/reports/') || pathname === '/hr/reports' || pathname?.startsWith('/hr/reports/'))) {
       setActiveSection('reports')
       return
     }
-    if (!isJobSeeker && (pathname === '/dashboard/templates' || pathname?.startsWith('/dashboard/templates/'))) {
+    if (!isJobSeeker && (pathname === '/dashboard/templates' || pathname?.startsWith('/dashboard/templates/') || pathname === '/hr/templates' || pathname?.startsWith('/hr/templates/'))) {
       setActiveSection('templates')
     }
   }, [pathname, isJobSeeker])
@@ -633,14 +633,14 @@ function DashboardContent() {
     if (!user) return
     const t = window.setTimeout(() => {
       try {
-        void router.prefetch('/dashboard/jobs')
-        void router.prefetch('/dashboard/jobs/new')
+        void router.prefetch(isJobSeeker ? '/candidate/jobs' : '/hr/jobs')
+        if (!isJobSeeker) void router.prefetch('/hr/jobs/new')
       } catch {
         /* ignore */
       }
     }, 1500)
     return () => clearTimeout(t)
-  }, [router, user])
+  }, [router, user, isJobSeeker])
 
   // Optimized section change handler - now includes URL navigation
   const handleSectionChange = useCallback((section: string) => {
@@ -648,22 +648,22 @@ function DashboardContent() {
     // Update URL using Next.js router for proper client-side navigation
     const sectionMap: Record<string, string> = isJobSeeker
       ? {
-          overview: '/dashboard',
-          'talent-profile': '/dashboard/candidate',
-          jobs: '/dashboard/jobs',
-          interviews: '/dashboard/interviews',
-          profile: '/dashboard/profile',
+          overview: '/candidate',
+          'talent-profile': '/candidate/profile',
+          jobs: '/candidate/jobs',
+          interviews: '/candidate/interviews',
+          profile: '/candidate/settings',
         }
       : {
-          overview: '/dashboard',
-          jobs: '/dashboard/jobs',
-          'create-job': '/dashboard/jobs/new',
-          'edit-job': pathname || '/dashboard/jobs',
-          reports: '/dashboard/reports',
-          interviews: '/dashboard/interviews',
-          profile: '/dashboard/profile',
+          overview: '/hr',
+          jobs: '/hr/jobs',
+          'create-job': '/hr/jobs/new',
+          'edit-job': pathname || '/hr/jobs',
+          reports: '/hr/reports',
+          interviews: '/hr/interviews',
+          profile: '/hr/profile',
         }
-    const newPath = sectionMap[section] || '/dashboard'
+    const newPath = sectionMap[section] || (isJobSeeker ? '/candidate' : '/hr')
     router.push(newPath)
   }, [router, isJobSeeker, pathname])
 
@@ -755,7 +755,7 @@ function DashboardContent() {
                     className="h-10 w-10 shrink-0 rounded-xl border-slate-200 sm:hidden "
                     aria-label="Job postings"
                   >
-                    <Link href="/dashboard/jobs" prefetch={false}>
+                    <Link href="/hr/jobs" prefetch={false}>
                       <Briefcase className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -764,7 +764,7 @@ function DashboardContent() {
                     size="sm"
                     className="hidden h-9 rounded-lg bg-[#2D2DDD] px-3 text-xs font-semibold text-white shadow-none hover:bg-[#2525c4] sm:inline-flex md:h-10 md:px-4 md:text-sm"
                   >
-                    <Link href="/dashboard/jobs/new" prefetch={false}>
+                    <Link href="/hr/jobs/new" prefetch={false}>
                       <Briefcase className="mr-1.5 h-3.5 w-3.5 md:h-4 md:w-4" aria-hidden />
                       Post a role
                     </Link>

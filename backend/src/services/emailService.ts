@@ -1336,7 +1336,7 @@ HireBit System
         <p>View your applications dashboard</p>
         <p>Track candidates, review shortlists &amp; schedule interviews</p>
       </div>
-      <a href="https://optiohire.com/dashboard" class="cta-btn">Open Dashboard →</a>
+      <a href="https://optiohire.com/hr" class="cta-btn">Open Dashboard →</a>
     </div>
     <p style="font-size:12px; color:#94a3b8; line-height:1.7; text-align:center;">
       If you have any questions or need to update your posting, log in to your HR dashboard at any time.
@@ -1877,7 +1877,7 @@ The OptioHire Team
    */
   async sendWelcomeEmail(email: string, name: string) {
     const appUrl = (process.env.FRONTEND_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
-    const dashboardUrl = `${appUrl}/dashboard`
+    const dashboardUrl = `${appUrl}/hr`
     const html = `
 <!DOCTYPE html>
 <html>
