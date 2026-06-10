@@ -1,2 +1,0 @@
-if $programname == 'optiohire' then /var/log/optiohire/optiohire.log
-& stop
