@@ -206,13 +206,11 @@ function StudentPanel() {
 }
 
 /* ─── Main card ─────────────────────────────────────────────────────────── */
-export default function HeroDashboard() {
-  const [tab, setTab] = useState<'hr' | 'student'>('hr')
-
+export default function HeroDashboard({ role }: { role: 'hr' | 'candidate' }) {
   return (
     <div className="oh-dashboard-card w-full rounded-[14px] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,.07)]">
       {/* Header */}
-      <div className="mb-3 flex items-center gap-2.5">
+      <div className="mb-4 flex items-center gap-2.5">
         <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#3b3bba] text-[11px] font-bold text-white">
           OH
         </span>
@@ -222,25 +220,8 @@ export default function HeroDashboard() {
         </div>
       </div>
 
-      {/* Tab row */}
-      <div className="mb-3 flex gap-1.5">
-        {(['hr', 'student'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all ${
-              tab === t
-                ? 'border-[#1a1a2e] bg-[#1a1a2e] text-white'
-                : 'border-[#ddd] bg-white text-[#888] hover:border-[#999]'
-            }`}
-          >
-            {t === 'hr' ? '🏢 HR View' : '🎓 Student View'}
-          </button>
-        ))}
-      </div>
-
       {/* Panels */}
-      {tab === 'hr' ? <HRPanel /> : <StudentPanel />}
+      {role === 'hr' ? <HRPanel /> : <StudentPanel />}
     </div>
   )
 }

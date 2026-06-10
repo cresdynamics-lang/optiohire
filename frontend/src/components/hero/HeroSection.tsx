@@ -6,9 +6,12 @@ import { ArrowRight, Briefcase, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import HeroDashboard from '@/components/hero/HeroDashboard'
 
-export default function HeroSection() {
-  const [role, setRole] = useState<'hr' | 'candidate'>('hr')
+interface HeroSectionProps {
+  role: 'hr' | 'candidate'
+  setRole: (role: 'hr' | 'candidate') => void
+}
 
+export default function HeroSection({ role, setRole }: HeroSectionProps) {
   return (
     <section className="relative overflow-hidden px-6 py-11 md:px-10 lg:px-14">
       {/* Radial glow */}
@@ -21,13 +24,13 @@ export default function HeroSection() {
       <div className="relative z-10 mx-auto max-w-7xl">
         {/* Toggle Switch */}
         <div className="flex justify-center md:justify-start mb-8">
-          <div className="bg-slate-200/50 p-1 rounded-full flex items-center border border-slate-200">
+          <div className="bg-slate-100 p-1.5 rounded-full flex items-center border border-slate-200 shadow-sm">
             <button
               onClick={() => setRole('hr')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all ${
                 role === 'hr'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'
               }`}
             >
               <Briefcase className="w-4 h-4" />
@@ -35,10 +38,10 @@ export default function HeroSection() {
             </button>
             <button
               onClick={() => setRole('candidate')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all ${
                 role === 'candidate'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'
               }`}
             >
               <User className="w-4 h-4" />
@@ -149,7 +152,7 @@ export default function HeroSection() {
 
           {/* ── RIGHT – animated dashboard card ── */}
           <div className="flex h-full items-stretch">
-            <HeroDashboard />
+            <HeroDashboard role={role} />
           </div>
         </div>
       </div>

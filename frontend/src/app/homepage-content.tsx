@@ -65,9 +65,10 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(days / 7)}w ago`
 }
 
-export default function HomePageContent() {
+export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) {
   const router = useRouter()
-  const outcomes = [
+  
+  const hrOutcomes = [
     {
       title: '3x faster shortlisting',
       metric: 'No more weekend CV marathons',
@@ -84,8 +85,28 @@ export default function HomePageContent() {
       description: 'Every stage is documented, so rejected-candidate queries and stakeholder reviews are clear.',
     },
   ]
+  
+  const candidateOutcomes = [
+    {
+      title: '1-click applications',
+      metric: 'Apply in seconds',
+      description: 'Use your unified OptioHire profile to apply to multiple roles seamlessly without repetitive forms.',
+    },
+    {
+      title: 'Real-time tracking',
+      metric: 'Never guess where you stand',
+      description: 'Get live updates on your application status, from initial review to the final interview stage.',
+    },
+    {
+      title: 'Stand out on merit',
+      metric: 'Showcase your real skills',
+      description: 'Our structured profiling ensures your experience is evaluated fairly, beyond just a standard CV.',
+    },
+  ]
+  
+  const outcomes = role === 'candidate' ? candidateOutcomes : hrOutcomes
 
-  const useCases = [
+  const hrUseCases = [
     {
       title: 'High-growth startups',
       description: 'Hiring your first 20 employees? Do not let a weak process cost you.',
@@ -104,10 +125,40 @@ export default function HomePageContent() {
     },
   ]
 
+  const candidateUseCases = [
+    {
+      title: 'Recent Graduates',
+      description: 'Landing your first role? Show your potential with a standardized, structured profile that highlights your skills.',
+    },
+    {
+      title: 'Experienced Professionals',
+      description: 'Looking for the next step? Let your verifiable experience stand out to top employers without getting lost in the pile.',
+    },
+    {
+      title: 'Career Switchers',
+      description: 'Pivoting industries? Highlight your transferable skills through our fair, structured assessments.',
+    },
+    {
+      title: 'Freelancers to Full-time',
+      description: 'Transitioning to permanent roles? Present your portfolio and skills clearly to modern hiring teams.',
+    },
+  ]
+  
+  const useCases = role === 'candidate' ? candidateUseCases : hrUseCases
+
   const [featuredJobs, setFeaturedJobs] = useState<Job[]>([])
   const [loadingJobs, setLoadingJobs] = useState(true)
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
   const { executeRecaptcha } = useGoogleReCaptcha()
+  
+  const carouselRef = useRef<HTMLDivElement>(null)
+  
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = 340 + 24 // card width + gap
+      carouselRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' })
+    }
+  }
 
   const handleImgError = (id: string) => {
     setImgErrors((prev) => ({ ...prev, [id]: true }))
@@ -169,14 +220,17 @@ export default function HomePageContent() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 max-w-3xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
-              Outcome-focused platform
+              {role === 'hr' ? 'Outcome-focused platform' : 'Career-focused platform'}
             </p>
             <h2 className="headline-platform mt-4 text-3xl sm:text-5xl md:text-6xl">
-              Stop screening CVs manually. Start hiring confidently.
+              {role === 'hr' 
+                ? 'Stop screening CVs manually. Start hiring confidently.' 
+                : 'Stop guessing. Start landing your dream roles.'}
             </h2>
             <p className="mt-4 text-lg text-slate-600">
-              OptioHire helps Kenyan teams cut through hundreds of applicants — fairly, fast, and with a clear audit
-              trail your stakeholders can trust.
+              {role === 'hr'
+                ? 'OptioHire helps Kenyan teams cut through hundreds of applicants — fairly, fast, and with a clear audit trail your stakeholders can trust.'
+                : 'OptioHire helps ambitious professionals cut through the noise, stand out to top employers, and track their applications with full transparency.'}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button className="rounded-2xl" onClick={() => router.push('/demo')}>Request Demo</Button>
@@ -208,10 +262,21 @@ export default function HomePageContent() {
           <div>
             <h3 className="headline-platform text-2xl sm:text-3xl md:text-4xl">Sound familiar?</h3>
             <ul className="mt-4 space-y-2 text-slate-600">
-              <li>• Your inbox has 300 applications for one role</li>
-              <li>• Shortlisting took your team 4 days — for one position</li>
-              <li>• A rejected candidate asks why they were not selected and you have no clear answer</li>
-              <li>• Different interviewers score differently and alignment is a nightmare</li>
+              {role === 'hr' ? (
+                <>
+                  <li>• Your inbox has 300 applications for one role</li>
+                  <li>• Shortlisting took your team 4 days — for one position</li>
+                  <li>• A rejected candidate asks why they were not selected and you have no clear answer</li>
+                  <li>• Different interviewers score differently and alignment is a nightmare</li>
+                </>
+              ) : (
+                <>
+                  <li>• You applied to 50 jobs and heard absolutely nothing back</li>
+                  <li>• You have no idea if your CV was even read by a human</li>
+                  <li>• You got rejected but received zero actionable feedback to improve</li>
+                  <li>• You missed an interview email because it went to spam</li>
+                </>
+              )}
             </ul>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
@@ -219,7 +284,9 @@ export default function HomePageContent() {
               <span className="oh-typing inline-block">OptioHire fixes this — with structure, not just software.</span>
             </h4>
             <p className="mt-3 text-slate-600">
-              Standardized scoring, transparent evidence, and a full decision trail from first pass to final interview.
+              {role === 'hr'
+                ? 'Standardized scoring, transparent evidence, and a full decision trail from first pass to final interview.'
+                : 'A unified profile, transparent tracking, direct messaging, and fair evaluation based on your real skills.'}
             </p>
           </div>
         </div>
@@ -234,10 +301,14 @@ export default function HomePageContent() {
                 How it works
               </p>
               <h2 className="headline-platform-dark mt-4 text-3xl sm:text-4xl md:text-5xl">
-                From 300 applicants to 5 final interviews — in under 48 hours
+                {role === 'hr' 
+                  ? 'From 300 applicants to 5 final interviews — in under 48 hours'
+                  : 'From browsing roles to your final interview — in one place'}
               </h2>
               <p className="mt-4 max-w-2xl text-slate-200">
-                No spreadsheets. No CV marathons. Just a clear, structured process your whole team can trust.
+                {role === 'hr'
+                  ? 'No spreadsheets. No CV marathons. Just a clear, structured process your whole team can trust.'
+                  : 'No endless forms. No black hole tracking. Just a clear, transparent process for your career growth.'}
               </p>
               <Button
                 size="lg"
@@ -250,11 +321,15 @@ export default function HomePageContent() {
               </Button>
             </div>
             <div className="space-y-3">
-              {[
+              {(role === 'hr' ? [
                 'Screen candidates using role-specific criteria',
                 'Rank applicants with consistent, bias-aware scoring',
                 'Share final recommendations with hiring stakeholders',
-              ].map((item) => (
+              ] : [
+                'Create your unified profile once',
+                'Apply to top roles with a single click',
+                'Track your progress and schedule interviews directly',
+              ]).map((item) => (
                 <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/15 bg-white/10 p-4">
                   <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-300" />
                   <p className="text-sm text-slate-100">{item}</p>
@@ -270,10 +345,12 @@ export default function HomePageContent() {
           <div className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div className="max-w-2xl">
               <h2 className="headline-platform text-3xl sm:text-5xl md:text-6xl">
-                Designed for every hiring context
+                {role === 'hr' ? 'Designed for every hiring context' : 'Designed for every career stage'}
               </h2>
               <p className="mt-3 text-lg text-slate-600">
-                A professional UI and workflow model that scales from startup recruiting to enterprise hiring.
+                {role === 'hr' 
+                  ? 'A professional UI and workflow model that scales from startup recruiting to enterprise hiring.'
+                  : 'A professional platform that helps you shine, whether you are a new grad or a seasoned leader.'}
               </p>
             </div>
             <Button variant="outline" className="rounded-2xl" onClick={() => router.push('/use-cases')}>
@@ -312,10 +389,16 @@ export default function HomePageContent() {
               </h2>
             </div>
             <div className="hidden sm:flex gap-3">
-              <button className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+              <button 
+                onClick={() => scrollCarousel('left')}
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               </button>
-              <button className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+              <button 
+                onClick={() => scrollCarousel('right')}
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </button>
             </div>
@@ -328,7 +411,7 @@ export default function HomePageContent() {
               ))}
             </div>
           ) : featuredJobs.length > 0 ? (
-            <div className="flex gap-6 overflow-x-auto pb-8 snap-x scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div ref={carouselRef} className="flex gap-6 overflow-x-auto pb-8 snap-x scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
               {featuredJobs.map((job, index) => {
                 const colors = [
                   'bg-[#E0F2FE]', // Blue
