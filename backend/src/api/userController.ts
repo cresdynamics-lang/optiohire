@@ -373,3 +373,44 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
   }
 }
 
+
+// Permanently delete current user account
+export async function deleteSelf(req: AuthRequest, res: Response) {
+  try {
+    const userId = req.userId
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    // Check if user is an admin - we shouldn't let the last admin delete themselves
+    const { rows: userRows } = await query<{ role: string }>(
+      `SELECT role FROM users WHERE user_id = $1`,
+      [userId]
+    )
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    if (userRows[0].role === 'admin') {
+      const { rows: adminCount } = await query<{ count: string }>(
+        `SELECT COUNT(*) as count FROM users WHERE role = 'admin' AND is_active = true`
+      )
+      if (Number(adminCount[0].count) <= 1) {
+        return res.status(403).json({ error: 'Cannot delete the last active admin account' })
+      }
+    }
+
+    // Delete the user (cascade will handle related records in companies, applications, etc. 
+    // if references are set to ON DELETE CASCADE)
+    await query(`DELETE FROM users WHERE user_id = $1`, [userId])
+
+    // Invalidate user cache
+    await cache.del(cacheKeys.user(userId))
+
+    return res.json({ success: true, message: 'Account deleted successfully' })
+  } catch (err) {
+    console.error('Delete self error:', err)
+    return res.status(500).json({ error: 'Failed to delete account' })
+  }
+}

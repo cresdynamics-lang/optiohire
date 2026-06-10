@@ -139,7 +139,7 @@ export function EditJobSection() {
         variant: "success"
       })
       
-      router.push('/dashboard/jobs')
+      router.push('/hr/jobs')
     } catch (err: any) {
       console.error('Error updating job:', err)
       toast({
@@ -167,7 +167,7 @@ export function EditJobSection() {
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-slate-900 mb-2">Oops!</h2>
           <p className="text-slate-600 mb-6">{error || 'Job not found'}</p>
-          <Button onClick={() => router.push('/dashboard/jobs')} variant="outline">
+          <Button onClick={() => router.push('/hr/jobs')} variant="outline">
             Back to Jobs
           </Button>
         </div>
@@ -178,7 +178,7 @@ export function EditJobSection() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/jobs')} className="rounded-full">
+        <Button variant="ghost" size="sm" onClick={() => router.push('/hr/jobs')} className="rounded-full">
           <ChevronLeft className="mr-1 h-4 w-4" />
           Back to Jobs
         </Button>
@@ -335,7 +335,7 @@ export function EditJobSection() {
                 <Button 
                   type="button" 
                   variant="ghost" 
-                  onClick={() => router.push('/dashboard/jobs')}
+                  onClick={() => router.push('/hr/jobs')}
                   disabled={isSaving}
                   className="px-8"
                 >

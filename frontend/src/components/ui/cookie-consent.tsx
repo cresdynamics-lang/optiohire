@@ -10,11 +10,22 @@ export function CookieConsent() {
 
   useEffect(() => {
     // Check if user has already made a choice
-    const consent = localStorage.getItem('cookie-consent')
-    if (!consent) {
-      // Show banner after a short delay
-      setTimeout(() => setShowBanner(true), 1000)
+    const consentStr = localStorage.getItem('cookie-consent')
+    if (consentStr) {
+      try {
+        const consent = JSON.parse(consentStr)
+        if (consent && typeof consent.accepted === 'boolean') {
+          setShowBanner(false)
+          return
+        }
+      } catch (e) {
+        console.error('Error parsing cookie consent:', e)
+      }
     }
+    
+    // Show banner after a short delay if no valid consent found
+    const timer = setTimeout(() => setShowBanner(true), 1000)
+    return () => clearTimeout(timer)
   }, [])
 
   const applyCookiePreferences = (accepted: boolean) => {

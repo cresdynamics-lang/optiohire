@@ -11,6 +11,7 @@ import type { NextRequest } from 'next/server'
 const SUBDOMAIN_MAPPING: Record<string, string> = {
   'console': '/admin',
   'admin': '/admin',
+  'applications': '/candidate',
   // Add more subdomains here in the future
   // 'partners': '/partners',
   // 'talent': '/talent-pool',

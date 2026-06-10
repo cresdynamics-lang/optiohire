@@ -49,8 +49,19 @@ jobs:
       - name: Build frontend in CI
         run: |
           cd frontend
-          # Use .env.production for the build (bakes NEXT_PUBLIC_ vars into JS bundle)
-          cp .env.production .env.local
+          # Generate .env.local from secrets for the build
+          cat > .env.local << 'ENVEOF'
+          BACKEND_URL=http://127.0.0.1:3001
+          NEXT_PUBLIC_BACKEND_URL=https://optiohire.com
+          NEXT_PUBLIC_APP_URL=https://optiohire.com
+          NEXT_PUBLIC_API_URL=https://optiohire.com/api
+          NEXTAUTH_URL=https://optiohire.com
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+          NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+          ENVEOF
+          
           npm ci --legacy-peer-deps
           # Run the full quality build (types + lint + standalone)
           npm run build:prod
@@ -87,9 +98,9 @@ jobs:
             NEXT_PUBLIC_APP_URL=https://optiohire.com
             NEXT_PUBLIC_API_URL=https://optiohire.com/api
             NEXTAUTH_URL=https://optiohire.com
-            NEXTAUTH_SECRET=5e3d2e4d7f9a4bc8e2d6f4a9b3c8e7f0a9b3c8e7f9a4d6f4a9b3c8e7f0a9b3
-            JWT_SECRET=a6869b3fb2a7b56cb33c58d07cf69548ee1ccbe9f6ec2aa54ce13d1a1bafeedae2d88ee36ed7d92f0e29d573d68c2335fe187eb7cf3890be9b7d4bf216cfd568
-            NEXT_PUBLIC_GOOGLE_CLIENT_ID=9363904405900-e0i5c40qaeqfq3uk1t570k6ibqibp5e@apps.googleusercontent.com
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
             NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             DB_SSL=false

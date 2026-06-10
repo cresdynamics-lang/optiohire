@@ -92,7 +92,7 @@ export function JobsSection() {
     if (job) { setSelectedJob(job); setIsDetailsModalOpen(true); }
   }
 
-  const handleEditJob = (jobId: string) => router.push(`/dashboard/jobs/${jobId}/edit`)
+  const handleEditJob = (jobId: string) => router.push(`/hr/jobs/${jobId}/edit`)
 
   const handleDeleteJob = async (jobId: string) => {
     try {
@@ -130,7 +130,7 @@ export function JobsSection() {
           
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="outline" onClick={loadJobs} disabled={isLoading} size="sm" className="rounded-xl"><RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} /> Refresh</Button>
-            <Button variant="default" size="sm" className="rounded-xl bg-[#2D2DDD] hover:bg-[#2D2DDD]/90 text-white" onClick={() => router.push('/dashboard/jobs/new')}><Plus className="w-4 h-4 mr-2" /> New Job</Button>
+            <Button variant="default" size="sm" className="rounded-xl bg-[#2D2DDD] hover:bg-[#2D2DDD]/90 text-white" onClick={() => router.push('/hr/jobs/new')}><Plus className="w-4 h-4 mr-2" /> New Job</Button>
           </div>
         </div>
       </motion.div>
@@ -238,7 +238,7 @@ export function JobsSection() {
                         </span>
                       </div>
 
-                      <Link href={`/dashboard/job/${job.id}/shortlisted`} onClick={(e) => e.stopPropagation()}>
+                      <Link href={`/hr/job/${job.id}/shortlisted`} onClick={(e) => e.stopPropagation()}>
                         <Button 
                           className="w-full sm:w-auto rounded-lg bg-slate-900 text-white hover:bg-[#2D2DDD] dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition-all shadow-sm group/btn"
                         >
@@ -274,7 +274,7 @@ export function JobsSection() {
                   <TableCell className="text-center text-green-600 font-bold">{job.applicantStats.shortlisted}</TableCell>
                   <TableCell><Badge variant={job.status?.toLowerCase() as any}>{job.status}</Badge></TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/job/${job.id}/shortlisted`)}><ArrowUpRight className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => router.push(`/hr/job/${job.id}/shortlisted`)}><ArrowUpRight className="w-4 h-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}

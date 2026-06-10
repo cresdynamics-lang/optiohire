@@ -31,7 +31,7 @@ export async function hrChat(req: Request, res: Response) {
     // -------------------------------------------------------------------------
     const siteMap = {
       jobs: { view_all: "/dashboard/jobs", create: "/dashboard/jobs/new", edit: "/dashboard/jobs/:id/edit" },
-      candidates: { view_all: "/dashboard/candidate", details: "/dashboard/job/:jobId/candidate/:candidateId" },
+      candidates: { view_all: "/candidate/profile", details: "/dashboard/job/:jobId/candidate/:candidateId" },
       interviews: { view_all: "/dashboard/interviews" },
       settings: { company: "/dashboard/profile", users: "/admin/users" }
     }

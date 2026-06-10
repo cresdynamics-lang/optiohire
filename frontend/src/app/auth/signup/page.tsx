@@ -122,7 +122,7 @@ function SignUpForm() {
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
         return
       }
-      router.push('/dashboard')
+      router.push('/hr')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
@@ -170,7 +170,7 @@ function SignUpForm() {
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
         return
       }
-      router.push('/dashboard/candidate')
+      router.push('/candidate')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
@@ -182,10 +182,6 @@ function SignUpForm() {
     setUserRole(role)
     setStep(2)
     setError(null)
-  }
-
-  const handleAdminSelect = () => {
-    router.push('/admin/login')
   }
 
   const nextStep = () => {
@@ -313,21 +309,6 @@ function SignUpForm() {
                     </div>
                   </button>
 
-                  {/* <button
-                    type="button"
-                    onClick={handleAdminSelect}
-                    className="w-full p-4 border-2 border-slate-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <h3 className="headline-platform !font-semibold">I'm an Admin</h3>
-                        <p className="text-sm text-gray-600 font-figtree">Manage the platform and users</p>
-                      </div>
-                    </div>
-                  </button> */}
                 </div>
               </div>
             )}

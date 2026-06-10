@@ -376,15 +376,18 @@ export function ProfileSection() {
     setSaveMessage(null)
 
     try {
-      if (company) {
-        const { error: deleteCompanyError } = await supabase
-          .from('companies')
-          .delete()
-          .eq('id', company.id)
-
-        if (deleteCompanyError) {
-          console.error('Error deleting company:', deleteCompanyError)
+      const token = localStorage.getItem('token')
+      const resp = await fetch('/api/user/me', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      })
+
+      const data = await resp.json()
+      if (!resp.ok) {
+        throw new Error(data.error || 'Failed to delete account')
       }
 
       await signOut({ next: '/' })

@@ -21,31 +21,31 @@ const quickNavItems = [
   {
     label: 'Home',
     icon: Home,
-    href: '/dashboard',
+    href: '/hr',
     id: 'overview',
   },
   {
     label: 'Jobs',
     icon: Briefcase,
-    href: '/dashboard/jobs',
+    href: '/hr/jobs',
     id: 'jobs',
   },
   {
     label: 'Reports',
     icon: BarChart3,
-    href: '/dashboard/reports',
+    href: '/hr/reports',
     id: 'reports',
   },
   {
     label: 'Interviews',
     icon: Calendar,
-    href: '/dashboard/interviews',
+    href: '/hr/interviews',
     id: 'interviews',
   },
   {
     label: 'Profile',
     icon: Settings,
-    href: '/dashboard/profile',
+    href: '/hr/profile',
     id: 'profile',
   },
 ]

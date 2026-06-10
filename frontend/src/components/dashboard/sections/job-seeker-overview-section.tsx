@@ -38,7 +38,7 @@ export function JobSeekerOverviewSection() {
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="min-h-[48px] w-full touch-manipulation rounded-2xl border-slate-300 bg-white/90 sm:w-auto sm:min-h-0 dark:bg-gray-950 dark:border-gray-700">
-              <Link href="/dashboard/profile">My profile</Link>
+              <Link href="/candidate/profile">My profile</Link>
             </Button>
           </div>
           <div className="mt-6 grid grid-cols-1 gap-3 min-[480px]:grid-cols-3">
@@ -96,7 +96,7 @@ export function JobSeekerOverviewSection() {
           </CardHeader>
           <CardContent>
             <Button asChild variant="secondary" className="w-full rounded-2xl shadow-sm">
-              <Link href="/dashboard/profile">Update profile</Link>
+              <Link href="/candidate/profile">Update profile</Link>
             </Button>
           </CardContent>
         </Card>

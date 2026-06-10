@@ -34,6 +34,7 @@ import {
 import { ProductTour, TourStep } from '@/components/ui/product-tour'
 import { ScheduleDemoModal } from '@/components/modals/ScheduleDemoModal'
 import { Sparkles, Bot, Calendar } from 'lucide-react'
+import { PlatformTourPopup } from '../platform-tour-popup'
 
 interface DashboardMetrics {
   activeJobs: number
@@ -616,8 +617,8 @@ export function OverviewSection() {
       title: 'Manage Jobs',
       description: 'Create or update active roles',
       icon: Briefcase,
-      onHover: () => router.prefetch('/dashboard/jobs'),
-      onClick: () => router.push('/dashboard/jobs'),
+      onHover: () => router.prefetch('/hr/jobs'),
+      onClick: () => router.push('/hr/jobs'),
     },
     {
       key: 'candidates',
@@ -626,16 +627,16 @@ export function OverviewSection() {
       icon: Users,
       onHover: () => {
         if (jobPostings.length > 0) {
-          router.prefetch(`/dashboard/job/${jobPostings[0].id}/shortlisted`)
+          router.prefetch(`/hr/job/${jobPostings[0].id}/shortlisted`)
         } else {
-          router.prefetch('/dashboard/jobs')
+          router.prefetch('/hr/jobs')
         }
       },
       onClick: () => {
         if (jobPostings.length > 0) {
-          router.push(`/dashboard/job/${jobPostings[0].id}/shortlisted`)
+          router.push(`/hr/job/${jobPostings[0].id}/shortlisted`)
         } else {
-          router.push('/dashboard/jobs')
+          router.push('/hr/jobs')
         }
       },
     },
@@ -644,16 +645,16 @@ export function OverviewSection() {
       title: 'Open Reports',
       description: 'Track hiring insights and outcomes',
       icon: BarChart3,
-      onHover: () => router.prefetch('/dashboard/reports'),
-      onClick: () => router.push('/dashboard/reports'),
+      onHover: () => router.prefetch('/hr/reports'),
+      onClick: () => router.push('/hr/reports'),
     },
     {
       key: 'post',
       title: 'Post New Job',
       description: 'Launch a role and start sourcing',
       icon: Plus,
-      onHover: () => router.prefetch('/dashboard/jobs'),
-      onClick: () => router.push('/dashboard/jobs'),
+      onHover: () => router.prefetch('/hr/jobs'),
+      onClick: () => router.push('/hr/jobs'),
     },
   ]
 
@@ -672,6 +673,8 @@ export function OverviewSection() {
           })
         }}
       />
+      
+      <PlatformTourPopup onStartTour={() => setIsTourOpen(true)} />
       
       {/* HR Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -754,16 +757,6 @@ export function OverviewSection() {
               >
                 {getGreeting()}, {getDisplayName()}
               </h1>
-              <Button
-                size="lg"
-                type="button"
-                onClick={() => setIsTourOpen(true)}
-                className="h-11 shrink-0 rounded-xl border-2 border-yellow-400 bg-yellow-400 px-6 text-sm font-bold text-yellow-900 shadow-[0_0_18px_rgba(234,179,8,0.7)] transition-all hover:bg-yellow-300 hover:border-yellow-300 hover:shadow-[0_0_28px_rgba(234,179,8,0.9)] animate-pulse"
-                aria-label="Start product tour"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Take Tour
-              </Button>
             </div>
             <p className="text-xs sm:text-sm uppercase tracking-wide text-muted-foreground mb-1">
               {getCompanyLabel()} • dashboard overview
