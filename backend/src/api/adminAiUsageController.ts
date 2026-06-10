@@ -18,7 +18,8 @@ export async function getAiUsageSummary(req: Request, res: Response) {
       todayResult,
       dailyResult,
       modelResult,
-      recentLogsResult
+      recentLogsResult,
+      taskResult
     ] = await Promise.all([
 
       // 1. Period summary: total tokens, total cost, total requests
@@ -102,6 +103,8 @@ export async function getAiUsageSummary(req: Request, res: Response) {
         total_tokens: number
         cost_estimate: number
         created_at: string
+        task: string
+        user_email: string
       }>(`
         SELECT
           id,
@@ -110,11 +113,35 @@ export async function getAiUsageSummary(req: Request, res: Response) {
           completion_tokens,
           total_tokens,
           cost_estimate,
-          created_at
+          created_at,
+          task,
+          user_email
         FROM ai_usage_logs
         ORDER BY created_at DESC
         LIMIT 25
-      `).catch(() => ({ rows: [] }))
+      `).catch(() => ({ rows: [] })),
+
+      // 6. Task breakdown
+      query<{
+        task: string
+        total_tokens: number
+        total_prompt_tokens: number
+        total_completion_tokens: number
+        total_cost: number
+        request_count: number
+      }>(`
+        SELECT
+          COALESCE(task, 'Uncategorized') AS task,
+          COALESCE(SUM(total_tokens), 0)::bigint AS total_tokens,
+          COALESCE(SUM(prompt_tokens), 0)::bigint AS total_prompt_tokens,
+          COALESCE(SUM(completion_tokens), 0)::bigint AS total_completion_tokens,
+          COALESCE(SUM(cost_estimate), 0)::float  AS total_cost,
+          COUNT(*)::int                            AS request_count
+        FROM ai_usage_logs
+        WHERE created_at >= NOW() - INTERVAL '1 day' * $1
+        GROUP BY task
+        ORDER BY total_tokens DESC
+      `, [days]).catch(() => ({ rows: [] }))
     ])
 
     // Calculate previous period for comparison
@@ -166,6 +193,14 @@ export async function getAiUsageSummary(req: Request, res: Response) {
         totalCost: Number(r.total_cost),
         requestCount: Number(r.request_count),
       })),
+      tasks: (taskResult?.rows || []).map(r => ({
+        task: r.task,
+        totalTokens: Number(r.total_tokens),
+        totalPromptTokens: Number(r.total_prompt_tokens),
+        totalCompletionTokens: Number(r.total_completion_tokens),
+        totalCost: Number(r.total_cost),
+        requestCount: Number(r.request_count),
+      })),
       recentLogs: recentLogsResult.rows.map(r => ({
         id: r.id,
         model: r.model,
@@ -174,6 +209,8 @@ export async function getAiUsageSummary(req: Request, res: Response) {
         totalTokens: Number(r.total_tokens),
         costEstimate: Number(r.cost_estimate),
         createdAt: r.created_at,
+        task: r.task,
+        userEmail: r.user_email
       })),
       generatedAt: new Date().toISOString(),
     })

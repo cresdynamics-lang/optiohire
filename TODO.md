@@ -1,0 +1,4 @@
+- [ ] Add audience toggle buttons below hero section on landing page
+- [ ] Ensure Job Seeker button redirects to https://optiohire.com/jobs
+- [ ] Ensure Hiring Manager button only toggles UI state (no redirect yet)
+- [ ] Verify build/test + quick manual checks (render + click behaviors)
