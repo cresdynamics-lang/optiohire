@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Book, HelpCircle, MessageSquare, FileText, Settings, Users, Building2, Briefcase, FileText as FileTextIcon, Mail, BarChart3, LogIn, Shield } from 'lucide-react'
+import { ArrowLeft, Book, HelpCircle, MessageSquare, FileText, Settings, Users, Building2, Briefcase, FileText as FileTextIcon, Mail, BarChart3, LogIn, Shield, Star } from 'lucide-react'
 import Link from 'next/link'
+import { ChatbotWidget } from '@/components/dashboard/chatbot-widget'
 
 export default function AdminHelpPage() {
   const router = useRouter()
@@ -255,19 +256,19 @@ export default function AdminHelpPage() {
           </CardContent>
         </Card>
 
-        {/* Support */}
-        <Card className="border-border">
+        {/* Need Help */}
+        <Card className="border-border dark:border-gray-800 ">
           <CardHeader>
             <CardTitle className="text-foreground ">Need More Help?</CardTitle>
-            <CardDescription>Contact support or view documentation</CardDescription>
+            <CardDescription>Reach out to the support team or your AI Agent</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4">
-              <Button variant="outline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                View Full Documentation
+              <Button onClick={() => document.dispatchEvent(new CustomEvent('open-hr-assistant', { detail: { tab: 'chat' } }))} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+                <Star className="w-4 h-4" />
+                Ask AI Agent
               </Button>
-              <Button variant="outline" onClick={() => router.push('/admin/support')} className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => document.dispatchEvent(new CustomEvent('open-hr-assistant', { detail: { tab: 'support' } }))} className="flex items-center gap-2 ">
                 <MessageSquare className="w-4 h-4" />
                 Contact Support
               </Button>
@@ -275,6 +276,7 @@ export default function AdminHelpPage() {
           </CardContent>
         </Card>
       </div>
+      <ChatbotWidget />
     </div>
   )
 }

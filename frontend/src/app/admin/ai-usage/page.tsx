@@ -28,6 +28,7 @@ interface AiUsageData {
   }
   daily: { date: string; tokens: number; cost: number; requests: number }[]
   models: { model: string; totalTokens: number; totalCost: number; requestCount: number }[]
+  tasks: { task: string; totalTokens: number; totalPromptTokens: number; totalCompletionTokens: number; totalCost: number; requestCount: number }[]
   recentLogs: {
     id: string
     model: string
@@ -36,6 +37,8 @@ interface AiUsageData {
     totalTokens: number
     costEstimate: number
     createdAt: string
+    task?: string
+    userEmail?: string
   }[]
 }
 
@@ -220,6 +223,7 @@ export default function AiUsagePage() {
         <AiUsageCharts 
           daily={data?.daily || []}
           models={data?.models || []}
+          tasks={data?.tasks || []}
           loading={loading}
         />
 
@@ -241,11 +245,11 @@ export default function AiUsagePage() {
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                 <tr>
+                  <th className="px-6 py-4 font-medium">Task</th>
                   <th className="px-6 py-4 font-medium">Model</th>
-                  <th className="px-6 py-4 font-medium">Prompt Tokens</th>
-                  <th className="px-6 py-4 font-medium">Completion Tokens</th>
-                  <th className="px-6 py-4 font-medium">Total</th>
+                  <th className="px-6 py-4 font-medium">Tokens (In / Out)</th>
                   <th className="px-6 py-4 font-medium">Est. Cost</th>
+                  <th className="px-6 py-4 font-medium">User</th>
                   <th className="px-6 py-4 font-medium">Time</th>
                 </tr>
               </thead>
@@ -259,15 +263,19 @@ export default function AiUsagePage() {
                 ) : (
                   logs.map((log) => (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4 font-medium text-foreground">{log.task || 'Uncategorized'}</td>
                       <td className="px-6 py-4">
                         <Badge variant="secondary" className="font-mono text-xs bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">
                           {log.model.split('/').pop()}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 font-medium text-foreground tabular-nums">{log.promptTokens.toLocaleString()}</td>
-                      <td className="px-6 py-4 font-medium text-foreground tabular-nums">{log.completionTokens.toLocaleString()}</td>
-                      <td className="px-6 py-4 font-medium text-foreground tabular-nums">{log.totalTokens.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-medium text-foreground tabular-nums">
+                        <span className="text-muted-foreground text-xs">{log.promptTokens.toLocaleString()} / {log.completionTokens.toLocaleString()}</span>
+                        <br />
+                        <span className="font-bold">{log.totalTokens.toLocaleString()}</span>
+                      </td>
                       <td className="px-6 py-4 font-medium text-foreground tabular-nums">${log.costEstimate.toFixed(4)}</td>
+                      <td className="px-6 py-4 text-muted-foreground text-sm truncate max-w-[150px]">{log.userEmail || '—'}</td>
                       <td className="px-6 py-4 text-muted-foreground">{timeAgo(log.createdAt)}</td>
                     </tr>
                   ))

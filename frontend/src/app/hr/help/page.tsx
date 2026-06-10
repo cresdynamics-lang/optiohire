@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Book, HelpCircle, MessageSquare, Briefcase, FileText, Settings, Target, Calendar, Mail, BarChart3, Users, Star } from 'lucide-react'
 import Link from 'next/link'
+import { ChatbotWidget } from '@/components/dashboard/chatbot-widget'
 
 export default function HRHelpPage() {
   const router = useRouter()
@@ -222,6 +223,7 @@ export default function HRHelpPage() {
           </CardContent>
         </Card>
       </div>
+      <ChatbotWidget />
     </div>
   )
 }

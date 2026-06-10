@@ -56,6 +56,7 @@ class OpenRouterService {
       maxTokens?: number
       systemPrompt?: string
       tools?: any[]
+      logContext?: { task?: string; userEmail?: string; jobPostingId?: string }
     } = {}
   ): Promise<string> {
     if (!this.apiKey) throw new Error('OpenRouter API key not configured')
@@ -106,7 +107,7 @@ class OpenRouterService {
       logger.debug(`OpenRouter response via ${data.model} (${data.usage?.total_tokens || '?'} tokens)`)
       
       // Async DB Logging
-      this.logUsageAsync(data.model, data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0, data.usage?.total_tokens || 0);
+      this.logUsageAsync(data.model, data.usage?.prompt_tokens || 0, data.usage?.completion_tokens || 0, data.usage?.total_tokens || 0, options.logContext);
 
       return content
     } catch (error: any) {
@@ -126,6 +127,7 @@ class OpenRouterService {
       maxTokens?: number
       systemPrompt?: string
       tools?: any[]
+      logContext?: { task?: string; userEmail?: string; jobPostingId?: string }
     } = {}
   ): Promise<ReadableStream> {
     if (!this.apiKey) throw new Error('OpenRouter API key not configured')
@@ -185,6 +187,7 @@ class OpenRouterService {
       temperature?: number
       maxTokens?: number
       systemPrompt?: string
+      logContext?: { task?: string; userEmail?: string; jobPostingId?: string }
     } = {}
   ): Promise<T> {
     const systemPrompt =
@@ -219,19 +222,25 @@ class OpenRouterService {
   /**
    * Log AI token usage to the database asynchronously
    */
-  private logUsageAsync(model: string, promptTokens: number, completionTokens: number, totalTokens: number) {
+  private logUsageAsync(model: string, promptTokens: number, completionTokens: number, totalTokens: number, context?: { task?: string; userEmail?: string; jobPostingId?: string }) {
     setImmediate(() => {
       try {
         // Approximate cost calculation based on typical provider rates
-        // Flash: ~$0.15/1M prompt, $0.60/1M completion
-        // GPT-4o-mini: ~$0.15/1M prompt, $0.60/1M completion
-        // We'll use a blended generic estimate of $0.0003 per 1k tokens as a baseline
         const costEstimate = (totalTokens / 1000) * 0.0003;
         
         query(
-          `INSERT INTO ai_usage_logs (model, prompt_tokens, completion_tokens, total_tokens, cost_estimate)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [model, promptTokens, completionTokens, totalTokens, costEstimate]
+          `INSERT INTO ai_usage_logs (model, prompt_tokens, completion_tokens, total_tokens, cost_estimate, task, user_email, job_posting_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [
+            model, 
+            promptTokens, 
+            completionTokens, 
+            totalTokens, 
+            costEstimate,
+            context?.task || null,
+            context?.userEmail || null,
+            context?.jobPostingId || null
+          ]
         ).catch(err => {
           logger.error('Failed to log AI usage to database', { error: err.message });
         });
