@@ -70,7 +70,9 @@ export default function AdminUsersPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '20',
-        ...(search && { search })
+        ...(search && { search }),
+        ...(roleFilter !== 'all' && { role: roleFilter }),
+        ...(statusFilter !== 'all' && { status: statusFilter })
       })
 
       const response = await fetch(`/api/admin/users?${params}`, {
@@ -109,6 +111,27 @@ export default function AdminUsersPage() {
 
     try {
       const token = localStorage.getItem('token')
+
+      if (updates.role) {
+        const response = await fetch(`/api/admin/users/${userId}/role`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ role: updates.role })
+        })
+        const data = await response.json()
+        if (response.ok) {
+           alert(data.message || 'Role updated successfully.')
+           loadUsers()
+           return
+        } else {
+           alert(data.error || 'Failed to update role')
+           return
+        }
+      }
+
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
         headers: {
@@ -206,17 +229,12 @@ export default function AdminUsersPage() {
                   className="pl-10 border-border bg-white text-foreground"
                 />
               </div>
-              <Select value={roleFilter} onValueChange={(value) => { setRoleFilter(value); setPage(1) }}>
-                <SelectTrigger className="w-[150px] border-border bg-white text-foreground">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex bg-slate-100 rounded-md p-1">
+                <Button variant={roleFilter === 'all' ? 'default' : 'ghost'} onClick={() => { setRoleFilter('all'); setPage(1); }} size="sm">All</Button>
+                <Button variant={roleFilter === 'admin' ? 'default' : 'ghost'} onClick={() => { setRoleFilter('admin'); setPage(1); }} size="sm">Admins</Button>
+                <Button variant={roleFilter === 'hr' ? 'default' : 'ghost'} onClick={() => { setRoleFilter('hr'); setPage(1); }} size="sm">HR</Button>
+                <Button variant={roleFilter === 'candidate' ? 'default' : 'ghost'} onClick={() => { setRoleFilter('candidate'); setPage(1); }} size="sm">Candidates</Button>
+              </div>
               <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1) }}>
                 <SelectTrigger className="w-[150px] border-border bg-white text-foreground">
                   <SelectValue placeholder="Status" />
@@ -368,45 +386,47 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                         <div className="flex gap-2 flex-wrap">
-                          {/* Role Assignment UI */}
-                          <div className="flex items-center gap-2 mr-2 border-r border-border pr-4">
-                            <span className="text-xs font-medium text-muted-foreground">Change Role:</span>
-                            <Select 
-                              value={userItem.role} 
-                              onValueChange={(newRole) => {
-                                if (newRole === userItem.role) return;
-                                
-                                const confirmMsg = newRole === 'admin' 
-                                  ? 'Promote this user to admin? They will require approval before accessing admin features.'
-                                  : `Change this user's role to ${newRole}?`;
+                          {/* Role Assignment UI - Only visible to super admins */}
+                          {currentUser?.admin_permissions?.super_admin && (
+                            <div className="flex items-center gap-2 mr-2 border-r border-border pr-4">
+                              <span className="text-xs font-medium text-muted-foreground">Change Role:</span>
+                              <Select 
+                                value={userItem.role} 
+                                onValueChange={(newRole) => {
+                                  if (newRole === userItem.role) return;
                                   
-                                if (confirm(confirmMsg)) {
-                                  const updates: any = { role: newRole };
-                                  if (newRole === 'admin') {
-                                    updates.admin_permissions = {
-                                      manage_users: true,
-                                      manage_companies: true,
-                                      manage_jobs: true,
-                                      manage_applications: true,
-                                      view_analytics: true
-                                    };
+                                  const confirmMsg = newRole === 'admin' 
+                                    ? 'Promote this user to admin? They will require approval before accessing admin features.'
+                                    : `Change this user's role to ${newRole}?`;
+                                    
+                                  if (confirm(confirmMsg)) {
+                                    const updates: any = { role: newRole };
+                                    if (newRole === 'admin') {
+                                      updates.admin_permissions = {
+                                        manage_users: true,
+                                        manage_companies: true,
+                                        manage_jobs: true,
+                                        manage_applications: true,
+                                        view_analytics: true
+                                      };
+                                    }
+                                    updateUser(userItem.user_id, updates);
                                   }
-                                  updateUser(userItem.user_id, updates);
-                                }
-                              }}
-                              disabled={!!isCurrentUser}
-                            >
-                              <SelectTrigger className="w-[110px] h-8 text-xs border-border">
-                                <SelectValue placeholder="Select Role" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="hr">HR</SelectItem>
-                                <SelectItem value="candidate">Candidate</SelectItem>
-                                <SelectItem value="user">User</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                                }}
+                                disabled={!!isCurrentUser}
+                              >
+                                <SelectTrigger className="w-[110px] h-8 text-xs border-border">
+                                  <SelectValue placeholder="Select Role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="hr">HR</SelectItem>
+                                  <SelectItem value="candidate">Candidate</SelectItem>
+                                  <SelectItem value="user">User</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
                           {userItem.role === 'admin' && userItem.admin_approval_status === 'pending' && (
                             <>
                               <Button

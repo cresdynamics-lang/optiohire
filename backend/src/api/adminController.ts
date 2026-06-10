@@ -15,16 +15,28 @@ const SALT_ROUNDS = 12
 
 export async function getAllUsers(req: Request, res: Response) {
   try {
-    const { page = '1', limit = '50', search = '' } = req.query
+    const { page = '1', limit = '50', search = '', role = '', status = '' } = req.query
     const offset = (Number(page) - 1) * Number(limit)
 
-    let whereClause = ''
+    const conditions: string[] = []
     const params: any[] = [Number(limit), offset]
+    let paramIndex = 3
     
     if (search) {
-      whereClause = `WHERE email ILIKE $3`
+      conditions.push(`email ILIKE $${paramIndex++}`)
       params.push(`%${search}%`)
     }
+    if (role) {
+      conditions.push(`role = $${paramIndex++}`)
+      params.push(role)
+    }
+    if (status === 'active') {
+      conditions.push(`is_active = true`)
+    } else if (status === 'inactive') {
+      conditions.push(`is_active = false`)
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
     // Check which columns exist
     const { rows: colCheck } = await query(`
@@ -131,7 +143,7 @@ export async function getAllUsers(req: Request, res: Response) {
 
     const { rows: countRows } = await query<{ count: string }>(
       `SELECT COUNT(*) as count FROM users ${whereClause}`,
-      search ? [params[2]] : []
+      params.slice(2)
     )
 
     return res.json({
@@ -1354,5 +1366,89 @@ export async function markSupportTicketSeen(req: Request, res: Response) {
   } catch (error) {
     console.error('Error marking support ticket as seen:', error);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function changeUserRole(req: Request, res: Response) {
+  try {
+    const { userId } = req.params
+    const { role } = req.body
+    const authReq = req as AuthRequest
+    const currentUserId = authReq.userId
+
+    // Only super_admin can use this endpoint
+    const { rows: currentUserRows } = await query<{ admin_permissions: any }>(
+      `SELECT admin_permissions FROM users WHERE user_id = $1`,
+      [currentUserId]
+    )
+    if (!currentUserRows[0]?.admin_permissions?.super_admin) {
+      return res.status(403).json({ error: 'Only super admins can change user roles.' })
+    }
+
+    if (!role) {
+      return res.status(400).json({ error: 'Role is required' })
+    }
+
+    if (currentUserId === userId) {
+      return res.status(403).json({ error: 'You cannot change your own role' })
+    }
+
+    const { rows: targetUserRows } = await query<{ email: string, role: string }>(
+      `SELECT email, role FROM users WHERE user_id = $1`,
+      [userId]
+    )
+
+    if (targetUserRows.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const userEmail = targetUserRows[0].email
+    const oldRole = targetUserRows[0].role
+
+    if (oldRole === role) {
+      return res.status(400).json({ error: 'User already has this role' })
+    }
+
+    await query(
+      `UPDATE users SET role = $1, updated_at = now() WHERE user_id = $2`,
+      [role, userId]
+    )
+
+    // Generate password reset token
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 24)
+
+    await query(
+      `UPDATE password_reset_tokens SET used = true WHERE user_id = $1 AND used = false`,
+      [userId]
+    )
+    await query(
+      `INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`,
+      [userId, resetCode, expiresAt]
+    )
+
+    // Send email
+    let subdomain = ''
+    if (role === 'admin') subdomain = 'console.'
+    else if (role === 'hr') subdomain = ''
+    else if (role === 'candidate') subdomain = 'candidate.'
+    
+    const resetLink = `https://${subdomain}optiohire.com/auth/reset-password?code=${resetCode}&email=${encodeURIComponent(userEmail)}`
+    
+    try {
+      const emailService = new EmailService()
+      await emailService.sendRoleUpdatedEmail(userEmail, role, resetLink)
+    } catch (err) {
+      console.error('Failed to send role update email:', err)
+    }
+
+    await logAdminAction(req, 'change_role', 'user', userId, { oldRole, newRole: role })
+    await cache.del(cacheKeys.user(userId))
+
+    return res.json({ success: true, message: 'Role updated successfully and email sent.' })
+  } catch (err) {
+    console.error('Change user role error:', err)
+    return res.status(500).json({ error: 'Failed to change user role' })
   }
 }

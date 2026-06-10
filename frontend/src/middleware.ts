@@ -11,10 +11,9 @@ import type { NextRequest } from 'next/server'
 const SUBDOMAIN_MAPPING: Record<string, string> = {
   'console': '/admin',
   'admin': '/admin',
+  'candidate': '/candidate',
   'applications': '/candidate',
   // Add more subdomains here in the future
-  // 'partners': '/partners',
-  // 'talent': '/talent-pool',
 }
 
 export function middleware(request: NextRequest) {
@@ -22,23 +21,31 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
   
   // Extract subdomain (e.g., "console" from "console.optiohire.com")
-  const subdomain = hostname.split('.')[0].toLowerCase()
-
-  // Skip logic if it's the main domain, www, or an IP
-  if (!subdomain || subdomain === 'www' || subdomain === 'optiohire' || hostname.includes('localhost')) {
-    return NextResponse.next()
+  const isLocalhost = hostname.includes('localhost')
+  let subdomain = hostname.split('.')[0].toLowerCase()
+  if (isLocalhost && hostname.split('.').length < 3) {
+      subdomain = '' // On localhost without subdomain
   }
 
   // Check if we have a mapping for this subdomain
   const targetPath = SUBDOMAIN_MAPPING[subdomain]
   
-  // 1. If on the main domain (no subdomain mapping) and accessing /admin, redirect to console subdomain
-  if (!targetPath && url.pathname.startsWith('/admin')) {
-    const consoleUrl = new URL(url.pathname, `https://console.optiohire.com`)
-    return NextResponse.redirect(consoleUrl)
+  // 1. If on the main domain (no mapped subdomain)
+  if (!targetPath) {
+    // If trying to access /admin, redirect to console
+    if (url.pathname.startsWith('/admin')) {
+      const consoleUrl = new URL(url.pathname, `https://console.optiohire.com`)
+      return NextResponse.redirect(consoleUrl)
+    }
+    // If trying to access /candidate, redirect to candidate subdomain
+    if (url.pathname.startsWith('/candidate')) {
+      const candidateUrl = new URL(url.pathname, `https://candidate.optiohire.com`)
+      return NextResponse.redirect(candidateUrl)
+    }
+    return NextResponse.next()
   }
 
-  // 2. If on a mapped subdomain (like console.), handle the rewrite
+  // 2. If on a mapped subdomain (like console. or candidate.)
   if (targetPath) {
     // Skip static assets and internal Next.js routes
     if (
@@ -49,6 +56,14 @@ export function middleware(request: NextRequest) {
       url.pathname.includes('.')
     ) {
       return NextResponse.next()
+    }
+
+    // Explicit cross-subdomain blocking to enforce separation
+    if (targetPath === '/admin' && (url.pathname.startsWith('/hr') || url.pathname.startsWith('/candidate'))) {
+      return NextResponse.redirect(new URL('/', request.url)) // Or block
+    }
+    if (targetPath === '/candidate' && (url.pathname.startsWith('/hr') || url.pathname.startsWith('/admin'))) {
+      return NextResponse.redirect(new URL('/', request.url))
     }
 
     // Prevent infinite recursion if the path already starts with the target

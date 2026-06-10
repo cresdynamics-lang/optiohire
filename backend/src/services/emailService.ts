@@ -2748,6 +2748,31 @@ The OptioHire AI Team`;
       emailType: 'HRInterviewUpdated'
     });
   }
+  async sendRoleUpdatedEmail(email: string, newRole: string, resetLink: string) {
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #1e293b; margin: 0;">Account Role Updated</h2>
+        </div>
+        <div style="background-color: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hello,</p>
+          <p style="color: #334155; font-size: 16px;">Your account role has been updated to <strong>${newRole}</strong> by an administrator.</p>
+          <p style="color: #334155; font-size: 16px;">For security reasons, you must reset your password before logging in again.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Password & Log In</a>
+          </div>
+          <p style="color: #334155; font-size: 16px; margin-bottom: 0;">Best regards,<br/>The OptioHire Team</p>
+        </div>
+      </div>
+    `;
+    await this.sendEmail({
+      to: email,
+      subject: 'OptioHire Account Update: Role Changed',
+      html,
+      text: `Your account role has been updated to ${newRole}. Please reset your password to log in: ${resetLink}`,
+      emailType: 'RoleUpdated'
+    });
+  }
 }
 
 function escapeHtml(s: string): string {

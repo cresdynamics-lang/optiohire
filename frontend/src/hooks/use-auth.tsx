@@ -18,6 +18,7 @@ interface AuthUser {
   hiringManagerEmail?: string | null
   companyLogoUrl?: string | null
   companyLocation?: string | null
+  admin_permissions?: Record<string, boolean>
 }
 
 export type SignOutOptions = {

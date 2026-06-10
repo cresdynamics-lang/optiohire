@@ -1,13 +1,15 @@
 import { Router } from 'express'
-import { signup, signin, adminSignin, forgotPassword, verifyResetToken, verifyResetCode, resetPassword, sendSignupVerificationEmail, verifyEmail, googleSignIn } from '../api/authController.js'
+import { hrSignup, hrSignin, candidateSignup, candidateSignin, adminSignin, forgotPassword, verifyResetToken, verifyResetCode, resetPassword, sendSignupVerificationEmail, verifyEmail, googleSignIn } from '../api/authController.js'
 import { authLimiter, passwordResetRequestLimiter, passwordResetFlowLimiter } from '../middleware/rateLimiter.js'
 
 export const router = Router()
 
 // Apply rate limiting to auth routes
-router.post('/signup', authLimiter, signup)
-router.post('/signin', authLimiter, signin)
-router.post('/admin-signin', adminSignin) // Admin login without rate limiting
+router.post('/hr/signup', authLimiter, hrSignup)
+router.post('/hr/signin', authLimiter, hrSignin)
+router.post('/candidate/signup', authLimiter, candidateSignup)
+router.post('/candidate/signin', authLimiter, candidateSignin)
+router.post('/admin/signin', adminSignin) // Admin login without rate limiting
 router.post('/google', authLimiter, googleSignIn)
 router.post('/forgot-password', passwordResetRequestLimiter, forgotPassword)
 router.post('/verify-reset-token', passwordResetFlowLimiter, verifyResetToken)

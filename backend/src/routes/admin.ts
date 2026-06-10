@@ -6,6 +6,7 @@ import {
   getUserById,
   getUserStats,
   updateUser,
+  changeUserRole,
   deleteUser,
   resetUserPassword,
   getAllCompanies,
@@ -83,6 +84,7 @@ router.get('/users/:userId', getUserById)
 router.get('/users/:userId/stats', getUserStats)
 router.get('/users/:userId/activity', getUserActivity)
 router.patch('/users/:userId', updateUser)
+router.post('/users/:userId/role', changeUserRole)
 router.post('/users/:userId/reset-password', resetUserPassword)
 router.delete('/users/:userId', deleteUser)
 

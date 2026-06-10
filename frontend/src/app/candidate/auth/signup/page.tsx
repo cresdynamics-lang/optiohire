@@ -308,6 +308,7 @@ function SignUpForm() {
                       </div>
                     </div>
                   </button>
+
                 </div>
               </div>
             )}

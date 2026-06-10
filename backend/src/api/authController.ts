@@ -1035,3 +1035,137 @@ export async function googleSignIn(req: Request, res: Response) {
   }
 }
 
+export async function hrSignup(req: Request, res: Response) {
+  req.body.company_role = req.body.company_role || 'hr';
+  if (req.body.company_role !== 'hr' && req.body.company_role !== 'hiring_manager') {
+    return res.status(403).json({ error: 'Invalid role for HR portal' });
+  }
+  return signup(req, res);
+}
+
+export async function candidateSignup(req: Request, res: Response) {
+  req.body.company_role = 'candidate';
+  return signup(req, res);
+}
+
+export async function hrSignin(req: Request, res: Response) {
+  try {
+    const { email, password } = req.body || {}
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' })
+    }
+    const { rows } = await query<{
+      user_id: string
+      password_hash: string
+      role: string
+      is_active: boolean
+      created_at: string
+      name: string | null
+      company_role: string | null
+    }>(
+      `select user_id, password_hash, role, is_active, created_at, name, company_role from users where email = $1`,
+      [email.toLowerCase()]
+    )
+    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' })
+    if (!rows[0].is_active) return res.status(401).json({ error: 'Account is inactive' })
+    if (rows[0].company_role !== 'hr' && rows[0].company_role !== 'hiring_manager') {
+       return res.status(403).json({ error: 'Please login through the correct portal (HR)' })
+    }
+    const ok = await bcrypt.compare(password, rows[0].password_hash)
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
+
+    let hasCompany = false
+    let companyId = null
+    let companyName = null
+    let companyEmail = null
+    let hrEmail = null
+    
+    try {
+      const companyCheck = await query<{ company_id: string; company_name: string; company_email: string; hr_email: string }>(
+        `SELECT company_id, company_name, company_email, hr_email FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
+        [email.toLowerCase()]
+      )
+      hasCompany = companyCheck.rows.length > 0
+      if (hasCompany) {
+        companyId = companyCheck.rows[0]?.company_id || null
+        companyName = companyCheck.rows[0]?.company_name || null
+        companyEmail = companyCheck.rows[0]?.company_email || null
+        hrEmail = companyCheck.rows[0]?.hr_email || null
+      }
+    } catch (err) {
+      console.error('Error checking company:', err)
+    }
+
+    const token = jwt.sign({ sub: rows[0].user_id, email: email.toLowerCase(), role: rows[0].role }, process.env.JWT_SECRET!, { expiresIn: '7d' })
+    return res.status(200).json({ 
+      token, 
+      user: { 
+        user_id: rows[0].user_id,
+        id: rows[0].user_id,
+        email: email.toLowerCase(),
+        name: rows[0].name,
+        role: rows[0].role,
+        company_role: rows[0].company_role,
+        created_at: rows[0].created_at,
+        hasCompany,
+        companyId,
+        companyName,
+        companyEmail,
+        hrEmail
+      } 
+    })
+  } catch (err) {
+    console.error('Signin error:', err)
+    return res.status(500).json({ error: 'Failed to sign in' })
+  }
+}
+
+export async function candidateSignin(req: Request, res: Response) {
+  try {
+    const { email, password } = req.body || {}
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' })
+    }
+    const { rows } = await query<{
+      user_id: string
+      password_hash: string
+      role: string
+      is_active: boolean
+      created_at: string
+      name: string | null
+      company_role: string | null
+    }>(
+      `select user_id, password_hash, role, is_active, created_at, name, company_role from users where email = $1`,
+      [email.toLowerCase()]
+    )
+    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' })
+    if (!rows[0].is_active) return res.status(401).json({ error: 'Account is inactive' })
+    if (rows[0].company_role !== 'candidate') {
+       return res.status(403).json({ error: 'Please login through the correct portal (Candidate)' })
+    }
+    const ok = await bcrypt.compare(password, rows[0].password_hash)
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
+
+    const token = jwt.sign({ sub: rows[0].user_id, email: email.toLowerCase(), role: rows[0].role }, process.env.JWT_SECRET!, { expiresIn: '7d' })
+    return res.status(200).json({ 
+      token, 
+      user: { 
+        user_id: rows[0].user_id,
+        id: rows[0].user_id,
+        email: email.toLowerCase(),
+        name: rows[0].name,
+        role: rows[0].role,
+        company_role: rows[0].company_role,
+        created_at: rows[0].created_at,
+        hasCompany: false,
+        companyId: null,
+        companyName: null,
+        companyEmail: null,
+        hrEmail: null
+      } 
+    })
+  } catch (err) {
+    console.error('Signin error:', err)
+    return res.status(500).json({ error: 'Failed to sign in' })
+  }
+}
