@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth'
 function GoogleCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  useAuth()
+  const { setSession } = useAuth()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -42,7 +42,10 @@ function GoogleCallbackContent() {
           setError('Invalid response from server.')
           return
         }
-        localStorage.setItem('token', data.token)
+        
+        // Use setSession to update AuthProvider state immediately
+        setSession(data.token, data.user)
+        
         const user = data.user
         const isCandidate = user.company_role === 'candidate'
         if (isCandidate) {
@@ -56,7 +59,7 @@ function GoogleCallbackContent() {
         router.replace('/hr')
       })
       .catch(() => setError('Network error. Please try again.'))
-  }, [searchParams, router])
+  }, [searchParams, router, setSession])
 
   if (error) {
     return (
