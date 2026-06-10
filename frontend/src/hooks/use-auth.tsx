@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react'
 
 interface AuthUser {
   username?: string | null
@@ -41,6 +41,7 @@ interface AuthContextType {
   ) => Promise<{ error: null | { message: string }; needsEmailVerification?: boolean; email?: string }>
   signIn: (email: string, password: string) => Promise<{ error: null | { message: string } }>
   signOut: (options?: SignOutOptions) => Promise<void>
+  setSession: (token: string, user: any) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -83,7 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true) // Resolved synchronously in useLayoutEffect (client)
   const fallbackUserRef = useRef<AuthUser | null>(null)
   const profileSyncAbortRef = useRef<AbortController | null>(null)
-  const getBackendBaseUrl = () => {
+
+  const getBackendBaseUrl = useCallback(() => {
     const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim()
     if (envUrl) return envUrl.replace(/\/$/, '')
     if (typeof window !== 'undefined') {
@@ -91,7 +93,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isLocalHost) return 'http://localhost:3001'
     }
     return ''
-  }
+  }, [])
+
+  const setSession = useCallback((token: string, u: any) => {
+    profileSyncAbortRef.current?.abort()
+    localStorage.setItem('token', token)
+    const normalizedCR = normalizeCompanyRole(u.company_role || u.role || u.companyRole)
+    const isCandidate = normalizedCR === 'candidate'
+    const nextUser: AuthUser = {
+      username: u.username || null,
+      name: u.name || null,
+      email: (u.email || '').toLowerCase(),
+      id: u.id || u.user_id,
+      created_at: u.created_at,
+      role: u.role,
+      companyRole: normalizedCR,
+      hasCompany: isCandidate ? false : (u.hasCompany ?? false),
+      companyId: isCandidate ? undefined : (u.companyId || null),
+      companyName: isCandidate ? undefined : (u.companyName || null),
+      companyEmail: isCandidate ? undefined : (u.companyEmail || null),
+      hrEmail: isCandidate ? undefined : (u.hrEmail || null),
+      hiringManagerEmail: isCandidate ? undefined : (u.hiringManagerEmail || null),
+      companyLogoUrl: isCandidate ? undefined : (u.companyLogoUrl || null),
+      companyLocation: isCandidate ? undefined : (u.companyLocation || null),
+    }
+    setUser(nextUser)
+    fallbackUserRef.current = nextUser
+    setLoading(false)
+  }, [])
 
   // Hydrate session before first paint (avoids long “loading” flash on dashboard)
   useLayoutEffect(() => {
@@ -287,9 +316,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profileSyncAbortRef.current = null
       }
     }
-  }, [user?.id])
+  }, [user?.id, getBackendBaseUrl])
 
-  const signUp = async (
+  const signUp = useCallback(async (
     name: string,
     email: string,
     password: string,
@@ -369,9 +398,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       // No setLoading(false) - we didn't set it at start
     }
-  }
+  }, [getBackendBaseUrl])
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       // Same-origin proxy (server resolves BACKEND_URL / NEXT_PUBLIC_BACKEND_URL) — avoids :3001 in the browser network log and CORS edge cases.
       const signInUrl =
@@ -426,9 +455,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       // Keep auth context non-blocking during sign-in.
     }
-  }
+  }, [getBackendBaseUrl])
 
-  const signOut = async (options?: SignOutOptions) => {
+  const signOut = useCallback(async (options?: SignOutOptions) => {
     profileSyncAbortRef.current?.abort()
     localStorage.removeItem('token')
     localStorage.removeItem('admin_session')
@@ -449,15 +478,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(null)
     setLoading(false)
-  }
+  }, [])
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
     signUp,
     signIn,
     signOut,
-  }
+    setSession,
+  }), [user, loading, signUp, signIn, signOut, setSession])
 
   return (
     <AuthContext.Provider value={value}>
