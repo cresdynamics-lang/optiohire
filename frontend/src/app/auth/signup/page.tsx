@@ -313,7 +313,7 @@ function SignUpForm() {
                     </div>
                   </button>
 
-                  <button
+                  {/* <button
                     type="button"
                     onClick={handleAdminSelect}
                     className="w-full p-4 border-2 border-slate-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-left"
@@ -327,7 +327,7 @@ function SignUpForm() {
                         <p className="text-sm text-gray-600 font-figtree">Manage the platform and users</p>
                       </div>
                     </div>
-                  </button>
+                  </button> */}
                 </div>
               </div>
             )}
