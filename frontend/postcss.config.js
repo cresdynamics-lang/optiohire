@@ -26,7 +26,6 @@ if (origPostcss) {
 module.exports = {
   plugins: {
     tailwindcss: {},
-    './postcss-normalize-radial-gradient.js': {},
     autoprefixer: autoprefixerPlugin,
   },
 }
