@@ -34,6 +34,7 @@ import {
 import { ProductTour, TourStep } from '@/components/ui/product-tour'
 import { ScheduleDemoModal } from '@/components/modals/ScheduleDemoModal'
 import { Sparkles, Bot, Calendar } from 'lucide-react'
+import { PlatformTourPopup } from '../platform-tour-popup'
 
 interface DashboardMetrics {
   activeJobs: number
@@ -673,6 +674,8 @@ export function OverviewSection() {
         }}
       />
       
+      <PlatformTourPopup onStartTour={() => setIsTourOpen(true)} />
+      
       {/* HR Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Book a Demo Card */}
@@ -754,16 +757,6 @@ export function OverviewSection() {
               >
                 {getGreeting()}, {getDisplayName()}
               </h1>
-              <Button
-                size="lg"
-                type="button"
-                onClick={() => setIsTourOpen(true)}
-                className="h-11 shrink-0 rounded-xl border-2 border-yellow-400 bg-yellow-400 px-6 text-sm font-bold text-yellow-900 shadow-[0_0_18px_rgba(234,179,8,0.7)] transition-all hover:bg-yellow-300 hover:border-yellow-300 hover:shadow-[0_0_28px_rgba(234,179,8,0.9)] animate-pulse"
-                aria-label="Start product tour"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Take Tour
-              </Button>
             </div>
             <p className="text-xs sm:text-sm uppercase tracking-wide text-muted-foreground mb-1">
               {getCompanyLabel()} • dashboard overview
