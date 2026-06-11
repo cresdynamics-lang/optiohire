@@ -80,7 +80,7 @@ export default function HRSignInPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-slate-700 font-figtree">Password</label>
-                <Link href="/auth/forgot-password" hidden className="text-sm text-[#2D2DDD] font-medium font-figtree">Forgot password?</Link>
+                <Link href="/hr/auth/forgot-password" className="text-sm text-[#2D2DDD] font-medium font-figtree hover:underline">Forgot password?</Link>
               </div>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} {...register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#2D2DDD] outline-none font-figtree text-sm" required />

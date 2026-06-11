@@ -73,7 +73,7 @@ function CandidateSignUpForm() {
       }
 
       if (result.needsEmailVerification && result.email) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(result.email)}`)
+        router.push(`/candidate/auth/verify-email?email=${encodeURIComponent(result.email)}`)
         return
       }
       router.push('/')

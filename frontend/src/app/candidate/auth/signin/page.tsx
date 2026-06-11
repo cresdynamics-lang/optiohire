@@ -93,6 +93,7 @@ export default function CandidateSignInPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700 font-figtree">Password</label>
+                  <Link href="/candidate/auth/forgot-password" className="text-sm text-blue-600 font-medium font-figtree hover:underline">Forgot password?</Link>
                 </div>
                 <div className="relative">
                   <input 

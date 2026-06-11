@@ -177,7 +177,7 @@ export default function ForgotPasswordPage() {
         return
       }
 
-      router.push(`/auth/reset-password?email=${encodeURIComponent(email)}&code=${data.code}`)
+      router.push(`/candidate/auth/reset-password?email=${encodeURIComponent(email)}&code=${data.code}`)
     } catch (err) {
       console.error('Verify code error:', err)
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.'
@@ -207,7 +207,7 @@ export default function ForgotPasswordPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-1 max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 relative z-10"
+          className="flex-1 max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 relative z-10"
         >
           <div className="p-8 flex flex-col justify-center">
             {step === 'email' ? (

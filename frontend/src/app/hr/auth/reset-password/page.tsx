@@ -148,7 +148,7 @@ function ResetPasswordContent() {
                 {error || 'This password reset code is invalid or has expired. Please request a new one.'}
               </p>
               <Link
-                href="/auth/forgot-password"
+                href="/hr/auth/forgot-password"
                 className="w-full bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 transition-colors text-center font-figtree"
               >
                 Request New Reset Code

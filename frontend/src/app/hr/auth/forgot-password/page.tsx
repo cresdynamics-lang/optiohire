@@ -177,7 +177,7 @@ export default function ForgotPasswordPage() {
         return
       }
 
-      router.push(`/auth/reset-password?email=${encodeURIComponent(email)}&code=${data.code}`)
+      router.push(`/hr/auth/reset-password?email=${encodeURIComponent(email)}&code=${data.code}`)
     } catch (err) {
       console.error('Verify code error:', err)
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.'
