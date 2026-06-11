@@ -105,6 +105,11 @@ export async function getAiUsageSummary(req: Request, res: Response) {
         created_at: string
         task: string
         user_email: string
+        provider: string
+        speed: number
+        finish_reason: string
+        session_id: string
+        app_name: string
       }>(`
         SELECT
           id,
@@ -115,7 +120,12 @@ export async function getAiUsageSummary(req: Request, res: Response) {
           cost_estimate,
           created_at,
           task,
-          user_email
+          user_email,
+          provider,
+          speed,
+          finish_reason,
+          session_id,
+          app_name
         FROM ai_usage_logs
         ORDER BY created_at DESC
         LIMIT 25
@@ -210,7 +220,12 @@ export async function getAiUsageSummary(req: Request, res: Response) {
         costEstimate: Number(r.cost_estimate),
         createdAt: r.created_at,
         task: r.task,
-        userEmail: r.user_email
+        userEmail: r.user_email,
+        provider: r.provider,
+        speed: r.speed,
+        finishReason: r.finish_reason,
+        sessionId: r.session_id,
+        appName: r.app_name
       })),
       generatedAt: new Date().toISOString(),
     })
