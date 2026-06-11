@@ -92,8 +92,8 @@ function HRSignUpForm() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-start pt-8 pb-12 px-4">
-      <div className="w-full max-w-md flex flex-col gap-6">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-center py-12 px-4">
+      <div className="w-full max-w-lg flex flex-col gap-6">
         <button
           type="button"
           onClick={() => router.push('/')}

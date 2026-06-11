@@ -105,7 +105,7 @@ function VerifyEmailContent() {
   if (!email) {
     return (
       <div className="min-h-screen w-full bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
+        <div className="max-w-lg w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
           <p className="text-gray-600 mb-4">No email provided. Please complete sign up first.</p>
           <Link href="/hr/auth/signup" className="text-blue-600 hover:text-blue-700 font-medium">
             Go to Sign up
@@ -121,7 +121,7 @@ function VerifyEmailContent() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center"
+          className="max-w-lg w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center"
         >
           <CheckCircle className="w-16 h-16 text-blue-500 mx-auto mb-4" />
           <h2 className="headline-platform text-xl !font-semibold mb-2">Email confirmed</h2>
@@ -138,7 +138,7 @@ function VerifyEmailContent() {
 
   return (
     <div className="min-h-screen w-full bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <button
           onClick={() => router.push('/hr/auth/signup')}
           className="mb-4 px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-gray-100 border border-gray-200 text-gray-700 text-sm"

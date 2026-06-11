@@ -412,9 +412,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let portal = ''
       if (subdomain === 'applications' || subdomain === 'candidate' || pathname.includes('/candidate/')) {
         portal = 'candidate'
-      } else if (subdomain === 'console' || pathname.includes('/hr/') || pathname.includes('/console/')) {
+      } else if (pathname.includes('/hr/')) {
         portal = 'hr'
-      } else if (subdomain === 'admin' || pathname.includes('/admin/')) {
+      } else if (subdomain === 'admin' || subdomain === 'console' || pathname.includes('/admin/') || pathname.includes('/console/')) {
         portal = 'admin'
       }
 
@@ -492,20 +492,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ? hostParts[0].toLowerCase() 
       : ''
     
-    const isKnownSubdomain = ['applications', 'candidate', 'console'].includes(subdomain)
+    const isKnownSubdomain = ['applications', 'console', 'admin'].includes(subdomain)
     
     // Determine the best redirect path
     let nextPath = '/'
     
     if (isKnownSubdomain) {
-      // On subdomains, we always use /auth/signin as it's rewritten correctly by middleware
-      nextPath = '/auth/signin' 
+      // On subdomains, we use paths that are rewritten correctly by middleware
+      if (subdomain === 'admin' || subdomain === 'console') {
+        nextPath = '/login' // rewrites to /admin/login
+      } else {
+        // applications subdomain rewrites /auth/signin to /candidate/auth/signin
+        nextPath = '/auth/signin'
+      }
     } else if (pathname.startsWith('/candidate')) {
       nextPath = '/candidate/auth/signin'
-    } else if (pathname.startsWith('/admin') || subdomain === 'admin') {
-      nextPath = '/hr/auth/signin'
+    } else if (pathname.startsWith('/admin')) {
+      nextPath = '/admin/login'
     } else if (pathname.startsWith('/hr')) {
-      nextPath = '/'
+      nextPath = '/hr/auth/signin'
     }
 
     const next = options?.next === false ? null : options?.next || nextPath
@@ -532,15 +537,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ? hostParts[0].toLowerCase() 
       : ''
     
-    const isKnownSubdomain = ['applications', 'candidate', 'console'].includes(subdomain)
+    const isKnownSubdomain = ['applications', 'console', 'admin'].includes(subdomain)
     const modeParam = `mode=${mode}`
     
     if (isKnownSubdomain) {
+      if (subdomain === 'admin' || subdomain === 'console') {
+        return '/login'
+      }
       return `/auth/${mode}` 
+    } else if (pathname.startsWith('/admin')) {
+      return '/admin/login'
     } else if (pathname.startsWith('/candidate')) {
       return `/candidate/auth/${mode}`
-    } else if (pathname.startsWith('/admin') || subdomain === 'admin') {
-      return `/hr/auth/${mode}`
     } else if (pathname.startsWith('/hr')) {
       return `/hr/auth/${mode}`
     }

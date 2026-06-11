@@ -30,12 +30,12 @@ function AuthOptionsContent() {
   ]
 
   return (
-    <div className="w-full max-w-4xl flex flex-col gap-8">
+    <div className="w-full max-w-5xl flex flex-col gap-8">
       {/* Header - Minimal spacing */}
       <div className="h-8" />
 
       {/* Options Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-8">
         {options.map((option, index) => (
           <motion.div
             key={index}
@@ -45,7 +45,7 @@ function AuthOptionsContent() {
           >
             <Link 
               href={option.href}
-              className="group relative flex flex-col p-8 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300 overflow-hidden"
+              className="group relative flex flex-col p-10 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300 overflow-hidden"
             >
               <div className={`mb-6 p-4 rounded-2xl bg-${option.color}-50 inline-block w-fit group-hover:scale-110 transition-transform duration-300`}>
                 {option.icon}
