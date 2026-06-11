@@ -59,15 +59,34 @@ class OpenRouterService {
       }
       messages.push({ role: 'user', content: prompt })
 
-      const completion = await this.openrouter.chat.send({
-        chatRequest: {
-          model: modelToUse,
-          messages,
-          temperature: options.temperature ?? 0.7,
-          maxTokens: options.maxTokens ?? 1024,
-          tools: options.tools && options.tools.length > 0 ? options.tools : undefined,
-        }
-      })
+      let completion;
+      let usedModel = modelToUse;
+      let startTime = Date.now();
+
+      try {
+        completion = await this.openrouter.chat.send({
+          chatRequest: {
+            model: usedModel,
+            messages,
+            temperature: options.temperature ?? 0.7,
+            maxTokens: options.maxTokens ?? 1024,
+            tools: options.tools && options.tools.length > 0 ? options.tools : undefined,
+          }
+        })
+      } catch (err: any) {
+        logger.warn(`OpenRouter primary model (${usedModel}) failed: ${err.message}. Trying fallback ${this.fallbackModel}...`)
+        usedModel = this.fallbackModel;
+        startTime = Date.now();
+        completion = await this.openrouter.chat.send({
+          chatRequest: {
+            model: usedModel,
+            messages,
+            temperature: options.temperature ?? 0.7,
+            maxTokens: options.maxTokens ?? 1024,
+            tools: options.tools && options.tools.length > 0 ? options.tools : undefined,
+          }
+        })
+      }
 
       const endTime = Date.now()
       const durationSec = (endTime - startTime) / 1000
@@ -85,7 +104,6 @@ class OpenRouterService {
       const speed = totalTokens > 0 && durationSec > 0 ? totalTokens / durationSec : 0
 
       // Try to extract provider info from the non-standard metadata if possible
-      // OpenRouter often returns model and other details, but in SDK we just log model
       let provider = completion.model?.split('/')[0] || 'Unknown'
       if (completion.model === 'openai/gpt-4o') provider = 'OpenAI'
 
@@ -93,7 +111,7 @@ class OpenRouterService {
       
       // Async DB Logging
       this.logUsageAsync(
-        completion.model || modelToUse, 
+        completion.model || usedModel, 
         promptTokens, 
         completionTokens, 
         totalTokens, 
@@ -108,7 +126,7 @@ class OpenRouterService {
 
       return content
     } catch (error: any) {
-      logger.error(`OpenRouter native fallback failed: ${error.message}`)
+      logger.error(`OpenRouter fallback failed: ${error.message}`)
       throw new Error(`OpenRouter: API request failed`)
     }
   }
@@ -138,16 +156,33 @@ class OpenRouterService {
       }
       messages.push({ role: 'user', content: prompt })
 
-      // The openrouter SDK streaming return value depends on the interface
-      const stream = await this.openrouter.chat.send({
-        chatRequest: {
-          model: modelToUse,
-          messages,
-          temperature: options.temperature ?? 0.7,
-          maxTokens: options.maxTokens ?? 1024,
-          stream: true,
-        }
-      } as any)
+      let stream;
+      let usedModel = modelToUse;
+
+      try {
+        // The openrouter SDK streaming return value depends on the interface
+        stream = await this.openrouter.chat.send({
+          chatRequest: {
+            model: usedModel,
+            messages,
+            temperature: options.temperature ?? 0.7,
+            maxTokens: options.maxTokens ?? 1024,
+            stream: true,
+          }
+        } as any)
+      } catch (err: any) {
+        logger.warn(`OpenRouter primary model (${usedModel}) stream failed: ${err.message}. Trying fallback ${this.fallbackModel}...`)
+        usedModel = this.fallbackModel;
+        stream = await this.openrouter.chat.send({
+          chatRequest: {
+            model: usedModel,
+            messages,
+            temperature: options.temperature ?? 0.7,
+            maxTokens: options.maxTokens ?? 1024,
+            stream: true,
+          }
+        } as any)
+      }
 
       return stream
     } catch (error: any) {
