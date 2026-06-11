@@ -66,7 +66,7 @@ function GoogleCallbackContent() {
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
         <p className="text-red-600 font-figtree mb-4">{error}</p>
         <a
-          href="/auth/signin"
+          href="/candidate/auth/signin"
           className="text-blue-600 hover:underline font-figtree"
         >
           Back to sign in
