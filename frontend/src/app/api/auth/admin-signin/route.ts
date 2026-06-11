@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password } = body || {}
+    const { email, password, portal } = body || {}
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.toLowerCase(), password }),
+      body: JSON.stringify({ 
+        email: email.toLowerCase(), 
+        password,
+        portal: portal || 'admin' // Ensure portal is passed for enforcement
+      }),
       signal: AbortSignal.timeout(15000),
     })
 

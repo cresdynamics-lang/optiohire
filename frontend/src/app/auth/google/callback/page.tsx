@@ -13,7 +13,7 @@ function GoogleCallbackContent() {
   useEffect(() => {
     const code = searchParams.get('code')
     const errorParam = searchParams.get('error')
-    const statePortal = searchParams.get('state') // Read portal from state if available
+    const statePortal = searchParams.get('state') // Get portal from state
     
     if (errorParam) {
       setError(errorParam === 'access_denied' ? 'You cancelled sign in.' : 'Google sign-in failed.')
@@ -24,6 +24,7 @@ function GoogleCallbackContent() {
       return
     }
 
+    // Origin-aware redirect URI
     const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : ''
     const apiUrl = typeof window !== 'undefined'
       ? `${window.location.origin}/api/auth/google`
@@ -34,8 +35,8 @@ function GoogleCallbackContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         code, 
-        redirect_uri: redirectUri, 
-        portal: statePortal || 'candidate' // Use state if available, fallback to hardcoded candidate
+        redirect_uri: redirectUri,
+        portal: statePortal || undefined // Pass portal for enforcement
       })
     })
       .then((res) => res.json().catch(() => ({})))
@@ -49,7 +50,6 @@ function GoogleCallbackContent() {
           return
         }
         
-        // Use setSession to update AuthProvider state immediately
         setSession(data.token, data.user)
         
         const user = data.user
@@ -85,7 +85,7 @@ function GoogleCallbackContent() {
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
         <p className="text-red-600 font-figtree mb-4">{error}</p>
         <a
-          href="/candidate/auth/signin"
+          href="/auth/options?mode=signin"
           className="text-blue-600 hover:underline font-figtree"
         >
           Back to sign in

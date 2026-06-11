@@ -404,6 +404,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
+      // Detect portal from current URL to enforce role-based login isolation
+      const host = typeof window !== 'undefined' ? window.location.host : ''
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+      const subdomain = host.split('.')[0].toLowerCase()
+      
+      let portal = ''
+      if (subdomain === 'applications' || subdomain === 'candidate' || pathname.includes('/candidate/')) {
+        portal = 'candidate'
+      } else if (subdomain === 'console' || pathname.includes('/hr/') || pathname.includes('/console/')) {
+        portal = 'hr'
+      } else if (subdomain === 'admin' || pathname.includes('/admin/')) {
+        portal = 'admin'
+      }
+
       // Same-origin proxy (server resolves BACKEND_URL / NEXT_PUBLIC_BACKEND_URL) — avoids :3001 in the browser network log and CORS edge cases.
       const signInUrl =
         typeof window !== 'undefined'
@@ -412,7 +426,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const resp = await fetch(signInUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, portal }),
         signal: AbortSignal.timeout(15000),
       })
       const data = await resp.json().catch(() => ({}))
