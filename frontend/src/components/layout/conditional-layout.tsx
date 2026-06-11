@@ -1,18 +1,27 @@
-import { headers } from 'next/headers'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { Navbar } from '@/components/navigation/navbar'
 import { Footer } from '@/components/footer/footer'
+import { useAuth } from '@/hooks/use-auth'
 
 interface ConditionalLayoutProps {
   children: React.ReactNode
 }
 
-export async function ConditionalLayout({ children }: ConditionalLayoutProps) {
-  const headersList = await headers()
-  const subdomain = headersList.get('x-optiohire-subdomain')
-  const host = headersList.get('host') || ''
-  const pathname = headersList.get('x-invoke-path') || '' // Fallback if needed, though middleware rewrites might mask this.
+export function ConditionalLayout({ children }: ConditionalLayoutProps) {
+  const { user, loading } = useAuth()
+  const pathname = usePathname()
+  const [host, setHost] = useState('')
 
-  const isSubdomain = !!subdomain || host.startsWith('console.') || host.startsWith('admin.') || host.startsWith('candidate.') || host.startsWith('applications.')
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setHost(window.location.host)
+    }
+  }, [])
+
+  const isSubdomain = host.startsWith('console.') || host.startsWith('admin.') || host.startsWith('candidate.') || host.startsWith('applications.')
   const isDashboardPath = 
     pathname.startsWith('/dashboard') || 
     pathname.startsWith('/candidate') || 
@@ -21,17 +30,14 @@ export async function ConditionalLayout({ children }: ConditionalLayoutProps) {
     pathname.startsWith('/console') ||
     pathname === '/privacy'
 
-  // Hide navbar and footer for dashboard, auth, admin, setup and privacy pages, and ALL subdomains
-  if (isSubdomain || isDashboardPath) {
-    return <>{children}</>
-  }
+  // Determine if Navbar should be rendered
+  // It should ONLY appear when user is NOT authenticated AND it's not a dashboard/subdomain path
+  const showNavbar = !loading && !user && !isSubdomain && !isDashboardPath
 
-  // Always render Navbar + Footer on public pages.
-  // The pt-20 reserves space for the fixed navbar so content never jumps.
   return (
     <>
-      <Navbar />
-      <main className="pt-20 min-h-[60vh]">{children}</main>
+      {showNavbar && <Navbar />}
+      <main className={showNavbar ? "pt-20 min-h-[60vh]" : "min-h-[60vh]"}>{children}</main>
       <Footer />
     </>
   )

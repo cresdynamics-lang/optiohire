@@ -81,7 +81,7 @@ function HRSignUpForm() {
       }
 
       if (result.needsEmailVerification && result.email) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(result.email)}`)
+        router.push(`/hr/auth/verify-email?email=${encodeURIComponent(result.email)}`)
         return
       }
       router.push('/')
