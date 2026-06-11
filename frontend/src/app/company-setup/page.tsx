@@ -125,7 +125,7 @@ export default function CompanySetupPage() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     if (!token && !user) {
       setError('You must be logged in to continue. Please sign in first.')
-      router.push('/auth/signin')
+      router.push('/auth/options?mode=signin')
       return
     }
 

@@ -272,7 +272,7 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
           <button
             onClick={() => {
               localStorage.removeItem('token')
-              router.push('/auth/signin')
+              router.push('/auth/options?mode=signin')
             }}
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-red-600 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-200 dark:hover:bg-gray-700 dark:hover:text-red-400"
           >

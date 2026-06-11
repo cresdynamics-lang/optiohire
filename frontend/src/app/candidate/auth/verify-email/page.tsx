@@ -123,7 +123,7 @@ function VerifyEmailContent() {
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center"
         >
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <CheckCircle className="w-16 h-16 text-blue-500 mx-auto mb-4" />
           <h2 className="headline-platform text-xl !font-semibold mb-2">Email confirmed</h2>
           <p className="text-gray-600 mb-4">
             Verification successful. You are being redirected to your dashboard now.

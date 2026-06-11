@@ -512,7 +512,7 @@ function DashboardContent() {
     if (!user) {
       if (!redirectOnceRef.current.signIn) {
         redirectOnceRef.current.signIn = true
-        router.replace('/auth/signin')
+        router.replace('/auth/options?mode=signin')
       }
       return
     }

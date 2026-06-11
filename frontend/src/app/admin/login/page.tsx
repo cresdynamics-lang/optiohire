@@ -158,8 +158,7 @@ export default function AdminLoginPage() {
 
           <div className="mt-6 text-center">
             <a
-              href="/auth/signin"
-              className="text-sm text-muted-foreground hover:text-white transition-colors"
+              href="/auth/options?mode=signin"              className="text-sm text-muted-foreground hover:text-white transition-colors"
             >
               Regular user login
             </a>

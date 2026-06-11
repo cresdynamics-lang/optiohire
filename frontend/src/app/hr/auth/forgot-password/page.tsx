@@ -223,8 +223,8 @@ export default function ForgotPasswordPage() {
 
                 {success ? (
                   <div className="space-y-6">
-                    <div className="flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-xl">
-                      <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+                    <div className="flex flex-col items-center justify-center p-8 bg-blue-50 border border-blue-200 rounded-xl">
+                      <CheckCircle className="w-16 h-16 text-blue-500 mb-4" />
                       <h2 className="headline-platform text-xl !font-semibold mb-2">Check Your Email</h2>
                       <p className="text-sm text-gray-600 text-center font-figtree">
                         We've sent a 6-digit reset code to your email address. Please check your inbox.
