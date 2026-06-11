@@ -473,14 +473,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Extract subdomain
     const hostParts = host.split('.')
-    const subdomain = hostParts.length > 2 || (hostParts.length === 2 && !host.includes('localhost')) 
+    const isLocalhost = host.includes('localhost')
+    const subdomain = (isLocalhost && hostParts.length >= 2) || hostParts.length >= 3 
       ? hostParts[0].toLowerCase() 
       : ''
     
     const isKnownSubdomain = ['applications', 'candidate', 'console'].includes(subdomain)
     
     // Determine the best redirect path
-    let nextPath = '/hr/auth/signin'
+    let nextPath = '/'
     
     if (isKnownSubdomain) {
       // On subdomains, we always use /auth/signin as it's rewritten correctly by middleware
@@ -488,11 +489,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else if (pathname.startsWith('/candidate')) {
       nextPath = '/candidate/auth/signin'
     } else if (pathname.startsWith('/admin') || subdomain === 'admin') {
-      // Admins go to HR signin, but if on a subdomain, we might need to go to the main domain
-      // For now, let's try to stay relative but fallback to root if needed
       nextPath = '/hr/auth/signin'
     } else if (pathname.startsWith('/hr')) {
-      nextPath = '/hr/auth/signin'
+      nextPath = '/'
     }
 
     const next = options?.next === false ? null : options?.next || nextPath
@@ -514,7 +513,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Extract subdomain
     const hostParts = host.split('.')
-    const subdomain = hostParts.length > 2 || (hostParts.length === 2 && !host.includes('localhost')) 
+    const isLocalhost = host.includes('localhost')
+    const subdomain = (isLocalhost && hostParts.length >= 2) || hostParts.length >= 3 
       ? hostParts[0].toLowerCase() 
       : ''
     
