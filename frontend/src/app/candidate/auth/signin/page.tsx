@@ -40,7 +40,7 @@ export default function CandidateSignInPage() {
         setError(error.message)
         setIsLoading(false)
       } else {
-        router.push('/')
+        router.push('/candidate')
       }
     } catch (err) {
       setError('An unexpected error occurred')
