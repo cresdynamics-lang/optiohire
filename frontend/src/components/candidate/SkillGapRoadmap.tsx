@@ -52,9 +52,11 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
     }
   }
 
+  const [isDragging, setIsDragging] = useState(false)
+
   const handleUploadCertificate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!certificateUrl) return
+    if (!certificateUrl && !certificateFile) return
 
     setUploading(true)
     try {
@@ -88,13 +90,31 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
     }
   }
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setCertificateFile(e.dataTransfer.files[0])
+      setCertificateUrl('')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card className="border-indigo-200 shadow-sm overflow-hidden">
         <div className="bg-indigo-50 dark:bg-indigo-950 p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-              <Zap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              <Target className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
             </div>
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
               Skill Gap: <span className="text-indigo-600 dark:text-indigo-400">{gapAnalysis.topMissingSkill}</span>
@@ -142,8 +162,8 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
               <CardDescription>Upload a link or a file to your certificate to verify this skill and boost your score.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleUploadCertificate} className="flex flex-col gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleUploadCertificate} className="flex flex-col gap-6">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="certUrl">Option 1: Certificate Link (URL)</Label>
                     <Input 
@@ -156,19 +176,53 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
                       }}
                     />
                   </div>
+                  
+                  <div className="relative my-4 flex items-center">
+                    <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                    <span className="flex-shrink-0 mx-4 text-sm text-slate-400">OR</span>
+                    <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="certFile">Option 2: Upload Certificate (PDF/Image)</Label>
-                    <Input 
-                      id="certFile" 
-                      type="file" 
-                      accept=".pdf,.png,.jpg,.jpeg"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          setCertificateFile(e.target.files[0])
-                          setCertificateUrl('')
-                        }
-                      }}
-                    />
+                    <Label>Option 2: Upload Certificate (PDF/Image)</Label>
+                    <div 
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`mt-2 flex justify-center rounded-lg border border-dashed px-6 py-10 transition-colors duration-200 ${
+                        isDragging 
+                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                          : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <Upload className="mx-auto h-12 w-12 text-slate-300" aria-hidden="true" />
+                        <div className="mt-4 flex text-sm leading-6 text-slate-600 dark:text-slate-300 justify-center">
+                          <label
+                            htmlFor="certFile"
+                            className="relative cursor-pointer rounded-md bg-transparent font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                          >
+                            <span>Upload a file</span>
+                            <Input 
+                              id="certFile" 
+                              type="file" 
+                              className="sr-only"
+                              accept=".pdf,.png,.jpg,.jpeg"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setCertificateFile(e.target.files[0])
+                                  setCertificateUrl('')
+                                }
+                              }}
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs leading-5 text-slate-500 dark:text-slate-400 mt-2">
+                          {certificateFile ? certificateFile.name : 'PDF, PNG, JPG up to 10MB'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <Button type="submit" disabled={uploading || (!certificateUrl && !certificateFile)} className="w-full md:w-auto self-end mt-2">
