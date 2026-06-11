@@ -272,12 +272,12 @@ export function JobSeekerJobsSection() {
       <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent" aria-hidden />
         <div className="relative space-y-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-900 dark:text-white">
             <Sparkles className="h-3.5 w-3.5" />
             Candidate Jobs
           </span>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Open roles you can apply to</h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="max-w-2xl text-sm leading-relaxed text-slate-900 dark:text-white sm:text-base">
             Apply using your CV link, LinkedIn, GitHub, and any additional portfolio link. Your latest submission is saved.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mt-6">
@@ -291,7 +291,7 @@ export function JobSeekerJobsSection() {
               />
             </div>
           </div>
-          <p className="inline-flex items-center gap-2 text-xs font-medium text-slate-500">
+          <p className="inline-flex items-center gap-2 text-xs font-medium text-slate-900 dark:text-white">
             <TrendingUp className="h-3.5 w-3.5" />
             AI watcher continuously reviews submitted evidence and updates employer decisions.
           </p>
@@ -301,13 +301,13 @@ export function JobSeekerJobsSection() {
       <Card className="border-slate-200 bg-white shadow-sm">
         <CardHeader>
           <CardTitle className="text-base text-slate-900">Application History</CardTitle>
-          <CardDescription className="text-slate-600">
+          <CardDescription className="text-slate-900 dark:text-white">
             Track watcher decisions and recruiter pipeline progress for your submissions.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {applications.length === 0 ? (
-            <p className="text-sm text-slate-600">No applications submitted yet.</p>
+            <p className="text-sm text-slate-900 dark:text-white">No applications submitted yet.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {applications.slice(0, 8).map((application) => {
@@ -319,7 +319,7 @@ export function JobSeekerJobsSection() {
                       ? { label: 'Under Review', icon: AlertTriangle, className: 'bg-amber-50 text-amber-700 border-amber-200' }
                       : status === 'REJECT'
                         ? { label: 'Not Selected', icon: XCircle, className: 'bg-red-50 text-red-700 border-red-200' }
-                        : { label: 'Submitted', icon: Clock3, className: 'bg-slate-100 text-slate-700 border-slate-200' }
+                        : { label: 'Submitted', icon: Clock3, className: 'bg-slate-100 text-slate-900 dark:text-white border-slate-200' }
                 const StatusIcon = statusUi.icon
                 return (
                   <Dialog key={application.application_id}>
@@ -328,13 +328,13 @@ export function JobSeekerJobsSection() {
                         <div className="p-5 flex flex-col h-full w-full text-left outline-none">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                              <StatusIcon className="h-5 w-5 text-slate-500" />
+                              <StatusIcon className="h-5 w-5 text-slate-900 dark:text-white" />
                             </div>
                             <div className="overflow-hidden">
                               <p className="font-semibold text-foreground truncate" title={application.job_title}>
                                 {application.job_title}
                               </p>
-                              <p className="text-xs text-slate-500 dark:text-gray-400 truncate" title={application.company_name || 'Employer'}>
+                              <p className="text-xs text-slate-900 dark:text-white dark:text-gray-400 truncate" title={application.company_name || 'Employer'}>
                                 {application.company_name || 'Employer'} - {new Date(application.created_at).toLocaleDateString()}
                               </p>
                             </div>
@@ -342,7 +342,7 @@ export function JobSeekerJobsSection() {
 
                           <div className="mt-auto flex flex-wrap items-center gap-2">
                             {typeof application.ai_score === 'number' ? (
-                              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Score: {Math.round(application.ai_score)}</span>
+                              <span className="text-xs font-medium text-slate-900 dark:text-white dark:text-slate-400">Score: {Math.round(application.ai_score)}</span>
                             ) : null}
                             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusUi.className}`}>
                               <StatusIcon className="h-3 w-3" />
@@ -356,11 +356,11 @@ export function JobSeekerJobsSection() {
                         <DialogHeader>
                           <DialogTitle>Application Details</DialogTitle>
                         </DialogHeader>
-                        <div className="mt-4 grid gap-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 p-5 text-sm text-slate-700 dark:text-slate-300">
+                        <div className="mt-4 grid gap-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/50 p-5 text-sm text-slate-900 dark:text-white dark:text-slate-300">
                           <div className="flex justify-between items-start border-b border-slate-200 dark:border-gray-800 pb-4 mb-2">
                             <div>
                               <h3 className="font-bold text-lg text-foreground">{application.job_title}</h3>
-                              <p className="text-slate-500">{application.company_name || 'Employer'}</p>
+                              <p className="text-slate-900 dark:text-white">{application.company_name || 'Employer'}</p>
                             </div>
                             <div className="text-right">
                               <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${statusUi.className}`}>
@@ -378,7 +378,7 @@ export function JobSeekerJobsSection() {
                                   <FileText className="w-4 h-4" /> Open Document
                                 </a>
                               ) : (
-                                <span className="text-slate-500">Not provided</span>
+                                <span className="text-slate-900 dark:text-white">Not provided</span>
                               )}
                             </div>
                             
@@ -396,7 +396,7 @@ export function JobSeekerJobsSection() {
                                   {application.parsed_resume_json.links.linkedinUrl}
                                 </a>
                               ) : (
-                                <span className="text-slate-500">Not provided</span>
+                                <span className="text-slate-900 dark:text-white">Not provided</span>
                               )}
                             </div>
 
@@ -407,7 +407,7 @@ export function JobSeekerJobsSection() {
                                   {application.parsed_resume_json.links.githubUrl}
                                 </a>
                               ) : (
-                                <span className="text-slate-500">Not provided</span>
+                                <span className="text-slate-900 dark:text-white">Not provided</span>
                               )}
                             </div>
 
@@ -418,7 +418,7 @@ export function JobSeekerJobsSection() {
                                   {application.parsed_resume_json.links.otherUrl}
                                 </a>
                               ) : (
-                                <span className="text-slate-500">Not provided</span>
+                                <span className="text-slate-900 dark:text-white">Not provided</span>
                               )}
                             </div>
                           </div>
@@ -457,7 +457,7 @@ export function JobSeekerJobsSection() {
 
       {statusMessage ? (
         <Card className="border-slate-200 bg-white">
-          <CardContent className="pt-5 text-sm text-slate-700">{statusMessage}</CardContent>
+          <CardContent className="pt-5 text-sm text-slate-900 dark:text-white">{statusMessage}</CardContent>
         </Card>
       ) : null}
 
@@ -467,7 +467,7 @@ export function JobSeekerJobsSection() {
         </div>
       ) : filteredJobs.length === 0 ? (
         <Card className="border-slate-200 bg-white">
-          <CardContent className="pt-5 text-sm text-slate-600">
+          <CardContent className="pt-5 text-sm text-slate-900 dark:text-white">
             {searchQuery ? `No jobs found matching "${searchQuery}".` : 'No active job postings are available right now.'}
           </CardContent>
         </Card>
@@ -494,7 +494,7 @@ export function JobSeekerJobsSection() {
               return (
                 <Card 
                   key={job.job_posting_id} 
-                  className={`group border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden ${isExpanded ? 'md:col-span-2 lg:col-span-3' : ''}`}
+                  className={`group border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden`}
                 >
                   {/* Job Poster & Fallback */}
                   <div className="w-full h-32 bg-slate-100 flex items-center justify-center overflow-hidden relative border-b border-slate-100">
@@ -512,27 +512,27 @@ export function JobSeekerJobsSection() {
                   <CardHeader className="space-y-2 pb-2">
                     <div className="flex items-center justify-between gap-3">
                       <CardTitle className="flex items-center gap-2 text-base text-slate-900 line-clamp-1">
-                        <Briefcase className="h-4 w-4 text-slate-500 flex-shrink-0" />
+                        <Briefcase className="h-4 w-4 text-slate-900 dark:text-white flex-shrink-0" />
                         {job.job_title}
                       </CardTitle>
                       {!isExpanded && (
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-700 flex-shrink-0">
+                        <Badge variant="secondary" className="bg-slate-100 text-slate-900 dark:text-white flex-shrink-0">
                           Open
                         </Badge>
                       )}
                     </div>
-                    <CardDescription className="flex flex-col gap-1 text-slate-600">
-                      <span className="font-medium text-slate-700">{job.company_name || 'OptioHire Employer'}</span>
+                    <CardDescription className="flex flex-col gap-1 text-slate-900 dark:text-white">
+                      <span className="font-medium text-slate-900 dark:text-white">{job.company_name || 'OptioHire Employer'}</span>
                       {job.application_deadline ? (
                         <span className="text-xs">Deadline: {new Date(job.application_deadline).toLocaleDateString()}</span>
                       ) : null}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      {isExpanded ? job.job_description : truncateWords(job.job_description, 20)}
+                    <p className="text-sm leading-relaxed text-slate-900 dark:text-white line-clamp-3">
+                      {job.job_description}
                     </p>
-                    {job.skills.length > 0 && !isExpanded ? (
+                    {job.skills.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
                         {job.skills.slice(0, 3).map((skill) => (
                           <Badge key={`${job.job_posting_id}-${skill}`} variant="outline" className="text-[10px] py-0">
@@ -543,160 +543,154 @@ export function JobSeekerJobsSection() {
                           <span className="text-xs text-slate-400">+{job.skills.length - 3}</span>
                         )}
                       </div>
-                    ) : job.skills.length > 0 && isExpanded ? (
-                      <div className="flex flex-wrap gap-2">
-                        {job.skills.map((skill) => (
-                          <Badge key={`${job.job_posting_id}-${skill}`} variant="outline" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
                     ) : null}
                     
-                    {!isExpanded && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => setExpandedJobId(job.job_posting_id)}
-                        className="w-full bg-[#2D2DDD] text-white hover:bg-[#2525c4] mt-2"
-                      >
-                        Apply Now
-                      </Button>
-                    )}
+                    <Dialog open={isExpanded} onOpenChange={(open) => setExpandedJobId(open ? job.job_posting_id : null)}>
+                      <DialogTrigger asChild>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="w-full bg-[#2D2DDD] text-white hover:bg-[#2525c4] mt-4"
+                        >
+                          Apply Now
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Submit Application: {job.job_title}</DialogTitle>
+                        </DialogHeader>
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Your Email</label>
+                                <Input value={user?.email || ''} readOnly disabled className="bg-slate-50" />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">CV / Resume Document</label>
+                                <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-colors hover:border-slate-300">
+                                  <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-slate-900 dark:text-white">
+                                    <span className="inline-flex items-center gap-2 font-medium">
+                                      <Upload className="h-4 w-4 text-indigo-500" />
+                                      {isUploading ? 'Uploading...' : 'Upload File'}
+                                    </span>
+                                    <input
+                                      type="file"
+                                      className="hidden"
+                                      accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.jpg,.jpeg,.png,.webp"
+                                      disabled={isUploading}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) {
+                                          void uploadDocument(job.job_posting_id, file)
+                                        }
+                                        e.currentTarget.value = ''
+                                      }}
+                                    />
+                                  </label>
+                                  {form.resumeFileName ? (
+                                    <div className="mt-3 flex items-center justify-between bg-emerald-50 text-emerald-700 px-3 py-2 rounded-md border border-emerald-100">
+                                      <span className="text-xs font-medium truncate flex-1">{form.resumeFileName}</span>
+                                      <CheckCircle2 className="h-4 w-4 ml-2 flex-shrink-0" />
+                                    </div>
+                                  ) : (
+                                    <p className="mt-2 text-[10px] text-slate-900 dark:text-white">PDF, DOCX, JPG (Max 10MB)</p>
+                                  )}
+                                </div>
+                              </div>
 
-                    {isExpanded ? (
-                      <div className="mt-6 pt-6 border-t border-slate-100">
-                        <h4 className="text-sm font-semibold text-slate-900 mb-4">Submit your application</h4>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Email</label>
-                              <Input value={user?.email || ''} readOnly disabled className="bg-slate-50" />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">CV / Resume Document</label>
-                              <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-colors hover:border-slate-300">
-                                <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-slate-600">
-                                  <span className="inline-flex items-center gap-2 font-medium">
-                                    <Upload className="h-4 w-4 text-indigo-500" />
-                                    {isUploading ? 'Uploading...' : 'Upload File'}
-                                  </span>
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.jpg,.jpeg,.png,.webp"
-                                    disabled={isUploading}
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0]
-                                      if (file) {
-                                        void uploadDocument(job.job_posting_id, file)
-                                      }
-                                      e.currentTarget.value = ''
-                                    }}
+                              <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Or Paste CV Link</label>
+                                <div className="relative">
+                                  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                  <Input
+                                    placeholder="https://..."
+                                    value={form.resumeUrl}
+                                    onChange={(e) => updateForm(job.job_posting_id, 'resumeUrl', e.target.value)}
+                                    className="pl-9"
                                   />
-                                </label>
-                                {form.resumeFileName ? (
-                                  <div className="mt-3 flex items-center justify-between bg-emerald-50 text-emerald-700 px-3 py-2 rounded-md border border-emerald-100">
-                                    <span className="text-xs font-medium truncate flex-1">{form.resumeFileName}</span>
-                                    <CheckCircle2 className="h-4 w-4 ml-2 flex-shrink-0" />
-                                  </div>
-                                ) : (
-                                  <p className="mt-2 text-[10px] text-slate-500">PDF, DOCX, JPG (Max 10MB)</p>
-                                )}
+                                </div>
                               </div>
                             </div>
 
-                            <div className="space-y-2">
-                              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Or Paste CV Link</label>
-                              <div className="relative">
-                                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-2">
+                                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">LinkedIn</label>
+                                  <Input
+                                    placeholder="linkedin.com/in/..."
+                                    value={form.linkedinUrl}
+                                    onChange={(e) => updateForm(job.job_posting_id, 'linkedinUrl', e.target.value)}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">GitHub</label>
+                                  <Input
+                                    placeholder="github.com/..."
+                                    value={form.githubUrl}
+                                    onChange={(e) => updateForm(job.job_posting_id, 'githubUrl', e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Other Link / Portfolio</label>
                                 <Input
-                                  placeholder="https://..."
-                                  value={form.resumeUrl}
-                                  onChange={(e) => updateForm(job.job_posting_id, 'resumeUrl', e.target.value)}
-                                  className="pl-9"
+                                  placeholder="Portfolio or website"
+                                  value={form.otherUrl}
+                                  onChange={(e) => updateForm(job.job_posting_id, 'otherUrl', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Phone (Optional)</label>
+                                <Input
+                                  placeholder="+1 234 567 8900"
+                                  value={form.phone}
+                                  onChange={(e) => updateForm(job.job_posting_id, 'phone', e.target.value)}
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Note to Employer (Optional)</label>
+                                <Textarea
+                                  placeholder="Why are you a good fit?"
+                                  value={form.message}
+                                  onChange={(e) => updateForm(job.job_posting_id, 'message', e.target.value)}
+                                  className="h-20 resize-none"
                                 />
                               </div>
                             </div>
                           </div>
 
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-2">
-                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">LinkedIn</label>
-                                <Input
-                                  placeholder="linkedin.com/in/..."
-                                  value={form.linkedinUrl}
-                                  onChange={(e) => updateForm(job.job_posting_id, 'linkedinUrl', e.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">GitHub</label>
-                                <Input
-                                  placeholder="github.com/..."
-                                  value={form.githubUrl}
-                                  onChange={(e) => updateForm(job.job_posting_id, 'githubUrl', e.target.value)}
-                                />
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Other Link / Portfolio</label>
-                              <Input
-                                placeholder="Portfolio or website"
-                                value={form.otherUrl}
-                                onChange={(e) => updateForm(job.job_posting_id, 'otherUrl', e.target.value)}
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Phone (Optional)</label>
-                              <Input
-                                placeholder="+1 234 567 8900"
-                                value={form.phone}
-                                onChange={(e) => updateForm(job.job_posting_id, 'phone', e.target.value)}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Note to Employer (Optional)</label>
-                              <Textarea
-                                placeholder="Why are you a good fit?"
-                                value={form.message}
-                                onChange={(e) => updateForm(job.job_posting_id, 'message', e.target.value)}
-                                className="h-20 resize-none"
-                              />
-                            </div>
+                          <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                            {!hasApplicationEvidence ? (
+                              <p className="text-xs text-amber-600 sm:mr-auto flex items-center">
+                                <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                                Please add at least one link or upload a CV.
+                              </p>
+                            ) : null}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => setExpandedJobId(null)}
+                              className="w-full sm:w-auto"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="button"
+                              disabled={!hasApplicationEvidence || isSubmitting}
+                              onClick={() => void applyToJob(job.job_posting_id)}
+                              className="w-full sm:w-auto bg-[#2D2DDD] text-white hover:bg-[#2525c4]"
+                            >
+                              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                            </Button>
                           </div>
                         </div>
-
-                        <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                          {!hasApplicationEvidence ? (
-                            <p className="text-xs text-amber-600 sm:mr-auto flex items-center">
-                              <AlertTriangle className="h-3.5 w-3.5 mr-1" />
-                              Please add at least one link or upload a CV.
-                            </p>
-                          ) : null}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => setExpandedJobId(null)}
-                            className="w-full sm:w-auto"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="button"
-                            disabled={!hasApplicationEvidence || isSubmitting}
-                            onClick={() => void applyToJob(job.job_posting_id)}
-                            className="w-full sm:w-auto bg-[#2D2DDD] text-white hover:bg-[#2525c4]"
-                          >
-                            {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : null}
+                      </DialogContent>
+                    </Dialog>
                   </CardContent>
                 </Card>
               )
@@ -726,7 +720,7 @@ export function JobSeekerJobsSection() {
               </div>
               <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-slate-700">
+                  <p className="text-sm text-slate-900 dark:text-white">
                     Showing <span className="font-medium">{(currentPage - 1) * jobsPerPage + 1}</span> to{' '}
                     <span className="font-medium">
                       {Math.min(currentPage * jobsPerPage, filteredJobs.length)}

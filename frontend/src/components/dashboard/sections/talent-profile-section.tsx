@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { JobRecommendations } from '@/components/candidate/JobRecommendations'
 import { SkillGapRoadmap } from '@/components/candidate/SkillGapRoadmap'
@@ -256,7 +257,7 @@ export function TalentProfileSection() {
 
   if (!data) {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-600">
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-900 dark:text-white">
         Failed to load talent profile data. Please try refreshing.
       </div>
     )
@@ -271,7 +272,7 @@ export function TalentProfileSection() {
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-indigo-600">Candidate workspace</p>
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Talent Profile Dashboard</h1>
-          <p className="mt-1 max-w-2xl text-slate-600">
+          <p className="mt-1 max-w-2xl text-slate-900 dark:text-white">
             Build proof, close skill gaps, practice interviews, and become easier for recruiters to shortlist.
           </p>
         </div>
@@ -307,10 +308,61 @@ export function TalentProfileSection() {
                   Mission complete
                 </Button>
               )}
-              <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => document.getElementById('mock-interview-panel')?.scrollIntoView({ behavior: 'smooth' })}>
-                <Mic className="mr-2 h-4 w-4" />
-                Practice interview
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20">
+                    <Mic className="mr-2 h-4 w-4" />
+                    Practice interview
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>AI Mock Interview Practice</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-3 sm:grid-cols-3 mt-4">
+                    <div className="space-y-2">
+                      <Label>Interview type</Label>
+                      <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={interviewType} onChange={(event) => setInterviewType(event.target.value as keyof typeof INTERVIEW_QUESTIONS)}>
+                        {Object.keys(INTERVIEW_QUESTIONS).map((type) => <option key={type}>{type}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Level</Label>
+                      <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={level} onChange={(event) => setLevel(event.target.value)}>
+                        <option>Junior</option>
+                        <option>Mid-level</option>
+                        <option>Senior</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Target role</Label>
+                      <Input value={targetRole} onChange={(event) => setTargetRole(event.target.value)} placeholder="e.g. React Developer" />
+                    </div>
+                  </div>
+
+                  {INTERVIEW_QUESTIONS[interviewType].map((question, index) => (
+                    <div key={question} className="space-y-2 mt-2">
+                      <Label>Question {index + 1}</Label>
+                      <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 dark:text-white">{question}</p>
+                      <Textarea
+                        value={answers[index] || ''}
+                        onChange={(event) => {
+                          const next = [...answers]
+                          next[index] = event.target.value
+                          setAnswers(next)
+                        }}
+                        placeholder="Type your answer. Use examples, metrics, and trade-offs."
+                        rows={4}
+                      />
+                    </div>
+                  ))}
+
+                  <Button onClick={submitInterview} disabled={interviewLoading} className="w-full bg-indigo-600 hover:bg-indigo-700 mt-4">
+                    {interviewLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate interview report
+                  </Button>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -368,13 +420,13 @@ export function TalentProfileSection() {
                 </CardTitle>
                 <CardDescription>Small actions that compound into better recruiter signals.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="grid gap-3 sm:grid-cols-2">
                 {(data.missions || []).map((mission) => (
                   <div key={mission.mission_id} className="rounded-xl border border-slate-200 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-slate-900">{mission.mission_title}</p>
-                        <p className="mt-1 text-sm text-slate-600">{mission.mission_description}</p>
+                        <p className="mt-1 text-sm text-slate-900 dark:text-white">{mission.mission_description}</p>
                         <p className="mt-2 text-xs font-medium uppercase tracking-wide text-indigo-600">{mission.target_skill}</p>
                       </div>
                       <span className={`rounded-full px-2 py-1 text-xs font-semibold ${mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -423,7 +475,7 @@ export function TalentProfileSection() {
                 {INTERVIEW_QUESTIONS[interviewType].map((question, index) => (
                   <div key={question} className="space-y-2">
                     <Label>Question {index + 1}</Label>
-                    <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">{question}</p>
+                    <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 dark:text-white">{question}</p>
                     <Textarea
                       value={answers[index] || ''}
                       onChange={(event) => {
@@ -455,7 +507,7 @@ export function TalentProfileSection() {
                 ) : data.interviewSessions?.length ? (
                   <InterviewReport session={data.interviewSessions[0]} />
                 ) : (
-                  <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
+                  <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-900 dark:text-white">
                     Complete a mock interview to generate your first report.
                   </div>
                 )}
@@ -473,11 +525,11 @@ export function TalentProfileSection() {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-semibold text-slate-900">{session.interview_type}</p>
-                      <p className="text-xs text-slate-500">{new Date(session.created_at).toLocaleString()}</p>
+                      <p className="text-xs text-slate-900 dark:text-white">{new Date(session.created_at).toLocaleString()}</p>
                     </div>
                     <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-700">{session.overall_score}%</span>
                   </div>
-                  <p className="mt-3 text-sm text-slate-600">{session.feedback}</p>
+                  <p className="mt-3 text-sm text-slate-900 dark:text-white">{session.feedback}</p>
                 </div>
               ))}
             </CardContent>
@@ -520,20 +572,20 @@ function InterviewReport({ session }: { session: InterviewSession }) {
     <div className="space-y-5">
       <div className="text-center">
         <p className="text-5xl font-bold text-indigo-600">{session.overall_score}%</p>
-        <p className="mt-1 text-sm text-slate-500">overall readiness</p>
+        <p className="mt-1 text-sm text-slate-900 dark:text-white">overall readiness</p>
       </div>
       <div className="space-y-3">
         <ScoreBar label="Clarity" value={session.clarity_score || session.overall_score} />
         <ScoreBar label="Relevance" value={session.relevance_score || session.overall_score} />
         <ScoreBar label="Depth" value={session.depth_score || session.overall_score} />
       </div>
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-900 dark:text-white">
         {session.feedback || 'Practice report generated.'}
       </div>
       {recommendations.length > 0 && (
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-900">Next practice actions</p>
-          <ul className="space-y-2 text-sm text-slate-600">
+          <ul className="space-y-2 text-sm text-slate-900 dark:text-white">
             {recommendations.map((item) => (
               <li key={item} className="flex gap-2">
                 <Check className="mt-0.5 h-4 w-4 text-green-600" />
@@ -550,7 +602,7 @@ function InterviewReport({ session }: { session: InterviewSession }) {
 function ScoreBar({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <div className="mb-1 flex justify-between text-xs font-medium text-slate-600">
+      <div className="mb-1 flex justify-between text-xs font-medium text-slate-900 dark:text-white">
         <span>{label}</span>
         <span>{value}%</span>
       </div>
@@ -567,7 +619,7 @@ function MetricCard({ icon: Icon, label, value }: { icon: any; label: string; va
       <CardContent className="p-5">
         <Icon className="mb-3 h-5 w-5 text-indigo-600" />
         <p className="text-2xl font-bold text-slate-900">{value}</p>
-        <p className="text-sm text-slate-500">{label}</p>
+        <p className="text-sm text-slate-900 dark:text-white">{label}</p>
       </CardContent>
     </Card>
   )
@@ -623,7 +675,7 @@ function SkillInventory({
                       {isApproved && <StatusPill tone="green" icon={Check} label="Verified" />}
                       {isPending && <StatusPill tone="amber" icon={Clock} label="Pending" />}
                       {isRejected && <StatusPill tone="red" icon={X} label="Rejected" />}
-                      {hasNoCert && uploadingSkillId !== skill.skill_id && (
+                      {hasNoCert && (
                         <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setUploadingSkillId(skill.skill_id)}>
                           <UploadCloud className="mr-2 h-3 w-3" />
                           Upload
@@ -639,50 +691,58 @@ function SkillInventory({
                         Rejection reason
                       </p>
                       <p className="mb-3 text-sm text-red-900">{skill.certificate_rejection_reason || 'Certificate did not meet requirements.'}</p>
-                      {uploadingSkillId !== skill.skill_id && (
-                        <Button variant="outline" size="sm" className="bg-white" onClick={() => setUploadingSkillId(skill.skill_id)}>
-                          <UploadCloud className="mr-2 h-4 w-4" />
-                          Re-upload certificate
-                        </Button>
-                      )}
+                      <Button variant="outline" size="sm" className="bg-white" onClick={() => setUploadingSkillId(skill.skill_id)}>
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        Re-upload certificate
+                      </Button>
                     </div>
                   )}
 
-                  {uploadingSkillId === skill.skill_id && (
-                    <div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-sm font-medium text-slate-700">Choose one option to verify your skill:</p>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-1">
-                          <Label className="text-xs text-slate-500">Certificate link</Label>
-                          <Input
-                            placeholder="https://coursera.org/..."
-                            value={certUrl}
-                            onChange={(event) => {
-                              setCertUrl(event.target.value)
-                              if (event.target.value) setCertFile(null)
-                            }}
-                          />
+                  <Dialog open={uploadingSkillId === skill.skill_id} onOpenChange={(open) => setUploadingSkillId(open ? skill.skill_id : null)}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Verify Skill: {skill.skill_name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="mt-4 space-y-4">
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">Choose one option to verify your skill:</p>
+                        <div className="grid gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Certificate link</Label>
+                            <Input
+                              placeholder="https://coursera.org/..."
+                              value={certUrl}
+                              onChange={(event) => {
+                                setCertUrl(event.target.value)
+                                if (event.target.value) setCertFile(null)
+                              }}
+                            />
+                          </div>
+                          <div className="relative flex items-center py-2">
+                            <div className="flex-grow border-t border-slate-200"></div>
+                            <span className="flex-shrink-0 mx-4 text-slate-400 text-xs">OR</span>
+                            <div className="flex-grow border-t border-slate-200"></div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Upload file</Label>
+                            <Input
+                              type="file"
+                              accept=".pdf,.png,.jpg,.jpeg"
+                              onChange={(event) => {
+                                if (event.target.files?.[0]) {
+                                  setCertFile(event.target.files[0])
+                                  setCertUrl('')
+                                }
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs text-slate-500">Upload file</Label>
-                          <Input
-                            type="file"
-                            accept=".pdf,.png,.jpg,.jpeg"
-                            onChange={(event) => {
-                              if (event.target.files?.[0]) {
-                                setCertFile(event.target.files[0])
-                                setCertUrl('')
-                              }
-                            }}
-                          />
+                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
+                          <Button variant="ghost" onClick={() => setUploadingSkillId(null)}>Cancel</Button>
+                          <Button disabled={!certUrl && !certFile} onClick={() => { handleUpload(skill.skill_id); setUploadingSkillId(null); }} className="bg-[#2D2DDD] text-white hover:bg-[#2525c4]">Submit to Admin</Button>
                         </div>
                       </div>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setUploadingSkillId(null)}>Cancel</Button>
-                        <Button size="sm" disabled={!certUrl && !certFile} onClick={() => handleUpload(skill.skill_id)}>Submit to Admin</Button>
-                      </div>
-                    </div>
-                  )}
+                    </DialogContent>
+                  </Dialog>
                 </div>
               )
             })}

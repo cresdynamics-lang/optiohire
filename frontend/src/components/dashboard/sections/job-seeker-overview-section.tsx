@@ -26,7 +26,7 @@ export function JobSeekerOverviewSection() {
           <h1 className="mt-5 text-balance text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl ">
             Welcome back{firstName ? `, ${firstName}` : ''}
           </h1>
-          <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-slate-900 dark:text-white dark:text-slate-400">
             Your dashboard is tailored for applying and staying reachable. Keep your profile accurate so employers
             who hire through OptioHire can move quickly when you are shortlisted.
           </p>
@@ -43,22 +43,22 @@ export function JobSeekerOverviewSection() {
           </div>
           <div className="mt-6 grid grid-cols-1 gap-3 min-[480px]:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/60">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Status</p>
-              <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-900 dark:text-white">Status</p>
+              <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-white dark:text-slate-200">
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
                 Candidate workspace active
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/60">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Focus</p>
-              <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-900 dark:text-white">Focus</p>
+              <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-white dark:text-slate-200">
                 <Trophy className="h-4 w-4 text-amber-500" />
                 Profile completeness
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/60">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Role</p>
-              <p className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">Job seeker account</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-900 dark:text-white">Role</p>
+              <p className="mt-1 text-sm font-medium text-slate-900 dark:text-white dark:text-slate-200">Job seeker account</p>
             </div>
           </div>
         </div>
@@ -71,7 +71,7 @@ export function JobSeekerOverviewSection() {
               <Briefcase className="h-5 w-5" />
             </div>
             <CardTitle className="text-lg font-semibold tracking-tight">Find roles</CardTitle>
-            <CardDescription className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <CardDescription className="text-sm leading-relaxed text-slate-900 dark:text-white dark:text-slate-400">
               Hiring happens through employer workspaces on OptioHire. Explore how the product works and stay ready
               when teams invite you into their process.
             </CardDescription>
@@ -89,7 +89,7 @@ export function JobSeekerOverviewSection() {
               <User className="h-5 w-5" />
             </div>
             <CardTitle className="text-lg font-semibold tracking-tight">Stay ready</CardTitle>
-            <CardDescription className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <CardDescription className="text-sm leading-relaxed text-slate-900 dark:text-white dark:text-slate-400">
               Accurate contact details and a complete profile reduce friction when recruiters reach out or schedule
               next steps.
             </CardDescription>
@@ -107,12 +107,12 @@ export function JobSeekerOverviewSection() {
               <CalendarDays className="h-5 w-5" />
             </div>
             <CardTitle className="text-lg font-semibold tracking-tight">Interviews</CardTitle>
-            <CardDescription className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <CardDescription className="text-sm leading-relaxed text-slate-900 dark:text-white dark:text-slate-400">
               When a company schedules with you, you will usually get email and calendar details directly from them.
               Watch your inbox for updates from the recruiting team.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          <CardContent className="text-sm leading-relaxed text-slate-900 dark:text-white dark:text-slate-400">
             Tip: add the employer domain to your safe senders so invitations do not land in spam.
           </CardContent>
         </Card>
@@ -123,7 +123,7 @@ export function JobSeekerOverviewSection() {
               <Mail className="h-5 w-5" />
             </div>
             <CardTitle className="text-lg font-semibold tracking-tight">Need help?</CardTitle>
-            <CardDescription className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <CardDescription className="text-sm leading-relaxed text-slate-900 dark:text-white dark:text-slate-400">
               Questions about your account or an application? Our team can point you in the right direction.
             </CardDescription>
           </CardHeader>

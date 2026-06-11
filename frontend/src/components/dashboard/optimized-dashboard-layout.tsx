@@ -683,7 +683,7 @@ function DashboardContent() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-gray-950 text-foreground [background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] dark:[background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_42%)]" >
-      {isSidebarOpen && (
+      {isSidebarOpen && !isJobSeeker && (
         <div
           className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]"
           onClick={() => setIsSidebarOpen(false)}
@@ -709,7 +709,11 @@ function DashboardContent() {
         </ErrorBoundary>
       </aside>
       
-      <main className="min-w-0 flex-1 overflow-auto bg-transparent">
+      <main 
+        className={`min-w-0 flex-1 overflow-auto bg-transparent transition-all duration-300 ease-out ${
+          isSidebarOpen && isJobSeeker ? 'translate-x-[18rem] md:translate-x-0 md:ml-[18rem]' : ''
+        }`}
+      >
         {/* Top bar: wayfinding + notifications */}
         <div className="sticky top-0 z-10 border-b border-slate-200/90 bg-white/95 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-900/[0.06] backdrop-blur-xl  dark:bg-slate-950/90">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#2D2DDD]/35 to-transparent" aria-hidden />
