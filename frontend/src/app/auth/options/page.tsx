@@ -6,8 +6,6 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Building2, ArrowLeft, ChevronRight, UserCircle2 } from 'lucide-react'
 
-import { Suspense } from 'react'
-
 function AuthOptionsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -88,13 +86,5 @@ export default function AuthOptionsPage() {
         <AuthOptionsContent />
       </Suspense>
     </div>
-  )
-}
-
-export default function AuthOptionsPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen w-full flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-      <AuthOptionsContent />
-    </Suspense>
   )
 }
