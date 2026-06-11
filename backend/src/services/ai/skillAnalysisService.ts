@@ -25,21 +25,38 @@ export class SkillAnalysisService {
 
   /**
    * Analyzes active jobs to find the most common skills that the candidate is missing.
+   * Prioritizes jobs the candidate has applied to or matched with.
    */
   async getSkillGapRecommendations(profileId: string): Promise<any> {
     // Get candidate's current skills
     const candidateSkills = await this.candidateRepo.getSkills(profileId)
     const candidateSkillNames = candidateSkills.map(s => s.skill_name.toLowerCase())
 
-    // Fetch some active jobs (e.g. latest 20)
-    // Normally this would be a more complex ML match, but we use a simpler database + AI prompt approach
-    const { rows: jobs } = await query(`
-      SELECT job_posting_id, job_title, skills_required 
-      FROM job_postings 
-      WHERE status = 'ACTIVE' 
-      ORDER BY created_at DESC 
+    // Fetch jobs relevant to the candidate (applied or recommended)
+    let { rows: jobs } = await query(`
+      SELECT j.job_posting_id, j.job_title, j.skills_required
+      FROM job_postings j
+      LEFT JOIN job_applications a ON a.job_posting_id = j.job_posting_id 
+        AND a.candidate_id = (SELECT candidate_id FROM candidate_profiles WHERE profile_id = $1)
+      LEFT JOIN job_recommendations r ON r.job_posting_id = j.job_posting_id 
+        AND r.profile_id = $1
+      WHERE j.status = 'ACTIVE' 
+        AND (a.application_id IS NOT NULL OR r.recommendation_id IS NOT NULL)
+      ORDER BY j.created_at DESC
       LIMIT 20
-    `)
+    `, [profileId])
+
+    // Fallback to recent active jobs if no relevant jobs found
+    if (jobs.length === 0) {
+      const { rows: activeJobs } = await query(`
+        SELECT job_posting_id, job_title, skills_required 
+        FROM job_postings 
+        WHERE status = 'ACTIVE' 
+        ORDER BY created_at DESC 
+        LIMIT 20
+      `)
+      jobs = activeJobs
+    }
 
     // Count skills from jobs
     const skillCounts: Record<string, number> = {}
@@ -65,11 +82,13 @@ export class SkillAnalysisService {
     }
 
     const topMissingSkill = missingSkills[0].skill
+    const jobTitles = jobs.map(j => j.job_title).slice(0, 3).join(', ')
 
-    // Use AI to generate a quick insight reason why this skill is needed
+    // Use AI to generate a highly personalized insight reason
     const prompt = `
-      A candidate is missing the skill "${topMissingSkill}" which appeared in ${missingSkills[0].count} recent job postings.
-      Write a short, encouraging 2-sentence paragraph telling them why learning this skill will massively boost their chances of getting hired, and suggesting they start learning it today.
+      A candidate is interested in roles like ${jobTitles || 'various tech roles'}. 
+      Based on their profile, they are missing the skill "${topMissingSkill}" which is highly requested in these roles.
+      Write a highly personalized, short, encouraging 2-sentence paragraph telling them why learning "${topMissingSkill}" will massively boost their chances of getting hired for roles like ${jobTitles}, and suggesting they start learning it today. Avoid generic corporate speak. Be specific about the impact in their field.
     `
     const insight = await openRouterService.generateText(prompt)
 

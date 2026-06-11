@@ -409,9 +409,8 @@ export function TalentProfileSection() {
       )}
 
       <Tabs defaultValue="plan" className="space-y-5">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
           <TabsTrigger value="plan">Learning Plan</TabsTrigger>
-          <TabsTrigger value="interview">Mock Interview</TabsTrigger>
           <TabsTrigger value="jobs">Job Matches</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -448,101 +447,8 @@ export function TalentProfileSection() {
           </div>
         </TabsContent>
 
-        <TabsContent value="interview" className="space-y-6" id="mock-interview-panel">
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mic className="h-5 w-5 text-indigo-600" />
-                  AI Mock Interview Practice
-                </CardTitle>
-                <CardDescription>Answer three focused questions and get a scored readiness report.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label>Interview type</Label>
-                    <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={interviewType} onChange={(event) => setInterviewType(event.target.value as keyof typeof INTERVIEW_QUESTIONS)}>
-                      {Object.keys(INTERVIEW_QUESTIONS).map((type) => <option key={type}>{type}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Level</Label>
-                    <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={level} onChange={(event) => setLevel(event.target.value)}>
-                      <option>Junior</option>
-                      <option>Mid-level</option>
-                      <option>Senior</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Target role</Label>
-                    <Input value={targetRole} onChange={(event) => setTargetRole(event.target.value)} placeholder="e.g. React Developer" />
-                  </div>
-                </div>
 
-                {INTERVIEW_QUESTIONS[interviewType].map((question, index) => (
-                  <div key={question} className="space-y-2">
-                    <Label>Question {index + 1}</Label>
-                    <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 dark:text-white">{question}</p>
-                    <Textarea
-                      value={answers[index] || ''}
-                      onChange={(event) => {
-                        const next = [...answers]
-                        next[index] = event.target.value
-                        setAnswers(next)
-                      }}
-                      placeholder="Type your answer. Use examples, metrics, and trade-offs."
-                      rows={4}
-                    />
-                  </div>
-                ))}
 
-                <Button onClick={submitInterview} disabled={interviewLoading} className="w-full bg-indigo-600 hover:bg-indigo-700">
-                  {interviewLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Generate interview report
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Interview Report</CardTitle>
-                <CardDescription>Your latest practice score and coaching notes.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {latestReport ? (
-                  <InterviewReport session={latestReport} />
-                ) : data.interviewSessions?.length ? (
-                  <InterviewReport session={data.interviewSessions[0]} />
-                ) : (
-                  <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-900 dark:text-white">
-                    Complete a mock interview to generate your first report.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Past Sessions</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2">
-              {(data.interviewSessions || []).map((session) => (
-                <div key={session.session_id || session.created_at} className="rounded-xl border border-slate-200 p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-semibold text-slate-900">{session.interview_type}</p>
-                      <p className="text-xs text-slate-900 dark:text-white">{new Date(session.created_at).toLocaleString()}</p>
-                    </div>
-                    <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-700">{session.overall_score}%</span>
-                  </div>
-                  <p className="mt-3 text-sm text-slate-900 dark:text-white">{session.feedback}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="jobs">
           <JobRecommendations recommendations={data.recommendations} />

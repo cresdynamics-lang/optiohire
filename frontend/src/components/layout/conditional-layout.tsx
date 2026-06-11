@@ -30,15 +30,16 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
     pathname.startsWith('/console') ||
     pathname === '/privacy'
 
-  // Determine if Navbar should be rendered
-  // It should ONLY appear when user is NOT authenticated AND it's not a dashboard/subdomain path
-  const showNavbar = !loading && !user && !isSubdomain && !isDashboardPath
+  // Determine if Navbar and Footer should be rendered
+  const isAppInterface = isSubdomain || isDashboardPath
+  const showNavbar = !loading && !user && !isAppInterface
+  const showFooter = !isAppInterface
 
   return (
     <>
       {showNavbar && <Navbar />}
       <main className={showNavbar ? "pt-20 min-h-[60vh]" : "min-h-[60vh]"}>{children}</main>
-      <Footer />
+      {showFooter && <Footer />}
     </>
   )
 }

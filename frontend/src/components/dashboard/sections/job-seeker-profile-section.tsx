@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { 
   LogOut, 
   Mail, 
@@ -26,6 +27,19 @@ export function JobSeekerProfileSection() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    linkedinUrl: '',
+    githubUrl: '',
+    portfolioUrl: ''
+  })
+
+  const handleUpdateProfile = () => {
+    // In a real app this would call an API to save candidate details
+    setSaveMessage({ type: 'success', text: 'Profile updated successfully!' })
+    setIsEditing(false)
+  }
 
   const handleDeleteAccount = async () => {
     if (!user) return
@@ -98,16 +112,45 @@ export function JobSeekerProfileSection() {
       )}
 
       <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_22px_70px_-48px_rgba(15,23,42,0.38)] dark:border-gray-800 dark:bg-gray-900/85">
-        <CardHeader className="border-b border-slate-100 pb-6 dark:border-gray-800">
-          <CardTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 shadow-inner  dark:text-slate-200">
-              <User className="h-5 w-5" />
-            </span>
-            Account details
-          </CardTitle>
-          <CardDescription className="text-base text-slate-600 dark:text-slate-400">
-            Information tied to your sign-in for candidate-facing workflows.
-          </CardDescription>
+        <CardHeader className="border-b border-slate-100 pb-6 dark:border-gray-800 flex flex-row items-start justify-between">
+          <div className="space-y-1.5">
+            <CardTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 shadow-inner  dark:text-slate-200">
+                <User className="h-5 w-5" />
+              </span>
+              Account details
+            </CardTitle>
+            <CardDescription className="text-base text-slate-600 dark:text-slate-400">
+              Information tied to your sign-in for candidate-facing workflows.
+            </CardDescription>
+          </div>
+          <Dialog open={isEditing} onOpenChange={setIsEditing}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="h-9">Edit Profile</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Edit Profile</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label>Full Name</Label>
+                  <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label>LinkedIn URL</Label>
+                  <Input placeholder="https://linkedin.com/in/..." value={formData.linkedinUrl} onChange={(e) => setFormData({...formData, linkedinUrl: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label>GitHub / Portfolio</Label>
+                  <Input placeholder="https://github.com/..." value={formData.githubUrl} onChange={(e) => setFormData({...formData, githubUrl: e.target.value})} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleUpdateProfile}>Save changes</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           <div className="grid grid-cols-1 gap-3 min-[520px]:grid-cols-3">
@@ -133,12 +176,23 @@ export function JobSeekerProfileSection() {
               </p>
             </div>
           </div>
-          {user?.name && (
+          {(formData.name || user?.name) && (
             <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/50">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 Name
               </p>
-              <p className="mt-1 text-foreground">{user.name}</p>
+              <p className="mt-1 text-foreground">{formData.name || user?.name}</p>
+            </div>
+          )}
+          {(formData.linkedinUrl || formData.githubUrl) && (
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/50">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Links
+              </p>
+              <div className="mt-1 flex gap-3 text-sm text-foreground">
+                {formData.linkedinUrl && <a href={formData.linkedinUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">LinkedIn</a>}
+                {formData.githubUrl && <a href={formData.githubUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">Portfolio</a>}
+              </div>
             </div>
           )}
           <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-950/50">
