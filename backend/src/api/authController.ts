@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
+import { z } from 'zod'
 import { query, pool } from '../db/index.js'
 import { EmailService } from '../services/emailService.js'
 import { verifyCaptcha } from '../utils/captcha.js'
@@ -11,1161 +12,421 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET is required but not configured')
 }
 const SALT_ROUNDS = 10
-const RESET_TOKEN_EXPIRY_HOURS = 1 // Token expires in 1 hour
+const RESET_TOKEN_EXPIRY_HOURS = 1
+const VERIFICATION_CODE_EXPIRY_HOURS = 24
+
+// --- SCHEMAS ---
+const CleanEmail = z.string().email().transform(v => v.toLowerCase().trim())
+const CleanString = z.string().min(1).transform(v => v.trim())
+const CleanCode = z.coerce.string().transform(v => v.trim())
+
+const SignupSchema = z.object({
+  name: CleanString,
+  email: CleanEmail,
+  password: z.string().min(8),
+  company_role: z.string().transform(v => v.toLowerCase().trim()),
+  company_name: z.string().optional(),
+  company_email: CleanEmail.optional(),
+  hr_email: CleanEmail.optional(),
+  hiring_manager_email: CleanEmail.optional(),
+  captchaToken: z.string()
+})
+
+const SigninSchema = z.object({
+  email: CleanEmail,
+  password: z.string()
+})
+
+const ResetPasswordSchema = z.object({
+  email: CleanEmail,
+  code: CleanCode,
+  password: z.string().min(8)
+})
+
+// --- HELPERS ---
+async function getSystemSetting(key: string, defaultValue: any = null) {
+  try {
+    const { rows } = await query<{ setting_value: string }>(
+      `SELECT setting_value FROM system_settings WHERE setting_key = $1`,
+      [key]
+    )
+    return rows.length > 0 ? JSON.parse(rows[0].setting_value) : defaultValue
+  } catch {
+    return defaultValue
+  }
+}
+
+// --- CONTROLLERS ---
 
 export async function signup(req: Request, res: Response) {
+  const result = SignupSchema.safeParse(req.body)
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input', details: result.error.format() })
+  }
+
+  const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email, captchaToken } = result.data
+  
+  if (!(await verifyCaptcha(captchaToken))) {
+    return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
+  }
+
+  const isCandidate = ['candidate', 'jobseeker', 'job seeker', 'job-seeker', 'job_seeker'].includes(company_role)
+  const isEmployerAlias = ['employer', 'company', 'recruiter'].includes(company_role)
+  const targetRole = isCandidate ? 'candidate' : (isEmployerAlias ? 'hr' : company_role)
+
+  if (!isCandidate && (!company_name || !company_email || !hr_email)) {
+    return res.status(400).json({ error: 'Organization details are required for employers' })
+  }
+
   const client = await pool.connect()
   try {
-    const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email, captchaToken } = req.body || {}
-    
-    // Verify captcha
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-    }
+    const { rows: existing } = await client.query(`SELECT user_id FROM users WHERE email = $1`, [email])
+    if (existing.length > 0) return res.status(409).json({ error: 'Account already exists' })
 
-    const rawCompanyRole = String(company_role || '').toLowerCase().trim()
-    const isCandidateSignup =
-      rawCompanyRole === 'candidate' ||
-      rawCompanyRole === 'job_seeker' ||
-      rawCompanyRole === 'jobseeker' ||
-      rawCompanyRole === 'job seeker' ||
-      rawCompanyRole === 'job-seeker'
-    const isEmployerSignupAlias = rawCompanyRole === 'employer' || rawCompanyRole === 'company' || rawCompanyRole === 'recruiter'
-    const normalizedCompanyRole = isCandidateSignup
-      ? 'candidate'
-      : isEmployerSignupAlias
-        ? 'hr'
-        : rawCompanyRole
-    const normalizedEmail = String(email || '').toLowerCase().trim()
-    const normalizedCompanyEmail = String(company_email || '').toLowerCase().trim()
-    const normalizedHrEmail = String(hr_email || '').toLowerCase().trim()
-    const normalizedHiringManagerEmail = String(hiring_manager_email || '').toLowerCase().trim()
-    const resolvedHiringManagerEmail = normalizedHiringManagerEmail || normalizedHrEmail
-    
-    // STRICT: Validate all required fields - ALL MANDATORY
-    if (!name || !normalizedEmail || !password) {
-      return res.status(400).json({ error: 'Name, email, and password are required' })
-    }
-    if (!normalizedCompanyRole) {
-      return res.status(400).json({ error: 'Company role is required' })
-    }
-    // Candidate signups are allowed, so we don't block them here.
-    if (!isCandidateSignup && (!company_name || !normalizedCompanyEmail || !normalizedHrEmail)) {
-      return res.status(400).json({ error: 'Company role, organization name, company email, and HR email are required' })
-    }
-    
-    // Validate company_role
-    if (normalizedCompanyRole !== 'hr' && normalizedCompanyRole !== 'hiring_manager' && normalizedCompanyRole !== 'candidate') {
-      return res.status(400).json({ error: 'Company role must be either "hr", "hiring_manager", or "candidate"' })
-    }
-
-    // Validate email formats
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(normalizedEmail)) {
-      return res.status(400).json({ error: 'All email addresses must be valid' })
-    }
-    if (!isCandidateSignup && (!emailRegex.test(normalizedCompanyEmail) || !emailRegex.test(normalizedHrEmail) || !emailRegex.test(resolvedHiringManagerEmail))) {
-      return res.status(400).json({ error: 'All email addresses must be valid' })
-    }
-
-    // Check if email already exists
-    const { rows: existing } = await query<{ user_id: string }>(
-      `select user_id from users where email = $1`,
-      [normalizedEmail]
-    )
-    if (existing.length > 0) {
-      return res.status(409).json({ error: 'Account with this email already exists' })
-    }
-
-    // Start transaction
     await client.query('BEGIN')
+    const hash = await bcrypt.hash(password, SALT_ROUNDS)
+    
+    const { rows: colCheck } = await client.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name IN ('name', 'company_role')
+    `)
+    const hasName = colCheck.some(r => r.column_name === 'name')
+    const hasRole = colCheck.some(r => r.column_name === 'company_role')
 
+    const cols = ['email', 'password_hash', 'role', 'is_active']
+    const vals = ['$1', '$2', "'user'", 'true']
+    const params = [email, hash]
+    if (hasName) { cols.push('name'); vals.push(`$${params.push(name)}`) }
+    if (hasRole) { cols.push('company_role'); vals.push(`$${params.push(targetRole)}`) }
+
+    const { rows: userRows } = await client.query(
+      `INSERT INTO users (${cols.join(',')}) VALUES (${vals.join(',')}) RETURNING user_id, created_at`,
+      params
+    )
+    const userId = userRows[0].user_id
+
+    const requireApproval = await getSystemSetting('require_signup_approval', false)
+    if (requireApproval) {
+      await client.query(`UPDATE users SET is_active = false WHERE user_id = $1`, [userId])
+      await client.query(
+        `INSERT INTO signup_queue (user_id, email, name, company_name, company_email, status) VALUES ($1, $2, $3, $4, $5, 'pending')`,
+        [userId, email, name, isCandidate ? 'Individual' : company_name!, isCandidate ? email : company_email!]
+      )
+    }
+
+    let companyId = null
+    if (!isCandidate) {
+      const domain = company_email!.split('@')[1] || hr_email!.split('@')[1]
+      const { rows: colCheckComp } = await client.query(`SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'user_id'`)
+      const hasCompUserId = colCheckComp.length > 0
+
+      const hmEmail = hiring_manager_email || hr_email!
+      const { rows: existingComp } = await client.query(
+        `SELECT company_id FROM companies WHERE (company_email = $1 OR hr_email = $2 OR company_domain = $3) AND ($4::boolean = false OR user_id IS NULL OR user_id = $5) LIMIT 1`,
+        [company_email!, hr_email!, domain, hasCompUserId, userId]
+      )
+
+      if (existingComp.length > 0) {
+        companyId = existingComp[0].company_id
+        const upCols = ['company_name=$1', 'company_email=$2', 'hr_email=$3', 'hiring_manager_email=$4', 'company_domain=$5', 'updated_at=now()']
+        const upParams = [company_name!, company_email!, hr_email!, hmEmail, domain, companyId]
+        if (hasCompUserId) upCols.push(`user_id=$${upParams.push(userId)}`)
+        await client.query(`UPDATE companies SET ${upCols.join(',')} WHERE company_id = $${upParams.length}`, upParams)
+      } else {
+        const insCols = ['company_name', 'hr_email', 'hiring_manager_email', 'company_domain', 'company_email']
+        const insVals = ['$1', '$2', '$3', '$4', '$5']
+        const insParams = [company_name!, hr_email!, hmEmail, domain, company_email!]
+        if (hasCompUserId) { insCols.push('user_id'); insVals.push(`$${insParams.push(userId)}`) }
+        const { rows: newComp } = await client.query(`INSERT INTO companies (${insCols.join(',')}) VALUES (${insVals.join(',')}) RETURNING company_id`, insParams)
+        companyId = newComp[0].company_id
+      }
+    }
+
+    await client.query('COMMIT')
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const expires = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 3600000)
     try {
-      // Create user with name and company_role
-      const hash = await bcrypt.hash(password, SALT_ROUNDS)
-      
-      // Check which columns exist
-      const { rows: colCheck } = await client.query(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'users' 
-        AND column_name IN ('name', 'company_role')
-      `)
-      
-      const hasNameColumn = colCheck.some((r: any) => r.column_name === 'name')
-      const hasCompanyRoleColumn = colCheck.some((r: any) => r.column_name === 'company_role')
-      
-      // Build dynamic insert query based on available columns
-      const columns: string[] = []
-      const values: string[] = []
-      const params: any[] = []
-      let paramIndex = 1
-      
-      if (hasNameColumn) {
-        columns.push('name')
-        values.push(`$${paramIndex++}`)
-        params.push(name.trim())
+      await query(`INSERT INTO email_verification_codes (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)`, [userId, email, otp, expires])
+      void new EmailService().sendEmailVerificationCode(email, name, otp).catch(e => console.error('OTP send failed', e))
+    } catch (e) { console.error('OTP save failed', e) }
+
+    const token = jwt.sign({ sub: userId, email, role: 'user' }, JWT_SECRET, { expiresIn: '7d' })
+    return res.status(201).json({
+      token,
+      needsEmailVerification: true,
+      user: {
+        id: userId, email, name, role: 'user', company_role: targetRole,
+        hasCompany: !isCandidate, companyId, is_active: !requireApproval
       }
-      columns.push('email')
-      values.push(`$${paramIndex++}`)
-      params.push(normalizedEmail)
-      columns.push('password_hash')
-      values.push(`$${paramIndex++}`)
-      params.push(hash)
-      columns.push('role')
-      values.push(`'user'`)
-      if (hasCompanyRoleColumn) {
-        columns.push('company_role')
-        values.push(`$${paramIndex++}`)
-        // Persist candidate role so sign-in and /me can route job seekers to the correct dashboard.
-        params.push(isCandidateSignup ? 'candidate' : normalizedCompanyRole)
-      }
-      columns.push('is_active')
-      values.push('true')
-      
-      const insertQuery = `INSERT INTO users (${columns.join(', ')}) VALUES (${values.join(', ')}) RETURNING user_id, created_at`
-      
-      const { rows } = await client.query<{ user_id: string; created_at: string }>(
-        insertQuery,
-        params
-      )
-      const userId = rows[0].user_id
-
-      // Check if signup approval is required.
-      // Important: avoid querying a missing table inside a transaction, because that aborts the transaction.
-      let requireApproval = false
-      const { rows: hasSystemSettingsRows } = await client.query<{ exists: boolean }>(
-        `SELECT EXISTS (
-           SELECT 1
-           FROM information_schema.tables
-           WHERE table_schema = 'public' AND table_name = 'system_settings'
-         ) AS exists`
-      )
-      if (hasSystemSettingsRows[0]?.exists) {
-        const { rows: settingRows } = await client.query<{ setting_value: string }>(
-          `SELECT setting_value FROM system_settings WHERE setting_key = 'require_signup_approval'`
-        )
-        requireApproval = settingRows.length > 0 && JSON.parse(settingRows[0].setting_value) === true
-      }
-
-      // If approval is required, add to signup queue and set user as inactive
-      if (requireApproval) {
-        await client.query(
-          `UPDATE users SET is_active = false WHERE user_id = $1`,
-          [userId]
-        )
-        
-        try {
-          const queueCompanyName = isCandidateSignup ? 'Individual' : company_name
-          const queueCompanyEmail = isCandidateSignup ? normalizedEmail : normalizedCompanyEmail
-          await client.query(
-            `INSERT INTO signup_queue (user_id, email, name, company_name, company_email, status)
-             VALUES ($1, $2, $3, $4, $5, 'pending')`,
-            [userId, normalizedEmail, name, queueCompanyName, queueCompanyEmail]
-          )
-        } catch (queueError) {
-          console.error('Failed to add to signup queue:', queueError)
-          // Continue even if queue insert fails
-        }
-      }
-
-      let companyId: string | null = null
-      if (!isCandidateSignup) {
-        // Extract domain from company_email or hr_email
-        const companyDomain = normalizedCompanyEmail.split('@')[1] || normalizedHrEmail.split('@')[1] || null
-
-        // Check if user_id column exists
-        let hasUserIdColumn = false
-        try {
-          const checkResult = await client.query(`
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'companies' AND column_name = 'user_id'
-          `)
-          hasUserIdColumn = checkResult.rows.length > 0
-        } catch (err) {
-          console.log('⚠️ Could not check for user_id column, assuming it does not exist')
-          hasUserIdColumn = false
-        }
-
-        // Reuse existing company only when it is already owned by this user OR currently unowned.
-        // Never reassign a company from one user to another; that causes shared/crossed dashboards.
-        const { rows: existingCompanies } = await client.query<{ company_id: string }>(
-          `select company_id
-           from companies
-           where (company_email = $1
-              or hr_email = $2
-              or (company_domain is not null and company_domain = $3))
-             and ($4::boolean = false or user_id is null or user_id = $5)
-           limit 1`,
-          [normalizedCompanyEmail, normalizedHrEmail, companyDomain, hasUserIdColumn, userId]
-        )
-
-        if (existingCompanies.length > 0) {
-          companyId = existingCompanies[0].company_id
-          if (hasUserIdColumn) {
-            await client.query(
-              `update companies
-               set user_id = $1,
-                   company_name = $2,
-                   company_email = $3,
-                   hr_email = $4,
-                   hiring_manager_email = $5,
-                   company_domain = $6,
-                   updated_at = now()
-               where company_id = $7`,
-              [userId, company_name, normalizedCompanyEmail, normalizedHrEmail, resolvedHiringManagerEmail, companyDomain, companyId]
-            )
-          } else {
-            await client.query(
-              `update companies
-               set company_name = $1,
-                   company_email = $2,
-                   hr_email = $3,
-                   hiring_manager_email = $4,
-                   company_domain = $5,
-                   updated_at = now()
-               where company_id = $6`,
-              [company_name, normalizedCompanyEmail, normalizedHrEmail, resolvedHiringManagerEmail, companyDomain, companyId]
-            )
-          }
-        } else if (hasUserIdColumn) {
-          const companyResult = await client.query<{ company_id: string }>(
-            `insert into companies (user_id, company_name, hr_email, hiring_manager_email, company_domain, company_email)
-             values ($1, $2, $3, $4, $5, $6)
-             returning company_id`,
-            [userId, company_name, normalizedHrEmail, resolvedHiringManagerEmail, companyDomain, normalizedCompanyEmail]
-          )
-          companyId = companyResult.rows[0].company_id
-        } else {
-          const companyResult = await client.query<{ company_id: string }>(
-            `insert into companies (company_name, hr_email, hiring_manager_email, company_domain, company_email)
-             values ($1, $2, $3, $4, $5)
-             returning company_id`,
-            [company_name, normalizedHrEmail, resolvedHiringManagerEmail, companyDomain, normalizedCompanyEmail]
-          )
-          companyId = companyResult.rows[0].company_id
-        }
-      }
-
-      // Commit transaction
-      await client.query('COMMIT')
-
-      // Save OTP (6-digit verification code) to DB for verify-email flow.
-      // Email delivery is triggered in the background so signup response is fast.
-      const VERIFICATION_CODE_EXPIRY_HOURS = 24
-      const code = Math.floor(100000 + Math.random() * 900000).toString()
-      const expiresAt = new Date()
-      expiresAt.setHours(expiresAt.getHours() + VERIFICATION_CODE_EXPIRY_HOURS)
-      try {
-        await query(
-          `INSERT INTO email_verification_codes (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)`,
-          [userId, normalizedEmail, code, expiresAt]
-        )
-        const recipientEmail = normalizedEmail
-        const recipientName = name?.trim() || 'User'
-        const emailService = new EmailService()
-        void emailService
-          .sendEmailVerificationCode(recipientEmail, recipientName, code)
-          .then(() => {
-            console.log('[Auth] Signup OTP sent to', recipientEmail)
-          })
-          .catch((otpErr) => {
-            console.error('[Auth] Signup OTP send failed (code already saved):', otpErr)
-          })
-      } catch (otpErr) {
-        console.error('[Auth] Signup OTP save failed (user created):', otpErr)
-        // User is already created; they can request "Resend code" on verify-email page
-      }
-
-      const token = jwt.sign({ sub: userId, email: normalizedEmail, role: 'user' }, JWT_SECRET, { expiresIn: '7d' })
-      return res.status(201).json({
-        token,
-        needsEmailVerification: true,
-        user: {
-          user_id: userId,
-          id: userId, // Also include as 'id' for frontend compatibility
-          name: name.trim(),
-          email: normalizedEmail,
-          role: 'user',
-          company_role: isCandidateSignup ? 'candidate' : normalizedCompanyRole,
-          created_at: rows[0].created_at,
-          hasCompany: !isCandidateSignup,
-          companyId,
-          companyName: isCandidateSignup ? null : company_name,
-          companyEmail: isCandidateSignup ? null : normalizedCompanyEmail,
-          hrEmail: isCandidateSignup ? null : normalizedHrEmail,
-          hiringManagerEmail: isCandidateSignup ? null : resolvedHiringManagerEmail,
-          is_active: !requireApproval, // Set based on approval requirement
-          requires_approval: requireApproval
-        },
-        company: isCandidateSignup
-          ? null
-          : {
-              company_id: companyId,
-              company_name,
-              company_email: normalizedCompanyEmail,
-              hr_email: normalizedHrEmail,
-              hiring_manager_email: resolvedHiringManagerEmail
-            }
-      })
-    } catch (err) {
-      // Rollback transaction on error
-      await client.query('ROLLBACK')
-      throw err
-    }
+    })
   } catch (err) {
+    await client.query('ROLLBACK')
     console.error('Signup error:', err)
-    const dbErr = err as any
-    if (dbErr?.code === '23505') {
-      const detail = String(dbErr?.detail || '').toLowerCase()
-      if (detail.includes('users_email') || detail.includes('(email)')) {
-        return res.status(409).json({ error: 'Account with this email already exists' })
-      }
-      if (detail.includes('companies_company_email') || detail.includes('company_email')) {
-        return res.status(409).json({ error: 'A company with this email already exists. Try signing in instead.' })
-      }
-      if (detail.includes('companies_hr_email') || detail.includes('hr_email')) {
-        return res.status(409).json({ error: 'An account already exists for this HR email. Try signing in instead.' })
-      }
-      return res.status(409).json({ error: 'This account already exists. Try signing in.' })
-    }
-    if (dbErr?.code === '23514') {
-      const constraint = String(dbErr?.constraint || '')
-      if (constraint.includes('users_company_role_check')) {
-        return res.status(400).json({ error: 'Invalid account role. Please select Employer or Job Seeker and try again.' })
-      }
-      return res.status(400).json({ error: dbErr?.detail || 'Validation failed. Please review your details and try again.' })
-    }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    // Check if it's a database connection error
-    if (errorMessage.includes('password') || errorMessage.includes('authentication') || errorMessage.includes('ECONNREFUSED')) {
-      return res.status(500).json({ 
-        error: 'Database connection failed. Please check DATABASE_URL in backend/.env',
-        details: 'Make sure DATABASE_URL is correctly configured in backend/.env'
-      })
-    }
-    return res.status(500).json({ error: 'Failed to create account', details: errorMessage })
+    return res.status(500).json({ error: 'Failed to create account' })
   } finally {
     client.release()
   }
 }
 
 export async function signin(req: Request, res: Response) {
+  const result = SigninSchema.safeParse(req.body)
+  if (!result.success) return res.status(400).json({ error: 'Invalid input' })
+  const { email, password } = result.data
+
   try {
-    const { email, password } = req.body || {}
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' })
-    }
-    const { rows } = await query<{
-      user_id: string
-      password_hash: string
-      role: string
-      is_active: boolean
-      created_at: string
-      name: string | null
-      company_role: string | null
-    }>(
-      `select user_id, password_hash, role, is_active, created_at, name, company_role from users where email = $1`,
-      [email.toLowerCase()]
+    const { rows } = await query<{ user_id: string, password_hash: string, role: string, is_active: boolean, name: string | null, company_role: string | null, created_at: string }>(
+      `SELECT * FROM users WHERE email = $1`, [email]
     )
-    if (rows.length === 0) {
+    if (rows.length === 0 || !(await bcrypt.compare(password, rows[0].password_hash))) {
       return res.status(401).json({ error: 'Invalid credentials' })
     }
-    if (!rows[0].is_active) {
-      return res.status(401).json({ error: 'Account is inactive' })
-    }
-    const ok = await bcrypt.compare(password, rows[0].password_hash)
-    if (!ok) {
-      return res.status(401).json({ error: 'Invalid credentials' })
-    }
+    if (!rows[0].is_active) return res.status(401).json({ error: 'Account is inactive' })
 
-    // STRICT: Check if user has a company (except admin)
-    let hasCompany = false
-    let companyId = null
-    let companyName = null
-    let companyEmail = null
-    let hrEmail = null
+    const user = rows[0]
+    let companyInfo = { hasCompany: false, companyId: null as string | null }
     
-    if (rows[0].role !== 'admin') {
-      try {
-        // Check if user_id column exists in companies table
-        const checkColumn = await query(`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_name = 'companies' AND column_name = 'user_id'
-        `)
-        
-        if (checkColumn.rows.length > 0) {
-          // user_id column exists, check by user_id
-          const companyCheck = await query<{ company_id: string; company_name: string; company_email: string; hr_email: string }>(
-            `SELECT company_id, company_name, company_email, hr_email FROM companies WHERE user_id = $1 LIMIT 1`,
-            [rows[0].user_id]
-          )
-          hasCompany = companyCheck.rows.length > 0
-          if (hasCompany) {
-            companyId = companyCheck.rows[0]?.company_id || null
-            companyName = companyCheck.rows[0]?.company_name || null
-            companyEmail = companyCheck.rows[0]?.company_email || null
-            hrEmail = companyCheck.rows[0]?.hr_email || null
-          }
-        } else {
-          // Fallback: check by email (hr_email or company_email)
-          const companyCheck = await query<{ company_id: string; company_name: string; company_email: string; hr_email: string }>(
-            `SELECT company_id, company_name, company_email, hr_email FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
-            [email.toLowerCase()]
-          )
-          hasCompany = companyCheck.rows.length > 0
-          if (hasCompany) {
-            companyId = companyCheck.rows[0]?.company_id || null
-            companyName = companyCheck.rows[0]?.company_name || null
-            companyEmail = companyCheck.rows[0]?.company_email || null
-            hrEmail = companyCheck.rows[0]?.hr_email || null
-          }
-        }
-      } catch (err) {
-        console.error('Error checking company:', err)
-        // Strict enforcement: if check fails, assume no company
-        hasCompany = false
+    if (user.role === 'admin') {
+      companyInfo.hasCompany = true
+    } else if (user.company_role !== 'candidate') {
+      const { rows: colCheck } = await query(`SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'user_id'`)
+      const q = colCheck.length > 0 
+        ? `SELECT company_id FROM companies WHERE user_id = $1 LIMIT 1`
+        : `SELECT company_id FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`
+      const { rows: comp } = await query<{ company_id: string }>(q, colCheck.length > 0 ? [user.user_id] : [email])
+      if (comp.length > 0) {
+        companyInfo.hasCompany = true
+        companyInfo.companyId = comp[0].company_id
       }
-    } else {
-      // Admin always has access
-      hasCompany = true
     }
 
-    // Job seeker accounts never use employer company setup, even if an old company row matched by email.
-    if (rows[0].company_role === 'candidate') {
-      hasCompany = false
-      companyId = null
-      companyName = null
-      companyEmail = null
-      hrEmail = null
-    }
-
-    const token = jwt.sign({ sub: rows[0].user_id, email: email.toLowerCase(), role: rows[0].role }, JWT_SECRET, { expiresIn: '7d' })
+    const token = jwt.sign({ sub: user.user_id, email, role: user.role }, JWT_SECRET, { expiresIn: '7d' })
     return res.status(200).json({ 
       token, 
-      user: { 
-        user_id: rows[0].user_id,
-        id: rows[0].user_id, // Also include as 'id' for frontend compatibility
-        email: email.toLowerCase(),
-        name: rows[0].name,
-        role: rows[0].role,
-        company_role: rows[0].company_role,
-        created_at: rows[0].created_at,
-        hasCompany,
-        companyId,
-        companyName,
-        companyEmail,
-        hrEmail
-      } 
+      user: { id: user.user_id, email, name: user.name, role: user.role, company_role: user.company_role, ...companyInfo } 
     })
   } catch (err) {
     console.error('Signin error:', err)
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    // Check if it's a database connection error
-    if (errorMessage.includes('password') || errorMessage.includes('authentication') || errorMessage.includes('ECONNREFUSED')) {
-      return res.status(500).json({ 
-        error: 'Database connection failed. Please check DATABASE_URL in backend/.env',
-        details: 'Make sure DATABASE_URL is correctly configured in backend/.env'
-      })
-    }
-    return res.status(500).json({ error: 'Failed to sign in', details: errorMessage })
+    return res.status(500).json({ error: 'Failed to sign in' })
   }
 }
 
 export async function adminSignin(req: Request, res: Response) {
+  const result = SigninSchema.safeParse(req.body)
+  if (!result.success) return res.status(400).json({ error: 'Invalid input' })
+  const { email, password } = result.data
+
   try {
-    const { email, password } = req.body || {}
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' })
-    }
-    const { rows } = await query<{ user_id: string; password_hash: string; role: string; is_active: boolean; created_at: string }>(
-      `select user_id, password_hash, role, is_active, created_at from users where email = $1`,
-      [email.toLowerCase()]
+    const { rows } = await query<{ user_id: string, password_hash: string, role: string, is_active: boolean }>(
+      `SELECT * FROM users WHERE email = $1`, [email]
     )
-    if (rows.length === 0) {
+    if (rows.length === 0 || rows[0].role !== 'admin' || !(await bcrypt.compare(password, rows[0].password_hash))) {
       return res.status(401).json({ error: 'Invalid credentials' })
     }
-    if (!rows[0].is_active) {
-      return res.status(401).json({ error: 'Account is inactive' })
-    }
-    
-    // STRICT: Admin-only login - must be admin role
-    if (rows[0].role !== 'admin') {
-      return res.status(403).json({ error: 'This account does not have admin access' })
-    }
-    
-    const ok = await bcrypt.compare(password, rows[0].password_hash)
-    if (!ok) {
-      return res.status(401).json({ error: 'Invalid credentials' })
-    }
+    if (!rows[0].is_active) return res.status(401).json({ error: 'Account is inactive' })
 
-    // Admin always has access - skip company checking
-    const hasCompany = true
-    const companyId = null
-    const companyName = null
-    const companyEmail = null
-    const hrEmail = null
-
-    const token = jwt.sign({ sub: rows[0].user_id, email: email.toLowerCase(), role: rows[0].role }, JWT_SECRET, { expiresIn: '7d' })
-    return res.status(200).json({ 
-      token, 
-      user: { 
-        user_id: rows[0].user_id,
-        id: rows[0].user_id, // Also include as 'id' for frontend compatibility
-        email: email.toLowerCase(),
-        role: rows[0].role,
-        created_at: rows[0].created_at,
-        hasCompany,
-        companyId,
-        companyName,
-        companyEmail,
-        hrEmail
-      } 
-    })
+    const token = jwt.sign({ sub: rows[0].user_id, email, role: 'admin' }, JWT_SECRET, { expiresIn: '7d' })
+    return res.status(200).json({ token, user: { id: rows[0].user_id, email, role: 'admin', hasCompany: true } })
   } catch (err) {
     console.error('Admin signin error:', err)
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-    // Check if it's a database connection error
-    if (errorMessage.includes('password') || errorMessage.includes('authentication') || errorMessage.includes('ECONNREFUSED')) {
-      return res.status(500).json({ 
-        error: 'Database connection failed. Please check DATABASE_URL in backend/.env',
-        details: 'Make sure DATABASE_URL is correctly configured in backend/.env'
-      })
-    }
-    return res.status(500).json({ error: 'Failed to sign in', details: errorMessage })
+    return res.status(500).json({ error: 'Failed to sign in' })
   }
 }
 
 export async function forgotPassword(req: Request, res: Response) {
+  const { email, captchaToken } = req.body || {}
+  const cleanEmail = CleanEmail.safeParse(email)
+  if (!cleanEmail.success) return res.status(400).json({ error: 'Valid email required' })
+
+  if (!(await verifyCaptcha(captchaToken))) return res.status(400).json({ error: 'Invalid captcha' })
+
   try {
-    const { email, captchaToken } = req.body || {}
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' })
-    }
-
-    // Verify captcha
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-    }
-
-    // Check if user exists
-    const { rows } = await query<{ user_id: string; email: string; name: string | null }>(
-      `SELECT user_id, email, name FROM users WHERE email = $1 AND is_active = true`,
-      [email.toLowerCase()]
+    const { rows } = await query<{ user_id: string, email: string, name: string | null }>(
+      `SELECT user_id, email, name FROM users WHERE email = $1 AND is_active = true`, [cleanEmail.data]
     )
-
-    // Always return success to prevent email enumeration
-    if (rows.length === 0) {
-      return res.status(200).json({ message: 'If an account exists with this email, a password reset code has been sent.' })
+    if (rows.length > 0) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString()
+      const expires = new Date(Date.now() + RESET_TOKEN_EXPIRY_HOURS * 3600000)
+      await query(`UPDATE password_reset_tokens SET used = true WHERE user_id = $1`, [rows[0].user_id])
+      await query(`INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`, [rows[0].user_id, code, expires])
+      void new EmailService().sendPasswordResetCode(rows[0].email, rows[0].name || 'User', code).catch(e => console.error('Reset email failed', e))
     }
-
-    const userId = rows[0].user_id
-    const userEmail = rows[0].email
-    const userName = rows[0].name || 'User'
-
-    // Generate 6-digit random number
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString()
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + RESET_TOKEN_EXPIRY_HOURS)
-
-    // Invalidate any existing reset tokens for this user
-    await query(
-      `UPDATE password_reset_tokens SET used = true WHERE user_id = $1 AND used = false`,
-      [userId]
-    )
-
-    // Save code to database (stored in token field)
-    await query(
-      `INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`,
-      [userId, resetCode, expiresAt]
-    )
-
-    // Send reset code email
-    try {
-      const emailService = new EmailService()
-      await emailService.sendPasswordResetCode(userEmail, userName, resetCode)
-    } catch (emailError) {
-      console.error('Failed to send password reset code email:', emailError)
-      // Don't fail the request if email fails, but log it
-    }
-
-    return res.status(200).json({ message: 'If an account exists with this email, a password reset code has been sent.' })
+    return res.status(200).json({ message: 'If an account exists, a reset code has been sent.' })
   } catch (err) {
     console.error('Forgot password error:', err)
-    return res.status(500).json({ error: 'Failed to process password reset request' })
+    return res.status(500).json({ error: 'Failed to process request' })
   }
 }
 
 export async function verifyResetCode(req: Request, res: Response) {
+  const emailRes = CleanEmail.safeParse(req.body.email)
+  const codeRes = CleanCode.safeParse(req.body.code)
+  if (!emailRes.success || !codeRes.success) return res.status(400).json({ error: 'Email and code required', valid: false })
+
   try {
-    const { email, code } = req.body || {}
-    if (!email || !code) {
-      return res.status(400).json({ error: 'Email and code are required', valid: false })
-    }
-
-    // Check if code exists and is valid for this user
-    const { rows } = await query<{ token_id: string; user_id: string; expires_at: Date; used: boolean }>(
-      `SELECT prt.token_id, prt.user_id, prt.expires_at, prt.used 
-       FROM password_reset_tokens prt
-       JOIN users u ON u.user_id = prt.user_id
-       WHERE u.email = $1 AND prt.token = $2 AND prt.used = false
-       ORDER BY prt.created_at DESC
-       LIMIT 1`,
-      [email.toLowerCase(), code]
+    const { rows } = await query<{ token_id: string, expires_at: Date, used: boolean }>(
+      `SELECT prt.* FROM password_reset_tokens prt JOIN users u ON u.user_id = prt.user_id WHERE u.email = $1 AND prt.token = $2 AND prt.used = false ORDER BY prt.created_at DESC LIMIT 1`,
+      [emailRes.data, codeRes.data]
     )
-
-    if (rows.length === 0) {
-      return res.status(200).json({ valid: false, error: 'Invalid reset code' })
+    if (rows.length === 0 || new Date(rows[0].expires_at) < new Date()) {
+      return res.status(200).json({ valid: false, error: 'Invalid or expired code' })
     }
-
-    const tokenData = rows[0]
-    
-    // Check if code is expired
-    if (new Date(tokenData.expires_at) < new Date()) {
-      return res.status(200).json({ valid: false, error: 'Reset code has expired' })
-    }
-
-    // Check if code has been used
-    if (tokenData.used) {
-      return res.status(200).json({ valid: false, error: 'Reset code has already been used' })
-    }
-
-    return res.status(200).json({ valid: true, token_id: tokenData.token_id })
+    return res.status(200).json({ valid: true, token_id: rows[0].token_id })
   } catch (err) {
-    console.error('Verify reset code error:', err)
-    return res.status(500).json({ error: 'Failed to verify reset code', valid: false })
+    return res.status(500).json({ error: 'Failed to verify code', valid: false })
   }
 }
 
 export async function verifyResetToken(req: Request, res: Response) {
+  const tokenRes = CleanString.safeParse(req.body.token)
+  if (!tokenRes.success) return res.status(400).json({ error: 'Token required', valid: false })
+
   try {
-    const { token } = req.body || {}
-    if (!token) {
-      return res.status(400).json({ error: 'Token is required', valid: false })
-    }
-
-    // Check if token exists and is valid
-    const { rows } = await query<{ token_id: string; expires_at: Date; used: boolean }>(
-      `SELECT token_id, expires_at, used FROM password_reset_tokens WHERE token = $1`,
-      [token]
+    const { rows } = await query<{ expires_at: Date, used: boolean }>(
+      `SELECT * FROM password_reset_tokens WHERE token = $1`, [tokenRes.data]
     )
-
-    if (rows.length === 0) {
-      return res.status(200).json({ valid: false, error: 'Invalid reset token' })
+    if (rows.length === 0 || rows[0].used || new Date(rows[0].expires_at) < new Date()) {
+      return res.status(200).json({ valid: false, error: 'Invalid or expired token' })
     }
-
-    const tokenData = rows[0]
-    
-    // Check if token is expired
-    if (new Date(tokenData.expires_at) < new Date()) {
-      return res.status(200).json({ valid: false, error: 'Reset token has expired' })
-    }
-
-    // Check if token has been used
-    if (tokenData.used) {
-      return res.status(200).json({ valid: false, error: 'Reset token has already been used' })
-    }
-
     return res.status(200).json({ valid: true })
   } catch (err) {
-    console.error('Verify reset token error:', err)
-    return res.status(500).json({ error: 'Failed to verify reset token', valid: false })
+    return res.status(500).json({ error: 'Failed to verify token', valid: false })
   }
 }
 
 export async function resetPassword(req: Request, res: Response) {
+  const result = ResetPasswordSchema.safeParse(req.body)
+  if (!result.success) return res.status(400).json({ error: 'Invalid input' })
+  const { email, code, password } = result.data
+
   const client = await pool.connect()
   try {
-    const { email, code, password } = req.body || {}
-    if (!email || !code || !password) {
-      return res.status(400).json({ error: 'Email, code, and password are required' })
-    }
-
-    // Validate password strength
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters long' })
-    }
-
-    // Start transaction
     await client.query('BEGIN')
-
-    try {
-      // Verify code and get user_id
-      const { rows: tokenRows } = await client.query<{ token_id: string; user_id: string; expires_at: Date; used: boolean }>(
-        `SELECT prt.token_id, prt.user_id, prt.expires_at, prt.used 
-         FROM password_reset_tokens prt
-         JOIN users u ON u.user_id = prt.user_id
-         WHERE u.email = $1 AND prt.token = $2 AND prt.used = false
-         ORDER BY prt.created_at DESC
-         LIMIT 1
-         FOR UPDATE`,
-        [email.toLowerCase(), code]
-      )
-
-      if (tokenRows.length === 0) {
-        await client.query('ROLLBACK')
-        return res.status(400).json({ error: 'Invalid reset code' })
-      }
-
-      const tokenData = tokenRows[0]
-
-      // Check if code is expired
-      if (new Date(tokenData.expires_at) < new Date()) {
-        await client.query('ROLLBACK')
-        return res.status(400).json({ error: 'Reset code has expired' })
-      }
-
-      // Check if code has been used
-      if (tokenData.used) {
-        await client.query('ROLLBACK')
-        return res.status(400).json({ error: 'Reset code has already been used' })
-      }
-
-      // Hash new password
-      const hash = await bcrypt.hash(password, SALT_ROUNDS)
-
-      // Update user password
-      await client.query(
-        `UPDATE users SET password_hash = $1 WHERE user_id = $2`,
-        [hash, tokenData.user_id]
-      )
-
-      // Mark token as used
-      await client.query(
-        `UPDATE password_reset_tokens SET used = true WHERE token_id = $1`,
-        [tokenData.token_id]
-      )
-
-      // Commit transaction
-      await client.query('COMMIT')
-
-      return res.status(200).json({ message: 'Password has been reset successfully' })
-    } catch (err) {
+    const { rows } = await client.query<{ token_id: string, user_id: string, expires_at: Date }>(
+      `SELECT prt.* FROM password_reset_tokens prt JOIN users u ON u.user_id = prt.user_id WHERE u.email = $1 AND prt.token = $2 AND prt.used = false FOR UPDATE`,
+      [email, code]
+    )
+    if (rows.length === 0 || new Date(rows[0].expires_at) < new Date()) {
       await client.query('ROLLBACK')
-      throw err
+      return res.status(400).json({ error: 'Invalid or expired code' })
     }
+    const hash = await bcrypt.hash(password, SALT_ROUNDS)
+    await client.query(`UPDATE users SET password_hash = $1 WHERE user_id = $2`, [hash, rows[0].user_id])
+    await client.query(`UPDATE password_reset_tokens SET used = true WHERE token_id = $1`, [rows[0].token_id])
+    await client.query('COMMIT')
+    return res.status(200).json({ message: 'Password reset successfully' })
   } catch (err) {
-    console.error('Reset password error:', err)
+    await client.query('ROLLBACK')
     return res.status(500).json({ error: 'Failed to reset password' })
   } finally {
     client.release()
   }
 }
 
-const VERIFICATION_CODE_EXPIRY_HOURS = 24
-
-/**
- * Send email verification code after signup (for frontend signup flow).
- * Body: { email, name }. User must already exist in users.
- */
 export async function sendSignupVerificationEmail(req: Request, res: Response) {
+  const emailRes = CleanEmail.safeParse(req.body.email)
+  if (!emailRes.success) return res.status(400).json({ error: 'Valid email required' })
+  const email = emailRes.data
+
   try {
-    const { email, name } = req.body || {}
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' })
-    }
-    const { rows: userRows } = await query<{ user_id: string; name: string | null }>(
-      `SELECT user_id, name FROM users WHERE email = $1`,
-      [email.toLowerCase()]
-    )
-    if (userRows.length === 0) {
-      return res.status(404).json({ error: 'User not found' })
-    }
-    const userId = userRows[0].user_id
-    const userName = name || userRows[0].name || 'User'
+    const { rows } = await query<{ user_id: string, name: string | null }>(`SELECT user_id, name FROM users WHERE email = $1`, [email])
+    if (rows.length === 0) return res.status(404).json({ error: 'User not found' })
+    
     const code = Math.floor(100000 + Math.random() * 900000).toString()
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + VERIFICATION_CODE_EXPIRY_HOURS)
-
-    try {
-      await query(
-        `INSERT INTO email_verification_codes (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)`,
-        [userId, email.toLowerCase(), code, expiresAt]
-      )
-    } catch (e) {
-      console.error('Email verification table may not exist. Run migration add_email_verification.sql', e)
-      return res.status(503).json({ error: 'Email verification not configured' })
-    }
-
-    const emailService = new EmailService()
-    try {
-      await emailService.sendEmailVerificationCode(email.toLowerCase(), userName, code)
-      console.log('[Auth] Verification code email sent to', email.toLowerCase())
-    } catch (emailErr) {
-      console.error('Send verification email failed (code was saved):', emailErr)
-      return res.status(200).json({
-        message: 'Verification code could not be sent to your email. You can still verify later from the verify-email page with the code we generated.',
-        codeSaved: true
-      })
-    }
-    return res.status(200).json({ message: 'Verification code sent to your email' })
+    const expires = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 3600000)
+    await query(`INSERT INTO email_verification_codes (user_id, email, code, expires_at) VALUES ($1, $2, $3, $4)`, [rows[0].user_id, email, code, expires])
+    await new EmailService().sendEmailVerificationCode(email, req.body.name || rows[0].name || 'User', code)
+    return res.status(200).json({ message: 'Code sent' })
   } catch (err) {
-    console.error('Send signup verification email error:', err)
-    return res.status(500).json({ error: 'Failed to send verification email' })
+    return res.status(500).json({ error: 'Failed to send email' })
   }
 }
 
-/**
- * Verify email with code and send welcome email.
- * Body: { email, code }
- */
 export async function verifyEmail(req: Request, res: Response) {
+  const emailRes = CleanEmail.safeParse(req.body.email)
+  const codeRes = CleanCode.safeParse(req.body.code)
+  if (!emailRes.success || !codeRes.success) return res.status(400).json({ error: 'Email and code required' })
+
   try {
-    const { email, code } = req.body || {}
-    if (!email || !code) {
-      return res.status(400).json({ error: 'Email and code are required' })
-    }
-
-    const { rows } = await query<{ code_id: string; user_id: string; expires_at: Date; used: boolean }>(
-      `SELECT code_id, user_id, expires_at, used FROM email_verification_codes
-       WHERE email = $1 AND code = $2 ORDER BY created_at DESC LIMIT 1`,
-      [email.toLowerCase(), code]
+    const { rows } = await query<{ code_id: string, user_id: string, expires_at: Date, used: boolean }>(
+      `SELECT * FROM email_verification_codes WHERE email = $1 AND code = $2 ORDER BY created_at DESC LIMIT 1`,
+      [emailRes.data, codeRes.data]
     )
-    if (rows.length === 0) {
-      return res.status(400).json({ error: 'Invalid verification code' })
+    if (rows.length === 0 || rows[0].used || new Date(rows[0].expires_at) < new Date()) {
+      return res.status(400).json({ error: 'Invalid or expired code' })
     }
-    const row = rows[0]
-    if (row.used) {
-      return res.status(400).json({ error: 'This code has already been used' })
-    }
-    if (new Date(row.expires_at) < new Date()) {
-      return res.status(400).json({ error: 'Verification code has expired' })
-    }
-
-    await query(`UPDATE email_verification_codes SET used = true WHERE code_id = $1`, [row.code_id])
-
-    try {
-      await query(
-        `UPDATE users SET email_verified = true WHERE user_id = $1`,
-        [row.user_id]
-      )
-    } catch (e) {
-      // Column may not exist yet
-    }
-
-    const { rows: userRows } = await query<{ name: string | null }>(
-      `SELECT name FROM users WHERE user_id = $1`,
-      [row.user_id]
-    )
-    const name = userRows[0]?.name || 'User'
-    let welcomeSent = false
-    try {
-      const emailService = new EmailService()
-      await emailService.sendWelcomeEmail(email.toLowerCase(), name)
-      welcomeSent = true
-    } catch (emailErr) {
-      console.error('Welcome email failed (verification still succeeded):', emailErr)
-    }
-    return res.status(200).json({
-      message: welcomeSent ? 'Email confirmed. Welcome email sent.' : 'Email confirmed. Welcome email could not be sent.',
-      verified: true
-    })
+    await query(`UPDATE email_verification_codes SET used = true WHERE code_id = $1`, [rows[0].code_id])
+    await query(`UPDATE users SET email_verified = true WHERE user_id = $1`, [rows[0].user_id]).catch(() => {})
+    
+    const { rows: user } = await query<{ name: string | null }>(`SELECT name FROM users WHERE user_id = $1`, [rows[0].user_id])
+    void new EmailService().sendWelcomeEmail(emailRes.data, user[0]?.name || 'User').catch(() => {})
+    
+    return res.status(200).json({ message: 'Email verified', verified: true })
   } catch (err) {
-    console.error('Verify email error:', err)
     return res.status(500).json({ error: 'Failed to verify email' })
   }
 }
 
-/**
- * Google OAuth sign-in. Accepts { code, redirect_uri } or { id_token }.
- * Creates user if new (no company). Returns JWT and user; hasCompany false until they complete company-setup.
- */
 export async function googleSignIn(req: Request, res: Response) {
   try {
-    const { code, redirect_uri, id_token: idTokenFromBody } = req.body || {}
+    const { code, id_token: idTokenBody } = req.body
     const clientId = process.env.GOOGLE_CLIENT_ID
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-    const defaultRedirect = process.env.GOOGLE_REDIRECT_URI
+    if (!clientId || !clientSecret) return res.status(503).json({ error: 'Google auth not configured' })
 
-    if (!clientId || !clientSecret) {
-      return res.status(503).json({ error: 'Google sign-in is not configured' })
-    }
-
-    let idToken = idTokenFromBody
+    let idToken = idTokenBody
     if (code && !idToken) {
-      const redirectUri = redirect_uri || defaultRedirect
-      if (!redirectUri) {
-        return res.status(400).json({ error: 'redirect_uri required when using code' })
-      }
-      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      const resTok = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          code,
-          client_id: clientId,
-          client_secret: clientSecret,
-          redirect_uri: redirectUri,
-          grant_type: 'authorization_code'
-        })
+        body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: req.body.redirect_uri || process.env.GOOGLE_REDIRECT_URI!, grant_type: 'authorization_code' })
       })
-      if (!tokenRes.ok) {
-        const errText = await tokenRes.text()
-        console.error('Google token exchange failed:', tokenRes.status, errText)
-        return res.status(401).json({ error: 'Invalid or expired authorization code' })
-      }
-      const tokenData = (await tokenRes.json()) as { id_token?: string }
-      idToken = tokenData.id_token
+      if (!resTok.ok) return res.status(401).json({ error: 'Token exchange failed' })
+      idToken = (await resTok.json()).id_token
     }
-
-    if (!idToken) {
-      return res.status(400).json({ error: 'id_token or code required' })
-    }
+    if (!idToken) return res.status(400).json({ error: 'Token required' })
 
     const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`)
-    if (!infoRes.ok) {
-      return res.status(401).json({ error: 'Invalid Google token' })
-    }
-    const info = (await infoRes.json()) as { email?: string; name?: string; sub?: string; email_verified?: string }
-    if (!info.email || info.email_verified !== 'true') {
-      return res.status(401).json({ error: 'Google email not verified' })
-    }
-    const email = info.email.toLowerCase()
-    const name = (info.name || email.split('@')[0] || 'User').trim()
+    const info = await infoRes.json()
+    if (!info.email || info.email_verified !== 'true') return res.status(401).json({ error: 'Verified email required' })
 
-    const { rows: existing } = await query<{
-      user_id: string
-      role: string
-      name: string | null
-      is_active: boolean
-      company_role: string | null
-    }>(
-      `SELECT user_id, role, name, is_active, company_role FROM users WHERE email = $1`,
-      [email]
+    const email = info.email.toLowerCase().trim()
+    const { rows: user } = await query<{ user_id: string, role: string, name: string | null, is_active: boolean, company_role: string | null }>(
+      `SELECT * FROM users WHERE email = $1`, [email]
     )
+    if (user.length === 0) return res.status(401).json({ error: 'User does not exist. Sign up first.' })
+    if (!user[0].is_active) return res.status(403).json({ error: 'Account inactive' })
 
-    let userId: string
-    let userName: string
-    if (existing.length > 0) {
-      if (!existing[0].is_active) {
-        return res.status(403).json({ error: 'Account is inactive' })
-      }
-      userId = existing[0].user_id
-      userName = existing[0].name || name
-    } else {
-      const hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), SALT_ROUNDS)
-      const { rows: colCheck } = await query(`
-        SELECT column_name FROM information_schema.columns
-        WHERE table_name = 'users' AND column_name IN ('name', 'company_role')
-      `)
-      const hasName = colCheck.some((r: { column_name: string }) => r.column_name === 'name')
-      const cols = ['email', 'password_hash', 'role', 'is_active']
-      const vals = ['$1', '$2', "'user'", 'true']
-      const params: unknown[] = [email, hash]
-      let n = 3
-      if (hasName) {
-        cols.push('name')
-        vals.push(`$${n++}`)
-        params.push(name)
-      }
-      const { rows: inserted } = await query<{ user_id: string }>(
-        `INSERT INTO users (${cols.join(', ')}) VALUES (${vals.join(', ')}) RETURNING user_id`,
-        params
-      )
-      userId = inserted[0].user_id
-      userName = name
+    const u = user[0]
+    let companyInfo = { hasCompany: false, companyId: null as string | null }
+    if (u.company_role !== 'candidate') {
+      const { rows: comp } = await query<{ company_id: string }>(`SELECT company_id FROM companies WHERE user_id = $1 LIMIT 1`, [u.user_id])
+      if (comp.length > 0) { companyInfo.hasCompany = true; companyInfo.companyId = comp[0].company_id }
     }
 
-    let hasCompany = false
-    let companyId: string | null = null
-    let companyName: string | null = null
-    let companyEmail: string | null = null
-    let hrEmail: string | null = null
-    let hiringManagerEmail: string | null = null
-
-    const { rows: companyCheck } = await query(`
-      SELECT column_name FROM information_schema.columns
-      WHERE table_name = 'companies' AND column_name = 'user_id'
-    `)
-    if (companyCheck.length > 0) {
-      const { rows: companyRows } = await query<{ company_id: string; company_name: string; company_email: string; hr_email: string; hiring_manager_email: string | null }>(
-        `SELECT company_id, company_name, company_email, hr_email, hiring_manager_email FROM companies WHERE user_id = $1 LIMIT 1`,
-        [userId]
-      )
-      if (companyRows.length > 0) {
-        hasCompany = true
-        companyId = companyRows[0].company_id
-        companyName = companyRows[0].company_name
-        companyEmail = companyRows[0].company_email
-        hrEmail = companyRows[0].hr_email
-        hiringManagerEmail = companyRows[0].hiring_manager_email ?? null
-      }
-    }
-
-    const resolvedCompanyRole = existing.length > 0 ? existing[0].company_role : null
-    if (resolvedCompanyRole === 'candidate') {
-      hasCompany = false
-      companyId = null
-      companyName = null
-      companyEmail = null
-      hrEmail = null
-      hiringManagerEmail = null
-    }
-
-    const token = jwt.sign(
-      { sub: userId, email },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    )
-
-    return res.status(200).json({
-      token,
-      user: {
-        user_id: userId,
-        id: userId,
-        name: userName,
-        email,
-        role: existing.length > 0 ? existing[0].role : 'user',
-        company_role: resolvedCompanyRole,
-        created_at: null,
-        hasCompany,
-        companyId,
-        companyName,
-        companyEmail,
-        hrEmail,
-        hiringManagerEmail
-      }
-    })
+    const token = jwt.sign({ sub: u.user_id, email, role: u.role }, JWT_SECRET, { expiresIn: '7d' })
+    return res.status(200).json({ token, user: { id: u.user_id, email, name: u.name || info.name, role: u.role, company_role: u.company_role, ...companyInfo } })
   } catch (err) {
-    console.error('Google sign-in error:', err)
     return res.status(500).json({ error: 'Google sign-in failed' })
   }
 }
 
 export async function hrSignup(req: Request, res: Response) {
-  req.body.company_role = req.body.company_role || 'hr';
-  if (req.body.company_role !== 'hr' && req.body.company_role !== 'hiring_manager') {
-    return res.status(403).json({ error: 'Invalid role for HR portal' });
-  }
-  return signup(req, res);
+  req.body.company_role = req.body.company_role || 'hr'
+  return signup(req, res)
 }
 
 export async function candidateSignup(req: Request, res: Response) {
-  req.body.company_role = 'candidate';
-  return signup(req, res);
+  req.body.company_role = 'candidate'
+  return signup(req, res)
 }
 
 export async function hrSignin(req: Request, res: Response) {
-  try {
-    const { email, password } = req.body || {}
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' })
-    }
-    const { rows } = await query<{
-      user_id: string
-      password_hash: string
-      role: string
-      is_active: boolean
-      created_at: string
-      name: string | null
-      company_role: string | null
-    }>(
-      `select user_id, password_hash, role, is_active, created_at, name, company_role from users where email = $1`,
-      [email.toLowerCase()]
-    )
-    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' })
-    if (!rows[0].is_active) return res.status(401).json({ error: 'Account is inactive' })
-    if (rows[0].company_role !== 'hr' && rows[0].company_role !== 'hiring_manager') {
-       return res.status(403).json({ error: 'Please login through the correct portal (HR)' })
-    }
-    const ok = await bcrypt.compare(password, rows[0].password_hash)
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
-
-    let hasCompany = false
-    let companyId = null
-    let companyName = null
-    let companyEmail = null
-    let hrEmail = null
-    
-    try {
-      const companyCheck = await query<{ company_id: string; company_name: string; company_email: string; hr_email: string }>(
-        `SELECT company_id, company_name, company_email, hr_email FROM companies WHERE hr_email = $1 OR company_email = $1 LIMIT 1`,
-        [email.toLowerCase()]
-      )
-      hasCompany = companyCheck.rows.length > 0
-      if (hasCompany) {
-        companyId = companyCheck.rows[0]?.company_id || null
-        companyName = companyCheck.rows[0]?.company_name || null
-        companyEmail = companyCheck.rows[0]?.company_email || null
-        hrEmail = companyCheck.rows[0]?.hr_email || null
-      }
-    } catch (err) {
-      console.error('Error checking company:', err)
-    }
-
-    const token = jwt.sign({ sub: rows[0].user_id, email: email.toLowerCase(), role: rows[0].role }, process.env.JWT_SECRET!, { expiresIn: '7d' })
-    return res.status(200).json({ 
-      token, 
-      user: { 
-        user_id: rows[0].user_id,
-        id: rows[0].user_id,
-        email: email.toLowerCase(),
-        name: rows[0].name,
-        role: rows[0].role,
-        company_role: rows[0].company_role,
-        created_at: rows[0].created_at,
-        hasCompany,
-        companyId,
-        companyName,
-        companyEmail,
-        hrEmail
-      } 
-    })
-  } catch (err) {
-    console.error('Signin error:', err)
-    return res.status(500).json({ error: 'Failed to sign in' })
-  }
+  req.body.portal = 'hr'
+  return signin(req, res)
 }
 
 export async function candidateSignin(req: Request, res: Response) {
-  try {
-    const { email, password } = req.body || {}
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' })
-    }
-    const { rows } = await query<{
-      user_id: string
-      password_hash: string
-      role: string
-      is_active: boolean
-      created_at: string
-      name: string | null
-      company_role: string | null
-    }>(
-      `select user_id, password_hash, role, is_active, created_at, name, company_role from users where email = $1`,
-      [email.toLowerCase()]
-    )
-    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' })
-    if (!rows[0].is_active) return res.status(401).json({ error: 'Account is inactive' })
-    if (rows[0].company_role !== 'candidate') {
-       return res.status(403).json({ error: 'Please login through the correct portal (Candidate)' })
-    }
-    const ok = await bcrypt.compare(password, rows[0].password_hash)
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
-
-    const token = jwt.sign({ sub: rows[0].user_id, email: email.toLowerCase(), role: rows[0].role }, process.env.JWT_SECRET!, { expiresIn: '7d' })
-    return res.status(200).json({ 
-      token, 
-      user: { 
-        user_id: rows[0].user_id,
-        id: rows[0].user_id,
-        email: email.toLowerCase(),
-        name: rows[0].name,
-        role: rows[0].role,
-        company_role: rows[0].company_role,
-        created_at: rows[0].created_at,
-        hasCompany: false,
-        companyId: null,
-        companyName: null,
-        companyEmail: null,
-        hrEmail: null
-      } 
-    })
-  } catch (err) {
-    console.error('Signin error:', err)
-    return res.status(500).json({ error: 'Failed to sign in' })
-  }
+  req.body.portal = 'candidate'
+  return signin(req, res)
 }

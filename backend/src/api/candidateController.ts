@@ -222,9 +222,9 @@ export const submitMockInterview = async (req: Request, res: Response): Promise<
     const { interviewType = 'Behavioural', targetRole = null, level = 'Mid-level', answers = [] } = req.body || {}
     const profile = await candidateRepo.getProfileByUserId(userId) || await candidateRepo.createProfile(userId)
     await ensureCandidateFeatureTables()
-    const normalizedAnswers = Array.isArray(answers) ? answers.map(String) : []
-    const report = scoreInterviewAnswers(normalizedAnswers)
-    const transcript = normalizedAnswers.map((answer, index) => ({ question: index + 1, answer }))
+    const cleanAnswers = Array.isArray(answers) ? answers.map(String) : []
+    const report = scoreInterviewAnswers(cleanAnswers)
+    const transcript = cleanAnswers.map((answer, index) => ({ question: index + 1, answer }))
 
     let session: any = {
       session_id: null,

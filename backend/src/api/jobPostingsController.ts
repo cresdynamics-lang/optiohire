@@ -241,7 +241,7 @@ export async function createJobPosting(req: Request, res: Response) {
   }
 
   const payload = parse.data
-  const skills = normalizeSkills(payload.required_skills)
+  const cleanSkills = Array.from(new Set((payload.required_skills || []).map(s => s.trim().toLowerCase()).filter(s => s.length > 0)))
   const applicationDeadline = new Date(payload.application_deadline)
   
   if (isNaN(applicationDeadline.getTime())) {

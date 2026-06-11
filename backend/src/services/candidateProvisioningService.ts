@@ -22,17 +22,17 @@ export async function provisionCandidateAccount(data: {
   isNewAccount: boolean
   temporaryPassword: string | null
 }> {
-  const normalizedEmail = data.email.toLowerCase().trim()
+  const userEmail = data.email.toLowerCase().trim()
 
   try {
     // 1. Check if user already exists
     const { rows: existing } = await query<{ user_id: string; role: string }>(
       `SELECT user_id, role FROM users WHERE email = $1`,
-      [normalizedEmail]
+      [userEmail]
     )
 
     if (existing.length > 0) {
-      logger.info(`[CandidateProvisioning] User already exists for ${normalizedEmail}, skipping creation`)
+      logger.info(`[CandidateProvisioning] User already exists for ${userEmail}, skipping creation`)
       return {
         userId: existing[0].user_id,
         isNewAccount: false,
@@ -57,7 +57,7 @@ export async function provisionCandidateAccount(data: {
 
     const columns: string[] = ['email', 'password_hash', 'role', 'is_active']
     const placeholders: string[] = ['$1', '$2', '$3', '$4']
-    const params: any[] = [normalizedEmail, passwordHash, 'candidate', true]
+    const params: any[] = [userEmail, passwordHash, 'candidate', true]
     let paramIndex = 5
 
     if (hasNameColumn && data.candidateName) {
@@ -84,7 +84,7 @@ export async function provisionCandidateAccount(data: {
       // Race condition: another process created the user between our check and insert
       const { rows: fallback } = await query<{ user_id: string }>(
         `SELECT user_id FROM users WHERE email = $1`,
-        [normalizedEmail]
+        [userEmail]
       )
       return {
         userId: fallback[0]?.user_id || '',
@@ -94,7 +94,7 @@ export async function provisionCandidateAccount(data: {
     }
 
     const userId = rows[0].user_id
-    logger.info(`[CandidateProvisioning] Created candidate account for ${normalizedEmail} (user_id: ${userId})`)
+    logger.info(`[CandidateProvisioning] Created candidate account for ${userEmail} (user_id: ${userId})`)
 
     // 4. Create candidate_profiles row if the table exists
     try {
@@ -123,7 +123,7 @@ export async function provisionCandidateAccount(data: {
       temporaryPassword,
     }
   } catch (err) {
-    logger.error(`[CandidateProvisioning] Failed to provision candidate account for ${normalizedEmail}:`, err)
+    logger.error(`[CandidateProvisioning] Failed to provision candidate account for ${userEmail}:`, err)
     // Don't throw — this is a non-critical enhancement. The application was already saved.
     return {
       userId: '',

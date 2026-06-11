@@ -1077,16 +1077,16 @@ export async function getAllApplications(req: Request, res: Response) {
       params.slice(2)
     )
 
-    // Normalize ai_score to number (PostgreSQL numeric can be returned as string)
-    const normalizedApplications = applications.map((app: any) => ({
+    // Ensure ai_score is a number (PostgreSQL numeric can be returned as string)
+    const finalApplications = applications.map((app: any) => ({
       ...app,
       ai_score: app.ai_score !== null && app.ai_score !== undefined 
-        ? (typeof app.ai_score === 'number' ? app.ai_score : Number(app.ai_score))
+        ? Number(app.ai_score)
         : null
     }))
 
     return res.json({
-      applications: normalizedApplications,
+      applications: finalApplications,
       total: Number(countRows[0].count),
       page: Number(page),
       limit: Number(limit)
@@ -1195,12 +1195,12 @@ export async function getAIAuditTrail(req: Request, res: Response) {
       params.push(company_id)
     }
     if (decision) {
-      const normalizedDecision = String(decision).toUpperCase()
-      if (normalizedDecision === 'PENDING') {
+      const cleanDecision = String(decision).toUpperCase().trim()
+      if (cleanDecision === 'PENDING') {
         conditions.push(`a.ai_status IS NULL`)
-      } else if (['SHORTLIST', 'FLAG', 'REJECT'].includes(normalizedDecision)) {
+      } else if (['SHORTLIST', 'FLAG', 'REJECT'].includes(cleanDecision)) {
         conditions.push(`UPPER(a.ai_status) = $${i++}`)
-        params.push(normalizedDecision)
+        params.push(cleanDecision)
       }
     }
 
