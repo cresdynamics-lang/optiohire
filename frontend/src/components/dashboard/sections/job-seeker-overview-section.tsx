@@ -8,7 +8,7 @@ import { ArrowRight, Sparkles, ShieldCheck, Trophy, Loader2 } from 'lucide-react
 import { CandidateAnalyticsDashboard } from './candidate-analytics-dashboard'
 
 export function JobSeekerOverviewSection() {
-  const { user, token } = useAuth()
+  const { user } = useAuth()
   const firstName = user?.name?.split(/\s+/)[0]
 
   const [data, setData] = useState<any>(null)
@@ -17,6 +17,7 @@ export function JobSeekerOverviewSection() {
   useEffect(() => {
     async function fetchDashboard() {
       try {
+        const token = localStorage.getItem('token')
         if (!token) return
         const res = await fetch('/api/candidate/dashboard', {
           headers: { Authorization: `Bearer ${token}` }
@@ -32,7 +33,7 @@ export function JobSeekerOverviewSection() {
       }
     }
     fetchDashboard()
-  }, [token])
+  }, [])
 
   if (loading) {
     return (
