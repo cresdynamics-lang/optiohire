@@ -19,7 +19,7 @@ export default function FinalCTASection() {
   const shouldReduceMotion = useReducedMotion()
 
   const handleGetStarted = useCallback(() => {
-    router.push('/auth/signup')
+    router.push('/hr/auth/signup')
   }, [router])
 
   const handleContact = useCallback(() => {

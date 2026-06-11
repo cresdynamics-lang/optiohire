@@ -5,7 +5,8 @@ import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, Video, ExternalLink, Loader2, User, XCircle, Pencil } from 'lucide-react'
+import { Calendar, Clock, Video, ExternalLink, Loader2, User, XCircle, Pencil, LayoutGrid, Table as TableIcon } from 'lucide-react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAuth } from '@/hooks/use-auth'
 import { createTimeoutSignal } from '@/lib/utils'
 import { JobPosting } from '@/types'
@@ -54,6 +55,7 @@ export function InterviewsSection() {
   // Modals state
   const [isRejectedModalOpen, setIsRejectedModalOpen] = useState(false)
   const [selectedInterviewForEdit, setSelectedInterviewForEdit] = useState<InterviewData | null>(null)
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
 
   const loadInterviews = useCallback(async (options?: { silent?: boolean }) => {
     if (!user) {
@@ -284,13 +286,39 @@ export function InterviewsSection() {
         >
           <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-[0_22px_70px_-48px_rgba(15,23,42,0.38)] dark:border-gray-800 dark:bg-gray-900">
             <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-                <Calendar className="h-5 w-5 text-slate-700 dark:text-slate-200" />
-                Upcoming interviews
-              </CardTitle>
-              <CardDescription>
-                Scheduled interviews for your active job postings
-              </CardDescription>
+              <div className="flex items-center justify-between w-full">
+                <div>
+                  <CardTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight">
+                    <Calendar className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+                    Upcoming interviews
+                  </CardTitle>
+                  <CardDescription>
+                    Scheduled interviews for your active job postings
+                  </CardDescription>
+                </div>
+                {!isLoading && upcomingInterviews.length > 0 && (
+                  <div className="flex bg-slate-100 /50 p-1 rounded-xl border border-slate-200/50">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setViewMode('card')} 
+                      className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'card' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
+                      title="Card View"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setViewMode('table')} 
+                      className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
+                      title="Table View"
+                    >
+                      <TableIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {upcomingInterviews.length === 0 ? (
@@ -302,6 +330,7 @@ export function InterviewsSection() {
                   </p>
                 </div>
               ) : (
+                viewMode === 'card' ? (
                 <div className="space-y-4">
                   {upcomingInterviews.map((interview, index) => {
                     if (!interview.interview_date) return null
@@ -384,6 +413,62 @@ export function InterviewsSection() {
                     )
                   })}
                 </div>
+                ) : (
+                <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-muted">
+                      <TableRow>
+                        <TableHead className="font-bold">Interview</TableHead>
+                        <TableHead className="font-bold">Candidate</TableHead>
+                        <TableHead className="font-bold">Date & Time</TableHead>
+                        <TableHead className="font-bold text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {upcomingInterviews.map((interview) => {
+                        if (!interview.interview_date) return null
+                        const dateInfo = formatInterviewDate(interview.interview_date)
+                        return (
+                          <TableRow key={interview.id}>
+                            <TableCell>
+                              <div className="font-semibold text-slate-900">{interview.job_title}</div>
+                              <Badge variant={dateInfo.isToday ? 'warning' : 'success'} className="mt-1">
+                                {dateInfo.isToday ? 'Today' : 'Upcoming'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {interview.candidateName ? (
+                                <div>
+                                  <div className="font-medium">{interview.candidateName}</div>
+                                  <div className="text-xs text-muted-foreground">{interview.candidateEmail}</div>
+                                </div>
+                              ) : <span className="text-muted-foreground">-</span>}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5 text-sm">
+                                <Clock className="w-4 h-4 text-slate-500" />
+                                <span>{dateInfo.date} at {dateInfo.time}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                {interview.meeting_link && (
+                                  <Button variant="outline" size="sm" onClick={() => window.open(interview.meeting_link!, '_blank')}>
+                                    <Video className="w-4 h-4 mr-1" /> Join
+                                  </Button>
+                                )}
+                                <Button variant="outline" size="sm" onClick={() => setSelectedInterviewForEdit(interview)}>
+                                  <Pencil className="w-4 h-4" /> Edit
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+                )
               )}
             </CardContent>
           </Card>

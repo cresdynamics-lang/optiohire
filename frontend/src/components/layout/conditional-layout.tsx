@@ -1,6 +1,4 @@
-'use client'
-
-import { usePathname } from 'next/navigation'
+import { headers } from 'next/headers'
 import { Navbar } from '@/components/navigation/navbar'
 import { Footer } from '@/components/footer/footer'
 
@@ -8,20 +6,21 @@ interface ConditionalLayoutProps {
   children: React.ReactNode
 }
 
-export function ConditionalLayout({ children }: ConditionalLayoutProps) {
-  const pathname = usePathname()
+export async function ConditionalLayout({ children }: ConditionalLayoutProps) {
+  const headersList = await headers()
+  const subdomain = headersList.get('x-optiohire-subdomain')
+  const host = headersList.get('host') || ''
+  const pathname = headersList.get('x-invoke-path') || '' // Fallback if needed, though middleware rewrites might mask this.
 
-  const isDashboard = pathname?.startsWith('/dashboard') || pathname?.startsWith('/candidate') || pathname?.startsWith('/hr') || false
-  const isAuth = pathname?.startsWith('/auth') || false
-  const isAdmin = pathname?.startsWith('/admin') || false
-  const isPrivacy = pathname === '/privacy' || false
+  const isSubdomain = !!subdomain || host.startsWith('console.') || host.startsWith('admin.') || host.startsWith('candidate.') || host.startsWith('applications.')
+  const isDashboardPath = pathname.startsWith('/dashboard') || pathname.startsWith('/candidate') || pathname.startsWith('/hr') || pathname.startsWith('/auth') || pathname.startsWith('/admin') || pathname === '/privacy'
 
-  // Hide navbar and footer for dashboard, auth, admin, and privacy pages
-  if (isDashboard || isAuth || isAdmin || isPrivacy) {
+  // Hide navbar and footer for dashboard, auth, admin, and privacy pages, and ALL subdomains
+  if (isSubdomain || isDashboardPath) {
     return <>{children}</>
   }
 
-  // Always render Navbar + Footer on public pages — no mount gate.
+  // Always render Navbar + Footer on public pages.
   // The pt-20 reserves space for the fixed navbar so content never jumps.
   return (
     <>

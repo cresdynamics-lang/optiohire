@@ -66,10 +66,10 @@ export default function HeroSection({ role, setRole }: HeroSectionProps) {
 
                 <div className="mt-10 flex flex-wrap items-center gap-3">
                   <Button asChild size="lg" className="gap-2 rounded-2xl bg-slate-900 px-7 py-6 text-base font-semibold text-white hover:bg-black">
-                    <Link href="/auth/signup?role=employer">Get Started <ArrowRight className="ml-1 inline h-5 w-5" /></Link>
+                    <Link href="/hr/auth/signup">Get Started <ArrowRight className="ml-1 inline h-5 w-5" /></Link>
                   </Button>
                   <Button asChild variant="outline" size="lg" className="rounded-2xl border-slate-300 bg-white/90 px-7 py-6 text-base font-medium text-slate-700 hover:bg-slate-50">
-                    <Link href="/auth/signin">Sign In</Link>
+                    <Link href="/hr/auth/signin">Sign In</Link>
                   </Button>
                 </div>
 
@@ -113,10 +113,10 @@ export default function HeroSection({ role, setRole }: HeroSectionProps) {
 
                 <div className="mt-10 flex flex-wrap items-center gap-3">
                   <Button asChild size="lg" className="gap-2 rounded-2xl bg-[#15a36b] px-7 py-6 text-base font-semibold text-white hover:bg-[#118255]">
-                    <Link href="/auth/signup?role=candidate">Apply Now <ArrowRight className="ml-1 inline h-5 w-5" /></Link>
+                    <Link href="https://applications.optiohire.com">Apply Now <ArrowRight className="ml-1 inline h-5 w-5" /></Link>
                   </Button>
                   <Button asChild variant="outline" size="lg" className="rounded-2xl border-slate-300 bg-white/90 px-7 py-6 text-base font-medium text-slate-700 hover:bg-slate-50">
-                    <Link href="/auth/signin">Sign In</Link>
+                    <Link href="https://applications.optiohire.com">Sign In</Link>
                   </Button>
                 </div>
 

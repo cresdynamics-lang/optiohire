@@ -52,7 +52,7 @@ export function BottomCtaBanner() {
               {/* Center - CTA */}
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => router.push('/auth/signup')}
+                  onClick={() => router.push('/hr/auth/signup')}
                   className="px-4 py-2 bg-white text-teal-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm whitespace-nowrap"
                 >
                   Request Demo

@@ -104,7 +104,7 @@ export default function PricingSection({ plans: customPlans }: PricingSectionPro
         "Email support",
         "Basic integrations",
       ],
-      onButtonClick: () => router.push('/auth/signup'),
+      onButtonClick: () => router.push('/hr/auth/signup'),
     },
     {
       name: "Professional",
@@ -128,7 +128,7 @@ export default function PricingSection({ plans: customPlans }: PricingSectionPro
         "Advanced reporting",
         "API access",
       ],
-      onButtonClick: () => router.push('/auth/signup'),
+      onButtonClick: () => router.push('/hr/auth/signup'),
     },
     {
       name: "Enterprise",

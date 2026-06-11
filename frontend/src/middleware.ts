@@ -11,7 +11,6 @@ import type { NextRequest } from 'next/server'
 const SUBDOMAIN_MAPPING: Record<string, string> = {
   'console': '/admin',
   'admin': '/admin',
-  'candidate': '/candidate',
   'applications': '/candidate',
   // Add more subdomains here in the future
 }
@@ -39,7 +38,7 @@ export function middleware(request: NextRequest) {
     }
     // If trying to access /candidate, redirect to candidate subdomain
     if (url.pathname.startsWith('/candidate')) {
-      const candidateUrl = new URL(url.pathname, `https://candidate.optiohire.com`)
+      const candidateUrl = new URL(url.pathname, `https://applications.optiohire.com`)
       return NextResponse.redirect(candidateUrl)
     }
     return NextResponse.next()

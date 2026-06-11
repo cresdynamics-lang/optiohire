@@ -335,7 +335,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const signUpUrl =
         typeof window !== 'undefined'
           ? `${window.location.origin}/api/auth/signup`
-          : `${getBackendBaseUrl() || 'http://localhost:3001'}/auth/signup`
+          : `${getBackendBaseUrl() || 'http://localhost:3001'}/hr/auth/signup`
           
       const normalizedSignupRole = normalizeCompanyRole(company_role) || company_role
       const resp = await fetch(signUpUrl, {
@@ -407,7 +407,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const signInUrl =
         typeof window !== 'undefined'
           ? `${window.location.origin}/api/auth/signin`
-          : `${getBackendBaseUrl() || 'http://localhost:3001'}/auth/signin`
+          : `${getBackendBaseUrl() || 'http://localhost:3001'}/hr/auth/signin`
       const resp = await fetch(signInUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -468,7 +468,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fallbackUserRef.current = null
 
     const next =
-      options?.next === false ? null : typeof options?.next === 'string' ? options.next : '/auth/signin'
+      options?.next === false ? null : typeof options?.next === 'string' ? options.next : typeof window !== 'undefined' && (window.location.host.includes('applications.') || window.location.pathname.startsWith('/candidate')) ? '/candidate/auth/signin' : '/hr/auth/signin'
 
     // Full navigation avoids an extra React pass where the dashboard shows a skeleton while
     // `router.push` runs — the main cause of “logout just keeps loading”.

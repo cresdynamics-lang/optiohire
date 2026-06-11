@@ -60,6 +60,7 @@ export default function ShortlistedPage() {
   const [rejectReason, setRejectReason] = useState('')
   const [candidateToReject, setCandidateToReject] = useState<Candidate | null>(null)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
 
   // STRICT: Admin should NOT access HR dashboard
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function ShortlistedPage() {
     }
   }, [user, authLoading, router])
 
-  const fetchCandidates = useCallback(async () => {
+  const fetchCandidates = useCallback(async (silent = false) => {
     if (!jobId) {
       setError('Invalid job ID')
       setLoading(false)
@@ -84,7 +85,9 @@ export default function ShortlistedPage() {
       return
     }
 
-    setLoading(true)
+    if (!silent) {
+      setLoading(true)
+    }
     setError(null)
 
     try {
@@ -185,7 +188,9 @@ export default function ShortlistedPage() {
       setError(err.message || 'Failed to load candidates')
       setCandidates([])
     } finally {
-      setLoading(false)
+      if (!silent) {
+        setLoading(false)
+      }
     }
   }, [jobId])
 
@@ -201,7 +206,7 @@ export default function ShortlistedPage() {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
       // Skip polling if any modal/action is open to avoid disrupting HR operations
       if (isModalOpen || isMessageModalOpen || isRejectModalOpen) return
-      fetchCandidates()
+      fetchCandidates(true) // Poll silently so the UI doesn't flicker
     }
     const interval = setInterval(tick, 10000)
     return () => clearInterval(interval)
@@ -429,7 +434,7 @@ export default function ShortlistedPage() {
                 <p className="text-red-500 text-lg font-semibold mb-2">Failed to load candidates</p>
                 <p className="text-muted-foreground  mb-4">{error}</p>
                 <Button
-                  onClick={fetchCandidates}
+                  onClick={() => fetchCandidates(false)}
                   className="bg-[#2D2DDD] hover:bg-[#2D2DDD] text-white shadow-none hover:shadow-none"
                 >
                   Retry
@@ -505,6 +510,28 @@ export default function ShortlistedPage() {
                 </Button>
               )}
             </div>
+            {!isLoadingData && candidates.length > 0 && (
+              <div className="flex bg-slate-100 /50 p-1 rounded-xl border border-slate-200/50  w-fit">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setViewMode('card')} 
+                  className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'card' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
+                  title="Card View"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setViewMode('table')} 
+                  className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
+                  title="Table View"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
+                </Button>
+              </div>
+            )}
           </CardHeader>
         <CardContent>
           {isLoadingData ? (
@@ -529,6 +556,7 @@ export default function ShortlistedPage() {
               </label>
             </div>
 
+            {viewMode === 'card' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {candidates.length === 0 ? (
                 <div className="col-span-full text-center py-16">
@@ -681,6 +709,55 @@ export default function ShortlistedPage() {
                 })
               )}
             </div>
+            ) : (
+            <div className="rounded-2xl border border-border bg-white overflow-hidden">
+              <Table>
+                <TableHeader className="bg-muted">
+                  <TableRow>
+                    <TableHead className="w-[40px] px-4 py-3"></TableHead>
+                    <TableHead className="font-bold">Candidate</TableHead>
+                    <TableHead className="font-bold text-center">AI Score</TableHead>
+                    <TableHead className="font-bold">Status</TableHead>
+                    <TableHead className="font-bold text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {candidates.map((candidate) => (
+                    <TableRow key={candidate.id}>
+                      <TableCell className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(candidate.id)}
+                          onChange={() => toggleSelect(candidate.id)}
+                          className="rounded border-gray-300 accent-[#2D2DDD] w-4 h-4 cursor-pointer block"
+                        />
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                            {candidate.rank ? getRankIcon(candidate.rank) : <User className="w-4 h-4 text-muted-foreground" />}
+                          </div>
+                          <div>
+                            <div className="truncate font-semibold">{cleanCandidateName(candidate.candidate_name)}</div>
+                            <div className="text-xs text-muted-foreground truncate">{candidate.email}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-[#2D2DDD]">
+                        {candidate.score !== null && candidate.score !== undefined && typeof candidate.score === 'number' ? Number(candidate.score).toFixed(1) : '-'}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(candidate.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => handleRowClick(candidate)}>
+                          <User className="w-4 h-4 mr-1" /> Profile
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            )}
           </div>
           )}
         </CardContent>

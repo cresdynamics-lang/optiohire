@@ -69,7 +69,7 @@ export function Footer() {
             <p className="mt-1 text-sm text-slate-300">Ready to hire better, faster, and fairly? Join forward-thinking Kenyan companies using OptioHire.</p>
           </div>
           <Link
-            href="/auth/signup"
+            href="/hr/auth/signup"
             className="inline-flex w-fit items-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-blue-50"
           >
             Book a Free Demo
