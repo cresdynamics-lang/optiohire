@@ -15,10 +15,8 @@ function GoogleCallbackContent() {
     const tokenFromUrl = searchParams.get('token')
     if (tokenFromUrl) {
       localStorage.setItem('token', tokenFromUrl)
-      // Small delay to ensure localStorage is set
-      setTimeout(() => {
-        router.replace('/candidate')
-      }, 100)
+      // Use window.location.href to force a reload so AuthProvider hydrates the new token
+      window.location.href = '/candidate'
       return
     }
 

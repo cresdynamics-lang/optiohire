@@ -5,6 +5,7 @@ import fs from 'fs'
 
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
+
 const { Pool } = pg
 
 const pool = new Pool({
