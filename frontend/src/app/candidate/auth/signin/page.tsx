@@ -56,7 +56,7 @@ export default function CandidateSignInPage() {
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-md flex flex-col gap-4">
+      <div className="w-full max-w-md flex flex-col gap-4">
         <button onClick={() => router.push('/')} className="self-start px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-slate-50 text-slate-900 font-figtree text-sm shadow-sm border border-slate-200">
           <ArrowLeft className="w-4 h-4" /> Back to Home
         </button>
