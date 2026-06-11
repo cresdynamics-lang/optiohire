@@ -85,6 +85,7 @@ export function JobSeekerJobsSection() {
   useEffect(() => {
     const loadJobs = async () => {
       try {
+        setLoading(true)
         setStatusMessage(null)
         const token = localStorage.getItem('token')
         if (!token) {
@@ -117,7 +118,7 @@ export function JobSeekerJobsSection() {
       } catch (error: any) {
         setStatusMessage(error?.message || 'Unable to load jobs right now.')
       } finally {
-        // Keep jobs section interactive; no loading lock.
+        setLoading(false)
       }
     }
     void loadJobs()
@@ -460,7 +461,11 @@ export function JobSeekerJobsSection() {
         </Card>
       ) : null}
 
-      {filteredJobs.length === 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D2DDD]"></div>
+        </div>
+      ) : filteredJobs.length === 0 ? (
         <Card className="border-slate-200 bg-white">
           <CardContent className="pt-5 text-sm text-slate-600">
             {searchQuery ? `No jobs found matching "${searchQuery}".` : 'No active job postings are available right now.'}
