@@ -222,38 +222,7 @@ export function TalentProfileSection() {
     }
   }
 
-  const submitInterview = async () => {
-    if (answers.every((answer) => !answer.trim())) {
-      toast.error('Answer at least one question before submitting.')
-      return
-    }
 
-    setInterviewLoading(true)
-    try {
-      const res = await fetch('/api/candidate/mock-interview', {
-        method: 'POST',
-        headers: {
-          ...authHeaders(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          interviewType,
-          targetRole: targetRole || data?.recommendations?.[0]?.job_title || null,
-          level,
-          answers,
-        }),
-      })
-      const result = await res.json()
-      if (!res.ok || !result.success) throw new Error(result.error || 'Failed to submit interview')
-      setLatestReport(result.session)
-      toast.success('Mock interview report generated.')
-      await fetchDashboard()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to submit interview')
-    } finally {
-      setInterviewLoading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -316,65 +285,11 @@ export function TalentProfileSection() {
                   Mission complete
                 </Button>
               )}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20">
-                    <Mic className="mr-2 h-4 w-4" />
-                    Practice interview
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>AI Mock Interview Practice</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-3 sm:grid-cols-3 mt-4">
-                    <div className="space-y-2">
-                      <Label>Interview type</Label>
-                      <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={interviewType} onChange={(event) => setInterviewType(event.target.value as keyof typeof INTERVIEW_QUESTIONS)}>
-                        {Object.keys(INTERVIEW_QUESTIONS).map((type) => <option key={type}>{type}</option>)}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Level</Label>
-                      <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={level} onChange={(event) => setLevel(event.target.value)}>
-                        <option>Junior</option>
-                        <option>Mid-level</option>
-                        <option>Senior</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Target role</Label>
-                      <Input value={targetRole} onChange={(event) => setTargetRole(event.target.value)} placeholder="e.g. React Developer" />
-                    </div>
-                  </div>
 
-                  {INTERVIEW_QUESTIONS[interviewType].map((question, index) => (
-                    <div key={question} className="space-y-2 mt-2">
-                      <Label>Question {index + 1}</Label>
-                      <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 dark:text-white">{question}</p>
-                      <Textarea
-                        value={answers[index] || ''}
-                        onChange={(event) => {
-                          const next = [...answers]
-                          next[index] = event.target.value
-                          setAnswers(next)
-                        }}
-                        placeholder="Type your answer. Use examples, metrics, and trade-offs."
-                        rows={4}
-                      />
-                    </div>
-                  ))}
-
-                  <Button onClick={submitInterview} disabled={interviewLoading} className="w-full bg-indigo-600 hover:bg-indigo-700 mt-4">
-                    {interviewLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                    Generate interview report
-                  </Button>
-                </DialogContent>
-              </Dialog>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="rounded-2xl bg-white/10 p-4">
               <Trophy className="mb-3 h-5 w-5 text-amber-200" />
               <p className="text-3xl font-bold">{data.profile.total_score}</p>
@@ -389,11 +304,6 @@ export function TalentProfileSection() {
               <Briefcase className="mb-3 h-5 w-5 text-sky-200" />
               <p className="text-3xl font-bold">{data.recommendations.length}</p>
               <p className="text-xs text-indigo-100">Job matches</p>
-            </div>
-            <div className="rounded-2xl bg-white/10 p-4">
-              <Mic className="mb-3 h-5 w-5 text-purple-200" />
-              <p className="text-3xl font-bold">{stats.avgInterview || '-'}</p>
-              <p className="text-xs text-indigo-100">Avg interview</p>
             </div>
           </div>
         </CardContent>

@@ -5,7 +5,7 @@ import {
   completeMission,
   getCandidateDashboard,
   getLearningRoadmap,
-  submitMockInterview,
+  getLeaderboard,
   uploadCertificate,
 } from '../api/candidateController.js'
 import { uploadCandidateDocumentMiddleware } from '../api/uploadController.js'
@@ -24,6 +24,6 @@ router.get('/dashboard', getCandidateDashboard)
 router.get('/roadmap', getLearningRoadmap)
 router.post('/certificate', uploadCandidateDocumentMiddleware.single('certificate'), uploadCertificate)
 router.post('/missions/:missionId/complete', completeMission)
-router.post('/mock-interview', submitMockInterview)
+router.get('/leaderboard', getLeaderboard)
 
 export default router

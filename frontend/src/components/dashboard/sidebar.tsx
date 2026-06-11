@@ -14,7 +14,8 @@ import {
   Mail,
   Target,
   HelpCircle,
-  LogOut
+  LogOut,
+  Trophy
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, usePathname } from 'next/navigation'
@@ -94,6 +95,12 @@ const jobSeekerSidebarItems = [
     label: 'Interviews',
     icon: Calendar,
     href: '/candidate/interviews',
+  },
+  {
+    id: 'leaderboard',
+    label: 'Leaderboard',
+    icon: Trophy,
+    href: '/candidate/leaderboard',
   },
   {
     id: 'profile',

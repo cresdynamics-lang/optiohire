@@ -16,10 +16,9 @@ export function CandidateAnalyticsDashboard({ data }: { data: any }) {
   const missingSkills = data.gapAnalysis?.allMissingSkills || []
   
   const learningData = [
-    { name: 'Courses', value: 45 },
-    { name: 'Projects', value: 30 },
-    { name: 'Mock Interviews', value: 15 },
-    { name: 'Reading', value: 10 },
+    { name: 'Courses', value: 50 },
+    { name: 'Projects', value: 35 },
+    { name: 'Reading', value: 15 },
   ]
 
   const peerSkills = [

@@ -266,64 +266,43 @@ export const completeMission = async (req: Request, res: Response): Promise<void
   }
 }
 
-export const submitMockInterview = async (req: Request, res: Response): Promise<void> => {
+export const getLeaderboard = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).userId!
-    const { interviewType = 'Behavioural', targetRole = null, level = 'Mid-level', answers = [] } = req.body || {}
-    const profile = await candidateRepo.getProfileByUserId(userId) || await candidateRepo.createProfile(userId)
-    await ensureCandidateFeatureTables()
-    const cleanAnswers = Array.isArray(answers) ? answers.map(String) : []
-    const report = scoreInterviewAnswers(cleanAnswers)
-    const transcript = cleanAnswers.map((answer, index) => ({ question: index + 1, answer }))
+    const { time = 'all_time', category = 'all' } = req.query
 
-    let session: any = {
-      session_id: null,
-      profile_id: profile.profile_id,
-      interview_type: interviewType,
-      target_role: targetRole,
-      level,
-      overall_score: report.overall,
-      clarity_score: report.clarity,
-      relevance_score: report.relevance,
-      depth_score: report.depth,
-      feedback: report.feedback,
-      recommendations: report.recommendations,
-      transcript,
-      created_at: new Date().toISOString(),
+    // Basic leaderboard query
+    // Join candidate_profiles with users to get the candidate_name or email
+    let timeFilter = ''
+    if (time === 'this_week') {
+      timeFilter = 'AND cp.updated_at >= NOW() - INTERVAL \'7 days\''
+    } else if (time === 'this_month') {
+      timeFilter = 'AND cp.updated_at >= NOW() - INTERVAL \'30 days\''
     }
 
-    try {
-      const { rows } = await query(
-        `INSERT INTO candidate_interview_sessions
-          (profile_id, interview_type, target_role, level, overall_score, clarity_score, relevance_score, depth_score, feedback, recommendations, transcript)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-         RETURNING *`,
-        [
-          profile.profile_id,
-          interviewType,
-          targetRole,
-          level,
-          report.overall,
-          report.clarity,
-          report.relevance,
-          report.depth,
-          report.feedback,
-          JSON.stringify(report.recommendations),
-          JSON.stringify(transcript),
-        ]
-      )
-      session = rows[0]
-      await query(
-        `UPDATE candidate_profiles SET total_score = total_score + $2 WHERE profile_id = $1`,
-        [profile.profile_id, report.overall >= 80 ? 20 : 10]
-      )
-    } catch (error: any) {
-      if (!isMissingRelation(error)) throw error
-    }
+    const { rows } = await query(
+      `SELECT 
+         cp.profile_id, 
+         cp.total_score, 
+         u.name as candidate_name, 
+         u.email 
+       FROM candidate_profiles cp
+       JOIN users u ON cp.user_id = u.user_id
+       WHERE u.role = 'candidate' ${timeFilter}
+       ORDER BY cp.total_score DESC
+       LIMIT 50`
+    )
 
-    res.status(201).json({ success: true, session })
+    // Mask the email for privacy on a public leaderboard
+    const formattedLeaderboard = rows.map((row: any) => ({
+      profile_id: row.profile_id,
+      total_score: row.total_score,
+      candidate_name: row.candidate_name || row.email.split('@')[0],
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.profile_id}`
+    }))
+
+    res.status(200).json({ success: true, leaderboard: formattedLeaderboard })
   } catch (error: any) {
-    console.error('Error submitting mock interview:', error)
+    console.error('Error fetching leaderboard:', error)
     res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }
