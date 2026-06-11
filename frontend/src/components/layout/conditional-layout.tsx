@@ -13,9 +13,15 @@ export async function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = headersList.get('x-invoke-path') || '' // Fallback if needed, though middleware rewrites might mask this.
 
   const isSubdomain = !!subdomain || host.startsWith('console.') || host.startsWith('admin.') || host.startsWith('candidate.') || host.startsWith('applications.')
-  const isDashboardPath = pathname.startsWith('/dashboard') || pathname.startsWith('/candidate') || pathname.startsWith('/hr') || pathname.startsWith('/auth') || pathname.startsWith('/admin') || pathname === '/privacy'
+  const isDashboardPath = 
+    pathname.startsWith('/dashboard') || 
+    pathname.startsWith('/candidate') || 
+    pathname.startsWith('/hr') || 
+    pathname.startsWith('/admin') || 
+    pathname.startsWith('/console') ||
+    pathname === '/privacy'
 
-  // Hide navbar and footer for dashboard, auth, admin, and privacy pages, and ALL subdomains
+  // Hide navbar and footer for dashboard, auth, admin, setup and privacy pages, and ALL subdomains
   if (isSubdomain || isDashboardPath) {
     return <>{children}</>
   }

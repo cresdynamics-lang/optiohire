@@ -12,6 +12,10 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl
   const hostname = request.headers.get('host') || ''
   
+  // Create request headers to pass to the next component
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-invoke-path', url.pathname)
+
   // 1. Simple Subdomain Extraction
   const hostParts = hostname.split('.')
   const isLocalhost = hostname.includes('localhost')
@@ -30,19 +34,33 @@ export function middleware(request: NextRequest) {
       url.pathname.startsWith('/assets') ||
       url.pathname.includes('.')
     ) {
-      return NextResponse.next()
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      })
     }
 
   
     if (!url.pathname.startsWith(internalPath)) {
       const targetUrl = new URL(`${internalPath}${url.pathname === '/' ? '' : url.pathname}`, request.url)
-      const response = NextResponse.rewrite(targetUrl)
-      response.headers.set('x-optiohire-subdomain', subdomain)
+      
+      requestHeaders.set('x-optiohire-subdomain', subdomain)
+      
+      const response = NextResponse.rewrite(targetUrl, {
+        request: {
+          headers: requestHeaders,
+        },
+      })
       return response
     }
   }
 
-  return NextResponse.next()
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
 }
 
 export const config = {
