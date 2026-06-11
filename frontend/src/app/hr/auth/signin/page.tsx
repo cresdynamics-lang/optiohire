@@ -40,7 +40,7 @@ export default function EmployerSignInPage() {
         setError(error.message)
         setIsLoading(false)
       } else {
-        router.push('/')
+        router.push('/hr')
       }
     } catch (err) {
       setError('An unexpected error occurred')
