@@ -39,6 +39,11 @@ interface AiUsageData {
     createdAt: string
     task?: string
     userEmail?: string
+    provider?: string
+    speed?: number
+    finishReason?: string
+    sessionId?: string
+    appName?: string
   }[]
 }
 
@@ -245,11 +250,12 @@ export default function AiUsagePage() {
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Task</th>
-                  <th className="px-6 py-4 font-medium">Model</th>
+                  <th className="px-6 py-4 font-medium">Task / App</th>
+                  <th className="px-6 py-4 font-medium">Provider / Model</th>
+                  <th className="px-6 py-4 font-medium">Speed</th>
                   <th className="px-6 py-4 font-medium">Tokens (In / Out)</th>
                   <th className="px-6 py-4 font-medium">Est. Cost</th>
-                  <th className="px-6 py-4 font-medium">User</th>
+                  <th className="px-6 py-4 font-medium">Session ID</th>
                   <th className="px-6 py-4 font-medium">Time</th>
                 </tr>
               </thead>
@@ -263,11 +269,18 @@ export default function AiUsagePage() {
                 ) : (
                   logs.map((log) => (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 font-medium text-foreground">{log.task || 'Uncategorized'}</td>
                       <td className="px-6 py-4">
+                        <div className="font-medium text-foreground">{log.task || 'Uncategorized'}</div>
+                        <div className="text-xs text-muted-foreground">{log.appName || 'OptioHire Core'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs text-muted-foreground mb-1">{log.provider || 'Unknown'}</div>
                         <Badge variant="secondary" className="font-mono text-xs bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">
                           {log.model.split('/').pop()}
                         </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-mono text-muted-foreground tabular-nums">
+                        {log.speed ? `${log.speed.toFixed(1)} t/s` : '—'}
                       </td>
                       <td className="px-6 py-4 font-medium text-foreground tabular-nums">
                         <span className="text-muted-foreground text-xs">{log.promptTokens.toLocaleString()} / {log.completionTokens.toLocaleString()}</span>
@@ -275,8 +288,16 @@ export default function AiUsagePage() {
                         <span className="font-bold">{log.totalTokens.toLocaleString()}</span>
                       </td>
                       <td className="px-6 py-4 font-medium text-foreground tabular-nums">${log.costEstimate.toFixed(4)}</td>
-                      <td className="px-6 py-4 text-muted-foreground text-sm truncate max-w-[150px]">{log.userEmail || '—'}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{timeAgo(log.createdAt)}</td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs font-mono text-muted-foreground truncate max-w-[120px]">{log.sessionId || '—'}</div>
+                        <div className="text-xs text-muted-foreground truncate max-w-[120px] mt-1" title={log.userEmail}>{log.userEmail || '—'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-muted-foreground text-sm">{timeAgo(log.createdAt)}</div>
+                        {log.finishReason && (
+                          <div className="text-[10px] text-muted-foreground uppercase mt-1">{log.finishReason}</div>
+                        )}
+                      </td>
                     </tr>
                   ))
                 )}

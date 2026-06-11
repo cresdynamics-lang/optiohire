@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
   Briefcase, Plus, Calendar, Users, UserCheck, ExternalLink, Edit, Trash2, RefreshCw, ArrowUpRight, 
-  LayoutGrid, Table as TableIcon, ChevronLeft, ChevronRight, MoreVertical 
+  LayoutGrid, Table as TableIcon, List, ChevronLeft, ChevronRight, MoreVertical 
 } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -34,7 +34,7 @@ interface JobWithApplicants extends JobPosting {
 export function JobsSection() {
   const { user } = useAuth()
   const router = useRouter()
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
+  const [viewMode, setViewMode] = useState<'grid' | 'linear' | 'table'>('grid')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
@@ -142,11 +142,20 @@ export function JobsSection() {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setViewMode('card')} 
-              className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'card' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
-              title="Card View"
+              onClick={() => setViewMode('grid')} 
+              className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
+              title="Grid View"
             >
               <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setViewMode('linear')} 
+              className={`h-8 w-10 rounded-lg p-0 transition-all ${viewMode === 'linear' ? 'bg-white shadow-sm text-[#2D2DDD]' : 'text-slate-500 hover:text-slate-900'}`}
+              title="Linear View"
+            >
+              <List className="w-4 h-4" />
             </Button>
             <Button 
               variant="ghost" 
@@ -165,9 +174,9 @@ export function JobsSection() {
         <div className="flex justify-center py-12"><RefreshCw className="w-8 h-8 animate-spin text-[#2D2DDD]" /></div>
       ) : jobs.length === 0 ? (
         <div className="text-center py-16"><Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" /><h3 className="text-xl font-medium">No jobs posted</h3></div>
-      ) : viewMode === 'card' ? (
+      ) : viewMode === 'grid' || viewMode === 'linear' ? (
         <div className="space-y-6">
-          <div className="flex flex-col gap-4">
+          <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-4"}>
             {paginatedJobs.map((job, index) => (
               <motion.div 
                 key={job.id} 
