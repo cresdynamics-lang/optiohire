@@ -404,6 +404,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
+      // Detect portal from current URL to enforce role-based login isolation
+      const host = typeof window !== 'undefined' ? window.location.host : ''
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+      const subdomain = host.split('.')[0].toLowerCase()
+      
+      let portal = ''
+      if (subdomain === 'applications' || subdomain === 'candidate' || pathname.includes('/candidate/')) {
+        portal = 'candidate'
+      } else if (subdomain === 'console' || pathname.includes('/hr/') || pathname.includes('/console/')) {
+        portal = 'hr'
+      } else if (subdomain === 'admin' || pathname.includes('/admin/')) {
+        portal = 'admin'
+      }
+
       // Same-origin proxy (server resolves BACKEND_URL / NEXT_PUBLIC_BACKEND_URL) — avoids :3001 in the browser network log and CORS edge cases.
       const signInUrl =
         typeof window !== 'undefined'
@@ -412,7 +426,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const resp = await fetch(signInUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, portal }),
         signal: AbortSignal.timeout(15000),
       })
       const data = await resp.json().catch(() => ({}))
@@ -473,14 +487,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Extract subdomain
     const hostParts = host.split('.')
-    const subdomain = hostParts.length > 2 || (hostParts.length === 2 && !host.includes('localhost')) 
+    const isLocalhost = host.includes('localhost')
+    const subdomain = (isLocalhost && hostParts.length >= 2) || hostParts.length >= 3 
       ? hostParts[0].toLowerCase() 
       : ''
     
     const isKnownSubdomain = ['applications', 'candidate', 'console'].includes(subdomain)
     
     // Determine the best redirect path
-    let nextPath = '/hr/auth/signin'
+    let nextPath = '/'
     
     if (isKnownSubdomain) {
       // On subdomains, we always use /auth/signin as it's rewritten correctly by middleware
@@ -488,11 +503,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else if (pathname.startsWith('/candidate')) {
       nextPath = '/candidate/auth/signin'
     } else if (pathname.startsWith('/admin') || subdomain === 'admin') {
-      // Admins go to HR signin, but if on a subdomain, we might need to go to the main domain
-      // For now, let's try to stay relative but fallback to root if needed
       nextPath = '/hr/auth/signin'
     } else if (pathname.startsWith('/hr')) {
-      nextPath = '/hr/auth/signin'
+      nextPath = '/'
     }
 
     const next = options?.next === false ? null : options?.next || nextPath
@@ -514,7 +527,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Extract subdomain
     const hostParts = host.split('.')
-    const subdomain = hostParts.length > 2 || (hostParts.length === 2 && !host.includes('localhost')) 
+    const isLocalhost = host.includes('localhost')
+    const subdomain = (isLocalhost && hostParts.length >= 2) || hostParts.length >= 3 
       ? hostParts[0].toLowerCase() 
       : ''
     

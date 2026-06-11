@@ -34,7 +34,8 @@ const SignupSchema = z.object({
 
 const SigninSchema = z.object({
   email: CleanEmail,
-  password: z.string()
+  password: z.string(),
+  portal: z.string().optional()
 })
 
 const ResetPasswordSchema = z.object({
@@ -172,7 +173,7 @@ export async function signup(req: Request, res: Response) {
 export async function signin(req: Request, res: Response) {
   const result = SigninSchema.safeParse(req.body)
   if (!result.success) return res.status(400).json({ error: 'Invalid input' })
-  const { email, password } = result.data
+  const { email, password, portal } = result.data
 
   try {
     const { rows } = await query<{ user_id: string, password_hash: string, role: string, is_active: boolean, name: string | null, company_role: string | null, created_at: string }>(
@@ -181,9 +182,28 @@ export async function signin(req: Request, res: Response) {
     if (rows.length === 0 || !(await bcrypt.compare(password, rows[0].password_hash))) {
       return res.status(401).json({ error: 'Invalid credentials' })
     }
-    if (!rows[0].is_active) return res.status(401).json({ error: 'Account is inactive' })
-
+    
     const user = rows[0]
+    
+    // Strict Portal Enforcement: 
+    // Admins only on Admin page, Candidates only on Candidate page, HR only on HR page.
+    if (portal) {
+      if (portal === 'candidate' && user.company_role !== 'candidate') {
+        console.warn(`[AUTH] Non-candidate (${user.company_role || user.role}) tried to login via candidate portal: ${email}`)
+        return res.status(401).json({ error: 'Invalid credentials' })
+      }
+      if (portal === 'hr' && user.company_role !== 'hr') {
+        console.warn(`[AUTH] Non-HR (${user.company_role || user.role}) tried to login via HR portal: ${email}`)
+        return res.status(401).json({ error: 'Invalid credentials' })
+      }
+      if (portal === 'admin' && user.role !== 'admin') {
+        console.warn(`[AUTH] Non-admin (${user.role}) tried to login via admin portal: ${email}`)
+        return res.status(401).json({ error: 'Invalid credentials' })
+      }
+    }
+
+    if (!user.is_active) return res.status(401).json({ error: 'Account is inactive' })
+
     let companyInfo = { hasCompany: false, companyId: null as string | null }
     
     if (user.role === 'admin') {
@@ -369,7 +389,7 @@ export async function verifyEmail(req: Request, res: Response) {
 
 export async function googleSignIn(req: Request, res: Response) {
   try {
-    const { code, id_token: idTokenBody } = req.body
+    const { code, id_token: idTokenBody, portal } = req.body
     const clientId = process.env.GOOGLE_CLIENT_ID
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET
     if (!clientId || !clientSecret) return res.status(503).json({ error: 'Google auth not configured' })
@@ -396,9 +416,27 @@ export async function googleSignIn(req: Request, res: Response) {
       `SELECT * FROM users WHERE email = $1`, [email]
     )
     if (user.length === 0) return res.status(401).json({ error: 'User does not exist. Sign up first.' })
-    if (!user[0].is_active) return res.status(403).json({ error: 'Account inactive' })
-
+    
     const u = user[0]
+
+    // Strict Portal Enforcement for Google Login
+    if (portal) {
+      if (portal === 'candidate' && u.company_role !== 'candidate') {
+        console.warn(`[AUTH] Non-candidate (${u.company_role || u.role}) tried to login via Google on candidate portal: ${email}`)
+        return res.status(401).json({ error: 'Invalid credentials' })
+      }
+      if (portal === 'hr' && u.company_role !== 'hr') {
+        console.warn(`[AUTH] Non-HR (${u.company_role || u.role}) tried to login via Google on HR portal: ${email}`)
+        return res.status(401).json({ error: 'Invalid credentials' })
+      }
+      if (portal === 'admin' && u.role !== 'admin') {
+        console.warn(`[AUTH] Non-admin (${u.role}) tried to login via Google on admin portal: ${email}`)
+        return res.status(401).json({ error: 'Invalid credentials' })
+      }
+    }
+
+    if (!u.is_active) return res.status(403).json({ error: 'Account inactive' })
+
     let companyInfo = { hasCompany: false, companyId: null as string | null }
     if (u.company_role !== 'candidate') {
       const { rows: comp } = await query<{ company_id: string }>(`SELECT company_id FROM companies WHERE user_id = $1 LIMIT 1`, [u.user_id])

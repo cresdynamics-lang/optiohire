@@ -96,7 +96,14 @@ export default function EmployerSignInPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const params = new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, redirect_uri: getGoogleRedirectUri(), response_type: 'code', scope: 'openid email profile', prompt: 'select_account' })
+                    const params = new URLSearchParams({ 
+                      client_id: GOOGLE_CLIENT_ID, 
+                      redirect_uri: getGoogleRedirectUri(), 
+                      response_type: 'code', 
+                      scope: 'openid email profile', 
+                      prompt: 'select_account',
+                      state: 'hr'
+                    })
                     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
                   }}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors"

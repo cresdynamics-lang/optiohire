@@ -13,6 +13,8 @@ function GoogleCallbackContent() {
   useEffect(() => {
     const code = searchParams.get('code')
     const errorParam = searchParams.get('error')
+    const statePortal = searchParams.get('state') // Read portal from state if available
+    
     if (errorParam) {
       setError(errorParam === 'access_denied' ? 'You cancelled sign in.' : 'Google sign-in failed.')
       return
@@ -30,7 +32,11 @@ function GoogleCallbackContent() {
     fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, redirect_uri: redirectUri })
+      body: JSON.stringify({ 
+        code, 
+        redirect_uri: redirectUri, 
+        portal: statePortal || 'hr' // Use state if available, fallback to hardcoded hr
+      })
     })
       .then((res) => res.json().catch(() => ({})))
       .then((data) => {
@@ -47,16 +53,29 @@ function GoogleCallbackContent() {
         setSession(data.token, data.user)
         
         const user = data.user
-        const isCandidate = user.company_role === 'candidate'
-        if (isCandidate) {
-          router.replace('/candidate')
-          return
+        const role = (user.role || '').toLowerCase()
+        const companyRole = (user.company_role || user.companyRole || '').toLowerCase()
+        const isCandidate = role === 'candidate' || companyRole === 'candidate'
+        const isAdmin = role === 'admin'
+        
+        // Use full domain URL and path for redirection
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        let targetUrl = ''
+        
+        if (isLocalhost) {
+          if (isCandidate) targetUrl = '/candidate'
+          else if (isAdmin) targetUrl = '/admin'
+          else if (!user.hasCompany && !user.companyId) targetUrl = '/company-setup'
+          else targetUrl = '/hr'
+        } else {
+          // Production domain routing
+          if (isCandidate) targetUrl = 'https://applications.optiohire.com'
+          else if (isAdmin) targetUrl = 'https://console.optiohire.com'
+          else if (!user.hasCompany && !user.companyId) targetUrl = 'https://optiohire.com/company-setup'
+          else targetUrl = 'https://optiohire.com/hr'
         }
-        if (!isCandidate && !user.hasCompany && !user.companyId) {
-          router.replace('/company-setup')
-          return
-        }
-        router.replace('/hr')
+        
+        window.location.href = targetUrl
       })
       .catch(() => setError('Network error. Please try again.'))
   }, [searchParams, router, setSession])
