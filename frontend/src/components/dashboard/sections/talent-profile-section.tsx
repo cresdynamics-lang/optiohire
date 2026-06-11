@@ -125,6 +125,7 @@ export function TalentProfileSection() {
   const [uploadingSkillId, setUploadingSkillId] = useState<string | null>(null)
   const [certUrl, setCertUrl] = useState('')
   const [certFile, setCertFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const [missionLoading, setMissionLoading] = useState<string | null>(null)
   const [interviewType, setInterviewType] = useState<keyof typeof INTERVIEW_QUESTIONS>('Behavioural')
   const [targetRole, setTargetRole] = useState('')
@@ -197,6 +198,7 @@ export function TalentProfileSection() {
     }
 
     try {
+      setIsUploading(true)
       const formData = new FormData()
       formData.append('skillId', skillId)
       if (certUrl) formData.append('certificateUrl', certUrl)
@@ -219,6 +221,8 @@ export function TalentProfileSection() {
       }
     } catch {
       toast.error('Network error')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -250,7 +254,7 @@ export function TalentProfileSection() {
           <p className="text-sm font-medium uppercase tracking-wide text-indigo-600">Candidate workspace</p>
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Talent Profile Dashboard</h1>
           <p className="mt-1 max-w-2xl text-slate-900 dark:text-white">
-            Build proof, close skill gaps, practice interviews, and become easier for recruiters to shortlist.
+            Build proof, close skill gaps, and become easier for recruiters to shortlist.
           </p>
         </div>
         <div className="rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">
@@ -374,15 +378,15 @@ export function TalentProfileSection() {
             certFile={certFile}
             setCertFile={setCertFile}
             handleUpload={handleUpload}
+            isUploading={isUploading}
           />
         </TabsContent>
 
         <TabsContent value="analytics">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-3">
             <MetricCard icon={Trophy} label="Growth score" value={data.profile.total_score} />
             <MetricCard icon={ShieldCheck} label="Verified skills" value={stats.verifiedSkills} />
             <MetricCard icon={Target} label="Open gaps" value={stats.gapSkills} />
-            <MetricCard icon={BarChart3} label="Avg mock score" value={stats.avgInterview || '-'} />
           </div>
         </TabsContent>
       </Tabs>
@@ -467,6 +471,7 @@ function SkillInventory({
   certFile: File | null
   setCertFile: (file: File | null) => void
   handleUpload: (skillId: string) => void
+  isUploading: boolean
 }) {
   return (
     <Card>
@@ -589,8 +594,11 @@ function SkillInventory({
                           </div>
                         </div>
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
-                          <Button variant="ghost" onClick={() => setUploadingSkillId(null)}>Cancel</Button>
-                          <Button disabled={!certUrl && !certFile} onClick={() => { handleUpload(skill.skill_id); setUploadingSkillId(null); }} className="bg-[#2D2DDD] text-white hover:bg-[#2525c4]">Submit to Admin</Button>
+                          <Button variant="ghost" disabled={isUploading} onClick={() => setUploadingSkillId(null)}>Cancel</Button>
+                          <Button disabled={(!certUrl && !certFile) || isUploading} onClick={() => { handleUpload(skill.skill_id); }} className="bg-[#2D2DDD] text-white hover:bg-[#2525c4]">
+                            {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isUploading ? 'Uploading...' : 'Submit to Admin'}
+                          </Button>
                         </div>
                       </div>
                     </DialogContent>
