@@ -104,7 +104,7 @@ export function Navbar() {
                 Browse Jobs
               </Link>
               <Link
-                href="https://applications.optiohire.com"
+                href="https://application.optiohire.com"
                 className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-white/80 hover:text-blue-700 transition-colors duration-200"
               >
                 My Applications
@@ -153,13 +153,13 @@ export function Navbar() {
           ) : (
             <>
               <Link
-                href="/hr/auth/signin"
+                href="/auth/options?mode=signin"
                 className="whitespace-nowrap rounded-2xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:text-slate-900"
               >
                 Sign In
               </Link>
               <Link
-                href="/hr/auth/signup"
+                href="/auth/options?mode=signup"
                 className="whitespace-nowrap rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-black"
               >
                 Get Started
@@ -225,14 +225,14 @@ export function Navbar() {
                     </Link>
                   ))}
                   <Link
-                    href="/hr/auth/signin"
+                    href="/auth/options?mode=signin"
                     className="mt-2 block rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-medium text-slate-700"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Sign In
                   </Link>
                   <Link
-                    href="/hr/auth/signup"
+                    href="/auth/options?mode=signup"
                     className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -249,7 +249,7 @@ export function Navbar() {
                     Browse All Jobs
                   </Link>
                   <Link
-                    href="https://applications.optiohire.com"
+                    href="https://application.optiohire.com"
                     className="block rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-medium text-slate-700"
                     onClick={() => setMobileMenuOpen(false)}
                   >
