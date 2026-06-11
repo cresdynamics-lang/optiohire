@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { User, Briefcase, ArrowRight } from 'lucide-react'
 
-export default function SignupChoicePage() {
+export default function SigninChoicePage() {
   const router = useRouter()
 
   return (
@@ -14,15 +14,15 @@ export default function SignupChoicePage() {
         <motion.div 
           whileHover={{ y: -5 }}
           className="bg-white p-8 rounded-3xl shadow-lg border border-slate-200 cursor-pointer flex flex-col items-center text-center group"
-          onClick={() => window.location.href = 'https://candidate.optiohire.com/auth/signup'}
+          onClick={() => window.location.href = 'https://candidate.optiohire.com/auth/signin'}
         >
           <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-green-600 transition-colors">
             <User className="w-8 h-8 text-green-600 group-hover:text-white transition-colors" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-4 font-figtree">I'm a Job Seeker</h2>
-          <p className="text-slate-600 mb-8 font-figtree">Create a profile, analyze your skills, and find your dream job with AI insights.</p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-4 font-figtree">Job Seeker Login</h2>
+          <p className="text-slate-600 mb-8 font-figtree">Access your profile, track applications, and manage your career growth.</p>
           <button className="mt-auto flex items-center gap-2 text-green-600 font-semibold group-hover:gap-3 transition-all">
-            Get Started <ArrowRight className="w-4 h-4" />
+            Sign In <ArrowRight className="w-4 h-4" />
           </button>
         </motion.div>
 
@@ -30,15 +30,15 @@ export default function SignupChoicePage() {
         <motion.div 
           whileHover={{ y: -5 }}
           className="bg-white p-8 rounded-3xl shadow-lg border border-slate-200 cursor-pointer flex flex-col items-center text-center group"
-          onClick={() => window.location.href = 'https://console.optiohire.com/auth/signup'}
+          onClick={() => window.location.href = 'https://console.optiohire.com/auth/signin'}
         >
           <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#2D2DDD] transition-colors">
             <Briefcase className="w-8 h-8 text-[#2D2DDD] group-hover:text-white transition-colors" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-4 font-figtree">I'm an Employer</h2>
-          <p className="text-slate-600 mb-8 font-figtree">Post jobs, automate screening, and hire the best talent faster than ever.</p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-4 font-figtree">Employer Login</h2>
+          <p className="text-slate-600 mb-8 font-figtree">Manage your dashboard, review candidates, and make hiring decisions.</p>
           <button className="mt-auto flex items-center gap-2 text-[#2D2DDD] font-semibold group-hover:gap-3 transition-all">
-            Start Hiring <ArrowRight className="w-4 h-4" />
+            Sign In <ArrowRight className="w-4 h-4" />
           </button>
         </motion.div>
       </div>

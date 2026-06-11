@@ -94,7 +94,7 @@ function VerifyEmailContent() {
         return
       }
       setSuccess(true)
-      setTimeout(() => router.push('/hr'), 3000)
+      setTimeout(() => router.push('/'), 3000)
     } catch (err) {
       setError('Could not verify. Please ensure the backend is running and try again.')
     } finally {
