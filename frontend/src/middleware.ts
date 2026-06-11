@@ -31,6 +31,7 @@ export function middleware(request: NextRequest) {
       url.pathname.startsWith('/_next') ||
       url.pathname.startsWith('/api') ||
       url.pathname.startsWith('/assets') ||
+      url.pathname.startsWith('/auth/options') ||
       url.pathname.includes('.')
     ) {
       return NextResponse.next({

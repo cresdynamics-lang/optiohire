@@ -36,8 +36,13 @@ export class SkillAnalysisService {
     let { rows: jobs } = await query(`
       SELECT j.job_posting_id, j.job_title, j.skills_required
       FROM job_postings j
-      LEFT JOIN job_applications a ON a.job_posting_id = j.job_posting_id 
-        AND a.candidate_id = (SELECT candidate_id FROM candidate_profiles WHERE profile_id = $1)
+      LEFT JOIN applications a ON a.job_posting_id = j.job_posting_id 
+        AND a.email = (
+          SELECT u.email 
+          FROM users u 
+          JOIN candidate_profiles c ON c.user_id = u.user_id 
+          WHERE c.profile_id = $1
+        )
       LEFT JOIN job_recommendations r ON r.job_posting_id = j.job_posting_id 
         AND r.profile_id = $1
       WHERE j.status = 'ACTIVE' 
