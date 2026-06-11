@@ -11,9 +11,21 @@ function GoogleCallbackContent() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // 1. Check for token in URL (Session Transfer from main domain)
+    const tokenFromUrl = searchParams.get('token')
+    if (tokenFromUrl) {
+      localStorage.setItem('token', tokenFromUrl)
+      // Small delay to ensure localStorage is set
+      setTimeout(() => {
+        router.replace('/candidate')
+      }, 100)
+      return
+    }
+
+    // 2. Standard Google OAuth Code Exchange
     const code = searchParams.get('code')
     const errorParam = searchParams.get('error')
-    const statePortal = searchParams.get('state') // Read portal from state if available
+    const statePortal = searchParams.get('state') 
     
     if (errorParam) {
       setError(errorParam === 'access_denied' ? 'You cancelled sign in.' : 'Google sign-in failed.')
@@ -24,7 +36,12 @@ function GoogleCallbackContent() {
       return
     }
 
-    const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : ''
+    // Origin-aware redirect URI (must match the one used in sign-in)
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const redirectUri = isLocalhost 
+      ? `${window.location.origin}/auth/google/callback`
+      : 'https://optiohire.com/auth/google/callback'
+
     const apiUrl = typeof window !== 'undefined'
       ? `${window.location.origin}/api/auth/google`
       : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/google`
@@ -35,7 +52,7 @@ function GoogleCallbackContent() {
       body: JSON.stringify({ 
         code, 
         redirect_uri: redirectUri, 
-        portal: statePortal || 'candidate' // Use state if available, fallback to hardcoded candidate
+        portal: statePortal || 'candidate' 
       })
     })
       .then((res) => res.json().catch(() => ({})))
@@ -49,7 +66,6 @@ function GoogleCallbackContent() {
           return
         }
         
-        // Use setSession to update AuthProvider state immediately
         setSession(data.token, data.user)
         
         const user = data.user
@@ -58,8 +74,6 @@ function GoogleCallbackContent() {
         const isCandidate = role === 'candidate' || companyRole === 'candidate'
         const isAdmin = role === 'admin'
         
-        // Use full domain URL and path for redirection
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         let targetUrl = ''
         
         if (isLocalhost) {
@@ -67,15 +81,26 @@ function GoogleCallbackContent() {
           else if (isAdmin) targetUrl = '/admin'
           else if (!user.hasCompany && !user.companyId) targetUrl = '/company-setup'
           else targetUrl = '/hr'
+          window.location.href = targetUrl
         } else {
-          // Production domain routing
-          if (isCandidate) targetUrl = 'https://applications.optiohire.com'
-          else if (isAdmin) targetUrl = 'https://console.optiohire.com'
-          else if (!user.hasCompany && !user.companyId) targetUrl = 'https://optiohire.com/company-setup'
-          else targetUrl = 'https://optiohire.com/hr'
+          // Production domain routing with Session Transfer
+          const tokenParam = `?token=${data.token}`
+          
+          if (isCandidate) {
+            // Already on candidate subdomain or needs to go there
+            if (window.location.hostname.includes('applications')) {
+              router.replace('/candidate')
+            } else {
+              window.location.href = `https://applications.optiohire.com/auth/google/callback${tokenParam}`
+            }
+          } else if (isAdmin) {
+            window.location.href = `https://console.optiohire.com/auth/google/callback${tokenParam}`
+          } else {
+            if (!user.hasCompany && !user.companyId) targetUrl = '/company-setup'
+            else targetUrl = '/hr'
+            router.replace(targetUrl)
+          }
         }
-        
-        window.location.href = targetUrl
       })
       .catch(() => setError('Network error. Please try again.'))
   }, [searchParams, router, setSession])

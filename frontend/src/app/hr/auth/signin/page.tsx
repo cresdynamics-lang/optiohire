@@ -11,7 +11,13 @@ import { useAuth } from '@/hooks/use-auth'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
-const getGoogleRedirectUri = () => (typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : '')
+const getGoogleRedirectUri = () => {
+  if (typeof window === 'undefined') return ''
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  if (isLocalhost) return `${window.location.origin}/auth/google/callback`
+  // Always use the main domain for Google redirect to avoid whitelist issues with multiple subdomains
+  return 'https://optiohire.com/auth/google/callback'
+}
 
 const signInSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -20,7 +26,7 @@ const signInSchema = z.object({
 
 type SignInFormData = z.infer<typeof signInSchema>
 
-export default function EmployerSignInPage() {
+export default function HRSignInPage() {
   const router = useRouter()
   const { signIn } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
@@ -49,24 +55,24 @@ export default function EmployerSignInPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md flex flex-col gap-4">
         <button onClick={() => router.push('/')} className="self-start px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-slate-50 text-slate-900 font-figtree text-sm shadow-sm border border-slate-200">
           <ArrowLeft className="w-4 h-4" /> Back to Home
         </button>
-        
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 p-8">
           <div className="mb-6">
             <h1 className="headline-platform text-3xl mb-2 !font-semibold text-[#2D2DDD]">Employer Login</h1>
             <p className="text-slate-600 font-figtree text-sm">
-              Manage your hiring pipeline. Don't have an account?{' '}
-              <Link href="/hr/auth/signup" className="text-[#2D2DDD] font-medium hover:underline">Create one</Link>
+              Manage your workspace. Don't have an account?{' '}
+              <Link href="/auth/options?mode=signup" className="text-[#2D2DDD] font-medium hover:underline">Sign up</Link>
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2 font-figtree">Work Email</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 font-figtree">Workspace Email</label>
               <input type="email" {...register('email')} placeholder="email@company.com" className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#2D2DDD] outline-none font-figtree text-sm" required />
               {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
             </div>
@@ -74,7 +80,7 @@ export default function EmployerSignInPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-slate-700 font-figtree">Password</label>
-                <Link href="/hr/auth/forgot-password" hidden className="text-sm text-[#2D2DDD] font-medium font-figtree">Forgot password?</Link>
+                <Link href="/auth/forgot-password" hidden className="text-sm text-[#2D2DDD] font-medium font-figtree">Forgot password?</Link>
               </div>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} {...register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#2D2DDD] outline-none font-figtree text-sm" required />
@@ -86,7 +92,7 @@ export default function EmployerSignInPage() {
 
             {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 font-figtree">{error}</div>}
 
-            <button type="submit" disabled={isLoading} className="w-full bg-[#2D2DDD] text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors font-figtree disabled:opacity-50">
+            <button type="submit" disabled={isLoading} className="w-full bg-[#2D2DDD] text-white py-3 px-4 rounded-xl font-medium hover:bg-[#1f1faa] transition-colors font-figtree disabled:opacity-50">
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
 
@@ -114,7 +120,7 @@ export default function EmployerSignInPage() {
               </>
             )}
           </form>
-          
+
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500 font-figtree">
               Don't have an account? <Link href="/hr/auth/signup" className="text-[#2D2DDD] font-semibold hover:underline">Sign up</Link>

@@ -11,7 +11,13 @@ import { useAuth } from '@/hooks/use-auth'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
-const getGoogleRedirectUri = () => (typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : '')
+const getGoogleRedirectUri = () => {
+  if (typeof window === 'undefined') return ''
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  if (isLocalhost) return `${window.location.origin}/auth/google/callback`
+  // Always use the main domain for Google redirect to avoid whitelist issues with multiple subdomains
+  return 'https://optiohire.com/auth/google/callback'
+}
 
 const signInSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -50,7 +56,7 @@ export default function CandidateSignInPage() {
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md flex flex-col gap-4">
+      <div className="w-full max-md flex flex-col gap-4">
         <button onClick={() => router.push('/')} className="self-start px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-slate-50 text-slate-900 font-figtree text-sm shadow-sm border border-slate-200">
           <ArrowLeft className="w-4 h-4" /> Back to Home
         </button>

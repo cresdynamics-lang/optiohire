@@ -11,6 +11,26 @@ function GoogleCallbackContent() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // 1. Check for token in URL (Session Transfer from another subdomain)
+    const tokenFromUrl = searchParams.get('token')
+    if (tokenFromUrl) {
+      localStorage.setItem('token', tokenFromUrl)
+      // Small delay to ensure localStorage is set before redirecting
+      setTimeout(() => {
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        const isCandidateSubdomain = window.location.hostname.startsWith('applications.') || window.location.hostname.startsWith('candidate.')
+        
+        if (isLocalhost) {
+          router.replace(isCandidateSubdomain ? '/candidate' : '/hr')
+        } else {
+          // In production, the current hostname tells us where we are
+          router.replace('/') // The app's logic will handle internal routing based on role
+        }
+      }, 100)
+      return
+    }
+
+    // 2. Standard Google OAuth Code Exchange
     const code = searchParams.get('code')
     const errorParam = searchParams.get('error')
     const statePortal = searchParams.get('state') // Get portal from state
@@ -24,8 +44,12 @@ function GoogleCallbackContent() {
       return
     }
 
-    // Origin-aware redirect URI
-    const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : ''
+    // Origin-aware redirect URI (must match the one used in sign-in)
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const redirectUri = isLocalhost 
+      ? `${window.location.origin}/auth/google/callback`
+      : 'https://optiohire.com/auth/google/callback'
+      
     const apiUrl = typeof window !== 'undefined'
       ? `${window.location.origin}/api/auth/google`
       : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/google`
@@ -58,8 +82,6 @@ function GoogleCallbackContent() {
         const isCandidate = role === 'candidate' || companyRole === 'candidate'
         const isAdmin = role === 'admin'
         
-        // Use full domain URL and path for redirection
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         let targetUrl = ''
         
         if (isLocalhost) {
@@ -67,15 +89,28 @@ function GoogleCallbackContent() {
           else if (isAdmin) targetUrl = '/admin'
           else if (!user.hasCompany && !user.companyId) targetUrl = '/company-setup'
           else targetUrl = '/hr'
+          window.location.href = targetUrl
         } else {
-          // Production domain routing
-          if (isCandidate) targetUrl = 'https://applications.optiohire.com'
-          else if (isAdmin) targetUrl = 'https://console.optiohire.com'
-          else if (!user.hasCompany && !user.companyId) targetUrl = 'https://optiohire.com/company-setup'
-          else targetUrl = 'https://optiohire.com/hr'
+          // Production domain routing with Session Transfer (token in URL)
+          const tokenParam = `?token=${data.token}`
+          const currentHost = window.location.hostname
+          
+          if (isCandidate) {
+            targetUrl = `https://applications.optiohire.com/auth/google/callback${tokenParam}`
+          } else if (isAdmin) {
+            targetUrl = `https://console.optiohire.com/auth/google/callback${tokenParam}`
+          } else {
+            // Main domain: we can just use internal routing since token is already in localStorage
+            if (!user.hasCompany && !user.companyId) targetUrl = '/company-setup'
+            else targetUrl = '/hr'
+          }
+          
+          if (targetUrl.startsWith('http')) {
+            window.location.href = targetUrl
+          } else {
+            router.replace(targetUrl)
+          }
         }
-        
-        window.location.href = targetUrl
       })
       .catch(() => setError('Network error. Please try again.'))
   }, [searchParams, router, setSession])
