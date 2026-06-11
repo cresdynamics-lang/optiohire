@@ -1,12 +1,12 @@
 'use client'
 
+import { Suspense } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Briefcase, Building2, ArrowLeft, ChevronRight, UserCircle2 } from 'lucide-react'
-import Image from 'next/image'
+import { Building2, ArrowLeft, ChevronRight, UserCircle2 } from 'lucide-react'
 
-export default function AuthOptionsPage() {
+function AuthOptionsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const mode = searchParams.get('mode') // 'signup' or 'signin'
@@ -78,5 +78,13 @@ export default function AuthOptionsPage() {
         </button>
       </div>
     </div>
+  )
+}
+
+export default function AuthOptionsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen w-full flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+      <AuthOptionsContent />
+    </Suspense>
   )
 }
