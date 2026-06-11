@@ -462,6 +462,7 @@ function SkillInventory({
   certFile,
   setCertFile,
   handleUpload,
+  isUploading,
 }: {
   skills: CandidateSkill[]
   uploadingSkillId: string | null

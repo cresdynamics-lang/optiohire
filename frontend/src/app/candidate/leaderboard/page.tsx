@@ -21,7 +21,7 @@ export default function CandidateLeaderboardPage() {
   const fetchLeaderboard = async () => {
     setLoading(true)
     try {
-      const authHeaders = () => {
+      const authHeaders = (): Record<string, string> => {
         const token = localStorage.getItem('auth_token')
         return token ? { Authorization: `Bearer ${token}` } : {}
       }
