@@ -467,8 +467,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('admin_token')
     fallbackUserRef.current = null
 
+    const isApplicationsSubdomain = typeof window !== 'undefined' && (window.location.host.startsWith('applications.') || window.location.host.startsWith('candidate.'))
+    
     const next =
-      options?.next === false ? null : typeof options?.next === 'string' ? options.next : typeof window !== 'undefined' && (window.location.host.includes('applications.') || window.location.pathname.startsWith('/candidate')) ? '/candidate/auth/signin' : '/hr/auth/signin'
+      options?.next === false ? null : typeof options?.next === 'string' ? options.next : typeof window !== 'undefined' && isApplicationsSubdomain ? '/auth/signin' : typeof window !== 'undefined' && window.location.pathname.startsWith('/candidate') ? '/candidate/auth/signin' : '/hr/auth/signin'
 
     // Full navigation avoids an extra React pass where the dashboard shows a skeleton while
     // `router.push` runs — the main cause of “logout just keeps loading”.

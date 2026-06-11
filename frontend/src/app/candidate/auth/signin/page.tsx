@@ -60,7 +60,7 @@ export default function CandidateSignInPage() {
             <h1 className="headline-platform text-3xl mb-2 !font-semibold text-blue-600">Candidate Login</h1>
             <p className="text-slate-600 font-figtree text-sm">
               Find your next opportunity. Don't have an account?{' '}
-              <Link href="/candidate/auth/signup" className="text-blue-600 font-medium hover:underline">Create one</Link>
+              <Link href="/auth/signup" className="text-blue-600 font-medium hover:underline">Create one</Link>
             </p>
           </div>
 
@@ -74,7 +74,7 @@ export default function CandidateSignInPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-slate-700 font-figtree">Password</label>
-                <Link href="/candidate/auth/forgot-password" hidden className="text-sm text-blue-600 font-medium font-figtree">Forgot password?</Link>
+                <Link href="/auth/forgot-password" hidden className="text-sm text-blue-600 font-medium font-figtree">Forgot password?</Link>
               </div>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} {...register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" required />
@@ -110,7 +110,7 @@ export default function CandidateSignInPage() {
           
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500 font-figtree">
-              Don't have an account? <Link href="/candidate/auth/signup" className="text-blue-600 font-semibold hover:underline">Sign up</Link>
+              Don't have an account? <Link href="/auth/signup" className="text-blue-600 font-semibold hover:underline">Sign up</Link>
             </p>
           </div>
         </motion.div>

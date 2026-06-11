@@ -204,7 +204,7 @@ function CandidateSignUpForm() {
 
             <div className="mt-8 pt-6 border-t border-gray-100 text-center">
                 <p className="text-sm text-gray-500 font-figtree">
-                    Do you have an account? <Link href="/candidate/auth/signin" className="text-blue-600 font-semibold hover:underline">Sign in</Link>
+                    Do you have an account? <Link href="/auth/signin" className="text-blue-600 font-semibold hover:underline">Sign in</Link>
                 </p>
             </div>
           </div>

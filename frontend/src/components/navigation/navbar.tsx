@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Briefcase, ChevronRight } from 'lucide-react'
+import { Menu, X, Briefcase, ChevronRight, LayoutDashboard } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 const hrNavigation = [
   { name: 'Home', href: '/' },
@@ -17,10 +18,29 @@ const hrNavigation = [
 ]
 
 export function Navbar() {
+  const { user } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [candidateMode, setCandidateMode] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
+
+  // Get dashboard link based on role
+  const getDashboardLink = () => {
+    if (!user) return '/auth/options?mode=signin'
+    if (user.role === 'admin') return '/admin'
+    
+    const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+    const normalizedRole = user?.role?.toLowerCase()
+    const isJobSeeker =
+      normalizedCompanyRole === 'candidate' ||
+      normalizedCompanyRole === 'job_seeker' ||
+      normalizedCompanyRole === 'jobseeker' ||
+      normalizedRole === 'candidate' ||
+      normalizedRole === 'job_seeker' ||
+      normalizedRole === 'jobseeker'
+      
+    return isJobSeeker ? '/candidate' : '/hr'
+  }
 
   // Auto-detect candidate mode based on pathname
   useEffect(() => {
@@ -142,7 +162,17 @@ export function Navbar() {
             </Link>
           </div>
 
-          {candidateMode ? (
+          {user ? (
+            <Link
+              href={getDashboardLink()}
+              className={`whitespace-nowrap rounded-2xl px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 flex items-center gap-2 ${
+                candidateMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-900 hover:bg-black'
+              }`}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Go to Dashboard
+            </Link>
+          ) : candidateMode ? (
             <Link
               href="/jobs"
               className="whitespace-nowrap rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 flex items-center gap-1.5"
@@ -224,20 +254,33 @@ export function Navbar() {
                       {item.name}
                     </Link>
                   ))}
-                  <Link
-                    href="/auth/options?mode=signin"
-                    className="mt-2 block rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-medium text-slate-700"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/auth/options?mode=signup"
-                    className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Get Started
-                  </Link>
+                  {user ? (
+                    <Link
+                      href={getDashboardLink()}
+                      className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white flex items-center justify-center gap-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Go to Dashboard
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        href="/auth/options?mode=signin"
+                        className="mt-2 block rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-medium text-slate-700"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/auth/options?mode=signup"
+                        className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Get Started
+                      </Link>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
@@ -255,6 +298,16 @@ export function Navbar() {
                   >
                     My Applications
                   </Link>
+                  {user && (
+                    <Link
+                      href={getDashboardLink()}
+                      className="mt-2 block rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white flex items-center justify-center gap-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  )}
                 </>
               )}
             </div>
