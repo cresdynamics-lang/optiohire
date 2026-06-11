@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth'
 import OptimizedDashboardLayout from '@/components/dashboard/optimized-dashboard-layout'
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, getSignInUrl } = useAuth()
   const router = useRouter()
   const normalizedCompanyRole = user?.companyRole?.toLowerCase()
   const normalizedRole = user?.role?.toLowerCase()
@@ -52,13 +52,13 @@ export default function DashboardPage() {
     if (!user) {
       const token = localStorage.getItem('token')
       if (!token) {
-        router.replace('/auth/options?mode=signin')
+        router.replace(getSignInUrl())
         return
       }
       const timeout = setTimeout(() => {
         const stillHasToken = localStorage.getItem('token')
         if (!stillHasToken) {
-          router.replace('/auth/options?mode=signin')
+          router.replace(getSignInUrl())
         }
       }, 2000)
 

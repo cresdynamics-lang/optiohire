@@ -484,7 +484,7 @@ function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
 }
 
 function DashboardContent() {
-  const { user, loading } = useAuth()
+  const { user, loading, getSignInUrl } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
   const normalizedCompanyRole = user?.companyRole?.toLowerCase()
@@ -512,7 +512,7 @@ function DashboardContent() {
     if (!user) {
       if (!redirectOnceRef.current.signIn) {
         redirectOnceRef.current.signIn = true
-        router.replace('/auth/options?mode=signin')
+        router.replace(getSignInUrl())
       }
       return
     }

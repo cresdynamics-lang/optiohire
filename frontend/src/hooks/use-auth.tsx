@@ -43,6 +43,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: null | { message: string } }>
   signOut: (options?: SignOutOptions) => Promise<void>
   setSession: (token: string, user: any) => void
+  getSignInUrl: (mode?: 'signin' | 'signup') => string
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -467,10 +468,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('admin_token')
     fallbackUserRef.current = null
 
-    const isApplicationsSubdomain = typeof window !== 'undefined' && (window.location.host.startsWith('applications.') || window.location.host.startsWith('candidate.'))
+    const host = typeof window !== 'undefined' ? window.location.host : ''
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
     
-    const next =
-      options?.next === false ? null : typeof options?.next === 'string' ? options.next : typeof window !== 'undefined' && isApplicationsSubdomain ? '/auth/signin' : typeof window !== 'undefined' && window.location.pathname.startsWith('/candidate') ? '/candidate/auth/signin' : '/hr/auth/signin'
+    // Extract subdomain
+    const hostParts = host.split('.')
+    const subdomain = hostParts.length > 2 || (hostParts.length === 2 && !host.includes('localhost')) 
+      ? hostParts[0].toLowerCase() 
+      : ''
+    
+    const isKnownSubdomain = ['applications', 'candidate', 'console'].includes(subdomain)
+    
+    // Determine the best redirect path
+    let nextPath = '/hr/auth/signin'
+    
+    if (isKnownSubdomain) {
+      // On subdomains, we always use /auth/signin as it's rewritten correctly by middleware
+      nextPath = '/auth/signin' 
+    } else if (pathname.startsWith('/candidate')) {
+      nextPath = '/candidate/auth/signin'
+    } else if (pathname.startsWith('/admin') || subdomain === 'admin') {
+      // Admins go to HR signin, but if on a subdomain, we might need to go to the main domain
+      // For now, let's try to stay relative but fallback to root if needed
+      nextPath = '/hr/auth/signin'
+    } else if (pathname.startsWith('/hr')) {
+      nextPath = '/hr/auth/signin'
+    }
+
+    const next = options?.next === false ? null : options?.next || nextPath
 
     // Full navigation avoids an extra React pass where the dashboard shows a skeleton while
     // `router.push` runs — the main cause of “logout just keeps loading”.
@@ -483,6 +508,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [])
 
+  const getSignInUrl = useCallback((mode: 'signin' | 'signup' = 'signin') => {
+    const host = typeof window !== 'undefined' ? window.location.host : ''
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+    
+    // Extract subdomain
+    const hostParts = host.split('.')
+    const subdomain = hostParts.length > 2 || (hostParts.length === 2 && !host.includes('localhost')) 
+      ? hostParts[0].toLowerCase() 
+      : ''
+    
+    const isKnownSubdomain = ['applications', 'candidate', 'console'].includes(subdomain)
+    const modeParam = `mode=${mode}`
+    
+    if (isKnownSubdomain) {
+      return `/auth/${mode}` 
+    } else if (pathname.startsWith('/candidate')) {
+      return `/candidate/auth/${mode}`
+    } else if (pathname.startsWith('/admin') || subdomain === 'admin') {
+      return `/hr/auth/${mode}`
+    } else if (pathname.startsWith('/hr')) {
+      return `/hr/auth/${mode}`
+    }
+    
+    return `/auth/options?${modeParam}`
+  }, [])
+
   const value = useMemo(() => ({
     user,
     loading,
@@ -490,7 +541,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     setSession,
-  }), [user, loading, signUp, signIn, signOut, setSession])
+    getSignInUrl,
+  }), [user, loading, signUp, signIn, signOut, setSession, getSignInUrl])
 
   return (
     <AuthContext.Provider value={value}>
