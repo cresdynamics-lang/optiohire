@@ -738,8 +738,8 @@ export const Calendar = ({
           type="menu"
           className={twMerge(
             clsx(
-              "p-3 font-sans absolute top-14 sm:top-12 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800",
-              horizontalLayout ? "w-[462px]" : "w-[280px]",
+              "p-3 font-sans absolute top-14 sm:top-12 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg",
+              horizontalLayout ? "w-[540px]" : "w-[280px]",
               presets && !stacked && !compact && "left-0 sm:left-[250px]",
               presets && stacked && "top-[88px]",
               popoverAlignment === "center" && "left-1/2 -translate-x-1/2",
@@ -881,8 +881,8 @@ export const Calendar = ({
               <div className="flex flex-col gap-2">
                 <div>
                   <div className="text-xs text-slate-500 uppercase">Start</div>
-                  <div className="grid grid-cols-3 gap-2 mt-1">
-                    <div className={showTimeInput ? "col-span-2" : "col-span-3"}>
+                  <div className={clsx("grid gap-2 mt-1", showTimeInput ? "grid-cols-[1fr_90px]" : "grid-cols-1")}>
+                    <div>
                       <ShugarInput
                         size="small"
                         value={startDate}
@@ -902,8 +902,8 @@ export const Calendar = ({
                 </div>
                 <div>
                   <div className="text-xs text-slate-500 uppercase">End</div>
-                  <div className="grid grid-cols-3 gap-2 mt-1">
-                    <div className={showTimeInput ? "col-span-2" : "col-span-3"}>
+                  <div className={clsx("grid gap-2 mt-1", showTimeInput ? "grid-cols-[1fr_90px]" : "grid-cols-1")}>
+                    <div>
                       <ShugarInput
                         size="small"
                         value={endDate}

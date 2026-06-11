@@ -9,7 +9,10 @@ import { CandidateAnalyticsDashboard } from './candidate-analytics-dashboard'
 
 export function JobSeekerOverviewSection() {
   const { user } = useAuth()
-  const firstName = user?.name?.split(/\s+/)[0]
+  let firstName = user?.name?.split(/\s+/)[0]
+  if (!firstName || firstName.toLowerCase() === 'student') {
+    firstName = user?.email ? user.email.split('@')[0] : ''
+  }
 
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)

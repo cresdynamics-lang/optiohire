@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { DateTimePicker } from '@/components/ui/date-time-picker'
+import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
 import { useAuth } from '@/hooks/use-auth'
 import type { Candidate } from '@/components/CandidateRow'
 import { cleanCandidateName } from '@/lib/utils'
@@ -201,7 +201,7 @@ export function ScheduleInterviewModal({
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="interview-time">Interview Date & Time</Label>
-                <DateTimePicker
+                <SingleDateTimePicker
                   value={interviewTime}
                   onChange={setInterviewTime}
                   minDateTime={minDateTime}
