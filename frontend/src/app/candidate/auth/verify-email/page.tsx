@@ -107,7 +107,7 @@ function VerifyEmailContent() {
       <div className="min-h-screen w-full bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
           <p className="text-gray-600 mb-4">No email provided. Please complete sign up first.</p>
-          <Link href="/auth/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+          <Link href="/candidate/auth/signup" className="text-blue-600 hover:text-blue-700 font-medium">
             Go to Sign up
           </Link>
         </div>
@@ -140,7 +140,7 @@ function VerifyEmailContent() {
     <div className="min-h-screen w-full bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
         <button
-          onClick={() => router.push('/auth/signup')}
+          onClick={() => router.push('/candidate/auth/signup')}
           className="mb-4 px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-gray-100 border border-gray-200 text-gray-700 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />

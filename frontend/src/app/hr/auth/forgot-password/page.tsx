@@ -195,7 +195,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-4xl flex items-start gap-4">
         <div className="flex-shrink-0 pt-0">
           <button
-            onClick={() => router.push('/auth/signin')}
+            onClick={() => router.push('/hr/auth/signin')}
             className="px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-gray-100 transition-all text-gray-900 font-figtree text-sm shadow-lg border border-gray-200"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -268,7 +268,7 @@ export default function ForgotPasswordPage() {
                     </button>
 
                     <div className="text-center">
-                      <Link href="/auth/signin" className="text-sm text-blue-600 hover:text-blue-700 font-medium font-figtree">
+                      <Link href="/hr/auth/signin" className="text-sm text-blue-600 hover:text-blue-700 font-medium font-figtree">
                         Remember your password? Sign in
                       </Link>
                     </div>

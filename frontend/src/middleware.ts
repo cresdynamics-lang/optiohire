@@ -1,18 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-/**
- * OptioHire Stable Subdomain Middleware
- * 
- * Performs internal rewrites to map subdomains to their respective portal folders.
- * Trust Nginx to handle canonical redirects (e.g., stripping prefixes or routing main domain).
- */
 
 const SUBDOMAIN_MAPPING: Record<string, string> = {
   'console': '/console',
-  'admin': '/admin',
   'candidate': '/candidate',
-  'application': '/candidate',
   'applications': '/candidate',
 }
 
@@ -41,9 +33,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    // Stable Rewrite: Map the external URL to the internal folder
-    // e.g., console.optiohire.com/dashboard -> optiohire.com/hr/dashboard
-    // We only rewrite if the path hasn't already been prefixed (prevents recursion)
+  
     if (!url.pathname.startsWith(internalPath)) {
       const targetUrl = new URL(`${internalPath}${url.pathname === '/' ? '' : url.pathname}`, request.url)
       const response = NextResponse.rewrite(targetUrl)
@@ -52,19 +42,11 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Fallback (Main domain or already-prefixed path)
   return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }

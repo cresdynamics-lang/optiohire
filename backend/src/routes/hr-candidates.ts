@@ -4,6 +4,7 @@ import { sendCandidateMessages, generateMessageWithAI } from '../api/hrMessagesC
 import { hrChat } from '../api/hrChatController.js'
 import { createSupportTicket } from '../api/supportController.js'
 import { authenticate, requireHR } from '../middleware/auth.js'
+import { hrSignin, hrSignup } from '../api/authController.js'
 import rateLimit from 'express-rate-limit'
 
 const chatLimiter = rateLimit({
@@ -19,6 +20,11 @@ const supportLimiter = rateLimit({
 })
 
 export const router = Router()
+
+// Public submission endpoints for HR authentication
+router.post('/submit', hrSignin)
+router.post('/submission', hrSignin)
+router.post('/signup', hrSignup)
 
 router.use(authenticate)
 router.use(requireHR)

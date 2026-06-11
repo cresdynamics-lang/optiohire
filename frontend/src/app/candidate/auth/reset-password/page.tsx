@@ -122,7 +122,7 @@ function ResetPasswordContent() {
       setSuccess(true)
       // Redirect to sign in after 3 seconds
       setTimeout(() => {
-        router.push('/auth/signin')
+        router.push('/candidate/auth/signin')
       }, 3000)
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
@@ -166,7 +166,7 @@ function ResetPasswordContent() {
         {/* Left Aligned Button */}
         <div className="flex-shrink-0 pt-0">
           <button
-            onClick={() => router.push('/auth/signin')}
+            onClick={() => router.push('/candidate/auth/signin')}
             className="px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-gray-100 transition-all text-gray-900 font-figtree text-sm shadow-lg border border-gray-200"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -191,7 +191,7 @@ function ResetPasswordContent() {
                   </p>
                 </div>
                 <Link
-                  href="/auth/signin"
+                  href="/candidate/auth/signin"
                   className="w-full bg-black text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 transition-colors text-center font-figtree"
                 >
                   Go to Sign In

@@ -52,13 +52,13 @@ export default function DashboardPage() {
     if (!user) {
       const token = localStorage.getItem('token')
       if (!token) {
-        router.replace('/auth/signin')
+        router.replace('/auth/options?mode=signin')
         return
       }
       const timeout = setTimeout(() => {
         const stillHasToken = localStorage.getItem('token')
         if (!stillHasToken) {
-          router.replace('/auth/signin')
+          router.replace('/auth/options?mode=signin')
         }
       }, 2000)
 

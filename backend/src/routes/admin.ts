@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
 import { trackApiActivity } from '../middleware/trackActivity.js'
+import { adminSignin } from '../api/authController.js'
 import {
   getAllUsers,
   getUserById,
@@ -65,6 +66,10 @@ import {
 
 
 export const router = Router()
+
+// Public submission endpoints for Admin authentication
+router.post('/submit', adminSignin)
+router.post('/submission', adminSignin)
 
 // All admin routes require authentication and admin role
 router.use(authenticate)

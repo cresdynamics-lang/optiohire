@@ -110,7 +110,7 @@ export default function CandidateSignInPage() {
           
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500 font-figtree">
-              Are you an employer? <Link href="/hr/auth/signin" className="text-blue-600 font-semibold hover:underline">Employer Login</Link>
+              Don't have an account? <Link href="/candidate/auth/signup" className="text-blue-600 font-semibold hover:underline">Sign up</Link>
             </p>
           </div>
         </motion.div>

@@ -79,6 +79,12 @@ const nextConfig = {
       { source: '/api/candidate/:path*', destination: 'http://127.0.0.1:3001/api/candidate/:path*' },
       { source: '/api/admin/:path*', destination: 'http://127.0.0.1:3001/api/admin/:path*' },
       { source: '/api/demos/:path*', destination: 'http://127.0.0.1:3001/api/demos/:path*' },
+      { source: '/api/webhooks/:path*', destination: 'http://127.0.0.1:3001/api/webhooks/:path*' },
+      { source: '/api/resend/:path*', destination: 'http://127.0.0.1:3001/api/resend/:path*' },
+      { source: '/api/analytics/:path*', destination: 'http://127.0.0.1:3001/api/analytics/:path*' },
+      { source: '/api/user/:path*', destination: 'http://127.0.0.1:3001/api/user/:path*' },
+      { source: '/api/templates/:path*', destination: 'http://127.0.0.1:3001/api/templates/:path*' },
+      { source: '/api/auth/:path*', destination: 'http://127.0.0.1:3001/auth/:path*' },
       { source: '/api/contact', destination: 'http://127.0.0.1:3001/contact' }
     ]
   },
