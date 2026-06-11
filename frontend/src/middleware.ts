@@ -9,9 +9,10 @@ import type { NextRequest } from 'next/server'
  */
 
 const SUBDOMAIN_MAPPING: Record<string, string> = {
-  'console': '/hr',
+  'console': '/console',
   'admin': '/admin',
   'candidate': '/candidate',
+  'application': '/candidate',
   'applications': '/candidate',
 }
 
