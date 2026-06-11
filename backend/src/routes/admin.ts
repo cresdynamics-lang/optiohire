@@ -145,8 +145,9 @@ router.get('/workflows', getWorkflows)
 router.patch('/workflows/:workflowId', updateWorkflow)
 
 // Certificate Management
-
-
+import { getPendingCertificates, approveCertificate } from '../api/adminCertificateController.js'
+router.get('/certificates/pending', getPendingCertificates)
+router.post('/certificates/approve', approveCertificate)
 // Enhanced Analytics
 import { getEnhancedStats, getTimeSeriesAnalytics } from '../api/adminAnalyticsController.js'
 router.get('/analytics/enhanced', getEnhancedStats)

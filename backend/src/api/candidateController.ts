@@ -51,6 +51,28 @@ async function ensureCandidateFeatureTables() {
   `)
   await query(`CREATE INDEX IF NOT EXISTS idx_candidate_interview_sessions_profile ON candidate_interview_sessions(profile_id)`)
   await query(`CREATE INDEX IF NOT EXISTS idx_candidate_interview_sessions_created ON candidate_interview_sessions(created_at DESC)`)
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS recruiter_profile_views (
+      view_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
+      hr_user_id uuid NOT NULL,
+      viewed_at timestamptz NOT NULL DEFAULT now()
+    )
+  `)
+  await query(`CREATE INDEX IF NOT EXISTS idx_recruiter_profile_views_profile ON recruiter_profile_views(profile_id)`)
+  await query(`CREATE INDEX IF NOT EXISTS idx_recruiter_profile_views_viewed_at ON recruiter_profile_views(viewed_at DESC)`)
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS candidate_score_history (
+      history_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
+      total_score integer NOT NULL,
+      recorded_at date NOT NULL DEFAULT CURRENT_DATE,
+      UNIQUE (profile_id, recorded_at)
+    )
+  `)
+  await query(`CREATE INDEX IF NOT EXISTS idx_candidate_score_history_profile ON candidate_score_history(profile_id)`)
 }
 
 async function ensureCandidateMissions(profileId: string, gapAnalysis: any) {
@@ -163,6 +185,32 @@ export const getCandidateDashboard = async (req: Request, res: Response): Promis
     // Get missing skills analysis
     const gapAnalysis = await skillAnalysisService.getSkillGapRecommendations(profile.profile_id)
 
+    // Snapshot current score for today
+    await query(`
+      INSERT INTO candidate_score_history (profile_id, total_score, recorded_at)
+      VALUES ($1, $2, CURRENT_DATE)
+      ON CONFLICT (profile_id, recorded_at) 
+      DO UPDATE SET total_score = EXCLUDED.total_score
+    `, [profile.profile_id, profile.total_score])
+
+    // Get score history
+    const { rows: scoreHistory } = await query(
+      `SELECT total_score, recorded_at::text as recorded_at 
+       FROM candidate_score_history 
+       WHERE profile_id = $1 
+       ORDER BY recorded_at ASC`,
+      [profile.profile_id]
+    )
+
+    // Get recruiter views count
+    const { rows: viewsResult } = await query(
+      `SELECT count(*) as count 
+       FROM recruiter_profile_views 
+       WHERE profile_id = $1`,
+      [profile.profile_id]
+    )
+    const recruiterViewsCount = parseInt(viewsResult[0]?.count || '0', 10)
+
     res.status(200).json({
       success: true,
       data: {
@@ -171,7 +219,9 @@ export const getCandidateDashboard = async (req: Request, res: Response): Promis
         recommendations,
         gapAnalysis,
         missions: await ensureCandidateMissions(profile.profile_id, gapAnalysis),
-        interviewSessions: await getInterviewSessions(profile.profile_id)
+        interviewSessions: await getInterviewSessions(profile.profile_id),
+        scoreHistory,
+        recruiterViewsCount
       }
     })
   } catch (error: any) {
@@ -286,8 +336,8 @@ export const getLearningRoadmap = async (req: Request, res: Response): Promise<v
       return
     }
 
-    const roadmapHtml = await roadmapService.generateRoadmap(skillName)
-    res.status(200).json({ success: true, html: roadmapHtml })
+    const roadmapData = await roadmapService.generateRoadmap(skillName)
+    res.status(200).json({ success: true, steps: roadmapData })
   } catch (error: any) {
     console.error('Error generating roadmap:', error)
     res.status(500).json({ success: false, error: 'Internal server error' })

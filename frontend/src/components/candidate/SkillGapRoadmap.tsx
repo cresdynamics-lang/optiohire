@@ -15,7 +15,7 @@ interface GapAnalysis {
 }
 
 export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAnalysis, profileId: string }) {
-  const [roadmapHtml, setRoadmapHtml] = useState<string | null>(null)
+  const [roadmapSteps, setRoadmapSteps] = useState<any[] | null>(null)
   const [loadingRoadmap, setLoadingRoadmap] = useState(false)
   const [certificateUrl, setCertificateUrl] = useState('')
   const [certificateFile, setCertificateFile] = useState<File | null>(null)
@@ -41,7 +41,7 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
       })
       const data = await res.json()
       if (data.success) {
-        setRoadmapHtml(data.html)
+        setRoadmapSteps(data.steps)
       } else {
         toast.error('Failed to generate roadmap')
       }
@@ -104,7 +104,7 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
             "{gapAnalysis.insight}"
           </p>
           
-          {!roadmapHtml && (
+          {!roadmapSteps && (
             <Button 
               onClick={generateRoadmap} 
               disabled={loadingRoadmap}
@@ -117,13 +117,24 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
         </div>
       </Card>
 
-      {roadmapHtml && (
+      {roadmapSteps && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h4 className="text-xl font-bold mb-4 flex items-center">
             <BookOpen className="h-5 w-5 mr-2 text-indigo-600" /> 
             Your Personalized Path to Mastery
           </h4>
-          <div dangerouslySetInnerHTML={{ __html: roadmapHtml }} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {roadmapSteps.map((step: any, idx: number) => (
+              <div key={idx} className="p-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">{step.step}</div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{step.description}</p>
+                <a href={step.resource_url} className="text-sm text-blue-600 hover:underline inline-flex items-center" target="_blank" rel="noopener noreferrer">
+                  {step.resource_label} →
+                </a>
+              </div>
+            ))}
+          </div>
           
           <Card className="mt-8 border-dashed bg-slate-50 dark:bg-slate-900">
             <CardHeader>

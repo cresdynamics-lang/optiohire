@@ -11,6 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { JobRecommendations } from '@/components/candidate/JobRecommendations'
 import { SkillGapRoadmap } from '@/components/candidate/SkillGapRoadmap'
 import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ResponsiveContainer,
+} from 'recharts'
+import {
   AlertCircle,
   BarChart3,
   BookOpen,
@@ -657,7 +665,18 @@ function SkillInventory({
         {skills.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">No skills recorded yet.</p>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div className="h-[350px] w-full rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-gray-800 dark:bg-gray-900">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={skills}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="skill_name" />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                  <Radar name="Skills" dataKey="proficiency_score" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.5} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-4">
             {skills.map((skill) => {
               const isApproved = skill.certificate_status === 'APPROVED' || skill.is_verified
               const isPending = skill.certificate_status === 'PENDING'
@@ -723,17 +742,34 @@ function SkillInventory({
                             <div className="flex-grow border-t border-slate-200"></div>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Upload file</Label>
-                            <Input
-                              type="file"
-                              accept=".pdf,.png,.jpg,.jpeg"
-                              onChange={(event) => {
-                                if (event.target.files?.[0]) {
-                                  setCertFile(event.target.files[0])
-                                  setCertUrl('')
-                                }
-                              }}
-                            />
+                            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Upload file (Drag & Drop)</Label>
+                            <div className="flex w-full items-center justify-center">
+                              <label
+                                htmlFor={`dropzone-file-${skill.skill_id}`}
+                                className="dark:hover:bg-bray-800 flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+                              >
+                                <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                                  <UploadCloud className="mb-2 h-6 w-6 text-gray-500 dark:text-gray-400" />
+                                  <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
+                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">PDF, PNG, JPG (MAX. 5MB)</p>
+                                </div>
+                                <input
+                                  id={`dropzone-file-${skill.skill_id}`}
+                                  type="file"
+                                  className="hidden"
+                                  accept=".pdf,.png,.jpg,.jpeg"
+                                  onChange={(event) => {
+                                    if (event.target.files?.[0]) {
+                                      setCertFile(event.target.files[0])
+                                      setCertUrl('')
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            {certFile && <p className="text-sm text-green-600 mt-2">Selected: {certFile.name}</p>}
                           </div>
                         </div>
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
@@ -746,6 +782,7 @@ function SkillInventory({
                 </div>
               )
             })}
+            </div>
           </div>
         )}
       </CardContent>

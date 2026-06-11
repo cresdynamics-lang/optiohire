@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getCandidatesByJob, getCandidateById, updateCandidateStatus } from '../api/hrCandidatesController.js'
+import { getCandidatesByJob, getCandidateById, updateCandidateStatus, recordCandidateView, getTalentPoolLeaderboard } from '../api/hrCandidatesController.js'
 import { sendCandidateMessages, generateMessageWithAI } from '../api/hrMessagesController.js'
 import { hrChat } from '../api/hrChatController.js'
 import { createSupportTicket } from '../api/supportController.js'
@@ -23,8 +23,10 @@ export const router = Router()
 router.use(authenticate)
 router.use(requireHR)
 
+router.get('/leaderboard', getTalentPoolLeaderboard)
 router.get('/candidates', getCandidatesByJob)
 router.get('/candidates/:id', getCandidateById)
+router.post('/candidates/:id/view', recordCandidateView)
 router.patch('/candidates/:id/status', updateCandidateStatus)
 router.post('/chat', chatLimiter, hrChat)
 router.post('/messages', sendCandidateMessages)
