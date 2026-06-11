@@ -60,24 +60,24 @@ export default function EmployerSignInPage() {
             <h1 className="headline-platform text-3xl mb-2 !font-semibold text-[#2D2DDD]">Employer Login</h1>
             <p className="text-slate-600 font-figtree text-sm">
               Manage your hiring pipeline. Don't have an account?{' '}
-              <Link href="/hr/auth/signup" className="text-primary font-medium hover:underline">Create one</Link>
+              <Link href="/hr/auth/signup" className="text-[#2D2DDD] font-medium hover:underline">Create one</Link>
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 font-figtree">Work Email</label>
-              <input type="email" {...register('email')} placeholder="email@company.com" className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary outline-none font-figtree text-sm" required />
+              <input type="email" {...register('email')} placeholder="email@company.com" className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#2D2DDD] outline-none font-figtree text-sm" required />
               {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-slate-700 font-figtree">Password</label>
-                <Link href="/hr/auth/forgot-password" hidden className="text-sm text-primary font-medium font-figtree">Forgot password?</Link>
+                <Link href="/hr/auth/forgot-password" hidden className="text-sm text-[#2D2DDD] font-medium font-figtree">Forgot password?</Link>
               </div>
               <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} {...register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary outline-none font-figtree text-sm" required />
+                <input type={showPassword ? 'text' : 'password'} {...register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#2D2DDD] outline-none font-figtree text-sm" required />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1">
                   {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                 </button>

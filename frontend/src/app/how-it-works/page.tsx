@@ -30,7 +30,7 @@ export default function HowItWorksPage() {
             <a href="#video" className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black">
               See It in Action
             </a>
-            <a href="/auth/signup" className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+            <a href="/auth/options?mode=signup" className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
               Start Free Trial
             </a>
           </div>

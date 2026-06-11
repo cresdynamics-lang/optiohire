@@ -94,7 +94,7 @@ export default function RootLayout({
         {process.env.NODE_ENV === 'production' && (
           <>
             <link rel="prefetch" href="/auth/options?mode=signin" />
-            <link rel="prefetch" href="/auth/signup" />
+            <link rel="prefetch" href="/auth/options?mode=signup" />
           </>
         )}
         {/* Prefetch logo instead of preload to avoid unused resource warning */}

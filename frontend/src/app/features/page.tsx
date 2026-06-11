@@ -367,7 +367,7 @@ export default function FeaturesPage() {
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <motion.a
-                  href="/auth/signup"
+                  href="/auth/options?mode=signup"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-8 py-3 bg-[#2D2DDD] text-white rounded-full font-medium hover:bg-[#2525c5] transition-colors"

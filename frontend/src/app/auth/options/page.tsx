@@ -24,7 +24,7 @@ export default function AuthOptionsPage() {
       title: isSignUp ? 'I want a job' : 'I am a Candidate',
       description: isSignUp ? 'Create a profile and apply to top companies' : 'Track your applications and interviews',
       icon: <UserCircle2 className="w-8 h-8 text-blue-600" />,
-      href: isSignUp ? 'https://application.optiohire.com/auth/signup' : 'https://application.optiohire.com/auth/signin',
+      href: isSignUp ? 'https://applications.optiohire.com/auth/signup' : 'https://applications.optiohire.com/auth/signin',
       color: 'blue',
     },
   ]

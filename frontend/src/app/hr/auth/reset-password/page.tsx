@@ -183,8 +183,8 @@ function ResetPasswordContent() {
           <div className="p-8 flex flex-col justify-center">
             {success ? (
               <div className="space-y-6">
-                <div className="flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-xl">
-                  <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+                <div className="flex flex-col items-center justify-center p-8 bg-blue-50 border border-blue-200 rounded-xl">
+                  <CheckCircle className="w-16 h-16 text-blue-500 mb-4" />
                   <h2 className="headline-platform text-xl !font-semibold mb-2">Password Reset Successful</h2>
                   <p className="text-sm text-gray-600 text-center font-figtree">
                     Your password has been successfully reset. Redirecting you to sign in...
