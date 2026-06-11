@@ -23,34 +23,17 @@ export default function AuthOptionsPage() {
     {
       title: isSignUp ? 'I want a job' : 'I am a Candidate',
       description: isSignUp ? 'Create a profile and apply to top companies' : 'Track your applications and interviews',
-      icon: <UserCircle2 className="w-8 h-8 text-green-600" />,
+      icon: <UserCircle2 className="w-8 h-8 text-blue-600" />,
       href: isSignUp ? 'https://application.optiohire.com/auth/signup' : 'https://application.optiohire.com/auth/signin',
-      color: 'green',
+      color: 'blue',
     },
   ]
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-4xl flex flex-col gap-8">
-        {/* Header */}
-        <div className="flex flex-col items-center text-center gap-4">
-          <Link href="/" className="flex items-center gap-2 mb-4">
-             <Image
-              src="/assets/logo/logo-removebg-preview.png"
-              alt="OptioHire logo"
-              width={48}
-              height={48}
-              className="h-12 w-12 rounded-md object-contain"
-            />
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">OptioHire</span>
-          </Link>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-            {isSignUp ? 'How do you want to use OptioHire?' : 'Welcome back!'}
-          </h1>
-          <p className="text-slate-600 max-w-md mx-auto">
-            Select the portal that best fits your needs to continue.
-          </p>
-        </div>
+        {/* Header - Minimal spacing */}
+        <div className="h-8" />
 
         {/* Options Grid */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -80,7 +63,7 @@ export default function AuthOptionsPage() {
                 </div>
 
                 {/* Decorative background element */}
-                <div className={`absolute -right-4 -bottom-4 w-24 h-24 bg-${option.color}-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500`} />
+                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
               </Link>
             </motion.div>
           ))}
@@ -89,17 +72,10 @@ export default function AuthOptionsPage() {
         {/* Back link */}
         <button 
           onClick={() => router.back()}
-          className="self-center flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium"
+          className="self-center flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-sm font-medium mt-8"
         >
           <ArrowLeft className="w-4 h-4" /> Back to previous page
         </button>
-
-        {/* Footer info */}
-        <div className="text-center mt-4">
-          <p className="text-sm text-slate-400">
-            Authorized personnel? <Link href="https://console.optiohire.com/auth/signin" className="text-slate-600 hover:underline font-medium">Console Login</Link>
-          </p>
-        </div>
       </div>
     </div>
   )

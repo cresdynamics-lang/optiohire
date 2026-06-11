@@ -93,7 +93,7 @@ export default function RootLayout({
         {/* Prefetch auth routes in production only — dev HMR + prefetch causes noisy RSC fetches that feel like endless reloads */}
         {process.env.NODE_ENV === 'production' && (
           <>
-            <link rel="prefetch" href="/auth/signin" />
+            <link rel="prefetch" href="/auth/options?mode=signin" />
             <link rel="prefetch" href="/auth/signup" />
           </>
         )}

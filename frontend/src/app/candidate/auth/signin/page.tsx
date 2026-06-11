@@ -49,7 +49,7 @@ export default function CandidateSignInPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50 flex items-center justify-center p-4">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md flex flex-col gap-4">
         <button onClick={() => router.push('/')} className="self-start px-4 py-2 bg-white rounded-full flex items-center gap-2 hover:bg-slate-50 text-slate-900 font-figtree text-sm shadow-sm border border-slate-200">
           <ArrowLeft className="w-4 h-4" /> Back to Home
@@ -57,27 +57,27 @@ export default function CandidateSignInPage() {
         
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 p-8">
           <div className="mb-6">
-            <h1 className="headline-platform text-3xl mb-2 !font-semibold text-green-600">Candidate Login</h1>
+            <h1 className="headline-platform text-3xl mb-2 !font-semibold text-blue-600">Candidate Login</h1>
             <p className="text-slate-600 font-figtree text-sm">
               Find your next opportunity. Don't have an account?{' '}
-              <Link href="/candidate/auth/signup" className="text-green-600 font-medium hover:underline">Create one</Link>
+              <Link href="/candidate/auth/signup" className="text-blue-600 font-medium hover:underline">Create one</Link>
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 font-figtree">Email Address</label>
-              <input type="email" {...register('email')} placeholder="email@example.com" className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-figtree text-sm" required />
+              <input type="email" {...register('email')} placeholder="email@example.com" className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" required />
               {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-slate-700 font-figtree">Password</label>
-                <Link href="/candidate/auth/forgot-password" hidden className="text-sm text-green-600 font-medium font-figtree">Forgot password?</Link>
+                <Link href="/candidate/auth/forgot-password" hidden className="text-sm text-blue-600 font-medium font-figtree">Forgot password?</Link>
               </div>
               <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} {...register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-figtree text-sm" required />
+                <input type={showPassword ? 'text' : 'password'} {...register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" required />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1">
                   {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                 </button>
@@ -86,7 +86,7 @@ export default function CandidateSignInPage() {
 
             {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 font-figtree">{error}</div>}
 
-            <button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-green-700 transition-colors font-figtree disabled:opacity-50">
+            <button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors font-figtree disabled:opacity-50">
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
 
@@ -110,7 +110,7 @@ export default function CandidateSignInPage() {
           
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500 font-figtree">
-              Are you an employer? <Link href="/hr/auth/signin" className="text-green-600 font-semibold hover:underline">Employer Login</Link>
+              Are you an employer? <Link href="/hr/auth/signin" className="text-blue-600 font-semibold hover:underline">Employer Login</Link>
             </p>
           </div>
         </motion.div>
