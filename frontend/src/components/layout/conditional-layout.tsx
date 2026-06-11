@@ -32,7 +32,16 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
 
   // Determine if Navbar and Footer should be rendered
   const isAppInterface = isSubdomain || isDashboardPath
-  const showNavbar = !loading && !user && !isAppInterface
+  
+  // Show Navbar if:
+  // 1. Not logged in and not in an app interface (standard landing page behavior)
+  // 2. OR logged in on the main domain (optiohire.com) and not on the HR path
+  const isMainDomain = !isSubdomain && (host.includes('optiohire.com') || host.includes('localhost'))
+  const showNavbar = !loading && (
+    (!user && !isAppInterface) || 
+    (user && isMainDomain && !pathname.startsWith('/hr'))
+  )
+  
   const showFooter = !isAppInterface
 
   return (
