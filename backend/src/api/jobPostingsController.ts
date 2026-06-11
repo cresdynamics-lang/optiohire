@@ -20,16 +20,6 @@ const createJobSchema = z.object({
   job_poster_url: z.string().url().optional(),
 })
 
-function normalizeSkills(skills: string[]): string[] {
-  return Array.from(
-    new Set(
-      skills
-        .map(s => s.trim().toLowerCase())
-        .filter(s => s.length > 0)
-    )
-  )
-}
-
 function domainFromEmail(email: string): string | null {
   const at = email.indexOf('@')
   if (at === -1) return null
@@ -322,15 +312,15 @@ export async function createJobPosting(req: Request, res: Response) {
     const companyId = companyRow.company_id
     const meetingLink = payload.meeting_link ?? null
 
-    const jobIns = await client.query<{ job_posting_id: string }>(
-      `insert into job_postings
+    const { rows: jobIns } = await client.query<{ job_posting_id: string }>(
+      `INSERT INTO job_postings 
        (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'ACTIVE')
-       returning job_posting_id`,
-      [companyId, payload.job_title, payload.job_description, payload.job_description, skills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null]
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN')
+       RETURNING job_posting_id`,
+      [companyId, payload.job_title, payload.job_description, payload.job_description, cleanSkills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null]
     )
 
-    const jobPostingId = jobIns.rows[0].job_posting_id
+    const jobPostingId = jobIns[0].job_posting_id
     const secret = (await import('crypto')).randomBytes(32).toString('hex')
     const base = process.env.PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`
     const webhookUrl = `${base}/inbound/applications/${jobPostingId}`

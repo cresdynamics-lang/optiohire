@@ -14,7 +14,7 @@ type JobRequirements = {
   skills: string[]
 }
 
-function normalizeToken(t: string): string {
+function cleanToken(t: string): string {
   return t
     .toLowerCase()
     .replace(/\.(js|ts|tsx|jsx)$/i, '')
@@ -48,7 +48,7 @@ function skillMatchStrength(haystack: string, skillPhrase: string): number {
   if (haystack.includes(phrase)) return 1
   const tokens = phrase
     .split(/[/,]+|\s+/)
-    .map(normalizeToken)
+    .map(cleanToken)
     .filter((t) => t.length >= 2)
   if (tokens.length === 0) return 0
   let hits = 0

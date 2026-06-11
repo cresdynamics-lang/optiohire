@@ -139,7 +139,7 @@ export async function scheduleInterview(req: Request, res: Response) {
     // This prevents email delays from blocking the API response
     setImmediate(async () => {
       try {
-        const resolvedMeetingLink = meetingLink as string
+        const finalMeetingLink = meetingLink as string
         // Clean job title for email
         const cleanedJobTitle = cleanJobTitle(job.job_title)
 

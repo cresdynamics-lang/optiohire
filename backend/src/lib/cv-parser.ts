@@ -105,7 +105,7 @@ export class CVParser {
    * Categorizes: LinkedIn, GitHub, Emails (mailto:), Other links
    */
   private extractLinks(textContent: string): ParsedCV {
-    // Clean text for Groq/AI: normalize spaces but preserve paragraph breaks so structure stays readable
+    // Clean text for Groq/AI: tidy up spaces but preserve paragraph breaks so structure stays readable
     const cleanedText = textContent
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')

@@ -522,11 +522,11 @@ export async function bulkRequeueDeadLetterEmails(req: AuthRequest, res: Respons
       return res.status(400).json({ error: 'emailIds array is required' })
     }
 
-    const normalizedIds = emailIds
+    const cleanIds = emailIds
       .map((id: unknown) => (typeof id === 'string' ? id.trim() : ''))
       .filter(Boolean)
 
-    if (normalizedIds.length === 0) {
+    if (cleanIds.length === 0) {
       return res.status(400).json({ error: 'No valid email IDs provided' })
     }
 
@@ -552,18 +552,18 @@ export async function bulkRequeueDeadLetterEmails(req: AuthRequest, res: Respons
              true
            )
        WHERE email_id = ANY($1::uuid[])`,
-      [normalizedIds, nowIso, nowIso]
+      [cleanIds, nowIso, nowIso]
     )
 
     await logAdminAction(req, 'bulk_requeue_dead_letter_email', 'email', undefined, {
-      requested: normalizedIds.length,
+      requested: cleanIds.length,
       updated: rowCount || 0
     })
 
     return res.json({
       success: true,
       message: `${rowCount || 0} email(s) re-queued successfully`,
-      requested: normalizedIds.length,
+      requested: cleanIds.length,
       updated: rowCount || 0
     })
   } catch (err) {

@@ -382,12 +382,13 @@ export async function googleSignIn(req: Request, res: Response) {
         body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: req.body.redirect_uri || process.env.GOOGLE_REDIRECT_URI!, grant_type: 'authorization_code' })
       })
       if (!resTok.ok) return res.status(401).json({ error: 'Token exchange failed' })
-      idToken = (await resTok.json()).id_token
+      const tokenData = await resTok.json() as { id_token: string }
+      idToken = tokenData.id_token
     }
     if (!idToken) return res.status(400).json({ error: 'Token required' })
 
     const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`)
-    const info = await infoRes.json()
+    const info = await infoRes.json() as { email?: string, email_verified?: string, name?: string }
     if (!info.email || info.email_verified !== 'true') return res.status(401).json({ error: 'Verified email required' })
 
     const email = info.email.toLowerCase().trim()
@@ -405,7 +406,7 @@ export async function googleSignIn(req: Request, res: Response) {
     }
 
     const token = jwt.sign({ sub: u.user_id, email, role: u.role }, JWT_SECRET, { expiresIn: '7d' })
-    return res.status(200).json({ token, user: { id: u.user_id, email, name: u.name || info.name, role: u.role, company_role: u.company_role, ...companyInfo } })
+    return res.status(200).json({ token, user: { id: u.user_id, email, name: u.name || info.name || 'User', role: u.role, company_role: u.company_role, ...companyInfo } })
   } catch (err) {
     return res.status(500).json({ error: 'Google sign-in failed' })
   }
