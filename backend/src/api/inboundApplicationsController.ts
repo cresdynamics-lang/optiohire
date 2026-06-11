@@ -52,8 +52,7 @@ export async function receiveInboundApplication(req: Request, res: Response) {
       message_id ||
       sha256Hex([job.company_id, job.job_posting_id, email, subject || '', received_at || ''].join('|'))
 
-    // Normalize status to enum values if provided
-    const normalizedStatus = typeof status === 'string' ? status.toUpperCase() : null // 'SHORTLIST' | 'FLAG' | 'REJECT'
+    const finalStatus = typeof status === 'string' ? status.toUpperCase().trim() : null // 'SHORTLIST' | 'FLAG' | 'REJECT'
 
     const insert = await query<{ application_id: string }>(
       `insert into applications
@@ -71,7 +70,7 @@ export async function receiveInboundApplication(req: Request, res: Response) {
         resume_url || null,
         parsed_resume ? JSON.stringify(parsed_resume) : null,
         typeof score === 'number' ? score : null,
-        normalizedStatus || null,
+        finalStatus,
         reasoning || null,
         dedupeKey,
       ]
