@@ -84,7 +84,7 @@ function CandidateSignUpForm() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-green-50 flex flex-col items-center justify-start pt-8 pb-12 px-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-start pt-8 pb-12 px-4">
       <div className="w-full max-w-md flex flex-col gap-6">
         <button
           type="button"
@@ -98,7 +98,7 @@ function CandidateSignUpForm() {
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="p-6 sm:p-8 flex flex-col">
             <div className="mb-6 text-center">
-              <h1 className="headline-platform text-2xl sm:text-3xl mb-2 !font-semibold text-green-600">Candidate Signup</h1>
+              <h1 className="headline-platform text-2xl sm:text-3xl mb-2 !font-semibold text-blue-600">Candidate Signup</h1>
               <p className="text-slate-600 font-figtree text-sm">
                 Unlock your career potential with AI-driven insights
               </p>
@@ -108,10 +108,10 @@ function CandidateSignUpForm() {
             <div className="flex items-center justify-center mb-6">
               {[2, 4].map((stepNum, idx) => (
                 <div key={stepNum} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= stepNum ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= stepNum ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
                     {idx + 1}
                   </div>
-                  {idx === 0 && <div className={`w-12 h-0.5 ${step > stepNum ? 'bg-green-600' : 'bg-slate-200'}`} />}
+                  {idx === 0 && <div className={`w-12 h-0.5 ${step > stepNum ? 'bg-blue-600' : 'bg-slate-200'}`} />}
                 </div>
               ))}
             </div>
@@ -125,20 +125,20 @@ function CandidateSignUpForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-figtree">Full Name *</label>
-                  <input type="text" {...form.register('name')} placeholder="Enter your full name" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-figtree text-sm" />
+                  <input type="text" {...form.register('name')} placeholder="Enter your full name" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" />
                   {form.formState.errors.name && <p className="text-sm text-red-500 mt-1">{form.formState.errors.name.message}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-figtree">Email Address *</label>
-                  <input type="email" {...form.register('email')} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-figtree text-sm" />
+                  <input type="email" {...form.register('email')} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" />
                   {form.formState.errors.email && <p className="text-sm text-red-500 mt-1">{form.formState.errors.email.message}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-figtree">Password *</label>
                   <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} {...form.register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-figtree text-sm" />
+                    <input type={showPassword ? 'text' : 'password'} {...form.register('password')} placeholder="Password" className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1">
                       {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                     </button>
@@ -149,7 +149,7 @@ function CandidateSignUpForm() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-figtree">Confirm Password *</label>
                   <div className="relative">
-                    <input type={showConfirmPassword ? 'text' : 'password'} {...form.register('confirmPassword')} placeholder="Confirm Password" className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-figtree text-sm" />
+                    <input type={showConfirmPassword ? 'text' : 'password'} {...form.register('confirmPassword')} placeholder="Confirm Password" className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" />
                     <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1">
                       {showConfirmPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                     </button>
@@ -162,7 +162,7 @@ function CandidateSignUpForm() {
                   onClick={async () => {
                     if (await form.trigger(['name', 'email', 'password', 'confirmPassword'])) setStep(4)
                   }}
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-green-700 transition-colors font-figtree"
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors font-figtree"
                 >
                   Continue
                 </button>
@@ -172,21 +172,30 @@ function CandidateSignUpForm() {
             {step === 4 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <h2 className="headline-platform text-xl !font-semibold mb-2">Confirm Your Account</h2>
-                  <p className="text-gray-600 font-figtree text-sm">Review your details</p>
+                  <h2 className="headline-platform text-xl !font-semibold mb-2 text-slate-900">Confirm Your Account</h2>
+                  <p className="text-slate-600 font-figtree text-sm">Review your details</p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-xl space-y-3 font-figtree text-sm">
-                  <div className="flex justify-between"><span>Name:</span><span className="font-medium">{form.watch('name')}</span></div>
-                  <div className="flex justify-between"><span>Email:</span><span className="font-medium">{form.watch('email')}</span></div>
-                  <div className="flex justify-between"><span>Account Type:</span><span className="font-medium text-green-600">Job Seeker</span></div>
+                <div className="bg-slate-50 p-6 rounded-2xl space-y-4 border border-slate-100 font-figtree text-sm">
+                  <div className="flex justify-between items-center border-b border-slate-200/50 pb-2">
+                    <span className="text-slate-500">Name</span>
+                    <span className="font-semibold text-slate-900">{form.watch('name')}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-slate-200/50 pb-2">
+                    <span className="text-slate-500">Email</span>
+                    <span className="font-semibold text-slate-900">{form.watch('email')}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Account Type</span>
+                    <span className="font-bold text-blue-600">Job Seeker</span>
+                  </div>
                 </div>
 
                 {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-600 text-sm"><AlertCircle className="w-4 h-4" />{error}</div>}
 
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setStep(2)} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium">Back</button>
-                  <button type="submit" onClick={form.handleSubmit(onSubmit)} disabled={isLoading} className="flex-1 bg-green-600 text-white py-3 rounded-xl font-medium disabled:opacity-50">
+                  <button type="button" onClick={() => setStep(2)} className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors">Back</button>
+                  <button type="submit" onClick={form.handleSubmit(onSubmit)} disabled={isLoading} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-lg shadow-blue-600/20">
                     {isLoading ? 'Creating...' : 'Create Account'}
                   </button>
                 </div>
@@ -195,7 +204,7 @@ function CandidateSignUpForm() {
 
             <div className="mt-8 pt-6 border-t border-gray-100 text-center">
                 <p className="text-sm text-gray-500 font-figtree">
-                    Are you an employer? <Link href="/hr/auth/signup" className="text-green-600 font-semibold hover:underline">Employer Signup</Link>
+                    Do you have an account? <Link href="/candidate/auth/signin" className="text-blue-600 font-semibold hover:underline">Sign in</Link>
                 </p>
             </div>
           </div>
