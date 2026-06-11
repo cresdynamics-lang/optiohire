@@ -80,19 +80,19 @@ export function JobSeekerInterviewsSection() {
       <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent" aria-hidden />
         <div className="relative space-y-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-900 dark:text-white">
             <Sparkles className="h-3.5 w-3.5" />
             Candidate Interviews
           </span>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Your interviews</h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="max-w-2xl text-sm leading-relaxed text-slate-900 dark:text-white sm:text-base">
             Track your scheduled interviews and prepare for each discussion with hiring teams.
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+        <div className="flex flex-col items-center justify-center py-16 text-slate-900 dark:text-white">
           <Loader2 className="h-8 w-8 animate-spin mb-3" />
           <p className="text-sm">Loading your interviews...</p>
         </div>
@@ -101,13 +101,13 @@ export function JobSeekerInterviewsSection() {
       ) : interviews.length === 0 ? (
         <div className="text-center py-16">
           <CalendarClock className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-700 mb-1">No interviews scheduled yet</h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
+          <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">No interviews scheduled yet</h3>
+          <p className="text-sm text-slate-900 dark:text-white max-w-md mx-auto">
             When a company shortlists you and schedules an interview, it will appear here with all the details you need.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {interviews.map((interview) => (
             <Card
               key={interview.id}
@@ -126,7 +126,7 @@ export function JobSeekerInterviewsSection() {
                       )}
                       {interview.jobTitle}
                     </CardTitle>
-                    <CardDescription className="text-slate-600">{interview.companyName}</CardDescription>
+                    <CardDescription className="text-slate-900 dark:text-white">{interview.companyName}</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge
@@ -140,7 +140,7 @@ export function JobSeekerInterviewsSection() {
                       {interview.interviewType === 'in-person' ? '📍 In-Person' : '🎥 Online'}
                     </Badge>
                     {!isUpcoming(interview.interviewTime) && (
-                      <Badge variant="secondary" className="bg-slate-100 text-slate-500">
+                      <Badge variant="secondary" className="bg-slate-100 text-slate-900 dark:text-white">
                         Past
                       </Badge>
                     )}
@@ -148,7 +148,7 @@ export function JobSeekerInterviewsSection() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="inline-flex items-center gap-2 text-sm text-slate-600 font-medium">
+                <p className="inline-flex items-center gap-2 text-sm text-slate-900 dark:text-white font-medium">
                   <CalendarClock className="h-4 w-4 text-slate-400" />
                   {formatDate(interview.interviewTime)} at {formatTime(interview.interviewTime)}
                 </p>
@@ -186,7 +186,7 @@ export function JobSeekerInterviewsSection() {
                 {/* In-Person: Location + Google Maps */}
                 {interview.interviewType === 'in-person' && interview.location && (
                   <div className="space-y-2">
-                    <p className="inline-flex items-center gap-2 text-sm text-slate-600">
+                    <p className="inline-flex items-center gap-2 text-sm text-slate-900 dark:text-white">
                       <MapPin className="h-4 w-4 text-emerald-600" />
                       {interview.location}
                     </p>
