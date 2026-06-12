@@ -6,6 +6,7 @@ import { Trophy, CheckCircle, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { toast } from 'react-hot-toast'
 import Link from 'next/link'
+import OptimizedDashboardLayout from '@/components/dashboard/optimized-dashboard-layout'
 
 interface LeaderboardCandidate {
   user_id: string
@@ -16,7 +17,7 @@ interface LeaderboardCandidate {
   verified_skills_count: number
 }
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
   const [candidates, setCandidates] = useState<LeaderboardCandidate[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -132,5 +133,13 @@ export default function LeaderboardPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function LeaderboardPage() {
+  return (
+    <OptimizedDashboardLayout>
+      <LeaderboardContent />
+    </OptimizedDashboardLayout>
   )
 }

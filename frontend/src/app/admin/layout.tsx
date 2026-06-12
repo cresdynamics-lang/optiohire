@@ -2,6 +2,7 @@
 
 import { Suspense, Component, ReactNode, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, Menu, RefreshCw, X, Moon, Sun } from 'lucide-react'
@@ -154,7 +155,10 @@ export default function AdminLayout({
           </AdminErrorBoundary>
         </Suspense>
 
-        <main className="min-h-screen overflow-auto bg-background  pt-16">
+        <main className={cn(
+          "min-h-screen overflow-auto bg-background pt-16 transition-all duration-300 ease-out",
+          navOpen ? "lg:ml-64" : ""
+        )}>
           <AdminErrorBoundary>
             {children}
           </AdminErrorBoundary>

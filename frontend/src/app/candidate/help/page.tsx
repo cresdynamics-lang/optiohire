@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Book, HelpCircle, Briefcase, FileText, Target, Calendar, UserCheck, UploadCloud, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
+import OptimizedDashboardLayout from '@/components/dashboard/optimized-dashboard-layout'
 
-export default function CandidateHelpPage() {
+function CandidateHelpContent() {
   const router = useRouter()
 
   const quickLinks = [
@@ -218,5 +219,13 @@ export default function CandidateHelpPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function CandidateHelpPage() {
+  return (
+    <OptimizedDashboardLayout>
+      <CandidateHelpContent />
+    </OptimizedDashboardLayout>
   )
 }

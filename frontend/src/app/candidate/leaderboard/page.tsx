@@ -6,8 +6,9 @@ import { Trophy, Medal, Crown, Loader2, ArrowUpRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
 import Image from 'next/image'
+import OptimizedDashboardLayout from '@/components/dashboard/optimized-dashboard-layout'
 
-export default function CandidateLeaderboardPage() {
+function LeaderboardContent() {
   const [leaderboard, setLeaderboard] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [timeFilter, setTimeFilter] = useState('all_time')
@@ -173,5 +174,13 @@ export default function CandidateLeaderboardPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function CandidateLeaderboardPage() {
+  return (
+    <OptimizedDashboardLayout>
+      <LeaderboardContent />
+    </OptimizedDashboardLayout>
   )
 }

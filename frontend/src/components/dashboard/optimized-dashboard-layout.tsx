@@ -484,7 +484,7 @@ function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
     : { eyebrow: 'Employer workspace', title: 'Dashboard' }
 }
 
-function DashboardContent() {
+function DashboardContent({ children }: { children?: React.ReactNode }) {
   const { user, loading, getSignInUrl } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
@@ -719,7 +719,7 @@ function DashboardContent() {
       
       <main 
         className={`min-w-0 flex-1 overflow-auto bg-transparent transition-all duration-300 ease-out ${
-          isSidebarOpen && isJobSeeker ? 'translate-x-[18rem] md:translate-x-0 md:ml-[18rem]' : ''
+          isSidebarOpen ? 'lg:ml-[18rem]' : ''
         }`}
       >
         {/* Top bar: wayfinding + notifications */}
@@ -898,7 +898,7 @@ function DashboardContent() {
         <div className="relative z-20 mx-auto w-full max-w-[1440px] px-3 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:p-8 lg:px-10 lg:pb-12">
           <ErrorBoundary fallback={<SectionLoader sectionName={activeSection} />}>
             <div className="min-w-0">
-              {renderSection()}
+              {children || renderSection()}
             </div>
           </ErrorBoundary>
         </div>
@@ -911,10 +911,10 @@ function DashboardContent() {
   )
 }
 
-export function OptimizedDashboardLayout() {
+export function OptimizedDashboardLayout({ children }: { children?: React.ReactNode }) {
   return (
     <NotificationProvider>
-      <DashboardContent />
+      <DashboardContent>{children}</DashboardContent>
     </NotificationProvider>
   )
 }

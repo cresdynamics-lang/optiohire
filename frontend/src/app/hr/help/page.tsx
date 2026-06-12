@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Book, HelpCircle, MessageSquare, Briefcase, FileText, Settings, Target, Calendar, Mail, BarChart3, Users, Star } from 'lucide-react'
 import Link from 'next/link'
 import { ChatbotWidget } from '@/components/dashboard/chatbot-widget'
+import OptimizedDashboardLayout from '@/components/dashboard/optimized-dashboard-layout'
 
-export default function HRHelpPage() {
+function HRHelpContent() {
   const router = useRouter()
 
   const quickLinks = [
@@ -225,5 +226,13 @@ export default function HRHelpPage() {
       </div>
       <ChatbotWidget />
     </div>
+  )
+}
+
+export default function HRHelpPage() {
+  return (
+    <OptimizedDashboardLayout>
+      <HRHelpContent />
+    </OptimizedDashboardLayout>
   )
 }
