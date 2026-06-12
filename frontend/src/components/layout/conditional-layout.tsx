@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Navbar } from '@/components/navigation/navbar'
 import { Footer } from '@/components/footer/footer'
+import { CookieConsent } from '@/components/ui/cookie-consent'
 import { useAuth } from '@/hooks/use-auth'
 
 interface ConditionalLayoutProps {
@@ -43,11 +44,13 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   )
   
   const showFooter = !isAppInterface
+  const showCookieConsent = !isAppInterface
 
   return (
     <>
       {showNavbar && <Navbar />}
       <main className={showNavbar ? "pt-20 min-h-[60vh]" : "min-h-[60vh]"}>{children}</main>
+      {showCookieConsent && <CookieConsent />}
       {showFooter && <Footer />}
     </>
   )

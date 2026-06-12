@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/hooks/use-auth'
 import { ConditionalLayout } from '@/components/layout/conditional-layout'
-import { CookieConsent } from '@/components/ui/cookie-consent'
 import { CookieProvider } from '@/components/providers/cookie-provider'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { ServiceWorker } from '@/components/service-worker'
@@ -111,7 +110,6 @@ export default function RootLayout({
                   <ThemeProvider>
                     <ConditionalLayout>{children}</ConditionalLayout>
                   </ThemeProvider>
-                  <CookieConsent />
                   <ServiceWorker />
                 </div>
               </ErrorBoundary>
