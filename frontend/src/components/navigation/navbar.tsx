@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Briefcase, ChevronRight, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const hrNavigation = [
   { name: 'Home', href: '/' },
@@ -135,6 +136,9 @@ export function Navbar() {
 
         {/* Desktop right side */}
         <div className="hidden lg:flex lg:items-center lg:flex-shrink-0 lg:gap-2">
+          {/* Theme Toggle */}
+          <ThemeToggle className="mr-2" />
+
           {/* Mode toggle pill */}
           <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs font-medium mr-1">
             <Link
@@ -217,6 +221,12 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="absolute left-0 right-0 top-full z-[200] mt-2 translate-y-0 overflow-hidden rounded-2xl border border-slate-200 bg-white opacity-100 shadow-xl shadow-slate-900/10 transition-all duration-200 lg:hidden">
             <div className="px-4 py-4 space-y-2">
+              {/* Theme toggle in mobile */}
+              <div className="flex items-center justify-between p-2 mb-2 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-sm font-medium text-slate-700">Theme</span>
+                <ThemeToggle />
+              </div>
+
               {/* Mode toggle in mobile */}
               <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 mb-3">
                 <button

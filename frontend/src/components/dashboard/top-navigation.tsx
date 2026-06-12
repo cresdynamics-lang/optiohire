@@ -8,14 +8,11 @@ import {
   Calendar,
   Settings,
   Home,
-  Monitor,
-  Sun,
-  Moon,
   Bell
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
-import { useTheme } from 'next-themes'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const quickNavItems = [
   {
@@ -54,7 +51,6 @@ export function TopNavigation() {
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useAuth()
-  const { theme, setTheme } = useTheme()
 
   // Don't show on admin pages or auth pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/auth')) {
@@ -94,32 +90,7 @@ export function TopNavigation() {
 
       <div className="flex items-center gap-4">
         {/* Theme Toggle */}
-        <div className="flex bg-slate-100 dark:bg-gray-800 p-1 rounded-lg border border-border">
-          <button
-            type="button"
-            onClick={() => setTheme('system')}
-            className={cn('p-1.5 rounded-md transition-colors', theme === 'system' ? 'bg-white dark:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600 text-[#2D2DDD] ' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300')}
-            title="System Theme"
-          >
-            <Monitor className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setTheme('light')}
-            className={cn('p-1.5 rounded-md transition-colors', theme === 'light' ? 'bg-white dark:bg-gray-700 shadow-sm border border-[#2D2DDD] text-[#2D2DDD]' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300')}
-            title="Light Theme"
-          >
-            <Sun className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setTheme('dark')}
-            className={cn('p-1.5 rounded-md transition-colors', theme === 'dark' ? 'bg-white dark:bg-gray-700 shadow-sm border border-[#2D2DDD] text-[#2D2DDD]' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300')}
-            title="Dark Theme"
-          >
-            <Moon className="w-4 h-4" />
-          </button>
-        </div>
+        <ThemeToggle />
 
         {/* Notification Bell */}
         <button className="relative p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 rounded-lg border border-border transition-colors bg-background shadow-sm hover:shadow">

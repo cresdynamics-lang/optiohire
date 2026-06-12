@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { NotificationProvider, useNotifications } from '@/contexts/notification-context'
 import { Sidebar } from './sidebar'
 import { ChatbotWidget } from './chatbot-widget'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 // Simple Error Boundary component
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
@@ -775,6 +776,9 @@ function DashboardContent() {
                   </Button>
                 </>
               )}
+              
+              <ThemeToggle />
+
               {/* Notifications Bell - Moved to far right */}
               <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
                 <PopoverTrigger asChild>
