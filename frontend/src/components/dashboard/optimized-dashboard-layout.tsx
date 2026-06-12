@@ -499,8 +499,15 @@ function DashboardContent() {
     normalizedRole === 'jobseeker'
   const pageMeta = dashboardPageMeta(pathname, isJobSeeker)
   const [activeSection, setActiveSection] = useState('overview')
-  /** Nav drawer closed by default on all breakpoints; open via menu icon only. */
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  /** Nav drawer open by default on desktop; automatically handled by useEffect for mobile. */
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+
+  // Auto-close sidebar on mobile/tablet on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsSidebarOpen(false)
+    }
+  }, [])
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } = useNotifications()
   /** Avoid firing duplicate client navigations on every paint — feels like the site is “constantly refreshing”. */

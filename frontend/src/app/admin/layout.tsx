@@ -79,7 +79,14 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname()
   const isLoginPage = pathname === '/admin/login'
-  const [navOpen, setNavOpen] = useState(false)
+  const [navOpen, setNavOpen] = useState(true)
+
+  // Auto-close sidebar on mobile/tablet on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setNavOpen(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (!navOpen) return
