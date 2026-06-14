@@ -4,6 +4,9 @@ import {
   createJobPosting, 
   getJobPostings, 
   sendJobPostingCreatedNotification,
+  getJobPostingById,
+  updateJobPosting,
+  deleteJobPosting,
   getPublicJobPostings,
   getPublicJobPostingById,
   getPublicCompanyJobPostings

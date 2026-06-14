@@ -409,6 +409,30 @@ export async function createJobPosting(req: Request, res: Response) {
   }
 }
 
+export async function sendJobPostingCreatedNotification(req: Request, res: Response) {
+  try {
+    const { hr_email, company_email, job_title, company_name, application_deadline } = req.body
+    const recipients = [hr_email, company_email].filter((email): email is string => Boolean(email && email.includes('@')))
+    
+    if (recipients.length === 0) {
+      return res.status(400).json({ error: { message: 'No valid email addresses provided' } })
+    }
+
+    const emailService = new (await import('../services/emailService.js')).EmailService()
+    await emailService.sendJobPostingCreatedEmail({
+      recipients,
+      jobTitle: job_title,
+      companyName: company_name,
+      applicationDeadline: application_deadline
+    })
+
+    return res.status(200).json({ success: true, message: 'Notification sent' })
+  } catch (err) {
+    logger.error('Failed to send job posting created notification:', err)
+    return res.status(500).json({ error: { message: 'Failed to send notification' } })
+  }
+}
+
 async function getAccessibleCompanyIds(userId: string, userEmail: string): Promise<string[]> {
   const normalizedEmail = userEmail.toLowerCase()
   const { rows } = await query<{ company_id: string }>(

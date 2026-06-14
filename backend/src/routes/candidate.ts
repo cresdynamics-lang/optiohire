@@ -7,6 +7,9 @@ import {
   getLearningRoadmap,
   getLeaderboard,
   uploadCertificate,
+  getCandidateJobs,
+  getCandidateApplications,
+  submitCandidateApplication,
 } from '../api/candidateController.js'
 import { uploadCandidateDocumentMiddleware } from '../api/uploadController.js'
 
