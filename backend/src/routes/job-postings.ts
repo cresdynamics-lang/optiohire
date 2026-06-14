@@ -19,6 +19,9 @@ router.get('/public/company/:companyId', getPublicCompanyJobPostings)
 // Authenticated routes
 router.get('/', authenticate, requireHR, getJobPostings)
 router.post('/', authenticate, requireHR, createJobPosting)
+router.get('/:id', authenticate, requireHR, getJobPostingById)
+router.patch('/:id', authenticate, requireHR, updateJobPosting)
+router.delete('/:id', authenticate, requireHR, deleteJobPosting)
 router.post('/send-created-notification', authenticate, requireHR, sendJobPostingCreatedNotification)
 
 

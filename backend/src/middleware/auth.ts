@@ -11,6 +11,7 @@ if (!JWT_SECRET) {
 export interface AuthRequest extends Request {
   userId?: string
   userEmail?: string
+  userName?: string
   userRole?: string
   userCompanyRole?: string
 }
@@ -32,8 +33,8 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     
     if (adminEmail && allowAdminBypass && ADMIN_EMAILS.includes(adminEmail.toLowerCase())) {
       // Direct admin access - verify user exists and is admin
-      const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean }>(
-        `SELECT user_id, email, role, is_active FROM users WHERE email = $1 AND role = 'admin'`,
+      const { rows } = await query<{ user_id: string; email: string; name: string; role: string; is_active: boolean }>(
+        `SELECT user_id, email, name, role, is_active FROM users WHERE email = $1 AND role = 'admin'`,
         [adminEmail.toLowerCase()]
       )
 
@@ -41,6 +42,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
         logger.info(`Admin bypass used by: ${adminEmail}`)
         req.userId = rows[0].user_id
         req.userEmail = rows[0].email
+        req.userName = rows[0].name
         req.userRole = rows[0].role
         return next()
       }
@@ -58,15 +60,15 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     // Try to fetch company_role if it exists, otherwise fallback to standard fetch
     let userRecord = null;
     try {
-      const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean; company_role?: string }>(
-        `SELECT user_id, email, role, is_active, company_role FROM users WHERE user_id = $1`,
+      const { rows } = await query<{ user_id: string; email: string; name: string; role: string; is_active: boolean; company_role?: string }>(
+        `SELECT user_id, email, name, role, is_active, company_role FROM users WHERE user_id = $1`,
         [decoded.sub]
       )
       if (rows.length > 0) userRecord = rows[0];
     } catch (err) {
       // Fallback if company_role column doesn't exist
-      const { rows } = await query<{ user_id: string; email: string; role: string; is_active: boolean }>(
-        `SELECT user_id, email, role, is_active FROM users WHERE user_id = $1`,
+      const { rows } = await query<{ user_id: string; email: string; name: string; role: string; is_active: boolean }>(
+        `SELECT user_id, email, name, role, is_active FROM users WHERE user_id = $1`,
         [decoded.sub]
       )
       if (rows.length > 0) userRecord = rows[0];
@@ -128,6 +130,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
 
     req.userId = userRecord.user_id
     req.userEmail = userRecord.email
+    req.userName = userRecord.name
     req.userRole = userRecord.role
     req.userCompanyRole = (userRecord as any).company_role
 

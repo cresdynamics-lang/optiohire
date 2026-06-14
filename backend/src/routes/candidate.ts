@@ -21,6 +21,9 @@ router.use(authenticate) // Ensure user is logged in
 router.use(requireCandidate) // Ensure user is a candidate
 
 router.get('/dashboard', getCandidateDashboard)
+router.get('/jobs', getCandidateJobs)
+router.get('/applications', getCandidateApplications)
+router.post('/applications', submitCandidateApplication)
 router.get('/roadmap', getLearningRoadmap)
 router.post('/certificate', uploadCandidateDocumentMiddleware.single('certificate'), uploadCertificate)
 router.post('/missions/:missionId/complete', completeMission)

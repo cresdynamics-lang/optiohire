@@ -4,11 +4,16 @@ import { CandidateProfileRepository } from '../repositories/candidateProfileRepo
 import { CertificateRepository } from '../repositories/certificateRepository.js'
 import { SkillAnalysisService } from '../services/ai/skillAnalysisService.js'
 import { LearningRoadmapService } from '../services/ai/learningRoadmapService.js'
+import crypto from 'crypto'
 
 const candidateRepo = new CandidateProfileRepository()
 const certRepo = new CertificateRepository()
 const skillAnalysisService = new SkillAnalysisService()
 const roadmapService = new LearningRoadmapService()
+
+function sha256Hex(input: string): string {
+  return crypto.createHash('sha256').update(input).digest('hex')
+}
 
 function isMissingRelation(error: any): boolean {
   return error?.code === '42P01' || String(error?.message || '').includes('does not exist')
@@ -161,6 +166,199 @@ function scoreInterviewAnswers(answers: string[]) {
       overall >= 80
         ? ['Prepare two senior-level examples with numbers', 'Practice concise closing summaries']
         : ['Use STAR: situation, task, action, result', 'Add measurable outcomes to every answer', 'Practice one mock interview again this week'],
+  }
+}
+
+export const getCandidateJobs = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { rows } = await query(
+      `SELECT
+         jp.job_posting_id,
+         jp.job_title,
+         jp.job_description,
+         jp.skills_required,
+         jp.application_deadline,
+         jp.created_at,
+         jp.job_poster_url,
+         c.company_name
+       FROM job_postings jp
+       LEFT JOIN companies c ON c.company_id = jp.company_id
+       WHERE UPPER(COALESCE(jp.status, 'ACTIVE')) = 'ACTIVE'
+         AND (jp.application_deadline IS NULL OR jp.application_deadline::date >= CURRENT_DATE)
+       ORDER BY jp.created_at DESC
+       LIMIT 100`
+    )
+
+    res.status(200).json({ jobs: rows })
+  } catch (error) {
+    console.error('Candidate jobs fetch error:', error)
+    res.status(500).json({ error: 'Failed to load jobs' })
+  }
+}
+
+export const getCandidateApplications = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const authReq = req as any
+    const email = authReq.userEmail
+    
+    if (!email) {
+      res.status(400).json({ error: 'Missing candidate email in token' })
+      return
+    }
+
+    const { rows } = await query(
+      `SELECT
+         a.application_id,
+         a.created_at,
+         a.updated_at,
+         a.ai_score,
+         a.ai_status,
+         a.reasoning,
+         a.resume_url,
+         a.parsed_resume_json,
+         a.phone,
+         jp.job_posting_id,
+         jp.job_title,
+         c.company_name
+       FROM applications a
+       JOIN job_postings jp ON jp.job_posting_id = a.job_posting_id
+       LEFT JOIN companies c ON c.company_id = a.company_id
+       WHERE LOWER(a.email) = LOWER($1)
+       ORDER BY COALESCE(a.updated_at, a.created_at) DESC
+       LIMIT 100`,
+      [email]
+    )
+
+    res.status(200).json({ applications: rows })
+  } catch (error) {
+    console.error('Candidate applications fetch error:', error)
+    res.status(500).json({ error: 'Failed to load application history' })
+  }
+}
+
+export const submitCandidateApplication = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const authReq = req as any
+    const authEmail = authReq.userEmail
+    const authName = authReq.userName
+
+    const body = req.body
+    const jobPostingId = body?.jobPostingId ? String(body.jobPostingId) : ''
+    const resumeUrl = body?.resumeUrl ? String(body.resumeUrl).trim() : ''
+    const resumeFileName = body?.resumeFileName ? String(body.resumeFileName).trim() : ''
+    const resumeMimeType = body?.resumeMimeType ? String(body.resumeMimeType).trim() : ''
+    const linkedinUrl = body?.linkedinUrl ? String(body.linkedinUrl).trim() : ''
+    const githubUrl = body?.githubUrl ? String(body.githubUrl).trim() : ''
+    const otherUrl = body?.otherUrl ? String(body.otherUrl).trim() : ''
+    const phone = body?.phone ? String(body.phone).trim() : ''
+    const message = body?.message ? String(body.message).trim() : ''
+    const bodyEmail = body?.email ? String(body.email).toLowerCase().trim() : ''
+    const bodyName = body?.name ? String(body.name).trim() : ''
+
+    if (!jobPostingId) {
+      res.status(400).json({ error: 'jobPostingId is required' })
+      return
+    }
+    if (!resumeUrl && !linkedinUrl && !githubUrl && !otherUrl) {
+      res.status(400).json({ error: 'Provide at least one application link (CV, LinkedIn, GitHub, or other link).' })
+      return
+    }
+
+    const email = (authEmail || bodyEmail || '').toLowerCase().trim()
+    if (!email) {
+      res.status(400).json({ error: 'A valid applicant email is required.' })
+      return
+    }
+    const candidateName = authName || bodyName || email.split('@')[0] || null
+
+    const { rows: jobs } = await query<{ job_posting_id: string; company_id: string }>(
+      `SELECT job_posting_id, company_id
+       FROM job_postings
+       WHERE job_posting_id = $1
+       LIMIT 1`,
+      [jobPostingId]
+    )
+    const job = jobs[0]
+    if (!job) {
+      res.status(404).json({ error: 'Job not found' })
+      return
+    }
+
+    const parsedResume = {
+      source: 'candidate_portal',
+      links: {
+        resumeUrl: resumeUrl || null,
+        linkedinUrl: linkedinUrl || null,
+        githubUrl: githubUrl || null,
+        otherUrl: otherUrl || null,
+      },
+      document: {
+        name: resumeFileName || null,
+        mimeType: resumeMimeType || null,
+      },
+      note: message || null,
+    }
+
+    const externalId = sha256Hex(`${jobPostingId}|${email}`)
+
+    const writeParams = [
+      candidateName,
+      phone || null,
+      resumeUrl || linkedinUrl || githubUrl || otherUrl || null,
+      JSON.stringify(parsedResume),
+      externalId,
+      job.job_posting_id,
+      email,
+      job.company_id,
+    ]
+
+    const updateResult = await query<{ application_id: string }>(
+      `UPDATE applications
+       SET candidate_name = $1,
+           phone = $2,
+           resume_url = $3,
+           parsed_resume_json = $4::jsonb,
+           external_id = $5,
+           company_id = $8,
+           updated_at = NOW()
+       WHERE job_posting_id = $6
+         AND LOWER(email) = LOWER($7)
+       RETURNING application_id`,
+      writeParams
+    )
+
+    let applicationId = updateResult.rows[0]?.application_id || null
+
+    if (!applicationId) {
+      const insertResult = await query<{ application_id: string }>(
+        `INSERT INTO applications
+          (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json, external_id)
+         VALUES
+          ($6, $8, $1, $7, $2, $3, $4::jsonb, $5)
+         RETURNING application_id`,
+        writeParams
+      )
+      applicationId = insertResult.rows[0]?.application_id || null
+    }
+
+    // Trigger scoring pipeline
+    if (applicationId) {
+      try {
+        const { aiQueue } = await import('../queues/aiQueue.js')
+        await aiQueue.add('profile-application', { applicationId })
+      } catch (queueErr) {
+        console.warn('Background scoring trigger failed in backend:', queueErr)
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      applicationId,
+      scoringQueued: Boolean(applicationId),
+    })
+  } catch (error) {
+    console.error('Candidate application submit error:', error)
+    res.status(500).json({ error: 'Failed to submit application' })
   }
 }
 
