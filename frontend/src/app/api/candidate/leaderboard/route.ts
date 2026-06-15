@@ -17,11 +17,13 @@ function createTimeoutSignal(ms: number): AbortSignal {
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const response = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/candidate/jobs`, {
+    const searchParams = request.nextUrl.searchParams
+    const query = searchParams.toString()
+    const queryString = query ? `?${query}` : ''
+
+    const response = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/candidate/leaderboard${queryString}`, {
       headers: {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
@@ -32,8 +34,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
     return NextResponse.json(data, { status: response.status })
   } catch (err) {
-    console.error('Proxy GET candidate-jobs error:', err)
-    return NextResponse.json({ error: 'Failed to load jobs' }, { status: 500 })
+    console.error('Proxy GET candidate/leaderboard error:', err)
+    return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 })
   }
 }
-

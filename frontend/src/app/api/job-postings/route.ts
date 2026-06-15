@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const response = await fetch(`${BACKEND_URL}/api/job-postings`, {
+    const response = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/job-postings`, {
       headers: {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const response = await fetch(`${BACKEND_URL}/api/job-postings`, {
+    const response = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/job-postings`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

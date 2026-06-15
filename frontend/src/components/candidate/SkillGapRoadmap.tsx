@@ -65,6 +65,9 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
       const dummySkillId = '00000000-0000-0000-0000-000000000000'
       const formData = new FormData()
       formData.append('skillId', dummySkillId)
+      if (gapAnalysis.topMissingSkill) {
+        formData.append('skillName', gapAnalysis.topMissingSkill)
+      }
       if (certificateUrl) formData.append('certificateUrl', certificateUrl)
       if (certificateFile) formData.append('certificate', certificateFile)
 

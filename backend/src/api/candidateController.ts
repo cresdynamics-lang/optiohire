@@ -371,7 +371,15 @@ export const getCandidateDashboard = async (req: Request, res: Response): Promis
     if (!profile) {
       profile = await candidateRepo.createProfile(userId)
     }
-    await ensureCandidateFeatureTables()
+    try {
+      try {
+      await ensureCandidateFeatureTables()
+    } catch (e) {
+      console.warn('ensureCandidateFeatureTables error:', e)
+    }
+    } catch (e) {
+      console.warn('ensureCandidateFeatureTables error:', e)
+    }
 
     // Get skills
     const skills = await candidateRepo.getSkills(profile.profile_id)
@@ -450,7 +458,11 @@ export const completeMission = async (req: Request, res: Response): Promise<void
       res.status(404).json({ success: false, error: 'Candidate profile not found' })
       return
     }
-    await ensureCandidateFeatureTables()
+    try {
+      await ensureCandidateFeatureTables()
+    } catch (e) {
+      console.warn('ensureCandidateFeatureTables error:', e)
+    }
 
     const { rows } = await query(
       `UPDATE candidate_missions
@@ -539,9 +551,28 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
     const { skillId } = req.body
     let certificateUrl = req.body.certificateUrl
 
-    if (!skillId) {
-      res.status(400).json({ success: false, error: 'Skill ID is required' })
+    if (!skillId && !req.body.skillName) {
+      res.status(400).json({ success: false, error: 'Skill ID or Skill Name is required' })
       return
+    }
+
+    let actualSkillId = skillId
+    if (skillId === '00000000-0000-0000-0000-000000000000' && req.body.skillName) {
+      const authReq = req as any
+      const userId = authReq.userId!
+      const { CandidateProfileRepository } = await import('../repositories/candidateProfileRepository.js')
+      const repo = new CandidateProfileRepository()
+      const profile = await repo.getProfileByUserId(userId)
+      if (profile) {
+        const { query } = await import('../db/index.js')
+        const { rows } = await query(
+          `INSERT INTO candidate_skills (profile_id, skill_name, proficiency_score, is_verified)
+           VALUES ($1, $2, 0, false)
+           RETURNING skill_id`,
+          [profile.profile_id, req.body.skillName]
+        )
+        actualSkillId = rows[0].skill_id
+      }
     }
 
     if (req.file) {
@@ -576,7 +607,7 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
       return
     }
 
-    const approval = await certRepo.submitForApproval(skillId, certificateUrl)
+    const approval = await certRepo.submitForApproval(actualSkillId, certificateUrl)
     
     res.status(201).json({
       success: true,
