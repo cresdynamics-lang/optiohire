@@ -18,7 +18,7 @@ async function test() {
 
   console.log('\nTesting signin directly to backend...');
   try {
-    const resBackend = await fetch('http://localhost:3001/auth/signin', {
+    const resBackend = await fetch('https://api.optiohire.com/auth/signin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'admin@optiohire.com', password: 'OptiohIre@Admin123' })

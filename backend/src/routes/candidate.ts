@@ -8,6 +8,9 @@ import {
   getLeaderboard,
   uploadCertificate,
   onboardProfile,
+  getCandidateJobs,
+  getCandidateApplications,
+  submitCandidateApplication,
 } from '../api/candidateController.js'
 import { uploadCandidateDocumentMiddleware } from '../api/uploadController.js'
 
@@ -22,6 +25,9 @@ router.use(authenticate) // Ensure user is logged in
 router.use(requireCandidate) // Ensure user is a candidate
 
 router.get('/dashboard', getCandidateDashboard)
+router.get('/jobs', getCandidateJobs)
+router.get('/applications', getCandidateApplications)
+router.post('/applications', submitCandidateApplication)
 router.get('/roadmap', getLearningRoadmap)
 router.post('/profile/onboarding', uploadCandidateDocumentMiddleware.fields([
   { name: 'cv', maxCount: 1 },

@@ -4,10 +4,11 @@ import { authenticate } from '../middleware/auth.js'
 import { EmailService } from '../services/emailService.js'
 import { logger } from '../utils/logger.js'
 import { refreshAnalyticsViews } from './dashboardAnalyticsController.js'
-// GET /api/hr/candidates?jobId=...
+// GET /api/hr/candidates?jobId=...&status=...
 export async function getCandidatesByJob(req: Request, res: Response) {
   try {
     const jobId = req.query.jobId as string
+    const statusFilter = req.query.status as string
 
     if (!jobId) {
       return res.status(400).json({ error: 'jobId query parameter is required' })
@@ -23,6 +24,9 @@ export async function getCandidatesByJob(req: Request, res: Response) {
       return res.status(404).json({ error: 'Job not found' })
     }
 
+    const statusCondition = statusFilter ? `AND ai_status = $2` : ''
+    const queryParams = statusFilter ? [jobId, statusFilter] : [jobId]
+
     // Fetch candidates ordered: shortlist first, then flagged, then rejected; within each by score DESC
     const { rows } = await query<{
       application_id: string
@@ -32,6 +36,7 @@ export async function getCandidatesByJob(req: Request, res: Response) {
       ai_status: string | null
       interview_time: string | null
       interview_link: string | null
+      interview_status: string | null
       reasoning: string | null
     }>(
       `SELECT 
@@ -42,11 +47,12 @@ export async function getCandidatesByJob(req: Request, res: Response) {
         ai_status,
         interview_time,
         interview_link,
+        COALESCE(interview_status, 'PENDING') as interview_status,
         reasoning
       FROM applications 
-      WHERE job_posting_id = $1 
+      WHERE job_posting_id = $1 ${statusCondition}
       ORDER BY 
-        CASE COALESCE(UPPER(TRIM(ai_status)), '')
+        CASE COALESCE(UPPER(TRIM(ai_status::text)), '')
           WHEN 'SHORTLIST' THEN 1
           WHEN 'FLAG' THEN 2
           WHEN 'REJECT' THEN 3
@@ -54,7 +60,7 @@ export async function getCandidatesByJob(req: Request, res: Response) {
         END,
         ai_score DESC NULLS LAST,
         created_at ASC`,
-      [jobId]
+      queryParams
     )
 
     // Map to response format with ranking
@@ -67,6 +73,7 @@ export async function getCandidatesByJob(req: Request, res: Response) {
       status: row.ai_status || 'PENDING',
       interview_time: row.interview_time,
       interview_link: row.interview_link,
+      interview_status: row.interview_status,
       reasoning: row.reasoning || null,
     }))
 

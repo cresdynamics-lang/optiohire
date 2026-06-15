@@ -50,7 +50,10 @@ jobs:
             echo "=== Deployment complete ==="
             pm2 list
 
-            echo "=== Verifying ==="
+            echo "=== Verifying Backend ==="
             sleep 3
             curl -s -o /dev/null -w "Backend HTTP: %{http_code}\n" http://127.0.0.1:3001/api/health || true
 
+      - name: Trigger Vercel Deployment
+        run: |
+          curl -X POST "${{ secrets.VERCEL_HOOK }}"

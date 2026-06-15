@@ -217,7 +217,34 @@ export async function getJobPostings(req: Request, res: Response) {
       })
     )
 
-    return res.json({ jobs: jobsWithStats })
+    // Get reports counts for the user's companies (best effort)
+    let reportsCounts: { total_reports: string; ready_reports: string } = { total_reports: '0', ready_reports: '0' }
+    try {
+      if (companyIds.length > 0) {
+        const { rows: reportCountRows } = await query<{ total_reports: string; ready_reports: string }>(
+          `SELECT 
+            COUNT(*)::int as total_reports,
+            COUNT(*) FILTER (WHERE status = 'completed')::int as ready_reports
+           FROM reports
+           WHERE company_id = ANY($1)`,
+          [companyIds]
+        )
+        reportsCounts = reportCountRows[0] || reportsCounts
+      }
+    } catch (reportErr) {
+      console.warn('Failed to load report counts for job-postings response:', reportErr)
+    }
+
+    const totalReports = Number(reportsCounts.total_reports || 0)
+    const readyReports = Number(reportsCounts.ready_reports || 0)
+
+    return res.json({ 
+      jobs: jobsWithStats,
+      reports: {
+        totalReports,
+        readyReports
+      }
+    })
   } catch (err) {
     console.error('Error fetching job postings:', err)
     return res.json({ jobs: [] })
@@ -403,6 +430,146 @@ export async function sendJobPostingCreatedNotification(req: Request, res: Respo
   } catch (err) {
     logger.error('Failed to send job posting created notification:', err)
     return res.status(500).json({ error: { message: 'Failed to send notification' } })
+  }
+}
+
+async function getAccessibleCompanyIds(userId: string, userEmail: string): Promise<string[]> {
+  const normalizedEmail = userEmail.toLowerCase()
+  const { rows } = await query<{ company_id: string }>(
+    `SELECT DISTINCT company_id
+     FROM companies
+     WHERE user_id = $1
+        OR LOWER(company_email) = $2
+        OR LOWER(hr_email) = $2
+        OR LOWER(hiring_manager_email) = $2`,
+    [userId, normalizedEmail]
+  )
+  return rows.map((row) => row.company_id)
+}
+
+export async function getJobPostingById(req: Request, res: Response) {
+  try {
+    const { id } = req.params
+    const { rows } = await query<{
+      job_posting_id: string
+      interview_meeting_link: string | null
+      meeting_link: string | null
+    }>(
+      `SELECT job_posting_id, interview_meeting_link, meeting_link
+       FROM job_postings 
+       WHERE job_posting_id = $1
+       LIMIT 1`,
+      [id]
+    )
+
+    if (rows.length === 0) return res.status(404).json({ error: 'Job not found' })
+
+    const job = rows[0]
+    return res.json({
+      id: job.job_posting_id,
+      meeting_link: job.meeting_link || job.interview_meeting_link || '',
+    })
+  } catch (err) {
+    logger.error('Error fetching job posting:', err)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function updateJobPosting(req: Request, res: Response) {
+  try {
+    const { id } = req.params
+    const authReq = req as any
+    const userId = authReq.userId
+    const email = authReq.userEmail
+
+    const companyIds = await getAccessibleCompanyIds(userId, email)
+    if (companyIds.length === 0) return res.status(403).json({ error: 'Access denied' })
+
+    const body = req.body
+    const updates: string[] = []
+    const values: any[] = []
+    let param = 1
+
+    if (typeof body.job_title === 'string' && body.job_title.trim()) {
+      updates.push(`job_title = $${param++}`)
+      values.push(body.job_title.trim())
+    }
+    if (typeof body.job_description === 'string') {
+      updates.push(`job_description = $${param++}`)
+      values.push(body.job_description)
+    }
+    if (Array.isArray(body.required_skills)) {
+      updates.push(`skills_required = $${param++}`)
+      values.push(body.required_skills)
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'application_deadline')) {
+      updates.push(`application_deadline = $${param++}`)
+      values.push(body.application_deadline || null)
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'meeting_link')) {
+      updates.push(`meeting_link = $${param++}`)
+      values.push(body.meeting_link || null)
+      updates.push(`interview_meeting_link = $${param++}`)
+      values.push(body.meeting_link || null)
+    }
+    if (typeof body.status === 'string') {
+      const normalizedStatus = body.status.trim().toUpperCase()
+      const allowedStatuses = new Set(['ACTIVE', 'DRAFT', 'CLOSED', 'PAUSED'])
+      if (allowedStatuses.has(normalizedStatus)) {
+        updates.push(`status = $${param++}`)
+        values.push(normalizedStatus)
+      }
+    }
+
+    if (updates.length === 0) return res.status(400).json({ error: 'No valid fields provided' })
+
+    values.push(id)
+    values.push(companyIds)
+
+    const { rows } = await query(
+      `UPDATE job_postings
+       SET ${updates.join(', ')}, updated_at = NOW()
+       WHERE job_posting_id = $${param++}
+         AND company_id = ANY($${param}::uuid[])
+       RETURNING job_posting_id`,
+      values
+    )
+
+    if (rows.length === 0) return res.status(404).json({ error: 'Job not found' })
+
+    await cache.del(cacheKeys.publicJobs())
+    return res.json({ success: true })
+  } catch (err) {
+    logger.error('Error updating job posting:', err)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function deleteJobPosting(req: Request, res: Response) {
+  try {
+    const { id } = req.params
+    const authReq = req as any
+    const userId = authReq.userId
+    const email = authReq.userEmail
+
+    const companyIds = await getAccessibleCompanyIds(userId, email)
+    if (companyIds.length === 0) return res.status(403).json({ error: 'Access denied' })
+
+    const { rows } = await query(
+      `DELETE FROM job_postings
+       WHERE job_posting_id = $1
+         AND company_id = ANY($2::uuid[])
+       RETURNING job_posting_id`,
+      [id, companyIds]
+    )
+
+    if (rows.length === 0) return res.status(404).json({ error: 'Job not found' })
+
+    await cache.del(cacheKeys.publicJobs())
+    return res.json({ success: true })
+  } catch (err) {
+    logger.error('Error deleting job posting:', err)
+    return res.status(500).json({ error: 'Internal server error' })
   }
 }
 
