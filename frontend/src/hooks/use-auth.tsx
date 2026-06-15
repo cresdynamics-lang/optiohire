@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (envUrl) return envUrl.replace(/\/$/, '')
     if (typeof window !== 'undefined') {
       const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname)
-      if (isLocalHost) return 'http://localhost:3001'
+      if (isLocalHost) return 'https://api.optiohire.com'
     }
     return ''
   }, [])
@@ -223,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const profileUrl =
           typeof window !== 'undefined'
             ? `${window.location.origin}/api/user/me`
-            : `${getBackendBaseUrl() || 'http://localhost:3001'}/api/user/me`
+            : `${getBackendBaseUrl() || 'https://api.optiohire.com'}/api/user/me`
         const resp = await fetch(profileUrl, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -336,7 +336,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const signUpUrl =
         typeof window !== 'undefined'
           ? `${window.location.origin}/api/auth/signup`
-          : `${getBackendBaseUrl() || 'http://localhost:3001'}/hr/auth/signup`
+          : `${getBackendBaseUrl() || 'https://api.optiohire.com'}/hr/auth/signup`
           
       const normalizedSignupRole = normalizeCompanyRole(company_role) || company_role
       const resp = await fetch(signUpUrl, {
@@ -422,7 +422,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const signInUrl =
         typeof window !== 'undefined'
           ? `${window.location.origin}/api/auth/signin`
-          : `${getBackendBaseUrl() || 'http://localhost:3001'}/hr/auth/signin`
+          : `${getBackendBaseUrl() || 'https://api.optiohire.com'}/hr/auth/signin`
       const resp = await fetch(signInUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

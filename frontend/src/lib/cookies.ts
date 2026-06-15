@@ -103,7 +103,7 @@ async function sendActivityToBackend(activity: any) {
     const backendUrl = envUrl
       ? envUrl.replace(/\/$/, '')
       : isLocalHost
-        ? 'http://localhost:3001'
+        ? 'https://api.optiohire.com'
         : ''
     if (!backendUrl) return
     const token = localStorage.getItem('token')
