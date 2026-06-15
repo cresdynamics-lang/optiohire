@@ -1,6 +1,13 @@
+import { Metadata } from 'next'
 import Link from "next/link";
 import { Topbar } from "@/components/Topbar";
 import { Footer } from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: 'OptioHire | AI-Powered Smart Screening for African HR Teams',
+  description: 'OptioHire helps Kenyan and African hiring teams screen hundreds of CVs in seconds with fair, transparent AI. Hire 3x faster and save 60% in costs.',
+  keywords: 'AI recruitment kenya, automated CV screening africa, HR tech nairobi, smart hiring platform, fair candidate evaluation'
+}
 
 export default function Home() {
   return (

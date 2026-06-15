@@ -1,3 +1,10 @@
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Hiring Tips & Best Practices | OptioHire',
+  description: 'Actionable advice for African HR teams to attract better talent, write sharper job descriptions, and streamline recruitment processes.',
+}
+
 export default function TipsPage() {
   return (
     <div className="tips-layout">

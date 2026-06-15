@@ -312,102 +312,132 @@ export function TalentProfileSection() {
         onSuccess={fetchDashboard}
       />
 
-      <Card className="overflow-hidden border-indigo-100 bg-gradient-to-br from-indigo-600 via-slate-900 to-purple-700 text-white">
-        <CardContent className="grid gap-6 p-6 lg:grid-cols-[1.4fr_0.8fr]">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
-              <Zap className="h-3.5 w-3.5" />
-              Today's mission
+      <Card className="overflow-hidden border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md">
+        <CardContent className="p-0">
+          <div className="grid gap-0 lg:grid-cols-[1.4fr_0.8fr]">
+            <div className="p-8 border-b lg:border-b-0 lg:border-r border-slate-100">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-700">
+                <Zap className="h-3.5 w-3.5" />
+                Today&apos;s mission
+              </div>
+              <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">{activeMission?.mission_title || `Practice ${topSkill}`}</h2>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600">
+                {activeMission?.mission_description || `Spend focused time proving ${topSkill}. This improves your profile quality and recruiter confidence.`}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                {activeMission?.mission_id && activeMission.status !== 'COMPLETED' ? (
+                  <Button
+                    onClick={() => completeMission(activeMission.mission_id)}
+                    disabled={missionLoading === activeMission.mission_id}
+                    className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition-all active:scale-95 px-6 py-6 rounded-2xl text-base"
+                  >
+                    {missionLoading === activeMission.mission_id ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
+                    Mark mission done
+                  </Button>
+                ) : (
+                  <Button className="bg-slate-100 text-slate-500 cursor-not-allowed px-6 py-6 rounded-2xl text-base" disabled>
+                    <Check className="mr-2 h-5 w-5" />
+                    Mission complete
+                  </Button>
+                )}
+              </div>
             </div>
-            <h2 className="text-2xl font-bold">{activeMission?.mission_title || `Practice ${topSkill}`}</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-indigo-100">
-              {activeMission?.mission_description || `Spend focused time proving ${topSkill}. This improves your profile quality and recruiter confidence.`}
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {activeMission?.mission_id && activeMission.status !== 'COMPLETED' ? (
-                <Button
-                  onClick={() => completeMission(activeMission.mission_id)}
-                  disabled={missionLoading === activeMission.mission_id}
-                  className="bg-white text-indigo-700 hover:bg-indigo-50"
-                >
-                  {missionLoading === activeMission.mission_id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                  Mark mission done
-                </Button>
-              ) : (
-                <Button className="bg-white text-indigo-700 hover:bg-indigo-50" disabled>
-                  <Check className="mr-2 h-4 w-4" />
-                  Mission complete
-                </Button>
-              )}
 
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="rounded-2xl bg-white/10 p-4">
-              <Trophy className="mb-3 h-5 w-5 text-amber-200" />
-              <p className="text-3xl font-bold">{data.profile.total_score}</p>
-              <p className="text-xs text-indigo-100">Profile score</p>
-            </div>
-            <div className="rounded-2xl bg-white/10 p-4">
-              <ShieldCheck className="mb-3 h-5 w-5 text-green-200" />
-              <p className="text-3xl font-bold">{stats.verifiedSkills}</p>
-              <p className="text-xs text-indigo-100">Verified skills</p>
-            </div>
-            <div className="rounded-2xl bg-white/10 p-4">
-              <Briefcase className="mb-3 h-5 w-5 text-sky-200" />
-              <p className="text-3xl font-bold">{data.recommendations.length}</p>
-              <p className="text-xs text-indigo-100">Job matches</p>
+            <div className="bg-slate-50/50 p-8 flex flex-col justify-center">
+              <div className="grid grid-cols-1 gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 shadow-sm border border-amber-100">
+                    <Trophy className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{data.profile.total_score}</p>
+                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">Profile score</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 shadow-sm border border-emerald-100">
+                    <ShieldCheck className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{stats.verifiedSkills}</p>
+                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">Verified skills</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 shadow-sm border border-sky-100">
+                    <Briefcase className="h-6 w-6 text-sky-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{data.recommendations.length}</p>
+                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">Job matches</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {stats.rejectedCerts > 0 && (
-        <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-800">
-          <AlertCircle className="mt-0.5 h-5 w-5 text-blue-600" />
-          <p className="text-sm">
+        <div className="flex items-start gap-3 rounded-2xl border border-rose-100 bg-rose-50/50 p-4 text-rose-800 shadow-sm">
+          <AlertCircle className="mt-0.5 h-5 w-5 text-rose-600" />
+          <p className="text-sm font-medium">
             Fix {stats.rejectedCerts} rejected certificate{stats.rejectedCerts > 1 ? 's' : ''} to unlock up to +{stats.rejectedCerts * 50} more growth points.
           </p>
         </div>
       )}
 
-      <Tabs defaultValue="plan" className="space-y-5">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="plan">Learning Plan</TabsTrigger>
-          <TabsTrigger value="jobs">Job Matches</TabsTrigger>
-          <TabsTrigger value="skills">Skills</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="plan" className="space-y-8">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md pt-2 pb-4 border-b border-slate-100">
+          <TabsList className="flex h-auto w-full max-w-2xl bg-transparent p-0 gap-8">
+            <TabsTrigger value="plan" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none text-base font-semibold transition-all">Learning Plan</TabsTrigger>
+            <TabsTrigger value="jobs" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none text-base font-semibold transition-all">Job Matches</TabsTrigger>
+            <TabsTrigger value="skills" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none text-base font-semibold transition-all">Skills</TabsTrigger>
+            <TabsTrigger value="analytics" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none text-base font-semibold transition-all">Analytics</TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="plan" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-            <SkillGapRoadmap gapAnalysis={data.gapAnalysis} profileId={data.profile.profile_id} />
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-indigo-600" />
+        <TabsContent value="plan" className="space-y-12 pt-4">
+          <div className="max-w-4xl space-y-12">
+            <section>
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <div className="h-8 w-1 bg-indigo-600 rounded-full" />
+                Strategic Skill Gap
+              </h3>
+              <SkillGapRoadmap gapAnalysis={data.gapAnalysis} profileId={data.profile.profile_id} />
+            </section>
+
+            <section>
+              <div className="flex flex-col gap-1 mb-6">
+                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-3">
+                  <div className="h-8 w-1 bg-indigo-600 rounded-full" />
                   Mission Queue
-                </CardTitle>
-                <CardDescription>Small actions that compound into better recruiter signals.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-2">
+                </h3>
+                <p className="text-sm text-slate-500 ml-4">Small actions that compound into better recruiter signals.</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
                 {(data.missions || []).map((mission) => (
-                  <div key={mission.mission_id} className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-slate-900">{mission.mission_title}</p>
-                        <p className="mt-1 text-sm text-slate-900 dark:text-white">{mission.mission_description}</p>
-                        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-indigo-600">{mission.target_skill}</p>
+                  <div key={mission.mission_id} className="group rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-indigo-200 hover:shadow-md hover:-translate-y-0.5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="font-bold text-slate-900 text-lg group-hover:text-indigo-700 transition-colors">{mission.mission_title}</p>
+                          <p className="mt-1 text-sm text-slate-600 leading-relaxed">{mission.mission_description}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            {mission.target_skill}
+                          </span>
+                        </div>
                       </div>
-                      <span className={`rounded-full px-2 py-1 text-xs font-semibold ${mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {mission.status === 'COMPLETED' ? 'Done' : 'Open'}
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${mission.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-50 text-indigo-700'}`}>
+                        {mission.status === 'COMPLETED' ? 'Done' : 'Active'}
                       </span>
                     </div>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </section>
           </div>
         </TabsContent>
 

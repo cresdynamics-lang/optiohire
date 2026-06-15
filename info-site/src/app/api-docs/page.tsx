@@ -1,9 +1,15 @@
+import { Metadata } from 'next'
 import { 
   FileText, 
   Settings, 
   Key, 
   TerminalSquare 
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: 'API Reference | Integrate OptioHire with Your HRIS',
+  description: 'Connect your existing HR software directly to the OptioHire Watcher Engine. Documentation for webhooks and REST API endpoints.',
+}
 
 export default function ApiDocs() {
   return (

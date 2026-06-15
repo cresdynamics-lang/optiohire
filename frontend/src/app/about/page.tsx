@@ -1,4 +1,10 @@
-'use client'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Our Story | OptioHire - Transforming Recruitment in Africa',
+  description: 'Learn about OptioHire, an AI-powered recruitment platform by Cres Dynamics in Nairobi. We help companies hire based on skills-first capability and fair evaluation.',
+  keywords: 'about optiohire, cres dynamics nairobi, AI recruitment africa, skills-first hiring mission, HR tech kenya'
+}
 
 export default function AboutPage() {
   const audience = [

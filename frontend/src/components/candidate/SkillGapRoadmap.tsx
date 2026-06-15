@@ -109,129 +109,147 @@ export function SkillGapRoadmap({ gapAnalysis, profileId }: { gapAnalysis: GapAn
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border-indigo-200 shadow-sm overflow-hidden">
-        <div className="bg-indigo-50 dark:bg-indigo-950 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-              <Target className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+    <div className="space-y-8">
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition-all hover:shadow-md">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-sm">
+              <Target className="h-7 w-7" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Skill Gap: <span className="text-indigo-600 dark:text-indigo-400">{gapAnalysis.topMissingSkill}</span>
-            </h3>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-extrabold text-slate-900">
+                Strategic Gap: <span className="text-indigo-600 underline decoration-indigo-200 underline-offset-4">{gapAnalysis.topMissingSkill}</span>
+              </h3>
+              <p className="text-base text-slate-600 italic leading-relaxed max-w-2xl">
+                &ldquo;{gapAnalysis.insight}&rdquo;
+              </p>
+            </div>
           </div>
-          <p className="text-slate-700 dark:text-slate-300 italic">
-            "{gapAnalysis.insight}"
-          </p>
           
           {!roadmapSteps && (
             <Button 
               onClick={generateRoadmap} 
               disabled={loadingRoadmap}
-              className="mt-6 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900"
+              className="bg-slate-900 text-white hover:bg-slate-800 px-6 py-6 rounded-2xl font-bold shadow-lg shadow-slate-200 transition-all active:scale-95 shrink-0"
             >
-              {loadingRoadmap ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <BookOpen className="h-4 w-4 mr-2" />}
-              Generate AI Learning Roadmap
+              {loadingRoadmap ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <BookOpen className="h-5 w-5 mr-2" />}
+              Build Roadmap
             </Button>
           )}
         </div>
-      </Card>
+      </div>
 
       {roadmapSteps && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <h4 className="text-xl font-bold mb-4 flex items-center">
-            <BookOpen className="h-5 w-5 mr-2 text-indigo-600" /> 
-            Your Personalized Path to Mastery
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-slate-100" />
+            <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
+              Personalized Mastery Path
+            </h4>
+            <div className="h-px flex-1 bg-slate-100" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {roadmapSteps.map((step: any, idx: number) => (
-              <div key={idx} className="p-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-                <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">{step.step}</div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{step.title}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{step.description}</p>
-                <a href={step.resource_url} className="text-sm text-blue-600 hover:underline inline-flex items-center" target="_blank" rel="noopener noreferrer">
-                  {step.resource_label} →
+              <div key={idx} className="group flex flex-col p-6 bg-white rounded-3xl shadow-sm border border-slate-200 transition-all hover:border-indigo-300 hover:shadow-xl hover:-translate-y-1">
+                <div className="mb-4 inline-flex items-center justify-center h-8 w-8 rounded-full bg-slate-50 text-[10px] font-black text-slate-400 border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors">
+                  0{idx + 1}
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed mb-6 flex-1">{step.description}</p>
+                <a 
+                  href={step.resource_url} 
+                  className="inline-flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-800 gap-1.5 transition-all group-hover:gap-2.5" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  {step.resource_label} <Zap className="h-3 w-3 fill-current" />
                 </a>
               </div>
             ))}
           </div>
           
-          <Card className="mt-8 border-dashed bg-slate-50 dark:bg-slate-900">
-            <CardHeader>
-              <CardTitle className="text-lg">Already know this? Mastered it?</CardTitle>
-              <CardDescription>Upload a link or a file to your certificate to verify this skill and boost your score.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleUploadCertificate} className="flex flex-col gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="certUrl">Option 1: Certificate Link (URL)</Label>
-                    <Input 
-                      id="certUrl" 
-                      placeholder="https://coursera.org/verify/..." 
-                      value={certificateUrl}
-                      onChange={(e) => {
-                        setCertificateUrl(e.target.value)
-                        if (e.target.value) setCertificateFile(null)
-                      }}
-                    />
-                  </div>
-                  
-                  <div className="relative my-4 flex items-center">
-                    <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                    <span className="flex-shrink-0 mx-4 text-sm text-slate-400">OR</span>
-                    <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-                  </div>
+          <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-8">
+            <div className="max-w-2xl mx-auto text-center mb-8">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Already mastered this?</h3>
+              <p className="text-slate-500 text-sm">Upload your certificate to verify this skill and instantly boost your growth score.</p>
+            </div>
 
-                  <div className="space-y-2">
-                    <Label>Option 2: Upload Certificate (PDF/Image)</Label>
-                    <div 
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      className={`mt-2 flex justify-center rounded-lg border border-dashed px-6 py-10 transition-colors duration-200 ${
-                        isDragging 
-                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
-                          : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <Upload className="mx-auto h-12 w-12 text-slate-300" aria-hidden="true" />
-                        <div className="mt-4 flex text-sm leading-6 text-slate-600 dark:text-slate-300 justify-center">
-                          <label
-                            htmlFor="certFile"
-                            className="relative cursor-pointer rounded-md bg-transparent font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                          >
-                            <span>Upload a file</span>
-                            <Input 
-                              id="certFile" 
-                              type="file" 
-                              className="sr-only"
-                              accept=".pdf,.png,.jpg,.jpeg"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  setCertificateFile(e.target.files[0])
-                                  setCertificateUrl('')
-                                }
-                              }}
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
-                        </div>
-                        <p className="text-xs leading-5 text-slate-500 dark:text-slate-400 mt-2">
-                          {certificateFile ? certificateFile.name : 'PDF, PNG, JPG up to 10MB'}
-                        </p>
+            <form onSubmit={handleUploadCertificate} className="max-w-3xl mx-auto space-y-6">
+              <div className="grid gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="certUrl" className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Option 1: Public Link</Label>
+                  <Input 
+                    id="certUrl" 
+                    placeholder="https://coursera.org/verify/..." 
+                    className="h-12 rounded-xl border-slate-200 focus:ring-indigo-500"
+                    value={certificateUrl}
+                    onChange={(e) => {
+                      setCertificateUrl(e.target.value)
+                      if (e.target.value) setCertificateFile(null)
+                    }}
+                  />
+                </div>
+                
+                <div className="relative flex items-center gap-4">
+                  <div className="h-px flex-1 bg-slate-200"></div>
+                  <span className="text-[10px] font-black text-slate-300 uppercase">OR</span>
+                  <div className="h-px flex-1 bg-slate-200"></div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Option 2: Direct Upload</Label>
+                  <div 
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`mt-2 flex justify-center rounded-2xl border-2 border-dashed px-6 py-10 transition-all duration-200 ${
+                      isDragging 
+                        ? 'border-indigo-500 bg-indigo-50 shadow-inner' 
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="mx-auto h-16 w-16 mb-4 flex items-center justify-center rounded-2xl bg-slate-50 text-slate-300 group-hover:text-indigo-400 transition-colors">
+                        <Upload className="h-8 w-8" />
                       </div>
+                      <div className="flex text-sm leading-6 text-slate-600 justify-center">
+                        <label
+                          htmlFor="certFile"
+                          className="relative cursor-pointer rounded-md bg-transparent font-bold text-indigo-600 hover:text-indigo-500"
+                        >
+                          <span>Click to upload</span>
+                          <Input 
+                            id="certFile" 
+                            type="file" 
+                            className="sr-only"
+                            accept=".pdf,.png,.jpg,.jpeg"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                setCertificateFile(e.target.files[0])
+                                setCertificateUrl('')
+                              }
+                            }}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-[10px] font-medium text-slate-400 mt-2 uppercase tracking-wide">
+                        {certificateFile ? certificateFile.name : 'PDF, PNG, JPG (MAX 10MB)'}
+                      </p>
                     </div>
                   </div>
                 </div>
-                <Button type="submit" disabled={uploading || (!certificateUrl && !certificateFile)} className="w-full md:w-auto self-end mt-2">
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                  Submit to Admin
+              </div>
+              
+              <div className="flex justify-center pt-4">
+                <Button type="submit" disabled={uploading || (!certificateUrl && !certificateFile)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-6 rounded-2xl font-bold transition-all active:scale-95">
+                  {uploading ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Upload className="h-5 w-5 mr-2" />}
+                  Submit Verification
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

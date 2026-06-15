@@ -1,8 +1,14 @@
+import { Metadata } from 'next'
 import { 
   BrainCircuit, 
   Scale, 
   Lightbulb 
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: 'OptioHire Blog | Insights on AI Recruitment & HR Tech in Africa',
+  description: 'Guides, engineering deep-dives, and industry insights on the future of hiring in Africa. Learn how AI is transforming recruitment from our expert team.',
+}
 
 export default function BlogPage() {
   return (
