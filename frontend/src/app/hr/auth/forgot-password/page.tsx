@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
 
       const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/auth/forgot-password`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/forgot-password`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'}/auth/forgot-password`
         
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -96,7 +96,7 @@ export default function ForgotPasswordPage() {
 
       const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/auth/forgot-password`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/forgot-password`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'}/auth/forgot-password`
         
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -147,7 +147,7 @@ export default function ForgotPasswordPage() {
     try {
       const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/auth/verify-reset-code`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/api/auth/verify-reset-code`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'}/api/auth/verify-reset-code`
         
       const response = await fetch(apiUrl, {
         method: 'POST',

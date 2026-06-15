@@ -65,7 +65,7 @@ export default function AdminLoginsPage() {
         ...(search && { search })
       })
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
       const response = await fetch(`/api/admin/activity?${params}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,

@@ -110,7 +110,7 @@ export function SettingsSection() {
         return
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
       const resp = await fetch(`${backendUrl}/api/user/preferences`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -199,7 +199,7 @@ export function SettingsSection() {
         throw new Error('Not authenticated. Please sign in again.')
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
       const resp = await fetch(`${backendUrl}/api/user/preferences`, {
         method: 'PUT',
         headers: {

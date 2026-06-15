@@ -27,7 +27,7 @@ function GoogleCallbackContent() {
     const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : ''
     const apiUrl = typeof window !== 'undefined'
       ? `${window.location.origin}/api/auth/google`
-      : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/google`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'}/auth/google`
 
     fetch(apiUrl, {
       method: 'POST',

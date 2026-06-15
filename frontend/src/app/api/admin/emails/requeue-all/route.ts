@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.BACKEND_URL || 'https://api.optiohire.com'
     const response = await fetch(`${backendUrl}/api/admin/emails/requeue-all`, {
       method: 'POST',
       headers: {

@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
     const body = await request.json().catch(() => ({}))
     
     const res = await fetch(`${backendUrl}/api/admin/talent-pool/generate-email`, {

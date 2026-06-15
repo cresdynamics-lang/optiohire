@@ -2,7 +2,7 @@ const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
     return ''
   }
-  return process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+  return process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
 }
 
 export interface JobPosting {

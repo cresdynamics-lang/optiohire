@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.BACKEND_URL || 'https://api.optiohire.com'
     const queryString = searchParams.toString()
     
     const res = await fetch(`${backendUrl}/api/admin/activity?${queryString}`, {

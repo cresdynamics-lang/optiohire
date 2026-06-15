@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.BACKEND_URL || 'https://api.optiohire.com'
     const body = await request.json()
 
     const response = await fetch(`${backendUrl}/api/admin/audit/bulk-rescore`, {

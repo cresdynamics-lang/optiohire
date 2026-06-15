@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/api-auth'
 // GET /api/hr/reports/dashboard/stats
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.BACKEND_URL || 'https://api.optiohire.com'
     
     // Auth check
     let user;

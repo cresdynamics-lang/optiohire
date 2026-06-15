@@ -47,7 +47,7 @@ function VerifyEmailContent() {
     try {
       const apiUrl = typeof window !== 'undefined' 
         ? `${window.location.origin}/api/auth/send-signup-verification-email`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/send-signup-verification-email`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'}/auth/send-signup-verification-email`
         
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -80,7 +80,7 @@ function VerifyEmailContent() {
     try {
       const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/auth/verify-email`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/verify-email`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'}/auth/verify-email`
         
       const response = await fetch(apiUrl, {
         method: 'POST',

@@ -64,7 +64,7 @@ function ResetPasswordContent() {
     try {
       const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/auth/verify-reset-code`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/verify-reset-code`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'}/auth/verify-reset-code`
         
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -97,7 +97,7 @@ function ResetPasswordContent() {
     try {
       const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/auth/reset-password`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/auth/reset-password`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'}/auth/reset-password`
         
       const response = await fetch(apiUrl, {
         method: 'POST',

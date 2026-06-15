@@ -241,7 +241,7 @@ export function JobSeekerJobsSection() {
       const formData = new FormData()
       formData.append('document', file)
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
       const response = await fetch(`${backendUrl}/api/upload/candidate-document`, {
         method: 'POST',
         headers: {

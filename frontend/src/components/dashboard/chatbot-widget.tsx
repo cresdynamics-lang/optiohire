@@ -213,7 +213,7 @@ export function ChatbotWidget() {
 
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
 
       const conversationHistory = messages.slice(-10).map((msg) => ({
         role: msg.role,
@@ -304,7 +304,7 @@ export function ChatbotWidget() {
   const executeTool = async (tool: string, args: any) => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
 
       let endpoint = ''
       let method = 'POST'
@@ -368,7 +368,7 @@ export function ChatbotWidget() {
     setSupportStatus('sending')
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
 
       const resp = await fetch(`${backendUrl}/api/hr/support`, {
         method: 'POST',
