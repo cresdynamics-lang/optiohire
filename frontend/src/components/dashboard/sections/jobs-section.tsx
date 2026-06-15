@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { JobDetailsModal } from '../job-details-modal'
 import { JobPosting } from '@/types'
-import { supabase } from '@/lib/supabase'
+
 import { useAuth } from '@/hooks/use-auth'
 import { useJobsRealtime, useApplicantsRealtime, useAnalyticsRealtime } from '@/hooks/use-realtime-data'
 import { useRouter } from 'next/navigation'
@@ -96,8 +96,12 @@ export function JobsSection() {
 
   const handleDeleteJob = async (jobId: string) => {
     try {
-      const { error } = await supabase.from('job_postings').delete().eq('id', jobId)
-      if (error) throw error
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/job-postings/${jobId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Failed to delete job')
       setJobs(prev => prev.filter(j => j.id !== jobId))
     } catch (err) {
       setError('Failed to delete job')
