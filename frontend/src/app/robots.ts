@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/dashboard/', '/hr/', '/candidate/', '/auth/', '/api/'],
+        disallow: ['/admin/', '/dashboard/', '/hr/', '/candidate/', '/auth/', '/api/', '/console/'],
       },
     ],
     host: baseUrl,

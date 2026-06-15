@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import { AuthProvider } from '@/hooks/use-auth'
 import { ConditionalLayout } from '@/components/layout/conditional-layout'
@@ -39,6 +40,9 @@ const baseMetadata: Metadata = {
   description: 'OptioHire is a B2B HR tech SaaS by Cres Dynamics (Nairobi, Kenya) that helps companies hire 3x faster with AI-powered smart screening, fair evaluation, and confident hiring decisions.',
   keywords: ['AI recruitment', 'automated hiring', 'candidate screening', 'HR technology', 'recruitment software', 'hiring automation', 'talent acquisition', 'AI-powered HR'],
   authors: [{ name: 'OptioHire Team' }],
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: '/assets/logo/logo-removebg-preview.png',
     shortcut: '/assets/logo/logo-removebg-preview.png',
@@ -80,6 +84,20 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${syne.variable} ${playfairDisplay.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-RFW1R1SD9P"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-RFW1R1SD9P');
+          `}
+        </Script>
         {/* Favicon */}
         <link rel="icon" href="/assets/logo/logo-removebg-preview.png" type="image/png" />
         <link rel="apple-touch-icon" href="/assets/logo/logo-removebg-preview.png" />
@@ -120,3 +138,4 @@ export default function RootLayout({
     </html>
   )
 }
+

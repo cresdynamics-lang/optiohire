@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Syne, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { Topbar } from "@/components/Topbar";
@@ -37,6 +38,22 @@ export default function RootLayout({
       lang="en"
       className={`${syne.variable} ${dmSans.variable} ${dmMono.variable} antialiased`}
     >
+      <head>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-RFW1R1SD9P"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-RFW1R1SD9P');
+          `}
+        </Script>
+      </head>
       <body>
         <Topbar />
         {children}
@@ -45,3 +62,4 @@ export default function RootLayout({
     </html>
   );
 }
+
