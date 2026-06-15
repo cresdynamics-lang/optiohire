@@ -1,13 +1,16 @@
-name: Deploy to Production
+name: Deploy Backend to Production
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   deploy:
-    name: Deploy to VPS
+    name: Deploy Backend to VPS
     runs-on: ubuntu-latest
 
     steps:
@@ -39,88 +42,9 @@ jobs:
             npm run db:schema
             npx tsx migrate-prod.ts
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: |
-            frontend/package-lock.json
-            backend/package-lock.json
-
-      - name: Build frontend in CI
-        run: |
-          cd frontend
-          # Generate .env.local from secrets for the build
-          cat > .env.local << 'ENVEOF'
-          BACKEND_URL=http://127.0.0.1:3001
-          NEXT_PUBLIC_BACKEND_URL=https://optiohire.com
-          NEXT_PUBLIC_APP_URL=https://optiohire.com
-          NEXT_PUBLIC_API_URL=https://optiohire.com/api
-          NEXTAUTH_URL=https://optiohire.com
-          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-          NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
-          ENVEOF
-          
-          npm ci --legacy-peer-deps
-          # Run the full quality build (types + lint + standalone)
-          npm run build:prod
-          # Fix standalone missing CSS/Assets
-          cp -r public .next/standalone/ 2>/dev/null || true
-          cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
-
-      - name: Sync frontend build to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          source: "frontend/.next/standalone,frontend/.next/static"
-          target: "/var/www/optiohire/frontend/.next"
-          strip_components: 2
-
-      - name: Configure Nginx and Restart services
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            set -e
-
-            echo "=== Updating frontend .env.local on server ==="
-            cat > /var/www/optiohire/frontend/.env.local << 'ENVEOF'
-            # Frontend Environment Variables - PRODUCTION (server-side runtime)
-            BACKEND_URL=http://127.0.0.1:3001
-            NEXT_PUBLIC_BACKEND_URL=https://optiohire.com
-            NEXT_PUBLIC_APP_URL=https://optiohire.com
-            NEXT_PUBLIC_API_URL=https://optiohire.com/api
-            NEXTAUTH_URL=https://optiohire.com
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-            NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            DB_SSL=false
-            ENVEOF
-            # Remove leading whitespace from heredoc
-            sed -i 's/^            //' /var/www/optiohire/frontend/.env.local
-
-            echo "=== Restarting services ==="
+            echo "=== Restarting Backend Service ==="
             pm2 delete optiohire-backend 2>/dev/null || true
-            pm2 delete optiohire-frontend 2>/dev/null || true
-
-            cd /var/www/optiohire/backend
             pm2 start dist/server.js --name optiohire-backend
-
-            echo "=== Copying env files for standalone Next.js ==="
-            cp /var/www/optiohire/frontend/.env.local /var/www/optiohire/frontend/.next/standalone/.env.local 2>/dev/null || true
-            cd /var/www/optiohire/frontend/.next/standalone
-            pm2 start server.js --name optiohire-frontend
             pm2 save
 
             echo "=== Deployment complete ==="
@@ -129,4 +53,4 @@ jobs:
             echo "=== Verifying ==="
             sleep 3
             curl -s -o /dev/null -w "Backend HTTP: %{http_code}\n" http://127.0.0.1:3001/api/health || true
-            curl -s -o /dev/null -w "www redirect: %{http_code}\n" --max-redirs 0 http://www.optiohire.com || true
+

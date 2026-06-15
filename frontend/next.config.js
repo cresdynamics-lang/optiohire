@@ -71,21 +71,23 @@ const nextConfig = {
   },
 
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:3001';
+    
     return [
-      { source: '/api/upload/:path*', destination: 'http://127.0.0.1:3001/api/upload/:path*' },
-      { source: '/api/applications/:path*', destination: 'http://127.0.0.1:3001/applications/:path*' },
-      { source: '/api/job-postings/public/:path*', destination: 'http://127.0.0.1:3001/api/job-postings/public/:path*' },
-      { source: '/api/hr/:path*', destination: 'http://127.0.0.1:3001/api/hr/:path*' },
-      { source: '/api/candidate/:path*', destination: 'http://127.0.0.1:3001/api/candidate/:path*' },
-      { source: '/api/admin/:path*', destination: 'http://127.0.0.1:3001/api/admin/:path*' },
-      { source: '/api/demos/:path*', destination: 'http://127.0.0.1:3001/api/demos/:path*' },
-      { source: '/api/webhooks/:path*', destination: 'http://127.0.0.1:3001/api/webhooks/:path*' },
-      { source: '/api/resend/:path*', destination: 'http://127.0.0.1:3001/api/resend/:path*' },
-      { source: '/api/analytics/:path*', destination: 'http://127.0.0.1:3001/api/analytics/:path*' },
-      { source: '/api/user/:path*', destination: 'http://127.0.0.1:3001/api/user/:path*' },
-      { source: '/api/templates/:path*', destination: 'http://127.0.0.1:3001/api/templates/:path*' },
-      { source: '/api/auth/:path*', destination: 'http://127.0.0.1:3001/auth/:path*' },
-      { source: '/api/contact', destination: 'http://127.0.0.1:3001/contact' }
+      { source: '/api/upload/:path*', destination: `${backendUrl}/api/upload/:path*` },
+      { source: '/api/applications/:path*', destination: `${backendUrl}/applications/:path*` },
+      { source: '/api/job-postings/public/:path*', destination: `${backendUrl}/api/job-postings/public/:path*` },
+      { source: '/api/hr/:path*', destination: `${backendUrl}/api/hr/:path*` },
+      { source: '/api/candidate/:path*', destination: `${backendUrl}/api/candidate/:path*` },
+      { source: '/api/admin/:path*', destination: `${backendUrl}/api/admin/:path*` },
+      { source: '/api/demos/:path*', destination: `${backendUrl}/api/demos/:path*` },
+      { source: '/api/webhooks/:path*', destination: `${backendUrl}/api/webhooks/:path*` },
+      { source: '/api/resend/:path*', destination: `${backendUrl}/api/resend/:path*` },
+      { source: '/api/analytics/:path*', destination: `${backendUrl}/api/analytics/:path*` },
+      { source: '/api/user/:path*', destination: `${backendUrl}/api/user/:path*` },
+      { source: '/api/templates/:path*', destination: `${backendUrl}/api/templates/:path*` },
+      { source: '/api/auth/:path*', destination: `${backendUrl}/auth/:path*` },
+      { source: '/api/contact', destination: `${backendUrl}/contact` }
     ]
   },
 

@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { JobRecommendations } from '@/components/candidate/JobRecommendations'
 import { SkillGapRoadmap } from '@/components/candidate/SkillGapRoadmap'
+import { ProfileOnboardingModal } from '@/components/candidate/ProfileOnboardingModal'
+import { ReturneeUpdateModal } from '@/components/candidate/ReturneeUpdateModal'
 import {
   RadarChart,
   PolarGrid,
@@ -74,6 +76,9 @@ interface CandidateDashboardData {
   profile: {
     profile_id: string
     total_score: number
+    bio?: string
+    job_category?: string
+    is_returning?: boolean
   }
   skills: CandidateSkill[]
   recommendations: any[]
@@ -84,6 +89,7 @@ interface CandidateDashboardData {
   }
   missions?: CandidateMission[]
   interviewSessions?: InterviewSession[]
+  needsAlumniUpdate?: boolean
 }
 
 const INTERVIEW_QUESTIONS: Record<string, string[]> = {
@@ -133,6 +139,10 @@ export function TalentProfileSection() {
   const [answers, setAnswers] = useState<string[]>(['', '', ''])
   const [interviewLoading, setInterviewLoading] = useState(false)
   const [latestReport, setLatestReport] = useState<InterviewSession | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [hasPromptedOnboarding, setHasPromptedOnboarding] = useState(false)
+  const [showAlumniUpdate, setShowAlumniUpdate] = useState(false)
+  const [hasPromptedAlumni, setHasPromptedAlumni] = useState(false)
 
   const fetchDashboard = async () => {
     try {
@@ -140,6 +150,17 @@ export function TalentProfileSection() {
       const result = await res.json()
       if (result.success) {
         setData(result.data)
+        // Show onboarding modal if profile is incomplete and hasn't been prompted yet
+        if (result.data?.profile && !result.data.profile.bio && !result.data.profile.job_category && !hasPromptedOnboarding && !result.data.needsAlumniUpdate) {
+          setShowOnboarding(true)
+          setHasPromptedOnboarding(true)
+        }
+        
+        // Show alumni update modal if candidate is a returning alumni
+        if (result.data?.needsAlumniUpdate && !hasPromptedAlumni) {
+          setShowAlumniUpdate(true)
+          setHasPromptedAlumni(true)
+        }
       } else {
         toast.error(result.error || 'Failed to load talent profile data')
       }
@@ -257,10 +278,39 @@ export function TalentProfileSection() {
             Build proof, close skill gaps, and become easier for recruiters to shortlist.
           </p>
         </div>
-        <div className="rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">
-          Growth score: {data.profile.total_score}
+        <div className="flex flex-col gap-2 items-end">
+          <div className="rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">
+            Growth score: {data.profile.total_score}
+          </div>
+          {(!data.profile.bio || !data.profile.job_category) && !data.profile.is_returning && (
+            <Button variant="outline" size="sm" onClick={() => setShowOnboarding(true)}>
+              Complete Profile
+            </Button>
+          )}
+          {data.profile.is_returning && (
+            <div className="rounded-full border border-yellow-200 bg-yellow-50 px-4 py-1 text-xs font-semibold text-yellow-700">
+              Alumni Bonus Active
+            </div>
+          )}
+          {!data.profile.is_returning && (
+            <Button variant="ghost" size="sm" onClick={() => setShowAlumniUpdate(true)} className="text-indigo-600 hover:text-indigo-800 text-xs mt-1 underline">
+              Looking for new opportunities?
+            </Button>
+          )}
         </div>
       </div>
+      
+      <ProfileOnboardingModal 
+        isOpen={showOnboarding} 
+        onClose={() => setShowOnboarding(false)} 
+        onSuccess={fetchDashboard} 
+      />
+
+      <ReturneeUpdateModal
+        isOpen={showAlumniUpdate}
+        onClose={() => setShowAlumniUpdate(false)}
+        onSuccess={fetchDashboard}
+      />
 
       <Card className="overflow-hidden border-indigo-100 bg-gradient-to-br from-indigo-600 via-slate-900 to-purple-700 text-white">
         <CardContent className="grid gap-6 p-6 lg:grid-cols-[1.4fr_0.8fr]">

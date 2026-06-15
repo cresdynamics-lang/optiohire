@@ -211,6 +211,18 @@ export const getCandidateDashboard = async (req: Request, res: Response): Promis
     )
     const recruiterViewsCount = parseInt(viewsResult[0]?.count || '0', 10)
 
+    // Check if candidate is a returning alumni
+    const { rows: alumniCheck } = await query(
+      `SELECT 1 FROM applications a 
+       JOIN users u ON LOWER(a.email) = LOWER(u.email) 
+       WHERE u.user_id = $1 
+         AND a.interview_status = 'HIRED' 
+         AND a.updated_at < NOW() - INTERVAL '6 months'
+       LIMIT 1`,
+      [userId]
+    )
+    const needsAlumniUpdate = (alumniCheck.length > 0 && !profile.is_returning)
+
     res.status(200).json({
       success: true,
       data: {
@@ -221,7 +233,8 @@ export const getCandidateDashboard = async (req: Request, res: Response): Promis
         missions: await ensureCandidateMissions(profile.profile_id, gapAnalysis),
         interviewSessions: await getInterviewSessions(profile.profile_id),
         scoreHistory,
-        recruiterViewsCount
+        recruiterViewsCount,
+        needsAlumniUpdate
       }
     })
   } catch (error: any) {
@@ -374,6 +387,142 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
     })
   } catch (error: any) {
     console.error('Error uploading certificate:', error)
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+}
+
+export const onboardProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId!
+    const { bio, jobCategory } = req.body
+    
+    let profile = await candidateRepo.getProfileByUserId(userId)
+    if (!profile) {
+      profile = await candidateRepo.createProfile(userId)
+    }
+
+    const { saveFile } = await import('../utils/storage.js')
+    const path = await import('path')
+    const crypto = await import('crypto')
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } || {}
+    
+    const uploadSingleFile = async (fileArray: Express.Multer.File[] | undefined, folder: string) => {
+      if (!fileArray || fileArray.length === 0) return null
+      const file = fileArray[0]
+      const safeExt = path.extname(file.originalname).toLowerCase() || '.pdf'
+      const uniqueId = crypto.randomBytes(16).toString('hex')
+      const filename = `candidate_docs/${userId}/${folder}/${uniqueId}${safeExt}`
+      const fileUrl = await saveFile(filename, file.buffer)
+      const publicBaseUrl = process.env.PUBLIC_APP_URL || process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`
+      return fileUrl.startsWith('http') ? fileUrl : `${publicBaseUrl.replace(/\/$/, '')}/storage/${filename}`
+    }
+
+    const cvUrl = await uploadSingleFile(files['cv'], 'cv')
+    const coverLetterUrl = await uploadSingleFile(files['coverLetter'], 'cover_letters')
+    const recommendationLetterUrl = await uploadSingleFile(files['recommendationLetter'], 'recommendations')
+
+    // Initial Scoring Logic
+    let score = profile.total_score || 0
+    if (bio && !profile.bio) score += 10
+    if (jobCategory && !profile.job_category) score += 10
+    if (cvUrl && !profile.cv_url) score += 30
+    if (coverLetterUrl && !profile.cover_letter_url) score += 10
+    if (recommendationLetterUrl && !profile.recommendation_letter_url) score += 10
+
+    const updatedProfile = await candidateRepo.updateProfileOnboarding(profile.profile_id, {
+      bio,
+      job_category: jobCategory,
+      cv_url: cvUrl || undefined,
+      cover_letter_url: coverLetterUrl || undefined,
+      recommendation_letter_url: recommendationLetterUrl || undefined
+    })
+
+    await candidateRepo.setInitialAlternativeScore(profile.profile_id, score)
+    updatedProfile.total_score = score
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile onboarding completed successfully.',
+      profile: updatedProfile
+    })
+  } catch (error: any) {
+    console.error('Error onboarding profile:', error)
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+}
+
+export const alumniUpdate = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId!
+    const { newSkills, projects } = req.body
+    
+    let profile = await candidateRepo.getProfileByUserId(userId)
+    if (!profile) {
+      res.status(404).json({ success: false, error: 'Candidate profile not found' })
+      return
+    }
+
+    const { saveFile } = await import('../utils/storage.js')
+    const path = await import('path')
+    const crypto = await import('crypto')
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } || {}
+    
+    const uploadSingleFile = async (fileArray: Express.Multer.File[] | undefined, folder: string) => {
+      if (!fileArray || fileArray.length === 0) return null
+      const file = fileArray[0]
+      const safeExt = path.extname(file.originalname).toLowerCase() || '.pdf'
+      const uniqueId = crypto.randomBytes(16).toString('hex')
+      const filename = `candidate_docs/${userId}/${folder}/${uniqueId}${safeExt}`
+      const fileUrl = await saveFile(filename, file.buffer)
+      const publicBaseUrl = process.env.PUBLIC_APP_URL || process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`
+      return fileUrl.startsWith('http') ? fileUrl : `${publicBaseUrl.replace(/\/$/, '')}/storage/${filename}`
+    }
+
+    const cvUrl = await uploadSingleFile(files['cv'], 'cv')
+    
+    // Parse projects
+    let parsedProjects = []
+    if (projects) {
+      try {
+        parsedProjects = JSON.parse(projects)
+      } catch (e) {
+        // Handle invalid JSON
+      }
+    }
+
+    // Parse new skills and update them if needed (here we might just add to candidate_skills but let's keep it simple and just do the profile update)
+    let parsedSkills = []
+    if (newSkills) {
+      try {
+        parsedSkills = JSON.parse(newSkills)
+      } catch (e) {
+        // Handle invalid JSON
+      }
+    }
+
+    // Add +50 Alumni Bonus and score for new skills and projects
+    let score = profile.total_score || 0
+    score += 50 // Alumni Bonus
+    score += parsedSkills.length * 5 // +5 points per new skill
+    score += parsedProjects.length * 10 // +10 points per new project
+
+    const updatedProfile = await candidateRepo.updateProfileAlumni(profile.profile_id, {
+      cv_url: cvUrl || undefined,
+      metadata_projects: parsedProjects.length > 0 ? parsedProjects : undefined
+    })
+
+    await candidateRepo.setInitialAlternativeScore(profile.profile_id, score)
+    updatedProfile.total_score = score
+
+    res.status(200).json({
+      success: true,
+      message: 'Alumni profile updated successfully.',
+      profile: updatedProfile
+    })
+  } catch (error: any) {
+    console.error('Error updating alumni profile:', error)
     res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }

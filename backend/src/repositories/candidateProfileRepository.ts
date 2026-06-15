@@ -6,6 +6,12 @@ export interface CandidateProfile {
   total_score: number
   active_learning_path: string | null
   metadata: any
+  bio: string | null
+  job_category: string | null
+  cv_url: string | null
+  cover_letter_url: string | null
+  recommendation_letter_url: string | null
+  is_returning: boolean
   created_at: string
   updated_at: string
 }
@@ -111,5 +117,51 @@ export class CandidateProfileRepository {
       [profileId]
     )
     return rows
+  }
+
+  async updateProfileOnboarding(
+    profileId: string, 
+    data: { bio?: string, job_category?: string, cv_url?: string, cover_letter_url?: string, recommendation_letter_url?: string }
+  ): Promise<CandidateProfile> {
+    const { rows } = await query<CandidateProfile>(
+      `UPDATE candidate_profiles
+       SET bio = COALESCE($2, bio),
+           job_category = COALESCE($3, job_category),
+           cv_url = COALESCE($4, cv_url),
+           cover_letter_url = COALESCE($5, cover_letter_url),
+           recommendation_letter_url = COALESCE($6, recommendation_letter_url),
+           updated_at = NOW()
+       WHERE profile_id = $1
+       RETURNING *`,
+      [profileId, data.bio, data.job_category, data.cv_url, data.cover_letter_url, data.recommendation_letter_url]
+    )
+    if (rows.length === 0) throw new Error('Profile not found')
+    return rows[0]
+  }
+
+  async setInitialAlternativeScore(profileId: string, score: number): Promise<void> {
+    await query(`UPDATE candidate_profiles SET total_score = $2 WHERE profile_id = $1`, [profileId, score])
+  }
+
+  async updateProfileAlumni(
+    profileId: string, 
+    data: { cv_url?: string, metadata_projects?: any }
+  ): Promise<CandidateProfile> {
+    // We update is_returning to true, update cv_url, and merge metadata_projects into metadata
+    const { rows } = await query<CandidateProfile>(
+      `UPDATE candidate_profiles
+       SET is_returning = true,
+           cv_url = COALESCE($2, cv_url),
+           metadata = CASE 
+             WHEN $3::jsonb IS NOT NULL THEN jsonb_set(metadata, '{projects}', $3::jsonb)
+             ELSE metadata 
+           END,
+           updated_at = NOW()
+       WHERE profile_id = $1
+       RETURNING *`,
+      [profileId, data.cv_url, JSON.stringify(data.metadata_projects || null)]
+    )
+    if (rows.length === 0) throw new Error('Profile not found')
+    return rows[0]
   }
 }

@@ -18,6 +18,12 @@ CREATE TABLE IF NOT EXISTS candidate_profiles (
   total_score integer DEFAULT 0,
   active_learning_path text,
   metadata jsonb DEFAULT '{}'::jsonb,
+  bio text,
+  job_category text,
+  cv_url text,
+  cover_letter_url text,
+  recommendation_letter_url text,
+  is_returning boolean DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT unique_candidate_user UNIQUE (user_id)
