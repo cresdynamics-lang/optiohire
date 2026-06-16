@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = 'https://api.optiohire.com'
     const user = requireAuth(request)
     // In Next.js 16, params is always a Promise
     const resolvedParams = await params

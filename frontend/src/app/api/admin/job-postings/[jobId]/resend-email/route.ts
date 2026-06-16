@@ -14,7 +14,7 @@ export async function POST(
     }
 
     const resolvedParams = await params
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = 'https://api.optiohire.com'
     const res = await fetch(`${backendUrl}/api/admin/job-postings/${resolvedParams.jobId}/resend-email`, {
       method: 'POST',
       headers: {

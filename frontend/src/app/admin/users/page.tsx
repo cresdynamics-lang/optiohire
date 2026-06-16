@@ -386,47 +386,45 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                         <div className="flex gap-2 flex-wrap">
-                          {/* Role Assignment UI - Only visible to super admins */}
-                          {currentUser?.admin_permissions?.super_admin && (
-                            <div className="flex items-center gap-2 mr-2 border-r border-border pr-4">
-                              <span className="text-xs font-medium text-muted-foreground">Change Role:</span>
-                              <Select 
-                                value={userItem.role} 
-                                onValueChange={(newRole) => {
-                                  if (newRole === userItem.role) return;
+                          {/* Role Assignment UI - Visible to all admins */}
+                          <div className="flex items-center gap-2 mr-2 border-r border-border pr-4">
+                            <span className="text-xs font-medium text-muted-foreground">Change Role:</span>
+                            <Select 
+                              value={userItem.role} 
+                              onValueChange={(newRole) => {
+                                if (newRole === userItem.role) return;
+                                
+                                const confirmMsg = newRole === 'admin' 
+                                  ? 'Promote this user to admin? They will require approval before accessing admin features.'
+                                  : `Change this user's role to ${newRole}?`;
                                   
-                                  const confirmMsg = newRole === 'admin' 
-                                    ? 'Promote this user to admin? They will require approval before accessing admin features.'
-                                    : `Change this user's role to ${newRole}?`;
-                                    
-                                  if (confirm(confirmMsg)) {
-                                    const updates: any = { role: newRole };
-                                    if (newRole === 'admin') {
-                                      updates.admin_permissions = {
-                                        manage_users: true,
-                                        manage_companies: true,
-                                        manage_jobs: true,
-                                        manage_applications: true,
-                                        view_analytics: true
-                                      };
-                                    }
-                                    updateUser(userItem.user_id, updates);
+                                if (confirm(confirmMsg)) {
+                                  const updates: any = { role: newRole };
+                                  if (newRole === 'admin') {
+                                    updates.admin_permissions = {
+                                      manage_users: true,
+                                      manage_companies: true,
+                                      manage_jobs: true,
+                                      manage_applications: true,
+                                      view_analytics: true
+                                    };
                                   }
-                                }}
-                                disabled={!!isCurrentUser}
-                              >
-                                <SelectTrigger className="w-[110px] h-8 text-xs border-border">
-                                  <SelectValue placeholder="Select Role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="hr">HR</SelectItem>
-                                  <SelectItem value="candidate">Candidate</SelectItem>
-                                  <SelectItem value="user">User</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
+                                  updateUser(userItem.user_id, updates);
+                                }
+                              }}
+                              disabled={!!isCurrentUser}
+                            >
+                              <SelectTrigger className="w-[110px] h-8 text-xs border-border">
+                                <SelectValue placeholder="Select Role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="hr">HR</SelectItem>
+                                <SelectItem value="candidate">Candidate</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                           {userItem.role === 'admin' && userItem.admin_approval_status === 'pending' && (
                             <>
                               <Button

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET
-const BACKEND_URL = process.env.BACKEND_URL || 'https://api.optiohire.com'
+const BACKEND_URL = 'https://api.optiohire.com'
 
 function getJwtSecret(): string {
   if (!JWT_SECRET) {

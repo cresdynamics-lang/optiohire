@@ -7,7 +7,7 @@ export async function POST(
   try {
     const { path } = await params
     const body = await request.json()
-    const backendUrl = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001').trim()
+    const backendUrl = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com').trim()
 
     if (!backendUrl) {
       return NextResponse.json(

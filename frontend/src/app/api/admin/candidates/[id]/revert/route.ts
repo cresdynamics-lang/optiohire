@@ -6,7 +6,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
     
     const res = await fetch(`${backendUrl}/api/admin/candidates/${id}/revert`, {
       method: 'POST',

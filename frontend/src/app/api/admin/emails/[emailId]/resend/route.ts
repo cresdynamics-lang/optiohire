@@ -10,7 +10,7 @@ export async function POST(
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = 'https://api.optiohire.com'
     const resolvedParams = await params
     const { emailId } = resolvedParams
     

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const getBackendUrl = () =>
-  (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001')
+  (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com')
     .trim()
     .replace(/\/$/, '')
 
