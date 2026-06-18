@@ -85,6 +85,7 @@ router.get('/queues/health', getQueueHealth)
 
 // Users Management
 router.get('/users', getAllUsers)
+router.get('/users/pending', getPendingSignups)
 router.get('/users/:userId', getUserById)
 router.get('/users/:userId/stats', getUserStats)
 router.get('/users/:userId/activity', getUserActivity)
@@ -113,7 +114,6 @@ router.post('/audit/bulk-rescore', bulkRescoreApplications)
 router.post('/audit/override', overrideDecision)
 
 // Signup Queue Management
-router.get('/users/pending', getPendingSignups)
 router.post('/users/:userId/approve', approveSignup)
 router.post('/users/:userId/reject', rejectSignup)
 router.post('/users/bulk-approve', bulkApproveSignups)

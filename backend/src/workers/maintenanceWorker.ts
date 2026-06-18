@@ -126,7 +126,13 @@ export class MaintenanceWorker {
 
     for (const row of rows) {
       const { html, text } = row.metadata || {}
-      if (!html || !text) continue
+      if (!html || !text) {
+        await query(
+          `UPDATE email_logs SET metadata = jsonb_set(metadata, '{is_retry_eligible}', 'false') WHERE email_id = $1`,
+          [row.email_id]
+        )
+        continue
+      }
 
       try {
         await emailService.sendEmail({
@@ -136,6 +142,10 @@ export class MaintenanceWorker {
         logger.info(`📨 Retried email: ${row.email_id}`)
       } catch (err) {
         logger.warn(`❌ Retry failed: ${row.email_id}`)
+        await query(
+          `UPDATE email_logs SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{next_retry_at}', to_jsonb((NOW() + INTERVAL '1 hour')::text)) WHERE email_id = $1`,
+          [row.email_id]
+        )
       }
     }
   }

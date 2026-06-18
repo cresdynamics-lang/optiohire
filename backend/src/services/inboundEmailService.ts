@@ -36,7 +36,7 @@ export class ResendInboundService {
       const emailId = payload.data?.email_id;
       if (!emailId) {
         logger.error('[ResendInbound] No email_id found in payload data');
-        return { success: false, error: 'No email_id in payload' };
+        return { success: true, ignored: 'no_email_id' };
       }
 
       // Check if already processed as an application (using external_id)
@@ -52,7 +52,7 @@ export class ResendInboundService {
       const emailData = await this.resendService.getEmail(emailId);
       if (!emailData) {
         logger.error(`[ResendInbound] Could not fetch email data for ID: ${emailId}`);
-        return { success: false, error: 'Email data not found' };
+        return { success: true, ignored: 'no_email_data' };
       }
 
       const subject = emailData.subject || 'No Subject';
@@ -131,7 +131,7 @@ export class ResendInboundService {
 
       if (!companyId) {
         logger.error(`[ResendInbound] Company not found for matched job ID: ${jobId}`);
-        return { success: false, error: 'Company not found' };
+        return { success: true, ignored: 'company_not_found' };
       }
 
       // Create the application (using external_id for idempotency)

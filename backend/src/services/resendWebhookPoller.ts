@@ -40,35 +40,39 @@ export class ResendWebhookPoller {
       logger.info(`[ResendPoller] Processing ${emails.length} inbound emails`);
 
       for (const email of emails) {
-        const emailId = email.id;
-        
-        const isProcessed = await this.checkIfDeliveryProcessed(emailId);
-        if (isProcessed) {
-          logger.debug(`[ResendPoller] Email ${emailId} already processed, skipping`);
-          continue;
-        }
-
-        logger.info(`[ResendPoller] Found unprocessed inbound email: ${emailId}`);
-        logger.info(`[ResendPoller] Email details: From=${email.from}, Subject=${email.subject}`);
-        
-        // Construct a mock webhook payload that ResendInboundService expects
-        const mockPayload = {
-          type: 'email.received',
-          data: {
-            email_id: emailId,
-            from: email.from,
-            to: email.to,
-            subject: email.subject,
-            created_at: email.created_at
+        try {
+          const emailId = email.id;
+          
+          const isProcessed = await this.checkIfDeliveryProcessed(emailId);
+          if (isProcessed) {
+            logger.debug(`[ResendPoller] Email ${emailId} already processed, skipping`);
+            continue;
           }
-        };
 
-        logger.info(`[ResendPoller] Processing email ${emailId} with mock payload: ${JSON.stringify(mockPayload, null, 2)}`);
+          logger.info(`[ResendPoller] Found unprocessed inbound email: ${emailId}`);
+          logger.info(`[ResendPoller] Email details: From=${email.from}, Subject=${email.subject}`);
+          
+          // Construct a mock webhook payload that ResendInboundService expects
+          const mockPayload = {
+            type: 'email.received',
+            data: {
+              email_id: emailId,
+              from: email.from,
+              to: email.to,
+              subject: email.subject,
+              created_at: email.created_at
+            }
+          };
 
-        const result = await resendInboundService.processEmailReceivedEvent(mockPayload);
-        
-        if (result.success || result.ignored) {
-          await this.markDeliveryProcessed(emailId);
+          logger.info(`[ResendPoller] Processing email ${emailId} with mock payload: ${JSON.stringify(mockPayload, null, 2)}`);
+
+          const result = await resendInboundService.processEmailReceivedEvent(mockPayload);
+          
+          if (result.success || result.ignored) {
+            await this.markDeliveryProcessed(emailId);
+          }
+        } catch (innerError: any) {
+          logger.error(`[ResendPoller] Error processing individual email ${email.id}:`, { error: innerError });
         }
       }
     } catch (error: any) {
