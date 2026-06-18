@@ -1376,15 +1376,6 @@ export async function changeUserRole(req: Request, res: Response) {
     const authReq = req as AuthRequest
     const currentUserId = authReq.userId
 
-    // Only super_admin can use this endpoint
-    const { rows: currentUserRows } = await query<{ admin_permissions: any }>(
-      `SELECT admin_permissions FROM users WHERE user_id = $1`,
-      [currentUserId]
-    )
-    if (!currentUserRows[0]?.admin_permissions?.super_admin) {
-      return res.status(403).json({ error: 'Only super admins can change user roles.' })
-    }
-
     if (!role) {
       return res.status(400).json({ error: 'Role is required' })
     }

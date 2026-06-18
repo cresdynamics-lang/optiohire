@@ -337,7 +337,7 @@ export default function AdminUsersPage() {
                               Username: @{userItem.username}
                             </p>
                           )}
-                          {userItem.company_role && (
+                          {userItem.role === 'hr' && userItem.company_role && (
                             <p className="mt-1 text-sm text-muted-foreground">
                               Company Role: {userItem.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}
                             </p>
