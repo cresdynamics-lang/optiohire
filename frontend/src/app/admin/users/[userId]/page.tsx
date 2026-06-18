@@ -215,7 +215,7 @@ export default function UserDetailsPage() {
                 <Badge variant="outline">{userDetails.role}</Badge>
                 {userDetails.company_role && (
                   <Badge variant="secondary" className="capitalize">
-                    {userDetails.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}
+                    {userDetails.company_role === 'hr' ? 'HR Manager' : userDetails.company_role === 'candidate' ? 'Candidate' : 'Hiring Manager'}
                   </Badge>
                 )}
               </div>
@@ -256,7 +256,7 @@ export default function UserDetailsPage() {
                     Company Role
                   </div>
                   <p className="text-foreground capitalize">
-                    {userDetails.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}
+                    {userDetails.company_role === 'hr' ? 'HR Manager' : userDetails.company_role === 'candidate' ? 'Candidate' : 'Hiring Manager'}
                   </p>
                 </div>
               )}

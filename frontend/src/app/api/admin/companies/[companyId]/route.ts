@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const resolvedParams = await params
-    const backendUrl = 'https://api.optiohire.com'
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'https://api.optiohire.com'
     const res = await fetch(`${backendUrl}/api/admin/companies/${resolvedParams.companyId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -49,7 +49,7 @@ export async function DELETE(
     }
 
     const resolvedParams = await params
-    const backendUrl = 'https://api.optiohire.com'
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'https://api.optiohire.com'
     const res = await fetch(`${backendUrl}/api/admin/companies/${resolvedParams.companyId}`, {
       method: 'DELETE',
       headers: {

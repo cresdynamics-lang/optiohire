@@ -575,6 +575,11 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
       }
     }
 
+    if (actualSkillId === '00000000-0000-0000-0000-000000000000') {
+      res.status(400).json({ success: false, error: 'Valid Skill ID or Skill Name is required' })
+      return
+    }
+
     if (req.file) {
       const file = req.file
       if (file.size > 10 * 1024 * 1024) {

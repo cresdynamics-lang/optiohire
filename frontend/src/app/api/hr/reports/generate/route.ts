@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/api-auth'
 // POST /api/hr/reports/generate
 export async function POST(request: NextRequest) {
   try {
-    const backendUrl = 'https://api.optiohire.com'
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'https://api.optiohire.com'
     const user = requireAuth(request)
     const body = await request.json()
     const { jobPostingId } = body

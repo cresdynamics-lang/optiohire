@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.optiohire.com'
 
+function createTimeoutSignal(ms: number): AbortSignal {
+  if (
+    typeof AbortSignal !== 'undefined' &&
+    typeof (AbortSignal as { timeout?: (timeoutMs: number) => AbortSignal }).timeout === 'function'
+  ) {
+    return (AbortSignal as { timeout: (timeoutMs: number) => AbortSignal }).timeout(ms)
+  }
+  const controller = new AbortController()
+  setTimeout(() => controller.abort(), ms)
+  return controller.signal
+}
+
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.split(' ')[1] || ''
@@ -19,6 +31,7 @@ export async function POST(request: NextRequest) {
         // Fetch will automatically set the Content-Type boundary.
       },
       body: formData,
+      signal: createTimeoutSignal(15000),
     })
     
     const data = await res.json().catch(() => ({}))

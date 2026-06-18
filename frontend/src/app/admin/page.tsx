@@ -457,7 +457,7 @@ function AdminDashboardContent() {
                         Company Role
                       </div>
                       <p className="capitalize text-foreground ">
-                        {(currentUser as any).companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}
+                        {(currentUser as any).companyRole === 'hr' ? 'HR Manager' : (currentUser as any).companyRole === 'candidate' ? 'Candidate' : 'Hiring Manager'}
                       </p>
                     </div>
                   )}
@@ -678,7 +678,7 @@ function AdminDashboardContent() {
                               </div>
                               <div className="truncate">
                                 <p className="text-[10px] uppercase font-semibold text-muted-foreground">Company Role</p>
-                                <p className="text-foreground  font-medium capitalize">{user.company_role === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
+                                <p className="text-foreground  font-medium capitalize">{user.company_role === 'hr' ? 'HR Manager' : user.company_role === 'candidate' ? 'Candidate' : 'Hiring Manager'}</p>
                               </div>
                             </div>
                           )}

@@ -443,7 +443,7 @@ export function ProfileSection() {
                       <p className="text-sm text-slate-600 dark:text-gray-400">
                         Role:{' '}
                         <span className="font-semibold capitalize text-foreground">
-                          {user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}
+                          {user.companyRole === 'hr' ? 'HR Manager' : user.companyRole === 'candidate' ? 'Candidate' : 'Hiring Manager'}
                         </span>
                       </p>
                     )}
@@ -476,7 +476,7 @@ export function ProfileSection() {
                         <Key className="h-4 w-4 text-slate-500 dark:text-gray-400" />
                         <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-gray-500">Role in company</span>
                       </div>
-                      <p className="text-sm font-medium capitalize text-foreground">{user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}</p>
+                      <p className="text-sm font-medium capitalize text-foreground">{user.companyRole === 'hr' ? 'HR Manager' : user.companyRole === 'candidate' ? 'Candidate' : 'Hiring Manager'}</p>
                     </div>
                   )}
                   
@@ -588,7 +588,7 @@ export function ProfileSection() {
                   <Input
                     id="company_role"
                     type="text"
-                    value={user.companyRole === 'hr' ? 'HR Manager' : 'Hiring Manager'}
+                    value={user.companyRole === 'hr' ? 'HR Manager' : user.companyRole === 'candidate' ? 'Candidate' : 'Hiring Manager'}
                     disabled
                     className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 capitalize"
                   />

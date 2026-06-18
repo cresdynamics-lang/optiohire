@@ -404,6 +404,24 @@ export async function getDeadLetterEmails(req: Request, res: Response) {
     const offset = (Number(page) - 1) * Number(limit)
     const maxAttempts = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
 
+    // Ensure table exists before querying
+    const { rows: tableCheck } = await query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM information_schema.tables 
+         WHERE table_schema = 'public' AND table_name = 'email_logs'
+       ) as exists`
+    )
+    if (!tableCheck[0]?.exists) {
+      console.warn('[getDeadLetterEmails] email_logs table not found — returning empty list')
+      return res.json({
+        emails: [],
+        total: 0,
+        page: Number(page),
+        limit: Number(limit),
+        maxRetryAttempts: maxAttempts
+      })
+    }
+
     let whereClause = `WHERE status = 'failed'
       AND (
         COALESCE((metadata->>'is_retry_eligible')::boolean, true) = false
