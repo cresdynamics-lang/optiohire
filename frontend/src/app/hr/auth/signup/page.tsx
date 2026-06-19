@@ -23,8 +23,8 @@ const employerSignUpSchema = z.object({
   company_role: z.enum(['hr', 'hiring_manager']),
   organization_name: z.string().min(2, 'Organization name is required'),
   company_email: z.string().email('Please enter a valid company email'),
-  hr_email: z.string().email('Please enter a valid HR email'),
-  hiring_manager_email: z.string().email('Please enter a valid hiring manager email'),
+  hr_email: z.string().email('Please enter a valid HR email').optional(),
+  hiring_manager_email: z.string().email('Please enter a valid hiring manager email').optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -62,6 +62,9 @@ function HRSignUpForm() {
       const token = await executeRecaptcha('signup_hr')
       if (!token) throw new Error('Failed to obtain recaptcha token')
 
+      const hrEmail = data.hr_email || (data.company_role === 'hr' ? data.email : data.company_email)
+      const hiringManagerEmail = data.hiring_manager_email || (data.company_role === 'hiring_manager' ? data.email : data.company_email)
+
       const result = await signUp(
         data.name,
         data.email,
@@ -69,8 +72,8 @@ function HRSignUpForm() {
         data.company_role,
         data.organization_name,
         data.company_email,
-        data.hr_email,
-        data.hiring_manager_email,
+        hrEmail,
+        hiringManagerEmail,
         token
       )
       
@@ -229,7 +232,7 @@ function HRSignUpForm() {
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setStep(2)} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium">Back</button>
                   <button type="button" onClick={async () => {
-                    if (await form.trigger(['organization_name', 'company_email', 'hr_email', 'hiring_manager_email'])) setStep(4)
+                    if (await form.trigger(['organization_name', 'company_email'])) setStep(4)
                   }} className="flex-1 bg-[#2D2DDD] text-white py-3 rounded-xl font-medium">Next</button>
                 </div>
               </div>
