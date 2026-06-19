@@ -1,0 +1,26 @@
+name: Deploy Frontend to Vercel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+
+jobs:
+  deploy:
+    name: Trigger Vercel Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        run: |
+          echo "Triggering Vercel deployment..."
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.VERCEL_HOOK }}")
+          echo "Vercel hook response code: $RESPONSE"
+          if [ "$RESPONSE" != "200" ] && [ "$RESPONSE" != "201" ]; then
+            echo "❌ Vercel hook failed with status $RESPONSE"
+            exit 1
+          fi
+          echo "✅ Vercel deployment triggered successfully"
