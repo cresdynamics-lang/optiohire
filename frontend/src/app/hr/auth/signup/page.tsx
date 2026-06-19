@@ -23,8 +23,9 @@ const employerSignUpSchema = z.object({
   company_role: z.enum(['hr', 'hiring_manager']),
   organization_name: z.string().min(2, 'Organization name is required'),
   company_email: z.string().email('Please enter a valid company email'),
-  hr_email: z.string().email('Please enter a valid HR email'),
-  hiring_manager_email: z.string().email('Please enter a valid hiring manager email'),
+  // These still exist in the schema to validate the final API payload
+  hr_email: z.string().email('Invalid HR email'),
+  hiring_manager_email: z.string().email('Invalid hiring manager email'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -46,33 +47,42 @@ function HRSignUpForm() {
   const form = useForm<EmployerSignUpData>({
     resolver: zodResolver(employerSignUpSchema),
     defaultValues: {
-      company_role: 'hr'
+      company_role: 'hr',
+      // Initialize these so React Hook Form knows they exist without needing DOM inputs
+      hr_email: '',
+      hiring_manager_email: ''
     }
   })
 
-  // --- Handlers for Multi-Step Navigation ---
+  // --- Step Handlers ---
   
   const handleStep2Next = async () => {
+    // Only validate the fields visible on Step 2
     const isValid = await form.trigger(['name', 'email', 'password', 'confirmPassword'])
     if (isValid) setStep(3)
   }
 
   const handleStep3Next = async () => {
-    const currentValues = form.getValues()
-    const role = currentValues.company_role || 'hr'
-    const email = currentValues.email || ''
-    const companyEmail = currentValues.company_email || ''
+    // Only validate the fields visible on Step 3
+    const isStep3Valid = await form.trigger(['company_role', 'organization_name', 'company_email'])
 
-    // Always recalculate hidden fields based on the freshest input
-    const hrEmail = role === 'hr' ? email : companyEmail
-    const hmEmail = role === 'hiring_manager' ? email : companyEmail
+    if (isStep3Valid) {
+      // CLEVER LOGIC: Since 'email' and 'company_email' are already validated by Zod,
+      // we can safely copy them into the hidden schema fields without risking a silent failure.
+      const currentValues = form.getValues()
+      const role = currentValues.company_role
+      const personalEmail = currentValues.email
+      const companyEmail = currentValues.company_email
 
-    form.setValue('hr_email', hrEmail)
-    form.setValue('hiring_manager_email', hmEmail)
+      // Inject the values directly into state. No hidden HTML inputs needed.
+      form.setValue('hr_email', role === 'hr' ? personalEmail : companyEmail)
+      form.setValue('hiring_manager_email', role === 'hiring_manager' ? personalEmail : companyEmail)
 
-    const isValid = await form.trigger(['organization_name', 'company_email', 'hr_email', 'hiring_manager_email'])
-    if (isValid) setStep(4)
+      setStep(4)
+    }
   }
+
+  // --- Final Submit ---
 
   const onSubmit = async (data: EmployerSignUpData) => {
     if (!executeRecaptcha) {
@@ -129,7 +139,6 @@ function HRSignUpForm() {
           Back
         </button>
 
-        {/* Wrapped the main card in a <form> tag */}
         <form 
           onSubmit={form.handleSubmit(onSubmit)} 
           className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden"
@@ -153,10 +162,6 @@ function HRSignUpForm() {
                 </div>
               ))}
             </div>
-
-            {/* Hidden Inputs managed by React Hook Form */}
-            <input type="hidden" {...form.register('hr_email')} />
-            <input type="hidden" {...form.register('hiring_manager_email')} />
 
             {/* --- STEP 2: Credentials --- */}
             {step === 2 && (
