@@ -23,8 +23,8 @@ const employerSignUpSchema = z.object({
   company_role: z.enum(['hr', 'hiring_manager']),
   organization_name: z.string().min(2, 'Organization name is required'),
   company_email: z.string().email('Please enter a valid company email'),
-  hr_email: z.string().email('Please enter a valid HR email').optional(),
-  hiring_manager_email: z.string().email('Please enter a valid hiring manager email').optional(),
+  hr_email: z.string().email('Please enter a valid HR email'),
+  hiring_manager_email: z.string().email('Please enter a valid hiring manager email'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -36,7 +36,8 @@ function HRSignUpForm() {
   const router = useRouter()
   const { signUp } = useAuth()
   const { executeRecaptcha } = useGoogleReCaptcha()
-  const [step, setStep] = useState(2) // Start at step 2 (credentials)
+  
+  const [step, setStep] = useState(2)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -45,9 +46,33 @@ function HRSignUpForm() {
   const form = useForm<EmployerSignUpData>({
     resolver: zodResolver(employerSignUpSchema),
     defaultValues: {
-        company_role: 'hr'
+      company_role: 'hr'
     }
   })
+
+  // --- Handlers for Multi-Step Navigation ---
+  
+  const handleStep2Next = async () => {
+    const isValid = await form.trigger(['name', 'email', 'password', 'confirmPassword'])
+    if (isValid) setStep(3)
+  }
+
+  const handleStep3Next = async () => {
+    const currentValues = form.getValues()
+    const role = currentValues.company_role || 'hr'
+    const email = currentValues.email || ''
+    const companyEmail = currentValues.company_email || ''
+
+    // Always recalculate hidden fields based on the freshest input
+    const hrEmail = role === 'hr' ? email : companyEmail
+    const hmEmail = role === 'hiring_manager' ? email : companyEmail
+
+    form.setValue('hr_email', hrEmail)
+    form.setValue('hiring_manager_email', hmEmail)
+
+    const isValid = await form.trigger(['organization_name', 'company_email', 'hr_email', 'hiring_manager_email'])
+    if (isValid) setStep(4)
+  }
 
   const onSubmit = async (data: EmployerSignUpData) => {
     if (!executeRecaptcha) {
@@ -62,9 +87,6 @@ function HRSignUpForm() {
       const token = await executeRecaptcha('signup_hr')
       if (!token) throw new Error('Failed to obtain recaptcha token')
 
-      const hrEmail = data.hr_email || (data.company_role === 'hr' ? data.email : data.company_email)
-      const hiringManagerEmail = data.hiring_manager_email || (data.company_role === 'hiring_manager' ? data.email : data.company_email)
-
       const result = await signUp(
         data.name,
         data.email,
@@ -72,8 +94,8 @@ function HRSignUpForm() {
         data.company_role,
         data.organization_name,
         data.company_email,
-        hrEmail,
-        hiringManagerEmail,
+        data.hr_email,
+        data.hiring_manager_email,
         token
       )
       
@@ -97,6 +119,7 @@ function HRSignUpForm() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center justify-center py-12 px-4">
       <div className="w-full max-w-lg flex flex-col gap-6">
+        
         <button
           type="button"
           onClick={() => router.push('/')}
@@ -106,12 +129,16 @@ function HRSignUpForm() {
           Back
         </button>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        {/* Wrapped the main card in a <form> tag */}
+        <form 
+          onSubmit={form.handleSubmit(onSubmit)} 
+          className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden"
+        >
           <div className="p-6 sm:p-8 flex flex-col">
             <div className="mb-6 text-center">
               <h1 className="headline-platform text-2xl sm:text-3xl mb-2 !font-semibold text-[#2D2DDD]">Employer Signup</h1>
               <p className="text-slate-600 font-figtree text-sm">
-              Build your high-performance team with OptioHire
+                Build your high-performance team with OptioHire
               </p>
             </div>
 
@@ -127,7 +154,11 @@ function HRSignUpForm() {
               ))}
             </div>
 
-            {/* Step 2: Credentials */}
+            {/* Hidden Inputs managed by React Hook Form */}
+            <input type="hidden" {...form.register('hr_email')} />
+            <input type="hidden" {...form.register('hiring_manager_email')} />
+
+            {/* --- STEP 2: Credentials --- */}
             {step === 2 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
@@ -191,9 +222,7 @@ function HRSignUpForm() {
 
                 <button
                   type="button"
-                  onClick={async () => {
-                    if (await form.trigger(['name', 'email', 'password', 'confirmPassword'])) setStep(3)
-                  }}
+                  onClick={handleStep2Next}
                   className="w-full bg-[#2D2DDD] text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors font-figtree"
                 >
                   Continue
@@ -201,7 +230,7 @@ function HRSignUpForm() {
               </div>
             )}
 
-            {/* Step 3: Company Details */}
+            {/* --- STEP 3: Company Details --- */}
             {step === 3 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
@@ -231,14 +260,12 @@ function HRSignUpForm() {
 
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setStep(2)} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium">Back</button>
-                  <button type="button" onClick={async () => {
-                    if (await form.trigger(['organization_name', 'company_email'])) setStep(4)
-                  }} className="flex-1 bg-[#2D2DDD] text-white py-3 rounded-xl font-medium">Next</button>
+                  <button type="button" onClick={handleStep3Next} className="flex-1 bg-[#2D2DDD] text-white py-3 rounded-xl font-medium">Next</button>
                 </div>
               </div>
             )}
 
-            {/* Step 4: Confirmation */}
+            {/* --- STEP 4: Confirmation --- */}
             {step === 4 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
@@ -261,15 +288,20 @@ function HRSignUpForm() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Role</span>
-                    <span className="font-bold text-blue-600 uppercase">{form.watch('company_role')}</span>
+                    <span className="font-bold text-blue-600 uppercase">{form.watch('company_role')?.replace('_', ' ')}</span>
                   </div>
                 </div>
 
-                {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-600 text-sm"><AlertCircle className="w-4 h-4" />{error}</div>}
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-600 text-sm">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setStep(3)} className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors">Back</button>
-                  <button type="submit" onClick={form.handleSubmit(onSubmit)} disabled={isLoading} className="flex-1 bg-[#2D2DDD] text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-lg shadow-blue-600/20">
+                  <button type="submit" disabled={isLoading} className="flex-1 bg-[#2D2DDD] text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-lg shadow-blue-600/20">
                     {isLoading ? 'Creating...' : 'Create Account'}
                   </button>
                 </div>
@@ -282,7 +314,7 @@ function HRSignUpForm() {
                 </p>
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   )
@@ -290,7 +322,7 @@ function HRSignUpForm() {
 
 export default function HRSignUpPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen w-full flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+    <Suspense fallback={<div className="min-h-screen w-full flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-4 border-[#2D2DDD] border-t-transparent rounded-full animate-spin"></div></div>}>
       <HRSignUpForm />
     </Suspense>
   )
