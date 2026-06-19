@@ -20,12 +20,11 @@ const employerSignUpSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
   confirmPassword: z.string(),
-  company_role: z.enum(['hr', 'hiring_manager']),
+  company_role: z.enum(['hr']),
   organization_name: z.string().min(2, 'Organization name is required'),
   company_email: z.string().email('Please enter a valid company email'),
-  // These still exist in the schema to validate the final API payload
-  hr_email: z.string().email('Invalid HR email'),
-  hiring_manager_email: z.string().email('Invalid hiring manager email'),
+  hr_email: z.string().email().optional(),
+  hiring_manager_email: z.string().email().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -48,8 +47,6 @@ function HRSignUpForm() {
     resolver: zodResolver(employerSignUpSchema),
     defaultValues: {
       company_role: 'hr',
-      hr_email: '',
-      hiring_manager_email: ''
     }
   })
 
@@ -96,6 +93,10 @@ function HRSignUpForm() {
       const token = await executeRecaptcha('signup_hr')
       if (!token) throw new Error('Failed to obtain recaptcha token')
 
+      // Derive hr_email and hiring_manager_email from company_email if not provided
+      const hrEmail = data.hr_email || data.company_email
+      const hiringManagerEmail = data.hiring_manager_email || data.company_email
+
       const result = await signUp(
         data.name,
         data.email,
@@ -103,8 +104,8 @@ function HRSignUpForm() {
         data.company_role,
         data.organization_name,
         data.company_email,
-        data.hr_email,
-        data.hiring_manager_email,
+        hrEmail,
+        hiringManagerEmail,
         token
       )
       
@@ -246,7 +247,6 @@ function HRSignUpForm() {
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-figtree">Your Role *</label>
                   <select {...form.register('company_role')} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm bg-white">
                     <option value="hr">HR Manager</option>
-                    <option value="hiring_manager">Hiring Manager</option>
                   </select>
                 </div>
 
