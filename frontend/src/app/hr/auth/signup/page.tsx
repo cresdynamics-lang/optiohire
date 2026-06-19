@@ -48,7 +48,6 @@ function HRSignUpForm() {
     resolver: zodResolver(employerSignUpSchema),
     defaultValues: {
       company_role: 'hr',
-      // Initialize these so React Hook Form knows they exist without needing DOM inputs
       hr_email: '',
       hiring_manager_email: ''
     }
@@ -62,28 +61,25 @@ function HRSignUpForm() {
     if (isValid) setStep(3)
   }
 
-  const handleStep3Next = async () => {
-    // 1. Trigger validation ONLY on the visible fields
+  const handleStep3Next = async () => {    
     const isStep3Valid = await form.trigger(['company_role', 'organization_name', 'company_email'])
+    console.log("🚀 Validating Step 3 fields:", isStep3Valid)
 
-    // 2. DEBUG TRAP: If it fails, log exactly what React Hook Form is complaining about
     if (!isStep3Valid) {
       console.log("🚨 Step 3 Validation Failed! Errors:", form.formState.errors)
-      return // Stop execution here if invalid
+      return 
     }
 
-    // 3. CLEVER LOGIC: Since 'email' and 'company_email' are already validated by Zod,
-    // we safely copy them into the hidden schema fields without risking a silent failure.
+    console.log("✅ Step 3 Validation Passed! Current form values:", form.getValues())
+
     const currentValues = form.getValues()
     const role = currentValues.company_role
     const personalEmail = currentValues.email
     const companyEmail = currentValues.company_email
 
-    // Inject the values directly into state. No hidden HTML inputs needed.
     form.setValue('hr_email', role === 'hr' ? personalEmail : companyEmail)
     form.setValue('hiring_manager_email', role === 'hiring_manager' ? personalEmail : companyEmail)
 
-    // 4. Move to the next step
     setStep(4)
   }
 
