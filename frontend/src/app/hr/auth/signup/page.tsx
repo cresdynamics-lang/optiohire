@@ -63,23 +63,28 @@ function HRSignUpForm() {
   }
 
   const handleStep3Next = async () => {
-    // Only validate the fields visible on Step 3
+    // 1. Trigger validation ONLY on the visible fields
     const isStep3Valid = await form.trigger(['company_role', 'organization_name', 'company_email'])
 
-    if (isStep3Valid) {
-      // CLEVER LOGIC: Since 'email' and 'company_email' are already validated by Zod,
-      // we can safely copy them into the hidden schema fields without risking a silent failure.
-      const currentValues = form.getValues()
-      const role = currentValues.company_role
-      const personalEmail = currentValues.email
-      const companyEmail = currentValues.company_email
-
-      // Inject the values directly into state. No hidden HTML inputs needed.
-      form.setValue('hr_email', role === 'hr' ? personalEmail : companyEmail)
-      form.setValue('hiring_manager_email', role === 'hiring_manager' ? personalEmail : companyEmail)
-
-      setStep(4)
+    // 2. DEBUG TRAP: If it fails, log exactly what React Hook Form is complaining about
+    if (!isStep3Valid) {
+      console.log("🚨 Step 3 Validation Failed! Errors:", form.formState.errors)
+      return // Stop execution here if invalid
     }
+
+    // 3. CLEVER LOGIC: Since 'email' and 'company_email' are already validated by Zod,
+    // we safely copy them into the hidden schema fields without risking a silent failure.
+    const currentValues = form.getValues()
+    const role = currentValues.company_role
+    const personalEmail = currentValues.email
+    const companyEmail = currentValues.company_email
+
+    // Inject the values directly into state. No hidden HTML inputs needed.
+    form.setValue('hr_email', role === 'hr' ? personalEmail : companyEmail)
+    form.setValue('hiring_manager_email', role === 'hiring_manager' ? personalEmail : companyEmail)
+
+    // 4. Move to the next step
+    setStep(4)
   }
 
   // --- Final Submit ---
