@@ -56,7 +56,6 @@ function HRSignUpForm() {
   // --- Step Handlers ---
   
   const handleStep2Next = async () => {
-    // Only validate the fields visible on Step 2
     const isValid = await form.trigger(['name', 'email', 'password', 'confirmPassword'])
     if (isValid) setStep(3)
   }
@@ -83,7 +82,6 @@ function HRSignUpForm() {
     setStep(4)
   }
 
-  // --- Final Submit ---
 
   const onSubmit = async (data: EmployerSignUpData) => {
     if (!executeRecaptcha) {
@@ -260,7 +258,7 @@ function HRSignUpForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-figtree">Company Email *</label>
-                  <input type="email" {...form.register('company_email')} placeholder="info@company.com" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" />
+                  <input type="email" {...form.register('company_email')} placeholder="Company email" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-figtree text-sm" />
                   {form.formState.errors.company_email && <p className="text-sm text-red-500 mt-1">{form.formState.errors.company_email.message}</p>}
                 </div>
 
