@@ -238,7 +238,7 @@ function HRSignUpForm() {
             {step === 3 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <h2 className="headline-platform text-xl !font-semibold mb-2">Company Information</h2>
+                  <h2 className="headline-platform text-xl !font-semibold mb-2">Company Details</h2>
                   <p className="text-gray-600 font-figtree text-sm">Tell us about your organization</p>
                 </div>
 
