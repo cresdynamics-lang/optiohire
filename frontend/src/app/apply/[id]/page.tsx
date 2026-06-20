@@ -79,7 +79,7 @@ export default function ApplyPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-figtree">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-4xl">
         <Link
           href={`/jobs/${params.id}`}
           className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
