@@ -9,7 +9,8 @@ import {
   deleteJobPosting,
   getPublicJobPostings,
   getPublicJobPostingById,
-  getPublicCompanyJobPostings
+  getPublicCompanyJobPostings,
+  generateQuestions
 } from '../api/jobPostingsController.js'
 
 export const router = Router()
@@ -20,6 +21,7 @@ router.get('/public/:id', getPublicJobPostingById)
 router.get('/public/company/:companyId', getPublicCompanyJobPostings)
 
 // Authenticated routes
+router.post('/generate-questions', authenticate, requireHR, generateQuestions)
 router.get('/', authenticate, requireHR, getJobPostings)
 router.post('/', authenticate, requireHR, createJobPosting)
 router.get('/:id', authenticate, requireHR, getJobPostingById)

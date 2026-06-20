@@ -46,7 +46,7 @@ import { cache, cacheKeys } from '../utils/redis.js'
 
 export async function submitPublicApplication(req: Request, res: Response) {
   try {
-    const { job_posting_id, candidate_name, email, resume_url, cover_letter, phone, captchaToken, github_url, linkedin_url, portfolio_url } = req.body || {}
+    const { job_posting_id, candidate_name, email, resume_url, cover_letter, phone, captchaToken, github_url, linkedin_url, portfolio_url, custom_answers } = req.body || {}
 
     // Verify captcha
     // In test mode, unit/integration tests don't send captchaToken.
@@ -96,10 +96,10 @@ export async function submitPublicApplication(req: Request, res: Response) {
     if (existing.length > 0) return res.status(409).json({ error: 'Already applied' })
 
     const { rows: newApp } = await query<{ application_id: string }>(
-      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json, github_url, linkedin_url, portfolio_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10)
+      `INSERT INTO applications (job_posting_id, company_id, candidate_name, email, phone, resume_url, parsed_resume_json, github_url, linkedin_url, portfolio_url, custom_answers)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11::jsonb)
        RETURNING application_id`,
-      [job_posting_id, companyId, candidate_name, email.toLowerCase(), phone || null, resume_url, JSON.stringify({ cover_letter: cover_letter || null }), github_url || null, linkedin_url || null, portfolio_url || null]
+      [job_posting_id, companyId, candidate_name, email.toLowerCase(), phone || null, resume_url, JSON.stringify({ cover_letter: cover_letter || null }), github_url || null, linkedin_url || null, portfolio_url || null, JSON.stringify(custom_answers || {})]
     )
 
     const applicationId = newApp[0].application_id

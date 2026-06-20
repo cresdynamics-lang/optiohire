@@ -29,13 +29,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title,
         description,
         type: 'website',
-        images: job.job_poster_url ? [{ url: job.job_poster_url }] : [],
+        images: job.job_poster_url ? [{ url: job.job_poster_url }] : (job.company_logo_url ? [{ url: job.company_logo_url }] : []),
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description,
-        images: job.job_poster_url ? [job.job_poster_url] : [],
+        images: job.job_poster_url ? [job.job_poster_url] : (job.company_logo_url ? [job.company_logo_url] : []),
       }
     }
   } catch (error) {

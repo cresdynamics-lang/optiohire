@@ -8,6 +8,8 @@ import {
   Briefcase, ChevronRight, Share2, AlertCircle, Sparkles, Globe, Linkedin, Twitter
 } from 'lucide-react'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Job {
   id: string
@@ -270,31 +272,29 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
               </div>
             </div>
 
-            {/* About the role */}
             <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm">
               <h2 className="mb-4 text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-blue-600" />
                 About the Role
               </h2>
-              <div className="prose prose-slate prose-sm max-w-none">
-                {job.job_description.split('\n').filter(Boolean).map((para, i) => (
-                  <p key={i} className="mb-3 text-sm leading-relaxed text-slate-600">{para}</p>
-                ))}
+              <div className="prose prose-slate prose-sm max-w-none prose-p:leading-relaxed prose-li:marker:text-blue-500">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {job.job_description || ''}
+                </ReactMarkdown>
               </div>
             </div>
 
-            {/* Responsibilities */}
             {job.responsibilities && (
               <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm">
-                <h2 className="mb-4 text-lg font-bold text-slate-900">Responsibilities</h2>
-                <ul className="space-y-2.5">
-                  {job.responsibilities.split('\n').filter(Boolean).map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-slate-600">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
-                      <span>{item.replace(/^[-•*]\s*/, '')}</span>
-                    </li>
-                  ))}
-                </ul>
+                <h2 className="mb-4 text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  Responsibilities
+                </h2>
+                <div className="prose prose-slate prose-sm max-w-none prose-p:leading-relaxed prose-li:marker:text-emerald-500">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {job.responsibilities || ''}
+                  </ReactMarkdown>
+                </div>
               </div>
             )}
 

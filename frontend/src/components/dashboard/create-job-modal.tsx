@@ -14,6 +14,7 @@ import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useAuth } from '@/hooks/use-auth'
+import { ScreeningQuestionsBuilder } from './screening-questions-builder'
 
 interface CreateJobModalProps {
   isOpen: boolean
@@ -425,6 +426,16 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
                       </p>
                     </div>
                     
+                  </div>
+
+                  {/* Screening Questions */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <ScreeningQuestionsBuilder 
+                      questions={formData.custom_questions || []}
+                      onChange={(questions) => handleInputChange('custom_questions', questions as any)}
+                      jobTitle={formData.job_title}
+                      jobDescription={formData.job_description}
+                    />
                   </div>
 
                   {/* Webhook Status */}

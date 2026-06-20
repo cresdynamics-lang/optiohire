@@ -248,7 +248,9 @@ export function CreateJobSection() {
           required_skills: formData.required_skills,
           application_deadline: formData.application_deadline,
           meeting_link: formData.interview_meeting_link || undefined,
-          job_poster_url: formData.job_poster_url || undefined
+          job_poster_url: formData.job_poster_url || undefined,
+          // custom_questions are optional — strip any blank ones before sending
+          custom_questions: (formData.custom_questions || []).filter((q: any) => q.question?.trim())
         })
       })
       
@@ -372,7 +374,7 @@ export function CreateJobSection() {
                 <div className="space-y-2">
                   <Label htmlFor="job_description" className="text-sm font-semibold flex justify-between">
                     Job Description 
-                    <span className="text-slate-400 font-normal text-xs">(min 50 characters)</span>
+                    <span className="text-slate-400 font-normal text-xs">Supports Markdown (**, -, *)</span>
                   </Label>
                   <Textarea
                     id="job_description"
@@ -582,65 +584,68 @@ export function CreateJobSection() {
 
       {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-lg bg-white border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
-          <div className="bg-indigo-600 p-10 sm:p-14 flex flex-col items-center justify-center text-white">
-            <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-6">
-              <CheckCircle className="w-12 h-12 text-white" />
+        <DialogContent className="sm:max-w-2xl w-full bg-white border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+          <DialogTitle className="sr-only">Job Published Successfully</DialogTitle>
+          {/* Header */}
+          <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-purple-700 px-12 py-16 flex flex-col items-center justify-center text-white relative overflow-hidden">
+            {/* Decorative circles */}
+            <div className="absolute top-[-60px] right-[-60px] w-48 h-48 rounded-full bg-white/10" />
+            <div className="absolute bottom-[-40px] left-[-40px] w-36 h-36 rounded-full bg-white/10" />
+            <div className="w-28 h-28 rounded-full bg-white/20 flex items-center justify-center mb-8 ring-4 ring-white/30 shadow-2xl relative z-10">
+              <CheckCircle className="w-16 h-16 text-white" strokeWidth={1.5} />
             </div>
-            <h2 className="text-3xl font-bold text-center">Published!</h2>
-            <p className="text-indigo-100 text-center mt-3 text-lg leading-relaxed">Your job posting is now live and ready for applicants.</p>
+            <h2 className="text-5xl font-extrabold text-center tracking-tight relative z-10">Published! 🎉</h2>
+            <p className="text-indigo-100 text-center mt-4 text-xl leading-relaxed max-w-md relative z-10">Your job posting is now live and ready for applicants to apply.</p>
           </div>
 
-          <div className="p-8 sm:p-10 space-y-8">
-            <div className="space-y-6">
+          <div className="p-10 sm:p-12 space-y-8">
+            <div className="space-y-7">
               {/* Share Link */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm text-slate-700">Public Apply Link</h4>
-                  {copiedLink && <span className="text-xs font-bold text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Copied!</span>}
+                  <h4 className="font-bold text-base text-slate-700">🔗 Public Apply Link</h4>
+                  {copiedLink && <span className="text-sm font-bold text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Copied!</span>}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 overflow-hidden rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm font-mono text-slate-700 whitespace-nowrap overflow-ellipsis">
+                  <div className="flex-1 overflow-hidden rounded-xl bg-slate-50 border-2 border-slate-200 px-5 py-4 text-sm font-mono text-slate-700 truncate">
                     {typeof window !== 'undefined' ? `${window.location.origin}/apply/${createdJobInfo?.jobId}` : ''}
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="h-11 px-4 rounded-xl border-slate-200 hover:bg-slate-50 gap-2 font-medium"
-                      onClick={() => copyToClipboard(`${window.location.origin}/apply/${createdJobInfo?.jobId}`, 'link')}
-                    >
-                      <Copy className="h-4 w-4 text-slate-600" />
-                      Copy
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    className="h-14 px-6 rounded-xl border-2 border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 gap-2 font-semibold text-slate-700 shrink-0"
+                    onClick={() => copyToClipboard(`${window.location.origin}/apply/${createdJobInfo?.jobId}`, 'link')}
+                  >
+                    <Copy className="h-5 w-5" />
+                    Copy Link
+                  </Button>
                 </div>
               </div>
 
               {/* Application Email */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm text-slate-700">Application Email</h4>
-                  {copiedEmail && <span className="text-xs font-bold text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Copied!</span>}
+                  <h4 className="font-bold text-base text-slate-700">📧 Application Email</h4>
+                  {copiedEmail && <span className="text-sm font-bold text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Copied!</span>}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 overflow-hidden rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm font-mono text-slate-700 whitespace-nowrap overflow-ellipsis">
+                  <div className="flex-1 overflow-hidden rounded-xl bg-slate-50 border-2 border-slate-200 px-5 py-4 text-sm font-mono text-slate-700 truncate">
                     {APPLICATION_INBOX_EMAIL}
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="h-11 px-4 rounded-xl border-slate-200 hover:bg-slate-50 gap-2 font-medium"
-                      onClick={() => copyToClipboard(APPLICATION_INBOX_EMAIL, 'email')}
-                    >
-                      <Copy className="h-4 w-4 text-slate-600" />
-                      Copy
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    className="h-14 px-6 rounded-xl border-2 border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 gap-2 font-semibold text-slate-700 shrink-0"
+                    onClick={() => copyToClipboard(APPLICATION_INBOX_EMAIL, 'email')}
+                  >
+                    <Copy className="h-5 w-5" />
+                    Copy
+                  </Button>
                 </div>
-                <p className="text-xs text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-100 mt-2">
-                  <Info className="w-4 h-4 inline-block mr-1 text-blue-600" />
-                  Candidates should use subject: <strong className="text-slate-800">{createdJobInfo?.jobTitle} - {createdJobInfo?.companyName}</strong>
-                </p>
+                <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 mt-1">
+                  <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-slate-600">
+                    Candidates should use subject: <strong className="text-slate-800">{createdJobInfo?.jobTitle} - {createdJobInfo?.companyName}</strong>
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -649,7 +654,8 @@ export function CreateJobSection() {
                 setShowSuccessDialog(false)
                 router.push('/hr/jobs')
               }}
-              className="w-full bg-slate-900 text-white h-12 rounded-xl mt-4"            >
+              className="w-full bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white h-14 rounded-xl text-base font-semibold shadow-lg mt-2"
+            >
               Return to Dashboard
             </Button>
           </div>

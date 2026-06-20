@@ -7,6 +7,14 @@ export interface Company {
   user_id: string
 }
 
+export interface CustomQuestion {
+  id: string
+  question: string
+  type: 'TEXT' | 'PARAGRAPH' | 'BOOLEAN' | 'MULTIPLE_CHOICE'
+  options?: string[]
+  required: boolean
+}
+
 export interface JobPosting {
   id: string
   created_at: string
@@ -24,6 +32,7 @@ export interface JobPosting {
   n8n_webhook_sent: boolean
   google_calendar_link?: string | null
   job_poster_url?: string | null
+  custom_questions?: CustomQuestion[]
 }
 
 export interface Applicant {
@@ -62,6 +71,7 @@ export interface JobPostingFormData {
   interview_meeting_link?: string
   application_deadline?: string
   job_poster_url?: string
+  custom_questions?: CustomQuestion[]
 }
 
 export interface WebhookPayload {
