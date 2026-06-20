@@ -43,7 +43,7 @@ jobs:
 
             echo "=== Restarting Frontend Service ==="
             pm2 delete optiohire-frontend 2>/dev/null || true
-            pm2 start npm --name "optiohire-frontend" -- run start -p 3000
+            pm2 start npm --name "optiohire-frontend" -- run start
             pm2 save
 
             echo "=== Deployment complete ==="
