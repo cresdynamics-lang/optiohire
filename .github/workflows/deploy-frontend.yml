@@ -1,4 +1,4 @@
-name: Deploy Frontend to Vercel
+name: Deploy Frontend to VPS
 
 on:
   push:
@@ -10,17 +10,41 @@ on:
 
 jobs:
   deploy:
-    name: Trigger Vercel Deployment
+    name: Deploy Frontend to VPS
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger Vercel Deploy Hook
-        run: |
-          echo "Triggering Vercel deployment..."
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.VERCEL_HOOK }}")
-          echo "Vercel hook response code: $RESPONSE"
-          if [ "$RESPONSE" != "200" ] && [ "$RESPONSE" != "201" ]; then
-            echo "❌ Vercel hook failed with status $RESPONSE"
-            exit 1
-          fi
-          echo "✅ Vercel deployment triggered successfully"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy Frontend via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          command_timeout: 20m
+          script: |
+            set -e
+            echo "=== Pulling latest code ==="
+            cd /var/www/optiohire
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+
+            echo "=== Building frontend ==="
+            cd /var/www/optiohire/frontend
+            # Pull environment variables if necessary (usually they are stored in .env.local on the server)
+            # If backend has them, you might want to link them or use a shared .env
+            
+            npm install
+            npm run build
+
+            echo "=== Restarting Frontend Service ==="
+            pm2 delete optiohire-frontend 2>/dev/null || true
+            pm2 start npm --name "optiohire-frontend" -- run start -p 3000
+            pm2 save
+
+            echo "=== Deployment complete ==="
+            pm2 list

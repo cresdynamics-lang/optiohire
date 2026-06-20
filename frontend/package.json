@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "next dev --turbo",
     "dev:clean": "rm -rf .next && next dev --turbo",
-    "build": "NEXT_IGNORE_LINT=true NEXT_IGNORE_TYPES=true next build --webpack",
+    "build": "cross-env NEXT_IGNORE_LINT=true NEXT_IGNORE_TYPES=true next build --webpack",
     "build:prod": "next build --webpack",
     "build:analyze": "cross-env ANALYZE=true next build --webpack",
     "build:low-memory": "next build --webpack",
