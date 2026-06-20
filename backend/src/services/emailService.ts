@@ -1876,7 +1876,7 @@ The OptioHire Team
    * Welcome email from OptioHire – sent after email is confirmed
    */
   async sendWelcomeEmail(email: string, name: string) {
-    const appUrl = (process.env.FRONTEND_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.FRONTEND_URL || process.env.NEXTAUTH_URL || 'https://optiohire.com').replace(/\/$/, '')
     const dashboardUrl = `${appUrl}/hr`
     const html = `
 <!DOCTYPE html>
@@ -2771,6 +2771,93 @@ The OptioHire AI Team`;
       html,
       text: `Your account role has been updated to ${newRole}. Please reset your password to log in: ${resetLink}`,
       emailType: 'RoleUpdated'
+    });
+  }
+  async sendTalentPoolWelcomeEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    profileLink: string
+    jobsLink: string
+  }) {
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #1e293b; margin: 0;">Welcome to the OptioHire Talent Pool! 🎉</h2>
+        </div>
+        <div style="background-color: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <p style="color: #334155; font-size: 16px; margin-top: 0;">Hello ${data.candidateName},</p>
+          <p style="color: #334155; font-size: 16px;">Thanks for updating your profile! We have your details safely stored and you are now part of our exclusive Talent Pool.</p>
+          <p style="color: #334155; font-size: 16px;">This means you are now visible to our AI worker and HR recruiters. Since HRs are constantly posting jobs, once a perfect match is found, we will dispatch an email to you immediately.</p>
+          <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; margin: 20px 0;">
+            <h3 style="color: #166534; margin: 0 0 10px 0; font-size: 16px;">How to Improve Your Visibility & AI Score</h3>
+            <ul style="color: #166534; margin: 0; padding-left: 20px; font-size: 15px;">
+              <li style="margin-bottom: 5px;">Upload a <strong>Recommendation Letter</strong></li>
+              <li>Upload <strong>Certifications</strong> to verify your skills</li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.profileLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-right: 10px;">Confirm My Profile</a>
+            <a href="${data.jobsLink}" style="background-color: #475569; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Browse Open Jobs</a>
+          </div>
+          <p style="color: #334155; font-size: 16px;">We also encourage you to constantly check our jobs page in case any job that matches your preferences is uploaded.</p>
+          <p style="color: #334155; font-size: 16px; margin-bottom: 0;">Best regards,<br/>The OptioHire Team</p>
+        </div>
+      </div>
+    `;
+    await this.sendEmail({
+      to: data.candidateEmail,
+      subject: 'Welcome to the OptioHire Talent Pool!',
+      html,
+      text: `Hello ${data.candidateName},\n\nThanks for updating your profile! You are now in our Talent Pool and visible to HRs.\n\nView Profile: ${data.profileLink}\nBrowse Jobs: ${data.jobsLink}\n\nImprove your score by uploading certificates and recommendation letters on your dashboard!\n\nBest,\nThe OptioHire Team`,
+      emailType: 'TalentPoolWelcome'
+    });
+  }
+
+  async sendAdminUploadNotificationEmail(data: {
+    adminEmail: string
+    candidateName: string
+    documentType: string
+    dashboardLink: string
+  }) {
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>New Document Uploaded</h2>
+        <p>Candidate <strong>${data.candidateName}</strong> has uploaded a new <strong>${data.documentType}</strong>.</p>
+        <p><a href="${data.dashboardLink}">Review on Dashboard</a></p>
+      </div>
+    `;
+    await this.sendEmail({
+      to: data.adminEmail,
+      subject: `New ${data.documentType} Uploaded by ${data.candidateName}`,
+      html,
+      text: `Candidate ${data.candidateName} has uploaded a new ${data.documentType}. Review here: ${data.dashboardLink}`,
+      emailType: 'AdminUploadAlert'
+    });
+  }
+
+  async sendProfileCompletionReminderEmail(data: {
+    candidateEmail: string
+    candidateName: string
+    onboardingLink: string
+  }) {
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px;">
+        <h2 style="color: #e11d48; margin-top: 0;">Action Required: Complete Your Talent Profile</h2>
+        <p style="color: #4c0519; font-size: 16px;">Hello ${data.candidateName},</p>
+        <p style="color: #4c0519; font-size: 16px;">We noticed that your OptioHire candidate profile is incomplete. <strong>Currently, you are not in our Talent Pool and are invisible to our AI worker and HR recruiters.</strong></p>
+        <p style="color: #4c0519; font-size: 16px;">To fix this and get matched with exciting opportunities, please complete your profile by uploading your CV and adding a short bio.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${data.onboardingLink}" style="background-color: #e11d48; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Complete My Profile Now</a>
+        </div>
+        <p style="color: #4c0519; font-size: 16px; margin-bottom: 0;">Best regards,<br/>The OptioHire Team</p>
+      </div>
+    `;
+    await this.sendEmail({
+      to: data.candidateEmail,
+      subject: 'Action Required: Complete Your OptioHire Profile',
+      html,
+      text: `Hello ${data.candidateName},\n\nPlease complete your profile to become visible to recruiters and our AI matching system.\n\nComplete Profile: ${data.onboardingLink}\n\nBest,\nThe OptioHire Team`,
+      emailType: 'ProfileCompletionReminder'
     });
   }
 }

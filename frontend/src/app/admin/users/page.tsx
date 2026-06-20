@@ -29,6 +29,7 @@ interface User {
     hr_email: string
     hiring_manager_email: string
   } | null
+  in_talent_pool?: boolean
 }
 
 export default function AdminUsersPage() {
@@ -305,6 +306,11 @@ export default function AdminUsersPage() {
                             <Badge variant={userItem.is_active ? 'default' : 'destructive'}>
                               {userItem.is_active ? 'Active' : 'Inactive'}
                             </Badge>
+                            {userItem.role === 'candidate' && (
+                              <Badge variant={userItem.in_talent_pool ? 'outline' : 'destructive'} className={userItem.in_talent_pool ? 'border-green-500 text-green-600' : ''}>
+                                {userItem.in_talent_pool ? 'In Talent Pool' : 'Incomplete Profile'}
+                              </Badge>
+                            )}
                           </div>
                           <p className="mt-1 text-sm text-muted-foreground">
                             Created: {new Date(userItem.created_at).toLocaleDateString()}

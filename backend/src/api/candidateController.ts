@@ -614,6 +614,31 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
 
     const approval = await certRepo.submitForApproval(actualSkillId, certificateUrl)
     
+    // Notify admins
+    try {
+      const { query } = await import('../db/index.js');
+      const { rows: admins } = await query(`SELECT email FROM users WHERE role IN ('admin', 'superadmin')`);
+      const authReq = req as any;
+      const userId = authReq.userId;
+      const { rows: userRows } = await query(`SELECT name FROM users WHERE user_id = $1`, [userId]);
+      const candidateName = userRows[0]?.name || 'A candidate';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://optiohire.com';
+      
+      const { EmailService } = await import('../services/emailService.js');
+      const emailService = new EmailService();
+      
+      for (const admin of admins) {
+        await emailService.sendAdminUploadNotificationEmail({
+          adminEmail: admin.email,
+          candidateName,
+          documentType: 'Certificate',
+          dashboardLink: `${frontendUrl}/admin/certificates`
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to send admin notification for certificate upload', err);
+    }
+    
     res.status(201).json({
       success: true,
       message: 'Certificate submitted for admin review.',
@@ -675,9 +700,47 @@ export const onboardProfile = async (req: Request, res: Response): Promise<void>
     await candidateRepo.setInitialAlternativeScore(profile.profile_id, score)
     updatedProfile.total_score = score
 
+    // Trigger AI background parsing and Talent Pool Sync
+    if (cvUrl || bio) {
+      try {
+        const { rows: userRows } = await query('SELECT email, name FROM users WHERE user_id = $1', [userId])
+        if (userRows.length > 0) {
+          const { aiQueue } = await import('../queues/aiQueue.js')
+          await aiQueue.add('parse-candidate-profile', { 
+            profileId: profile.profile_id, 
+            userId, 
+            cvUrl: cvUrl || profile.cv_url, 
+            bio: bio || profile.bio, 
+            jobCategory: jobCategory || profile.job_category,
+            email: userRows[0].email,
+            name: userRows[0].name
+          })
+
+          // Notify admins of new profile document upload
+          if (cvUrl || coverLetterUrl || recommendationLetterUrl) {
+            const { EmailService } = await import('../services/emailService.js')
+            const emailService = new EmailService()
+            const frontendUrl = process.env.FRONTEND_URL || 'https://optiohire.com'
+            const { rows: admins } = await query("SELECT email FROM users WHERE role = 'admin' AND is_active = true")
+            
+            for (const admin of admins) {
+              await emailService.sendAdminUploadNotificationEmail({
+                adminEmail: admin.email,
+                candidateName: userRows[0].name || userRows[0].email.split('@')[0],
+                documentType: 'Profile Documents (CV/Cover Letter/Rec Letter)',
+                dashboardLink: `${frontendUrl}/admin/candidates`
+              }).catch(err => console.warn('Failed to send admin notification for profile upload', err))
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to enqueue parse-candidate-profile job or notify admins', err)
+      }
+    }
+
     res.status(200).json({
       success: true,
-      message: 'Profile onboarding completed successfully.',
+      message: 'Profile onboarding completed successfully. Parsing is queued.',
       profile: updatedProfile
     })
   } catch (error: any) {

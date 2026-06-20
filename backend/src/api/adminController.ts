@@ -54,17 +54,18 @@ export async function getAllUsers(req: Request, res: Response) {
     
     // Admin can see passwords (password_hash) - this is for admin dashboard
     const selectFields = [
-      'user_id',
-      'email',
-      'password_hash', // Admin can see passwords
-      'role',
-      hasUsername ? 'username' : 'NULL::text as username',
-      hasName ? 'name' : 'NULL::text as name',
-      hasCompanyRole ? 'company_role' : 'NULL::text as company_role',
-      'is_active',
-      'created_at',
-      hasApprovalStatus ? 'admin_approval_status' : 'NULL::text as admin_approval_status',
-      hasPermissions ? 'admin_permissions' : 'NULL::jsonb as admin_permissions'
+      'users.user_id',
+      'users.email',
+      'users.password_hash', // Admin can see passwords
+      'users.role',
+      hasUsername ? 'users.username' : 'NULL::text as username',
+      hasName ? 'users.name' : 'NULL::text as name',
+      hasCompanyRole ? 'users.company_role' : 'NULL::text as company_role',
+      'users.is_active',
+      'users.created_at',
+      hasApprovalStatus ? 'users.admin_approval_status' : 'NULL::text as admin_approval_status',
+      hasPermissions ? 'users.admin_permissions' : 'NULL::jsonb as admin_permissions',
+      'EXISTS (SELECT 1 FROM talent_pool tp WHERE LOWER(tp.email) = LOWER(users.email)) as in_talent_pool'
     ].join(', ')
 
     const { rows: users } = await query<{
@@ -79,11 +80,12 @@ export async function getAllUsers(req: Request, res: Response) {
       created_at: string
       admin_approval_status?: string | null
       admin_permissions?: Record<string, boolean> | null
+      in_talent_pool: boolean
     }>(
       `SELECT ${selectFields}
        FROM users 
-       ${whereClause}
-       ORDER BY created_at DESC 
+       ${whereClause ? whereClause.replace(/(\w+)(?=\s*(?:=|ILIKE|IS))/g, 'users.$1') : ''}
+       ORDER BY users.created_at DESC 
        LIMIT $1 OFFSET $2`,
       params
     )

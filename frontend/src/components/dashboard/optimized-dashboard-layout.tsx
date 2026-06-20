@@ -13,6 +13,7 @@ import { NotificationProvider, useNotifications } from '@/contexts/notification-
 import { Sidebar } from './sidebar'
 import { ChatbotWidget } from './chatbot-widget'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { ProfileCompletenessBanner } from '@/components/candidate/ProfileCompletenessBanner'
 
 // Simple Error Boundary component
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
@@ -895,6 +896,9 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
             </div>
           </div>
         </div>
+
+        <ProfileCompletenessBanner />
+
         <div className="relative z-20 mx-auto w-full max-w-[1440px] px-3 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:p-8 lg:px-10 lg:pb-12">
           <ErrorBoundary fallback={<SectionLoader sectionName={activeSection} />}>
             <div className="min-w-0">

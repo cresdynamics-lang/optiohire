@@ -56,6 +56,10 @@ export class AIWorker {
     if (job.name === 'talent-pool-match') {
       return await this.processTalentPoolMatch(job)
     }
+    
+    if (job.name === 'parse-candidate-profile') {
+      return await this.processCandidateProfile(job)
+    }
 
     const { applicationId } = job.data
     if (!applicationId) {
@@ -215,6 +219,61 @@ export class AIWorker {
     }
     
     logger.info(`✅ [Talent Pool Match] Completed scan for job ${jobPostingId}`)
+  }
+
+  private async processCandidateProfile(job: Job) {
+    const { profileId, userId, cvUrl, bio, jobCategory, email, name } = job.data;
+    if (!profileId || !cvUrl) {
+      logger.warn('⚠️ Missing profileId or cvUrl in parse-candidate-profile');
+      return;
+    }
+
+    logger.info(`📄 Parsing candidate profile CV: ${profileId}`);
+    const cvResult = await this.parseResume(cvUrl);
+    
+    if (cvResult) {
+      const skills = (cvResult as any).skills || [];
+      const summary = (cvResult as any).summary || bio || '';
+      
+      // Update parsed JSON in candidate_profiles
+      await query(
+        `UPDATE candidate_profiles SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{parsed_cv}', $1::jsonb) WHERE profile_id = $2`,
+        [JSON.stringify(cvResult), profileId]
+      );
+      
+      // Upsert into talent_pool
+      await query(`
+        INSERT INTO talent_pool (email, candidate_name, resume_url, parsed_resume_json, skills, experience_summary, updated_at)
+        VALUES ($1, $2, $3, $4::jsonb, $5, $6, NOW())
+        ON CONFLICT (email) DO UPDATE SET
+            candidate_name = EXCLUDED.candidate_name,
+            resume_url = EXCLUDED.resume_url,
+            parsed_resume_json = EXCLUDED.parsed_resume_json,
+            skills = CASE WHEN array_length(EXCLUDED.skills, 1) > 0 THEN EXCLUDED.skills ELSE talent_pool.skills END,
+            experience_summary = COALESCE(EXCLUDED.experience_summary, talent_pool.experience_summary),
+            updated_at = NOW()
+      `, [
+        email, 
+        name, 
+        cvUrl, 
+        JSON.stringify(cvResult), 
+        skills, 
+        summary
+      ]);
+
+      // Send email
+      const frontendUrl = process.env.FRONTEND_URL || 'https://optiohire.com';
+      await emailService.sendTalentPoolWelcomeEmail({
+        candidateEmail: email,
+        candidateName: name || email.split('@')[0],
+        profileLink: `${frontendUrl}/candidate/profile`,
+        jobsLink: `${frontendUrl}/candidate/jobs`
+      }).catch(err => logger.error(`❌ Failed to send Talent Pool Welcome email: ${err.message}`));
+
+      logger.info(`✅ Candidate Profile parsed and synced to Talent Pool: ${email}`);
+    } else {
+      logger.error(`❌ CV parsing returned null for profile: ${profileId}`);
+    }
   }
 
   private async fetchApplication(applicationId: string) {
