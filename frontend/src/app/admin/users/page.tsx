@@ -112,25 +112,7 @@ export default function AdminUsersPage() {
     try {
       const token = localStorage.getItem('token')
 
-      if (updates.role) {
-        const response = await fetch(`/api/admin/users/${userId}/role`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ role: updates.role })
-        })
-        const data = await response.json()
-        if (response.ok) {
-           alert(data.message || 'Role updated successfully.')
-           loadUsers()
-           return
-        } else {
-           alert(data.error || 'Failed to update role')
-           return
-        }
-      }
+
 
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
