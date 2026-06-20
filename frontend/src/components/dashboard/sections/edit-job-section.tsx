@@ -88,11 +88,19 @@ export function EditJobSection() {
   }
 
   const addSkill = () => {
-    if (newSkill.trim() && !formData.required_skills?.includes(newSkill.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        required_skills: [...(prev.required_skills || []), newSkill.trim()]
-      }))
+    if (newSkill.trim()) {
+      const currentSkills = formData.required_skills || [];
+      const skillsToAdd = newSkill
+        .split(/[,\n]+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0 && !currentSkills.includes(s))
+
+      if (skillsToAdd.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          required_skills: [...(prev.required_skills || []), ...skillsToAdd]
+        }))
+      }
       setNewSkill('')
     }
   }

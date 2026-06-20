@@ -11,7 +11,7 @@ export function ProfileCompletenessBanner() {
 
   useEffect(() => {
     // Only check for candidates
-    if (!user || (user.role !== 'candidate' && user.company_role !== 'candidate')) return
+    if (!user || (user.role !== 'candidate' && user.companyRole !== 'candidate')) return
 
     const checkProfile = async () => {
       try {

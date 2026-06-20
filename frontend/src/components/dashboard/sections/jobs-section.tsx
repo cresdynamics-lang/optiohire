@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
   Briefcase, Plus, Calendar, Users, UserCheck, ExternalLink, Edit, Trash2, RefreshCw, ArrowUpRight, 
-  LayoutGrid, Table as TableIcon, List, ChevronLeft, ChevronRight, MoreVertical 
+  LayoutGrid, Table as TableIcon, List, ChevronLeft, ChevronRight, MoreVertical, Sparkles 
 } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -44,6 +44,7 @@ export function JobsSection() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [jobToDelete, setJobToDelete] = useState<JobPosting | null>(null)
+  const [showFirstJobModal, setShowFirstJobModal] = useState(false)
 
   const loadJobs = useCallback(async () => {
     if (!user) return
@@ -61,6 +62,13 @@ export function JobsSection() {
       const data = await response.json()
       const jobPostings = data.jobs || []
       
+      if (jobPostings.length === 0) {
+        const hasSeenPrompt = localStorage.getItem('hasSeenFirstJobPrompt')
+        if (!hasSeenPrompt) {
+          setShowFirstJobModal(true)
+        }
+      }
+
       setJobs(jobPostings.map((job: any) => ({
         ...job,
         id: job.job_posting_id || job.id,
@@ -177,7 +185,23 @@ export function JobsSection() {
       {isLoading ? (
         <div className="flex justify-center py-12"><RefreshCw className="w-8 h-8 animate-spin text-[#2D2DDD]" /></div>
       ) : jobs.length === 0 ? (
-        <div className="text-center py-16"><Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" /><h3 className="text-xl font-medium">No jobs posted</h3></div>
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-3xl border border-slate-200/90 shadow-sm mt-6">
+          <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
+            <Briefcase className="w-10 h-10 text-[#2D2DDD]" />
+          </div>
+          <h3 className="text-2xl font-bold font-figtree text-slate-900 mb-2">Post Your First Job</h3>
+          <p className="text-slate-500 max-w-md mx-auto mb-8">
+            You haven't posted any jobs yet. Create your first job posting to start receiving AI-screened applications.
+          </p>
+          <Button 
+            size="lg" 
+            className="rounded-xl bg-[#2D2DDD] hover:bg-[#2D2DDD]/90 text-white px-8 h-12 text-base shadow-lg shadow-[#2D2DDD]/20" 
+            onClick={() => router.push('/hr/jobs/new')}
+          >
+            <Plus className="w-5 h-5 mr-2" /> 
+            Create Job Posting
+          </Button>
+        </div>
       ) : viewMode === 'grid' || viewMode === 'linear' ? (
         <div className="space-y-6">
           <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-4"}>
@@ -308,6 +332,48 @@ export function JobsSection() {
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setJobToDelete(null)}>Cancel</Button>
               <Button variant="destructive" onClick={() => { handleDeleteJob(jobToDelete.id); setJobToDelete(null); }}>Delete Permanently</Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {showFirstJobModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => {
+            localStorage.setItem('hasSeenFirstJobPrompt', 'true');
+            setShowFirstJobModal(false);
+          }} />
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+            <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-6 mx-auto">
+              <Sparkles className="w-8 h-8 text-[#2D2DDD]" />
+            </div>
+            <h3 className="text-2xl font-bold font-figtree text-slate-900 mb-3 text-center">Welcome to OptioHire!</h3>
+            <p className="text-slate-500 mb-8 text-center leading-relaxed">
+              Create your first job posting to start receiving AI-screened applications. We'll guide you through setting up requirements, descriptions, and more.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button 
+                size="lg"
+                className="w-full rounded-xl bg-[#2D2DDD] hover:bg-[#2D2DDD]/90 text-white h-12 text-base shadow-lg shadow-[#2D2DDD]/20" 
+                onClick={() => {
+                  localStorage.setItem('hasSeenFirstJobPrompt', 'true');
+                  setShowFirstJobModal(false);
+                  router.push('/hr/jobs/new');
+                }}
+              >
+                <Plus className="w-5 h-5 mr-2" /> 
+                Create First Job
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full text-slate-500 hover:text-slate-700 h-12"
+                onClick={() => {
+                  localStorage.setItem('hasSeenFirstJobPrompt', 'true');
+                  setShowFirstJobModal(false);
+                }}
+              >
+                Skip for now
+              </Button>
             </div>
           </motion.div>
         </div>

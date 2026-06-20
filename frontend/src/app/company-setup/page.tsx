@@ -24,31 +24,6 @@ const companySetupSchema = z.object({
   website_url: z.string().url('Invalid URL').optional().or(z.literal('')),
   linkedin_url: z.string().url('Invalid URL').optional().or(z.literal('')),
   twitter_url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  job_title: z.string().min(1, 'Job title is required'),
-  job_description: z.string().min(10, 'Job description must be at least 10 characters'),
-  required_skills: z.array(z.string()).min(1, 'At least one skill is required'),
-  deadline_for_applications: z.string().min(1, 'Application deadline is required').refine((val) => {
-    if (!val) return false
-    // Check if it's a valid datetime-local format (YYYY-MM-DDTHH:mm)
-    const datetimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
-    if (!datetimeRegex.test(val)) return false
-    const date = new Date(val)
-    return !isNaN(date.getTime()) && date > new Date()
-  }, {
-    message: 'Application deadline must be a valid future date and time'
-  }),
-  interview_date: z.string().min(1, 'Interview date is required').refine((val) => {
-    if (!val) return false
-    // Check if it's a valid datetime-local format (YYYY-MM-DDTHH:mm)
-    const datetimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
-    if (!datetimeRegex.test(val)) return false
-    const date = new Date(val)
-    return !isNaN(date.getTime())
-  }, {
-    message: 'Please enter a valid date and time'
-  }),
-  interview_meeting_link: z.string().optional(),
-  google_calendar_link: z.string().url('Please enter a valid Google Calendar link'),
 })
 
 type CompanySetupFormData = z.infer<typeof companySetupSchema>
@@ -56,7 +31,6 @@ type CompanySetupFormData = z.infer<typeof companySetupSchema>
 export default function CompanySetupPage() {
   const router = useRouter()
   const { user, loading } = useAuth()
-  const [skillInput, setSkillInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -99,26 +73,10 @@ export default function CompanySetupPage() {
   } = useForm<CompanySetupFormData>({
     resolver: zodResolver(companySetupSchema),
     defaultValues: {
-      required_skills: [],
     },
   })
 
-  const skills = watch('required_skills') || []
-  const recommendedSubject =
-    (watch('job_title')?.trim() || 'Job Title') +
-    ' at ' +
-    (watch('company_name')?.trim() || 'Company Name')
 
-  const addSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setValue('required_skills', [...skills, skillInput.trim()])
-      setSkillInput('')
-    }
-  }
-
-  const removeSkill = (skillToRemove: string) => {
-    setValue('required_skills', skills.filter(skill => skill !== skillToRemove))
-  }
 
   const onSubmit = async (data: CompanySetupFormData) => {
     // Check if user is logged in (token exists)
@@ -155,27 +113,6 @@ export default function CompanySetupPage() {
         throw new Error(companyJson?.error || 'Failed to create company')
       }
 
-      // Create job via backend
-      const jobResp = await fetch('/api/jobs', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          company_id: companyJson.company_id,
-          job_title: data.job_title,
-          job_description: data.job_description,
-          responsibilities: data.job_description,
-          skills_required: data.required_skills,
-          application_deadline: data.deadline_for_applications,
-          interview_slots: null,
-          interview_meeting_link: data.interview_meeting_link || null,
-          google_calendar_link: data.google_calendar_link
-        })
-      })
-      const jobJson = await jobResp.json().catch(() => ({}))
-      if (!jobResp.ok || !jobJson?.job_posting_id) {
-        throw new Error(jobJson?.error || 'Failed to create job posting')
-      }
-
       // Success - redirect to dashboard
       router.push('/hr')
     } catch (err: any) {
@@ -200,14 +137,14 @@ export default function CompanySetupPage() {
               Company Setup
             </h1>
             <p className="text-xl font-figtree font-light text-gray-300">
-              Tell us about your company and the position you're hiring for
+              Tell us about your company to complete your account setup
             </p>
           </div>
 
           <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-md">
             <CardHeader>
               <CardTitle className="text-2xl font-figtree font-semibold">
-                Company & Job Details
+                Company Details
               </CardTitle>
               <CardDescription className="text-base font-figtree font-light">
                 Fill in the details below to get started with AI-powered recruitment
@@ -324,175 +261,28 @@ export default function CompanySetupPage() {
                   </div>
                 </div>
 
-                {/* Job Information */}
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Users className="w-5 h-5 text-white" />
-                    <h3 className="text-xl font-figtree font-semibold">Job Information</h3>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="job_title" className="text-sm font-medium">
-                      Job Title *
-                    </Label>
-                    <Input
-                      id="job_title"
-                      placeholder="e.g., Senior Frontend Developer"
-                      {...register('job_title')}
-                      className="h-12"
-                    />
-                    {errors.job_title && (
-                      <p className="text-sm text-red-500">{errors.job_title.message}</p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      When posting this role via email, ask candidates to use this exact subject line so OptioHire can
-                      correctly route applications to this job:
-                      {' '}
-                      <span className="font-mono text-[11px] bg-gray-100 px-1 py-0.5 rounded">
-                        {recommendedSubject}
-                      </span>
-                      .
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="job_description" className="text-sm font-medium">
-                      Job Description *
-                    </Label>
-                    <Textarea
-                      id="job_description"
-                      placeholder="Describe the role, responsibilities, and requirements..."
-                      {...register('job_description')}
-                      className="min-h-[120px]"
-                    />
-                    {errors.job_description && (
-                      <p className="text-sm text-red-500">{errors.job_description.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">
-                      Required Skills *
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Add a required skill"
-                        value={skillInput}
-                        onChange={(e) => setSkillInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                        className="h-12"
-                      />
-                      <Button
-                        type="button"
-                        onClick={addSkill}
-                        variant="secondary"
-                        size="icon"
-                        className="h-12 w-12"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    {skills.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {skills.map((skill) => (
-                          <Badge key={skill} variant="secondary" className="flex items-center gap-1">
-                            {skill}
-                            <X
-                              className="w-3 h-3 cursor-pointer"
-                              onClick={() => removeSkill(skill)}
-                            />
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    {errors.required_skills && (
-                      <p className="text-sm text-red-500">{errors.required_skills.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="deadline_for_applications" className="text-sm font-medium">
-                      Deadline for Applications *
-                    </Label>
-                    <DateTimePicker
-                      value={watch('deadline_for_applications')}
-                      onChange={(value) => setValue('deadline_for_applications', value)}
-                      placeholder="Select application deadline and time"
-                      minDateTime={new Date().toISOString().slice(0, 16)}
-                    />
-                    {errors.deadline_for_applications && (
-                      <p className="text-sm text-red-500">{errors.deadline_for_applications.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Interview Information */}
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-5 h-5 text-white" />
-                    <h3 className="text-xl font-figtree font-semibold">Interview Information</h3>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="interview_date" className="text-sm font-medium">
-                      Interview Date & Time *
-                    </Label>
-                    <DateTimePicker
-                      value={watch('interview_date')}
-                      onChange={(value) => setValue('interview_date', value)}
-                      placeholder="Select interview date and time"
-                      minDateTime={new Date().toISOString().slice(0, 16)}
-                    />
-                    {errors.interview_date && (
-                      <p className="text-sm text-red-500">{errors.interview_date.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="interview_meeting_link" className="text-sm font-medium">
-                      Interview Meeting Link (Optional)
-                    </Label>
-                    <Input
-                      id="interview_meeting_link"
-                      type="url"
-                      placeholder="https://meet.google.com/..."
-                      {...register('interview_meeting_link')}
-                      className="h-12"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="google_calendar_link" className="text-sm font-medium">
-                      Google Calendar Link *
-                    </Label>
-                    <Input
-                      id="google_calendar_link"
-                      type="url"
-                      placeholder="https://calendar.google.com/..."
-                      {...register('google_calendar_link')}
-                      className="h-12"
-                    />
-                    {errors.google_calendar_link && (
-                      <p className="text-sm text-red-500">{errors.google_calendar_link.message}</p>
-                    )}
-                  </div>
-                </div>
-
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-600">{error}</p>
                   </div>
                 )}
 
-                <Button
-                  type="submit"
-                  className="w-full h-14 text-lg text-white hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: '#2D2DDD' }}
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Setting Up...' : 'Complete Setup & Start Hiring'}
-                </Button>
-              </form>
+                <div className="pt-4 border-t border-white/10">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-12 bg-white text-black hover:bg-gray-100 font-figtree font-semibold shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all"
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        Setting up...
+                      </span>
+                    ) : (
+                      'Complete Setup & View Dashboard'
+                    )}
+                  </Button>
+                </div></form>
             </CardContent>
           </Card>
         </motion.div>

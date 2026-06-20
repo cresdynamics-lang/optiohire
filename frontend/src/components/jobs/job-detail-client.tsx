@@ -327,13 +327,29 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
               <p className="mb-5 text-sm text-slate-500">
                 Submit your application directly to {job.company_name}.
               </p>
-              <Link
-                href={`/apply/${job.job_posting_id}`}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-all duration-200 hover:shadow-md"
-              >
-                Apply for this Role
-                <ChevronRight className="h-4 w-4" />
-              </Link>
+              <div className="flex flex-col gap-3">
+                <Link
+                  href={`/apply/${job.job_posting_id}`}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-all duration-200 hover:shadow-md"
+                >
+                  Apply for this Role
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+                <button
+                  onClick={handleShare}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 border border-slate-200 px-5 py-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition-all duration-200"
+                >
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-4 w-4" /> Share this Job
+                    </>
+                  )}
+                </button>
+              </div>
               <p className="mt-3 text-center text-xs text-slate-400">
                 Takes ~5 minutes · No account required
               </p>

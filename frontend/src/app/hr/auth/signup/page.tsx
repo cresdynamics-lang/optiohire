@@ -20,7 +20,7 @@ const employerSignUpSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
   confirmPassword: z.string(),
-  company_role: z.enum(['hr']),
+  company_role: z.enum(['hr', 'hiring_manager']),
   organization_name: z.string().min(2, 'Organization name is required'),
   company_email: z.string().email('Please enter a valid company email'),
   hr_email: z.string().email().optional(),

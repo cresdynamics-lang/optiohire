@@ -65,11 +65,18 @@ export function CreateJobModal({ isOpen, onClose, onSubmit }: CreateJobModalProp
   }
 
   const addSkill = () => {
-    if (newSkill.trim() && !formData.required_skills.includes(newSkill.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        required_skills: [...prev.required_skills, newSkill.trim()]
-      }))
+    if (newSkill.trim()) {
+      const skillsToAdd = newSkill
+        .split(/[,\n]+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0 && !formData.required_skills.includes(s))
+
+      if (skillsToAdd.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          required_skills: [...prev.required_skills, ...skillsToAdd]
+        }))
+      }
       setNewSkill('')
     }
   }

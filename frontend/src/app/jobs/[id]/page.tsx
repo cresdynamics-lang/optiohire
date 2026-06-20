@@ -2,11 +2,12 @@ import { Metadata } from 'next'
 import JobDetailClient from '@/components/jobs/job-detail-client'
 
 interface Props {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const id = params.id
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   
   try {
     const backendUrl = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com').replace(/\/$/, '')
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function JobDetailPage({ params }: Props) {
-  return <JobDetailClient jobId={params.id} />
+export default async function JobDetailPage({ params }: Props) {
+  const resolvedParams = await params;
+  return <JobDetailClient jobId={resolvedParams.id} />
 }
