@@ -237,7 +237,7 @@ export function EditJobSection() {
           job_poster_url: formData.job_poster_url,
           updated_at: new Date().toISOString()
         })
-        .eq('id', jobId)
+        .eq('job_posting_id', jobId)
 
       if (error) throw error
 

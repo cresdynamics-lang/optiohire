@@ -165,7 +165,7 @@ export function SettingsSection() {
           company_email: formData.company_email,
           hr_email: formData.hr_email,
         })
-        .eq('id', company.id)
+        .eq('company_id', company.id)
 
       if (error) {
         throw error
