@@ -382,13 +382,59 @@ export async function createJobPosting(req: Request, res: Response) {
     const companyId = companyRow.company_id
     const meetingLink = payload.meeting_link ?? null
 
-    const { rows: jobIns } = await client.query<{ job_posting_id: string }>(
-      `INSERT INTO job_postings 
-       (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status, custom_questions)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN', $11)
-       RETURNING job_posting_id`,
-      [companyId, payload.job_title, payload.job_description, payload.job_description, cleanSkills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null, JSON.stringify(payload.custom_questions || [])]
-    )
+    // Auto-categorize the job using AI
+    let jobCategory = 'Other';
+    try {
+      const { openRouterService } = await import('../services/ai/openRouterService.js');
+      const categoryPrompt = `Classify the following job into EXACTLY ONE of these categories:
+Software Engineering, IT & Network Administration, Data Science & Analytics, Sales, Marketing, Product Management, Design & UI/UX, Customer Support & Success, Operations, Finance & Accounting, Human Resources (HR), Legal & Compliance, Executive Management, Project & Program Management, Business Development & Partnerships, Media & Communications, Healthcare & Medicine, Education & Training, Real Estate & Construction, Supply Chain & Logistics, Manufacturing & Production, Retail & Consumer Goods, Hospitality & Tourism, Art & Creative, Research & Development, Security & Protection, Non-Profit & Volunteering, Consulting, Strategy, Other.
+
+Respond ONLY with the exact name of the category from the list above. No other text.
+
+Job Title: ${payload.job_title}
+Job Description: ${payload.job_description}`;
+
+      const aiResponse = await openRouterService.generateText(categoryPrompt, undefined, {
+        systemPrompt: 'You are an expert HR recruitment assistant. Classify jobs exactly as requested.',
+        logContext: { task: 'auto_categorize_job' }
+      });
+      
+      const suggestedCategory = aiResponse.trim();
+      const validCategories = ['Software Engineering', 'IT & Network Administration', 'Data Science & Analytics', 'Sales', 'Marketing', 'Product Management', 'Design & UI/UX', 'Customer Support & Success', 'Operations', 'Finance & Accounting', 'Human Resources (HR)', 'Legal & Compliance', 'Executive Management', 'Project & Program Management', 'Business Development & Partnerships', 'Media & Communications', 'Healthcare & Medicine', 'Education & Training', 'Real Estate & Construction', 'Supply Chain & Logistics', 'Manufacturing & Production', 'Retail & Consumer Goods', 'Hospitality & Tourism', 'Art & Creative', 'Research & Development', 'Security & Protection', 'Non-Profit & Volunteering', 'Consulting', 'Strategy', 'Other'];
+      
+      if (validCategories.includes(suggestedCategory)) {
+        jobCategory = suggestedCategory;
+      }
+    } catch (catErr) {
+      logger.warn('Failed to auto-categorize job, falling back to Other:', catErr);
+    }
+
+    // Support job_category column if it exists in DB (will silently ignore if column missing on old DB until migration runs)
+    let insertQuery = `INSERT INTO job_postings 
+       (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status, custom_questions, job_category)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN', $11, $12)
+       RETURNING job_posting_id`;
+    let insertArgs = [companyId, payload.job_title, payload.job_description, payload.job_description, cleanSkills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null, JSON.stringify(payload.custom_questions || []), jobCategory];
+
+    let jobIns;
+    try {
+      const result = await client.query<{ job_posting_id: string }>(insertQuery, insertArgs);
+      jobIns = result.rows;
+    } catch (dbErr: any) {
+      // Fallback if migration hasn't run yet
+      if (dbErr.code === '42703' && dbErr.message.includes('job_category')) {
+        logger.warn('job_category column missing, falling back to legacy INSERT');
+        insertQuery = `INSERT INTO job_postings 
+         (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status, custom_questions)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN', $11)
+         RETURNING job_posting_id`;
+        insertArgs = [companyId, payload.job_title, payload.job_description, payload.job_description, cleanSkills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null, JSON.stringify(payload.custom_questions || [])];
+        const result = await client.query<{ job_posting_id: string }>(insertQuery, insertArgs);
+        jobIns = result.rows;
+      } else {
+        throw dbErr;
+      }
+    }
 
     const jobPostingId = jobIns[0].job_posting_id
     const secret = (await import('crypto')).randomBytes(32).toString('hex')

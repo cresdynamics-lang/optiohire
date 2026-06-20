@@ -166,20 +166,45 @@ export class AIWorker {
 
     logger.info(`🔍 [Talent Pool Match] Step 1: Fast Pass querying past applications for similar title to "${jobPosting.job_title}"`)
     
-    // Fast Pass: find distinct applicants who applied to roles with similar titles at this company
-    const { rows: candidates } = await query(
-      `SELECT DISTINCT ON (a.email) a.email, a.candidate_name, a.parsed_resume_json
-       FROM applications a
-       JOIN job_postings jp ON a.job_posting_id = jp.job_posting_id
-       WHERE jp.company_id = $1 
-         AND a.job_posting_id != $2
-         AND a.parsed_resume_json IS NOT NULL
-         AND (
-           LOWER(jp.job_title) LIKE '%' || LOWER($3) || '%' 
-           OR LOWER($3) LIKE '%' || LOWER(jp.job_title) || '%'
-         )`,
-      [jobPosting.company_id, jobPostingId, jobPosting.job_title]
-    )
+    // Fast Pass: find distinct applicants who applied to roles with similar titles or matching categories at this company
+    let candidates = [];
+    try {
+      const result = await query(
+        `SELECT DISTINCT ON (a.email) a.email, a.candidate_name, a.parsed_resume_json
+         FROM applications a
+         JOIN job_postings jp ON a.job_posting_id = jp.job_posting_id
+         WHERE jp.company_id = $1 
+           AND a.job_posting_id != $2
+           AND a.parsed_resume_json IS NOT NULL
+           AND (
+             (jp.job_category IS NOT NULL AND jp.job_category = $4)
+             OR LOWER(jp.job_title) LIKE '%' || LOWER($3) || '%' 
+             OR LOWER($3) LIKE '%' || LOWER(jp.job_title) || '%'
+           )`,
+        [jobPosting.company_id, jobPostingId, jobPosting.job_title, jobPosting.job_category || 'Other']
+      );
+      candidates = result.rows;
+    } catch (err: any) {
+      // Fallback if job_category column doesn't exist yet
+      if (err.code === '42703' && err.message.includes('job_category')) {
+        const result = await query(
+          `SELECT DISTINCT ON (a.email) a.email, a.candidate_name, a.parsed_resume_json
+           FROM applications a
+           JOIN job_postings jp ON a.job_posting_id = jp.job_posting_id
+           WHERE jp.company_id = $1 
+             AND a.job_posting_id != $2
+             AND a.parsed_resume_json IS NOT NULL
+             AND (
+               LOWER(jp.job_title) LIKE '%' || LOWER($3) || '%' 
+               OR LOWER($3) LIKE '%' || LOWER(jp.job_title) || '%'
+             )`,
+          [jobPosting.company_id, jobPostingId, jobPosting.job_title]
+        );
+        candidates = result.rows;
+      } else {
+        throw err;
+      }
+    }
 
     if (candidates.length === 0) {
       logger.info(`🔍 [Talent Pool Match] No previous candidates found for similar roles.`)
