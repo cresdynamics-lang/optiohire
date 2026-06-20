@@ -14,6 +14,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { useRef } from 'react'
+import { CustomQuestion } from '@/types'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 
 const formSchema = z.object({
   candidate_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -27,17 +31,23 @@ const formSchema = z.object({
 
 interface ApplyFormProps {
   jobPostingId: string
+  customQuestions?: CustomQuestion[]
 }
 
-export function ApplyForm({ jobPostingId }: ApplyFormProps) {
+export function ApplyForm({ jobPostingId, customQuestions = [] }: ApplyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [resumeUploadError, setResumeUploadError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [customAnswers, setCustomAnswers] = useState<Record<string, any>>({})
   const { toast } = useToast()
   const { executeRecaptcha } = useGoogleReCaptcha()
+
+  const handleCustomAnswerChange = (questionId: string, value: any) => {
+    setCustomAnswers(prev => ({ ...prev, [questionId]: value }))
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -137,6 +147,7 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
         linkedin_url: values.linkedin_url || undefined,
         portfolio_url: values.portfolio_url || undefined,
         captchaToken: token,
+        custom_answers: customAnswers,
       })
 
       setIsSuccess(true)
@@ -186,8 +197,12 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
           </Alert>
         )}
 
-        <FormField
-          control={form.control}
+        {/* Section 1: Personal Information */}
+        <div className="space-y-4 pt-4 pb-6 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-800">Personal Information</h3>
+          
+          <FormField
+            control={form.control}
           name="candidate_name"
           render={({ field }) => (
             <FormItem>
@@ -271,7 +286,13 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
           )}
         />
 
-        <div className="space-y-2">
+        </div>
+
+        {/* Section 2: Resume & Links */}
+        <div className="space-y-4 pt-4 pb-6 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-800">Resume & Links</h3>
+
+          <div className="space-y-2">
           <FormLabel>Resume (PDF or Word)</FormLabel>
           <div 
             className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
@@ -324,6 +345,69 @@ export function ApplyForm({ jobPostingId }: ApplyFormProps) {
             </FormItem>
           )}
         />
+        </div>
+
+        {/* Section 3: Custom Questions */}
+        {customQuestions && customQuestions.length > 0 && (
+          <div className="space-y-4 pt-4 pb-6 border-b border-slate-100">
+            <h3 className="text-lg font-bold text-slate-800">Additional Questions</h3>
+            <p className="text-sm text-slate-500 mb-4">Please answer the following questions required by the employer.</p>
+            
+            {customQuestions.map((q, idx) => (
+              <div key={q.id} className="space-y-2">
+                <FormLabel>
+                  {q.question} {q.required && <span className="text-red-500">*</span>}
+                </FormLabel>
+                
+                {q.type === 'TEXT' && (
+                  <Input 
+                    required={q.required}
+                    value={customAnswers[q.id] || ''}
+                    onChange={(e) => handleCustomAnswerChange(q.id, e.target.value)}
+                    placeholder="Your answer"
+                  />
+                )}
+                
+                {q.type === 'PARAGRAPH' && (
+                  <Textarea 
+                    required={q.required}
+                    value={customAnswers[q.id] || ''}
+                    onChange={(e) => handleCustomAnswerChange(q.id, e.target.value)}
+                    placeholder="Your detailed answer"
+                    rows={4}
+                  />
+                )}
+                
+                {q.type === 'BOOLEAN' && (
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Switch 
+                      checked={customAnswers[q.id] === 'Yes'}
+                      onCheckedChange={(checked) => handleCustomAnswerChange(q.id, checked ? 'Yes' : 'No')}
+                    />
+                    <span className="text-sm">{customAnswers[q.id] === 'Yes' ? 'Yes' : 'No'}</span>
+                  </div>
+                )}
+                
+                {q.type === 'MULTIPLE_CHOICE' && (
+                  <Select 
+                    required={q.required}
+                    value={customAnswers[q.id] || ''}
+                    onValueChange={(val) => handleCustomAnswerChange(q.id, val)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {q.options?.map((opt, i) => (
+                        <SelectItem key={i} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         <Button 
           type="submit" 

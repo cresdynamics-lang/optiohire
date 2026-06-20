@@ -13,6 +13,7 @@ interface Job {
   job_title: string
   company_name: string
   company_logo_url: string | null
+  custom_questions?: any[]
 }
 
 export default function ApplyPage() {
@@ -105,7 +106,7 @@ export default function ApplyPage() {
               <p className="text-sm text-slate-500">Fill in your details below and upload your CV.</p>
             </div>
 
-            <ApplyForm jobPostingId={params.id as string} />
+            <ApplyForm jobPostingId={params.id as string} customQuestions={job.custom_questions} />
           </div>
         </div>
 

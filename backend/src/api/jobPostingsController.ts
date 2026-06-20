@@ -18,7 +18,46 @@ const createJobSchema = z.object({
   }),
   meeting_link: z.string().url().optional(),
   job_poster_url: z.string().url().optional(),
+  custom_questions: z.array(z.object({
+    id: z.string(),
+    question: z.string(),
+    type: z.enum(['TEXT', 'PARAGRAPH', 'BOOLEAN', 'MULTIPLE_CHOICE']),
+    options: z.array(z.string()).optional(),
+    required: z.boolean().default(false)
+  })).optional()
 })
+
+export async function generateQuestions(req: Request, res: Response) {
+  try {
+    const { job_title, job_description } = req.body
+    if (!job_title || !job_description) {
+      return res.status(400).json({ error: 'job_title and job_description are required' })
+    }
+
+    const { openRouterService } = await import('../services/ai/openRouterService.js')
+    
+    const prompt = `Based on the following job title and description, generate 3 to 5 highly relevant screening questions to ask candidates during the application process. 
+    Format the response as a JSON object with a 'questions' array. Each question should have:
+    - id: a unique short string id (e.g. 'q1', 'years_exp')
+    - question: the question text
+    - type: one of 'TEXT', 'PARAGRAPH', 'BOOLEAN', 'MULTIPLE_CHOICE'
+    - options: an array of strings (only if type is 'MULTIPLE_CHOICE')
+    - required: boolean
+    
+    Job Title: ${job_title}
+    Job Description: ${job_description}`
+
+    const result = await openRouterService.generateJSON<{ questions: any[] }>(prompt, undefined, {
+      systemPrompt: 'You are an expert HR recruiter assistant.',
+      logContext: { task: 'generate_screening_questions' }
+    })
+
+    return res.json({ questions: result.questions || [] })
+  } catch (err: any) {
+    logger.error('Error generating questions:', err)
+    return res.status(500).json({ error: 'Failed to generate questions' })
+  }
+}
 
 function domainFromEmail(email: string): string | null {
   const at = email.indexOf('@')
@@ -123,6 +162,7 @@ export async function getJobPostings(req: Request, res: Response) {
       meeting_link: string | null
       interview_meeting_link: string | null
       job_poster_url: string | null
+      custom_questions: any[] | null
     }>(
       companyIds.length > 0
         ? `SELECT 
@@ -139,7 +179,8 @@ export async function getJobPostings(req: Request, res: Response) {
             updated_at,
             meeting_link,
             interview_meeting_link,
-            job_poster_url
+            job_poster_url,
+            custom_questions
           FROM job_postings
           WHERE company_id = ANY($1)
           ORDER BY created_at DESC`
@@ -192,6 +233,7 @@ export async function getJobPostings(req: Request, res: Response) {
             interview_meeting_link: job.interview_meeting_link || job.meeting_link || null,
             job_poster_url: job.job_poster_url || null,
             interview_start_time: job.interview_start_time || null,
+            custom_questions: Array.isArray(job.custom_questions) ? job.custom_questions : (job.custom_questions ? JSON.parse(job.custom_questions as any) : []),
             applicant_count: Number(stats[0]?.total || 0),
             shortlisted_count: Number(stats[0]?.shortlisted || 0),
             rejected_count: Number(stats[0]?.rejected || 0),
@@ -208,6 +250,7 @@ export async function getJobPostings(req: Request, res: Response) {
             interview_meeting_link: job.interview_meeting_link || job.meeting_link || null,
             job_poster_url: job.job_poster_url || null,
             interview_start_time: job.interview_start_time || null,
+            custom_questions: Array.isArray(job.custom_questions) ? job.custom_questions : (job.custom_questions ? JSON.parse(job.custom_questions as any) : []),
             applicant_count: 0,
             shortlisted_count: 0,
             rejected_count: 0,
@@ -341,10 +384,10 @@ export async function createJobPosting(req: Request, res: Response) {
 
     const { rows: jobIns } = await client.query<{ job_posting_id: string }>(
       `INSERT INTO job_postings 
-       (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN')
+       (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status, custom_questions)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN', $11)
        RETURNING job_posting_id`,
-      [companyId, payload.job_title, payload.job_description, payload.job_description, cleanSkills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null]
+      [companyId, payload.job_title, payload.job_description, payload.job_description, cleanSkills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null, JSON.stringify(payload.custom_questions || [])]
     )
 
     const jobPostingId = jobIns[0].job_posting_id
@@ -454,8 +497,9 @@ export async function getJobPostingById(req: Request, res: Response) {
       job_posting_id: string
       interview_meeting_link: string | null
       meeting_link: string | null
+      custom_questions: any[] | null
     }>(
-      `SELECT job_posting_id, interview_meeting_link, meeting_link
+      `SELECT job_posting_id, interview_meeting_link, meeting_link, custom_questions
        FROM job_postings 
        WHERE job_posting_id = $1
        LIMIT 1`,
@@ -468,6 +512,7 @@ export async function getJobPostingById(req: Request, res: Response) {
     return res.json({
       id: job.job_posting_id,
       meeting_link: job.meeting_link || job.interview_meeting_link || '',
+      custom_questions: job.custom_questions || []
     })
   } catch (err) {
     logger.error('Error fetching job posting:', err)
@@ -519,6 +564,10 @@ export async function updateJobPosting(req: Request, res: Response) {
         updates.push(`status = $${param++}`)
         values.push(normalizedStatus)
       }
+    }
+    if (Array.isArray(body.custom_questions)) {
+      updates.push(`custom_questions = $${param++}`)
+      values.push(JSON.stringify(body.custom_questions))
     }
 
     if (updates.length === 0) return res.status(400).json({ error: 'No valid fields provided' })
@@ -587,7 +636,7 @@ export async function getPublicJobPostings(req: Request, res: Response) {
     if (cached) return res.json(cached)
 
     const { rows: jobs } = await query(
-      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, jp.custom_questions, c.company_name, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
        WHERE jp.status = 'ACTIVE'
@@ -617,7 +666,7 @@ export async function getPublicJobPostingById(req: Request, res: Response) {
     if (cached) return res.json(cached)
 
     const { rows: jobs } = await query(
-      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.responsibilities, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url, c.company_domain, c.website_url, c.linkedin_url, c.twitter_url
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.responsibilities, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, jp.custom_questions, c.company_name, c.company_logo_url, c.company_domain, c.website_url, c.linkedin_url, c.twitter_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
        WHERE jp.job_posting_id = $1 AND jp.status = 'ACTIVE'
@@ -646,7 +695,7 @@ export async function getPublicCompanyJobPostings(req: Request, res: Response) {
 
     const { companyId } = req.params
     const { rows: jobs } = await query(
-      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, c.company_name, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url
+      `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, jp.custom_questions, c.company_name, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
        WHERE jp.company_id = $1 AND jp.status = 'ACTIVE'

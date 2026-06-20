@@ -92,7 +92,7 @@ export async function getPublicJobs(req: Request, res: Response) {
     const { rows } = await query(
       `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
               jp.responsibilities, jp.skills_required, jp.application_deadline, 
-              jp.status, jp.created_at, c.company_name, c.company_email, c.company_logo_url
+              jp.status, jp.created_at, jp.custom_questions, c.company_name, c.company_email, c.company_logo_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
        WHERE jp.status = 'ACTIVE'
@@ -136,7 +136,7 @@ export async function getPublicJobById(req: Request, res: Response) {
     const { rows } = await query(
       `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
               jp.responsibilities, jp.skills_required, jp.application_deadline, 
-              jp.status, jp.created_at, c.company_name, c.company_email, c.company_logo_url
+              jp.status, jp.created_at, jp.custom_questions, c.company_name, c.company_email, c.company_logo_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
        WHERE jp.job_posting_id = $1 AND jp.status = 'ACTIVE'`,
