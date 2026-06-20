@@ -332,11 +332,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     captchaToken?: string
   ) => {
     try {
+      // Detect portal from current URL to decide which bridge endpoint to call
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+      const host = typeof window !== 'undefined' ? window.location.host : ''
+      const subdomain = host.split('.')[0].toLowerCase()
+      
+      let portalPrefix = ''
+      if (subdomain === 'applications' || subdomain === 'candidate' || pathname.includes('/candidate/')) {
+        portalPrefix = '/candidate'
+      } else if (pathname.includes('/hr/')) {
+        portalPrefix = '/hr'
+      }
+
       // Use same-origin proxy (server resolves BACKEND_URL) — avoids CORS and 405 errors on production.
       const signUpUrl =
         typeof window !== 'undefined'
-          ? `${window.location.origin}/api/auth/signup`
-          : `${getBackendBaseUrl() || 'https://api.optiohire.com'}/hr/auth/signup`
+          ? `${window.location.origin}/api${portalPrefix}/auth/signup`
+          : `${getBackendBaseUrl() || 'https://api.optiohire.com'}${portalPrefix}/auth/signup`
           
       const normalizedSignupRole = normalizeCompanyRole(company_role) || company_role
       const resp = await fetch(signUpUrl, {
@@ -419,10 +431,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Same-origin proxy (server resolves BACKEND_URL / NEXT_PUBLIC_BACKEND_URL) — avoids :3001 in the browser network log and CORS edge cases.
+      const portalPrefix = portal === 'hr' ? '/hr' : (portal === 'candidate' ? '/candidate' : '')
       const signInUrl =
         typeof window !== 'undefined'
-          ? `${window.location.origin}/api/auth/signin`
-          : `${getBackendBaseUrl() || 'https://api.optiohire.com'}/hr/auth/signin`
+          ? `${window.location.origin}/api${portalPrefix}/auth/signin`
+          : `${getBackendBaseUrl() || 'https://api.optiohire.com'}${portalPrefix}/auth/signin`
       const resp = await fetch(signInUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -34,3 +34,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Cannot reach jobs service' }, { status: 502 })
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const backendUrl = getBackendUrl()
+
+    const res = await fetch(`${backendUrl}/jobs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': request.headers.get('authorization') || '',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(15000),
+    })
+
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: data?.error || 'Failed to create job posting' },
+        { status: res.status }
+      )
+    }
+
+    return NextResponse.json(data, { status: res.status })
+  } catch (err) {
+    console.error('[API] Jobs POST proxy error:', err)
+    return NextResponse.json({ error: 'Cannot reach jobs service' }, { status: 502 })
+  }
+}

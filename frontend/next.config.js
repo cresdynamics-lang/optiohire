@@ -6,19 +6,19 @@ const nextConfig = {
   reactStrictMode: false,
 
   // Quality checks - can be toggled via environment variables for speed
-  eslint: { 
-    ignoreDuringBuilds: process.env.NEXT_IGNORE_LINT === 'true' 
+  eslint: {
+    ignoreDuringBuilds: process.env.NEXT_IGNORE_LINT === 'true'
   },
-  typescript: { 
-    ignoreBuildErrors: process.env.NEXT_IGNORE_TYPES === 'true' 
+  typescript: {
+    ignoreBuildErrors: process.env.NEXT_IGNORE_TYPES === 'true'
   },
 
   // Performance optimizations
   compress: true,
   productionBrowserSourceMaps: false,
-  
+
   // Standalone output is required for the production VPS deployment (PM2/Docker style)
-  output: 'standalone', 
+  output: 'standalone',
 
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -31,11 +31,11 @@ const nextConfig = {
     scrollRestoration: true,
     webVitalsAttribution: ['CLS', 'LCP'],
     optimizePackageImports: [
-      'lucide-react', 
-      '@heroicons/react', 
-      'framer-motion', 
-      'gsap', 
-      'recharts', 
+      'lucide-react',
+      '@heroicons/react',
+      'framer-motion',
+      'gsap',
+      'recharts',
       'date-fns',
       'three',
       '@react-three/drei',
@@ -72,7 +72,7 @@ const nextConfig = {
 
   async rewrites() {
     const backendUrl = 'https://api.optiohire.com';
-    
+
     return [
       { source: '/api/upload/:path*', destination: `${backendUrl}/api/upload/:path*` },
       { source: '/api/applications/:path*', destination: `${backendUrl}/applications/:path*` },
@@ -86,7 +86,6 @@ const nextConfig = {
       { source: '/api/analytics/:path*', destination: `${backendUrl}/api/analytics/:path*` },
       { source: '/api/user/:path*', destination: `${backendUrl}/api/user/:path*` },
       { source: '/api/templates/:path*', destination: `${backendUrl}/api/templates/:path*` },
-      { source: '/api/auth/:path*', destination: `${backendUrl}/auth/:path*` },
       { source: '/api/contact', destination: `${backendUrl}/contact` }
     ]
   },

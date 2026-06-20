@@ -136,7 +136,7 @@ export default function CompanySetupPage() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
       if (token) headers['Authorization'] = `Bearer ${token}`
       // Create company via backend (link to current user when token present)
-      const companyResp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/companies`, {
+      const companyResp = await fetch('/api/companies', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -156,7 +156,7 @@ export default function CompanySetupPage() {
       }
 
       // Create job via backend
-      const jobResp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/jobs`, {
+      const jobResp = await fetch('/api/jobs', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -221,7 +221,7 @@ export default function CompanySetupPage() {
                     <Building2 className="w-5 h-5 text-white" />
                     <h3 className="text-xl font-figtree font-semibold">Company Information</h3>
                   </div>
-                  
+
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="company_name" className="text-sm font-medium">
@@ -330,7 +330,7 @@ export default function CompanySetupPage() {
                     <Users className="w-5 h-5 text-white" />
                     <h3 className="text-xl font-figtree font-semibold">Job Information</h3>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="job_title" className="text-sm font-medium">
                       Job Title *
@@ -432,7 +432,7 @@ export default function CompanySetupPage() {
                     <Calendar className="w-5 h-5 text-white" />
                     <h3 className="text-xl font-figtree font-semibold">Interview Information</h3>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="interview_date" className="text-sm font-medium">
                       Interview Date & Time *
