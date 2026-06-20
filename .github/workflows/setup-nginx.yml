@@ -1,0 +1,51 @@
+name: Setup Nginx
+
+on:
+  push:
+    paths:
+      - '.github/workflows/setup-nginx.yml'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure Nginx via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -e
+            echo "Installing certbot and nginx..."
+            sudo apt-get update
+            sudo apt-get install -y nginx certbot python3-certbot-nginx
+
+            echo "Writing Nginx configuration..."
+            sudo tee /etc/nginx/sites-available/optiohire-frontend << 'EOF'
+            server {
+                listen 80;
+                server_name optiohire.com www.optiohire.com console.optiohire.com applications.optiohire.com;
+
+                location / {
+                    proxy_pass http://localhost:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+                }
+            }
+            EOF
+
+            echo "Enabling site and restarting Nginx..."
+            sudo ln -sf /etc/nginx/sites-available/optiohire-frontend /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo nginx -t
+            sudo systemctl restart nginx
+            
+            echo "Running certbot to generate SSL..."
+            sudo certbot --nginx --non-interactive --agree-tos -m applicationsoptiohire@gmail.com -d optiohire.com -d www.optiohire.com -d console.optiohire.com -d applications.optiohire.com
+            
+            echo "Nginx setup and SSL complete!"
