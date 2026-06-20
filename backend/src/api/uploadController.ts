@@ -276,7 +276,15 @@ export async function uploadJobPoster(req: Request, res: Response) {
       mimetype: file.mimetype,
     })
 
-    return res.status(200).json({ url: fileUrl })
+    const publicBaseUrl =
+      process.env.PUBLIC_APP_URL ||
+      process.env.FRONTEND_URL ||
+      `${req.protocol}://${req.get('host')}`
+    const publicUrl = fileUrl.startsWith('http')
+      ? fileUrl
+      : `${publicBaseUrl.replace(/\/$/, '')}/storage/${filename}`
+
+    return res.status(200).json({ url: publicUrl })
   } catch (error) {
     logger.error('Error uploading job poster:', error)
     return res.status(500).json({ error: 'Failed to upload job poster' })
