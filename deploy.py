@@ -9,10 +9,20 @@ def run_deploy():
         print("Connected.")
         
         cmd = """
-        cd /var/www/optiohire/backend
+        cd /var/www/optiohire
         git pull origin main
+        
+        echo "Building backend..."
+        cd backend
         npm install --include=dev
         npm run build
+        
+        echo "Building frontend..."
+        cd ../frontend
+        npm install
+        npm run build
+        
+        echo "Restarting services..."
         pm2 restart all --update-env
         """
         

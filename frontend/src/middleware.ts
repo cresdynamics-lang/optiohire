@@ -6,7 +6,6 @@ const SUBDOMAIN_MAPPING: Record<string, string> = {
   'console': '/admin',
   'admin': '/admin',
   'applications': '/candidate',
-  'candidates': '/candidate',
 }
 
 export function middleware(request: NextRequest) {
