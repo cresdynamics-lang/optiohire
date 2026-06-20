@@ -37,7 +37,7 @@ export async function getPublicJobPostings(): Promise<JobPosting[]> {
 
 export async function getPublicJobPostingById(id: string): Promise<JobPosting | null> {
   try {
-    const response = await fetch(`${getBaseUrl()}/api/jobs/${id}`, {
+    const response = await fetch(`${getBaseUrl()}/api/job-postings/public/${id}`, {
       next: { revalidate: 0 }
     })
     if (!response.ok) return null

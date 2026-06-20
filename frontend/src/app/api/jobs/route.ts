@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       headers['X-Captcha-Token'] = captchaToken
     }
 
-    const res = await fetch(`${backendUrl}/jobs${queryString ? `?${queryString}` : ''}`, {
+    const res = await fetch(`${backendUrl}/api/job-postings/public${queryString ? `?${queryString}` : ''}`, {
       headers,
       signal: AbortSignal.timeout(10000),
     })
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const backendUrl = getBackendUrl()
 
-    const res = await fetch(`${backendUrl}/jobs`, {
+    const res = await fetch(`${backendUrl}/api/job-postings`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

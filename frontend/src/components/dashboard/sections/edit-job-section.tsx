@@ -219,7 +219,7 @@ export function EditJobSection() {
       const token = localStorage.getItem('token')
       
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
-      const resp = await fetch(`${backendUrl}/api/jobs/${jobId}`, {
+      const resp = await fetch(`${backendUrl}/api/job-postings/${jobId}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

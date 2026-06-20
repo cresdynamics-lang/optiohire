@@ -21,7 +21,7 @@ export async function GET(
       headers['X-Captcha-Token'] = captchaToken
     }
 
-    const res = await fetch(`${backendUrl}/jobs/${resolvedParams.id}`, {
+    const res = await fetch(`${backendUrl}/api/job-postings/public/${resolvedParams.id}`, {
       headers,
       signal: AbortSignal.timeout(10000),
     })
