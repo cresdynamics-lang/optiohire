@@ -19,7 +19,10 @@ import {
   Save, 
   AlertCircle,
   Briefcase,
-  ExternalLink
+  ExternalLink,
+  CheckCircle,
+  ImagePlus,
+  Users
 } from 'lucide-react'
 import { JobPosting } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
@@ -40,6 +43,11 @@ export function EditJobSection() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  const [posterFile, setPosterFile] = useState<File | null>(null)
+  const [isUploadingPoster, setIsUploadingPoster] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [status, setStatus] = useState<{status: 'idle' | 'success' | 'error', message?: string}>({ status: 'idle' })
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -73,6 +81,7 @@ export function EditJobSection() {
           application_deadline: foundJob.application_deadline,
           status: foundJob.status,
           custom_questions: foundJob.custom_questions || [],
+          job_poster_url: foundJob.job_poster_url || '',
         })
       } catch (err: any) {
         console.error('Error fetching job:', err)
@@ -87,6 +96,74 @@ export function EditJobSection() {
 
   const handleInputChange = (field: keyof JobPosting, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handlePosterUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    
+    const file = e.target.files[0]
+    setPosterFile(file)
+    setIsUploadingPoster(true)
+    setUploadProgress(0)
+    
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('poster', file)
+      
+      const token = localStorage.getItem('token')
+      
+      const xhr = new XMLHttpRequest()
+      
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100)
+          setUploadProgress(percentComplete)
+        }
+      }
+      
+      xhr.onload = () => {
+        setIsUploadingPoster(false)
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText)
+            if (data.url) {
+              handleInputChange('job_poster_url', data.url)
+              setUploadProgress(100)
+            } else {
+              throw new Error('No URL in response')
+            }
+          } catch (err) {
+            setStatus({ status: 'error', message: 'Failed to parse response' })
+            setPosterFile(null)
+          }
+        } else {
+          try {
+            const errorData = JSON.parse(xhr.responseText)
+            setStatus({ status: 'error', message: errorData.error || 'Upload failed' })
+          } catch {
+            setStatus({ status: 'error', message: `Upload failed with status ${xhr.status}` })
+          }
+          setPosterFile(null)
+        }
+      }
+      
+      xhr.onerror = () => {
+        setIsUploadingPoster(false)
+        setStatus({ status: 'error', message: 'Network error during upload' })
+        setPosterFile(null)
+      }
+      
+      xhr.open('POST', '/api/upload/job-poster', true)
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      }
+      xhr.send(formDataUpload)
+      
+    } catch (err: any) {
+      setStatus({ status: 'error', message: err.message || 'Error uploading poster' })
+      setPosterFile(null)
+      setIsUploadingPoster(false)
+    }
   }
 
   const addSkill = () => {
@@ -157,6 +234,7 @@ export function EditJobSection() {
           application_deadline: formData.application_deadline,
           status: formData.status,
           custom_questions: formData.custom_questions,
+          job_poster_url: formData.job_poster_url,
           updated_at: new Date().toISOString()
         })
         .eq('id', jobId)
@@ -236,8 +314,70 @@ export function EditJobSection() {
               {/* Role Details */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-                  <Briefcase className="h-5 w-5" />
+                  <Users className="h-5 w-5" />
                   <h3 className="font-bold uppercase tracking-wider text-xs">Role Information</h3>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="job_poster_url" className="text-sm font-semibold">Job Poster (Optional)</Label>
+                  <p className="text-xs text-slate-500 mb-2">Upload a custom image to be shown when sharing the job on social media.</p>
+                  <div className="flex flex-col gap-2 mt-2">
+                    <div className="flex items-center gap-4">
+                      <Label 
+                        htmlFor="poster_upload" 
+                        className={`cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2 ${isUploadingPoster ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {isUploadingPoster ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                          ) : (
+                            <ImagePlus className="h-4 w-4 text-slate-500" />
+                          )}
+                          {isUploadingPoster ? `Uploading... ${uploadProgress}%` : 'Upload Image'}
+                        </div>
+                      </Label>
+                      <Input
+                        id="poster_upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handlePosterUpload}
+                        disabled={isUploadingPoster}
+                      />
+                      {formData.job_poster_url && !isUploadingPoster && (
+                        <div className="text-sm text-green-600 flex items-center gap-1.5 font-medium">
+                          <CheckCircle className="h-4 w-4" /> Poster Uploaded
+                        </div>
+                      )}
+                    </div>
+                    {isUploadingPoster && (
+                      <div className="w-full bg-slate-100 rounded-full h-2 mt-2 max-w-xs overflow-hidden">
+                        <div 
+                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300 ease-out" 
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                    )}
+                    {formData.job_poster_url && !isUploadingPoster && (
+                      <div className="relative w-40 h-40 rounded-xl overflow-hidden border border-slate-200 mt-2">
+                        <img 
+                          src={formData.job_poster_url} 
+                          alt="Job Poster Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPosterFile(null)
+                            handleInputChange('job_poster_url', '')
+                          }}
+                          className="absolute top-2 right-2 bg-white/90 hover:bg-white text-slate-700 rounded-full p-1.5 shadow-sm transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
