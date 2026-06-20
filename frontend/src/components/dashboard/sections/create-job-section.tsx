@@ -147,11 +147,36 @@ export function CreateJobSection() {
   }
 
   const addSkill = () => {
-    if (newSkill.trim() && !formData.required_skills.includes(newSkill.trim())) {
+    if (!newSkill.trim()) return
+    const currentSkills = formData.required_skills || []
+    const skillsToAdd = newSkill
+      .split(/[,\n]+/)
+      .map(s => s.replace(/^\d+\.\s*/, '').trim())
+      .filter(s => s.length > 0 && !currentSkills.includes(s))
+    if (skillsToAdd.length > 0) {
       setFormData(prev => ({
         ...prev,
-        required_skills: [...prev.required_skills, newSkill.trim()]
+        required_skills: [...prev.required_skills, ...skillsToAdd]
       }))
+    }
+    setNewSkill('')
+  }
+
+  const handleSkillPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text')
+    if (text.includes(',') || text.includes('\n')) {
+      e.preventDefault()
+      const currentSkills = formData.required_skills || []
+      const skillsToAdd = text
+        .split(/[,\n]+/)
+        .map(s => s.replace(/^\d+\.\s*/, '').trim())
+        .filter(s => s.length > 0 && !currentSkills.includes(s))
+      if (skillsToAdd.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          required_skills: [...prev.required_skills, ...skillsToAdd]
+        }))
+      }
       setNewSkill('')
     }
   }
@@ -373,8 +398,9 @@ export function CreateJobSection() {
                     <Input
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
-                      placeholder="Add a skill (e.g., React, Python)"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                      placeholder="Add skills — type one or paste a comma-separated list"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                      onPaste={handleSkillPaste}
                       className="h-11 border-slate-200"
                     />
                     <Button type="button" onClick={addSkill} className="bg-slate-900 text-white hover:bg-slate-800 px-6">

@@ -25,6 +25,7 @@ import { JobPosting } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
+import { ScreeningQuestionsBuilder } from '../screening-questions-builder'
 
 export function EditJobSection() {
   const { user, loading: authLoading } = useAuth()
@@ -71,6 +72,7 @@ export function EditJobSection() {
           interview_meeting_link: foundJob.interview_meeting_link || foundJob.meeting_link,
           application_deadline: foundJob.application_deadline,
           status: foundJob.status,
+          custom_questions: foundJob.custom_questions || [],
         })
       } catch (err: any) {
         console.error('Error fetching job:', err)
@@ -92,9 +94,28 @@ export function EditJobSection() {
       const currentSkills = formData.required_skills || [];
       const skillsToAdd = newSkill
         .split(/[,\n]+/)
-        .map(s => s.trim())
+        .map(s => s.replace(/^\d+\.\s*/, '').trim())
         .filter(s => s.length > 0 && !currentSkills.includes(s))
 
+      if (skillsToAdd.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          required_skills: [...(prev.required_skills || []), ...skillsToAdd]
+        }))
+      }
+      setNewSkill('')
+    }
+  }
+
+  const handleSkillPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text')
+    if (text.includes(',') || text.includes('\n')) {
+      e.preventDefault()
+      const currentSkills = formData.required_skills || []
+      const skillsToAdd = text
+        .split(/[,\n]+/)
+        .map(s => s.replace(/^\d+\.\s*/, '').trim())
+        .filter(s => s.length > 0 && !currentSkills.includes(s))
       if (skillsToAdd.length > 0) {
         setFormData(prev => ({
           ...prev,
@@ -135,6 +156,7 @@ export function EditJobSection() {
           meeting_link: formData.interview_meeting_link,
           application_deadline: formData.application_deadline,
           status: formData.status,
+          custom_questions: formData.custom_questions,
           updated_at: new Date().toISOString()
         })
         .eq('id', jobId)
@@ -248,8 +270,9 @@ export function EditJobSection() {
                     <Input
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
-                      placeholder="Add a skill"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                      placeholder="Add skills — type one or paste a comma-separated list"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                      onPaste={handleSkillPaste}
                       className="h-11 border-slate-200"
                     />
                     <Button type="button" onClick={addSkill} variant="outline" className="border-slate-900 bg-slate-900 text-white px-6">
@@ -336,6 +359,16 @@ export function EditJobSection() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Screening Questions */}
+              <div className="pt-4 border-t border-slate-100">
+                <ScreeningQuestionsBuilder 
+                  questions={formData.custom_questions || []}
+                  onChange={(questions) => handleInputChange('custom_questions', questions)}
+                  jobTitle={formData.job_title || ''}
+                  jobDescription={formData.job_description || ''}
+                />
               </div>
 
               {/* Footer Actions */}
