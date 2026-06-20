@@ -6,6 +6,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Building2, Clock, AlertCircle, Loader2
 } from 'lucide-react'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { ApplyForm } from '@/components/jobs/apply-form'
 
 interface Job {
@@ -22,11 +23,20 @@ export default function ApplyPage() {
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { executeRecaptcha } = useGoogleReCaptcha()
 
   useEffect(() => {
+    if (!executeRecaptcha) return
     const fetchJob = async () => {
       try {
-        const res = await fetch(`/api/jobs/${params.id}`)
+        let captchaToken = ''
+        if (executeRecaptcha) {
+          captchaToken = await executeRecaptcha('apply_page')
+        }
+
+        const res = await fetch(`/api/jobs/${params.id}`, {
+          headers: captchaToken ? { 'X-Captcha-Token': captchaToken } : {}
+        })
         const data = await res.json()
         if (!res.ok) throw new Error(data?.error || 'Job not found')
         setJob(data.job)
@@ -37,7 +47,7 @@ export default function ApplyPage() {
       }
     }
     if (params.id) fetchJob()
-  }, [params.id])
+  }, [params.id, executeRecaptcha])
 
   if (loading) {
     return (
