@@ -74,24 +74,32 @@ export function SettingsSection() {
 
     try {
       setIsLoading(true)
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, company_name, company_email, hr_email, created_at')
-        .eq('user_id', user.id)
-        .single()
+      const token = localStorage.getItem('token')
+      if (!token) return
 
-      if (error) {
-        console.error('Error loading company:', error)
-        return
-      }
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
+      const resp = await fetch(`${backendUrl}/api/user/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
 
-      if (data) {
-        setCompany(data)
-        setFormData({
-          company_name: data.company_name || '',
-          company_email: data.company_email || '',
-          hr_email: data.hr_email || '',
-        })
+      if (resp.ok) {
+        const data = await resp.json()
+        if (data && data.hasCompany) {
+          setCompany({
+            id: data.companyId,
+            company_name: data.companyName,
+            company_email: data.companyEmail,
+            hr_email: data.hrEmail,
+            created_at: data.created_at || new Date().toISOString()
+          })
+          setFormData({
+            company_name: data.companyName || '',
+            company_email: data.companyEmail || '',
+            hr_email: data.hrEmail || '',
+          })
+        }
+      } else {
+        console.error('Error loading company:', await resp.text())
       }
     } catch (error) {
       console.error('Error loading company data:', error)
@@ -158,17 +166,26 @@ export function SettingsSection() {
     setSaveMessage(null)
 
     try {
-      const { error } = await supabase
-        .from('companies')
-        .update({
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('Not authenticated')
+
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
+      const resp = await fetch(`${backendUrl}/api/user/company`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           company_name: formData.company_name,
           company_email: formData.company_email,
           hr_email: formData.hr_email,
         })
-        .eq('company_id', company.id)
+      })
 
-      if (error) {
-        throw error
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to update company settings')
       }
 
       setSaveMessage({ type: 'success', text: 'Company settings updated successfully!' })

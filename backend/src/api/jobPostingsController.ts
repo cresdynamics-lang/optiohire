@@ -615,6 +615,10 @@ export async function updateJobPosting(req: Request, res: Response) {
       updates.push(`custom_questions = $${param++}`)
       values.push(JSON.stringify(body.custom_questions))
     }
+    if (Object.prototype.hasOwnProperty.call(body, 'job_poster_url')) {
+      updates.push(`job_poster_url = $${param++}`)
+      values.push(body.job_poster_url || null)
+    }
 
     if (updates.length === 0) return res.status(400).json({ error: 'No valid fields provided' })
 

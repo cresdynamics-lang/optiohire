@@ -218,14 +218,14 @@ export function EditJobSection() {
       setIsSaving(true)
       const token = localStorage.getItem('token')
       
-      // Currently, the frontend uses Supabase for direct updates in some places, 
-      // but let's try to use the API or fallback to Supabase if needed.
-      // Based on jobs-section.tsx, handleSaveJob uses Supabase.
-      
-      const { supabase } = await import('@/lib/supabase')
-      const { error } = await supabase
-        .from('job_postings')
-        .update({
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
+      const resp = await fetch(`${backendUrl}/api/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
           job_title: formData.job_title,
           job_description: formData.job_description,
           required_skills: formData.required_skills,
@@ -234,12 +234,14 @@ export function EditJobSection() {
           application_deadline: formData.application_deadline,
           status: formData.status,
           custom_questions: formData.custom_questions,
-          job_poster_url: formData.job_poster_url,
-          updated_at: new Date().toISOString()
+          job_poster_url: formData.job_poster_url
         })
-        .eq('job_posting_id', jobId)
+      })
 
-      if (error) throw error
+      if (!resp.ok) {
+        const errorData = await resp.json().catch(() => ({}))
+        throw new Error(errorData.error || errorData.message || 'Failed to update job posting')
+      }
 
       toast({
         title: "Success",
