@@ -20,6 +20,8 @@ export function ProfileOnboardingModal({
   onSuccess: () => void
 }) {
   const [loading, setLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success'>('idle')
   const [bio, setBio] = useState('')
   const [jobCategory, setJobCategory] = useState('')
   const [cvFile, setCvFile] = useState<File | null>(null)
@@ -38,27 +40,59 @@ export function ProfileOnboardingModal({
       if (coverLetterFile) formData.append('coverLetter', coverLetterFile)
       if (recLetterFile) formData.append('recommendationLetter', recLetterFile)
 
-      const res = await fetch('/api/candidate/profile/onboarding', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      })
+      setUploadStatus('uploading')
+      setUploadProgress(0)
 
-      const data = await res.json()
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', '/api/candidate/profile/onboarding')
+      xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`)
 
-      if (data.success) {
-        toast.success('Profile updated successfully!')
-        onSuccess()
-        onClose()
-      } else {
-        toast.error(data.error || 'Failed to update profile')
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100)
+          setUploadProgress(percentComplete)
+        }
       }
+
+      xhr.onload = () => {
+        setLoading(false)
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText)
+            if (data.success) {
+              setUploadStatus('success')
+              toast.success('Profile updated successfully!')
+              setTimeout(() => {
+                onSuccess()
+                onClose()
+                setUploadStatus('idle')
+                setUploadProgress(0)
+              }, 1000)
+            } else {
+              setUploadStatus('idle')
+              toast.error(data.error || 'Failed to update profile')
+            }
+          } catch (e) {
+            setUploadStatus('idle')
+            toast.error('Invalid server response')
+          }
+        } else {
+          setUploadStatus('idle')
+          toast.error('Failed to update profile')
+        }
+      }
+
+      xhr.onerror = () => {
+        setLoading(false)
+        setUploadStatus('idle')
+        toast.error('Network error during upload')
+      }
+
+      xhr.send(formData)
     } catch (err) {
-      toast.error('Network error during upload')
-    } finally {
       setLoading(false)
+      setUploadStatus('idle')
+      toast.error('Network error during upload')
     }
   }
 
@@ -131,13 +165,34 @@ export function ProfileOnboardingModal({
           </div>
           <FileUploader label="Upload Recommendation Letter" file={recLetterFile} setFile={setRecLetterFile} />
 
+          {uploadStatus === 'uploading' && (
+            <div className="pt-2 pb-4">
+              <div className="flex justify-between text-xs font-medium text-slate-500 mb-1">
+                <span>Uploading files...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-indigo-600 h-full transition-all duration-300 ease-out" 
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {uploadStatus === 'success' && (
+            <div className="flex items-center justify-center p-3 mb-4 rounded-lg bg-green-50 text-green-700 text-sm font-medium border border-green-200">
+              <UploadCloud className="w-4 h-4 mr-2" /> Upload Complete!
+            </div>
+          )}
+
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Skip for now
             </Button>
             <Button type="submit" disabled={loading || (!bio && !jobCategory && !cvFile)} className="bg-indigo-600 hover:bg-indigo-700 text-white">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? 'Saving...' : 'Save Profile & Get Scored'}
+              {loading ? `Uploading (${uploadProgress}%)` : 'Save Profile & Get Scored'}
             </Button>
           </div>
         </form>

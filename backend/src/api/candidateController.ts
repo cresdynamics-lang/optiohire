@@ -20,6 +20,16 @@ function isMissingRelation(error: any): boolean {
 }
 
 async function ensureCandidateFeatureTables() {
+  try {
+    await query(`
+      ALTER TABLE candidate_profiles 
+      ADD COLUMN IF NOT EXISTS cover_letter_url text,
+      ADD COLUMN IF NOT EXISTS recommendation_letter_url text;
+    `)
+  } catch (err) {
+    console.warn('Failed to add columns to candidate_profiles', err)
+  }
+
   await query(`
     CREATE TABLE IF NOT EXISTS candidate_missions (
       mission_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

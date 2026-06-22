@@ -22,6 +22,8 @@ router.post('/submission', candidateSignin)
 router.post('/signup', candidateSignup)
 
 router.use(authenticate) // Ensure user is logged in
+router.get('/leaderboard', getLeaderboard)
+
 router.use(requireCandidate) // Ensure user is a candidate
 
 router.get('/dashboard', getCandidateDashboard)
@@ -36,6 +38,5 @@ router.post('/profile/onboarding', uploadCandidateDocumentMiddleware.fields([
 ]), onboardProfile)
 router.post('/certificate', uploadCandidateDocumentMiddleware.single('certificate'), uploadCertificate)
 router.post('/missions/:missionId/complete', completeMission)
-router.get('/leaderboard', getLeaderboard)
 
 export default router
