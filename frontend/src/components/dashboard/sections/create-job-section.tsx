@@ -627,8 +627,11 @@ export function CreateJobSection() {
 
       {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-4xl w-full bg-white border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+        <DialogContent aria-describedby="success-dialog-description" className="sm:max-w-4xl w-full bg-white border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
           <DialogTitle className="sr-only">Job Published Successfully</DialogTitle>
+          <div id="success-dialog-description" className="sr-only">
+            Success dialog showing the newly created job posting details and share links.
+          </div>
           {/* Header */}
           <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-purple-700 px-12 py-16 flex flex-col items-center justify-center text-white relative overflow-hidden">
             {/* Decorative circles */}
