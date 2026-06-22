@@ -47,7 +47,7 @@ import { resendWebhookPoller } from './services/resendWebhookPoller.js'
 const app = express()
 const port = Number(process.env.PORT || 3001)
 const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS || 1)
-app.set('trust proxy', 1)
+app.set('trust proxy', true)
 
 // Temporarily add to app.ts or any router — remove after testing
 app.get('/debug/ip', (req, res) => {
@@ -93,7 +93,7 @@ app.use(express.json({ limit: '2mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan('dev'))
 app.use(performanceMonitor)
-app.use('/api', apiLimiter)
+// app.use('/api', apiLimiter) // Completely disabled rate limiting
 
 app.get('/health', async (_req, res) => {
   const health: any = {
