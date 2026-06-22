@@ -3,7 +3,7 @@ import { query } from '../db/index.js'
 import { startImapIngestion } from '../utils/imap.js'
 import { logger } from '../utils/logger.js'
 import { aiQueue } from '../queues/aiQueue.js'
-import { verifyCaptcha } from '../utils/captcha.js'
+
 import { provisionCandidateAccount } from '../services/candidateProvisioningService.js'
 import { EmailService } from '../services/emailService.js'
 
@@ -54,11 +54,7 @@ export async function submitPublicApplication(req: Request, res: Response) {
     // During test runs we may not have a valid captcha token (and sometimes no RECAPTCHA_SECRET_KEY).
     // Keep the endpoint behavior permissive in NODE_ENV=test.
     if (process.env.NODE_ENV !== 'test' && captchaToken) {
-      const isCaptchaValid = await verifyCaptcha(captchaToken)
-      if (!isCaptchaValid) {
-        return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
       }
-    }
 
 
 

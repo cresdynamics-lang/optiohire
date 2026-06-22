@@ -62,6 +62,9 @@ export function CreateJobSection() {
   const [isUploadingPoster, setIsUploadingPoster] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
 
+  const [workType, setWorkType] = useState('Remote')
+  const [customWorkType, setCustomWorkType] = useState('')
+
   // Pre-fill company info from user
   useEffect(() => {
     if (user) {
@@ -232,6 +235,7 @@ export function CreateJobSection() {
     setStatus({ status: 'sending', message: 'Creating job posting...' })
 
     try {
+      const finalWorkType = workType === 'Custom' ? customWorkType : workType
       const token = localStorage.getItem('token')
       const resp = await fetch('/api/job-postings', {
         method: 'POST',
@@ -244,7 +248,7 @@ export function CreateJobSection() {
           company_email: formData.company_email,
           hr_email: formData.hr_email,
           job_title: formData.job_title,
-          job_description: formData.job_description,
+          job_description: `${formData.job_description}\n\n[Work Type: ${finalWorkType}]`,
           required_skills: formData.required_skills,
           application_deadline: formData.application_deadline,
           meeting_link: formData.interview_meeting_link || undefined,
@@ -370,6 +374,37 @@ export function CreateJobSection() {
                     required
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="work_type" className="text-sm font-semibold">Work Type / Location</Label>
+                  <select
+                    id="work_type"
+                    value={workType}
+                    onChange={(e) => setWorkType(e.target.value)}
+                    className="flex h-11 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+                  >
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="On-site">On-site</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Custom">Custom (Type below)</option>
+                  </select>
+                </div>
+                {workType === 'Custom' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom_work_type" className="text-sm font-semibold">Custom Work Type</Label>
+                    <Input
+                      id="custom_work_type"
+                      placeholder="e.g. Remote (US Only)"
+                      className="h-11 border-slate-200"
+                      value={customWorkType}
+                      onChange={(e) => setCustomWorkType(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
                 
                 <div className="space-y-2">
                   <Label htmlFor="job_description" className="text-sm font-semibold flex justify-between">

@@ -49,6 +49,9 @@ export function EditJobSection() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [status, setStatus] = useState<{status: 'idle' | 'success' | 'error', message?: string}>({ status: 'idle' })
 
+  const [workType, setWorkType] = useState('Remote')
+  const [customWorkType, setCustomWorkType] = useState('')
+
   useEffect(() => {
     const fetchJob = async () => {
       if (!jobId || !user) return
@@ -73,9 +76,22 @@ export function EditJobSection() {
         }
 
         setJob(foundJob)
+        let desc = foundJob.job_description || ''
+        let wt = 'Remote'
+        const match = desc.match(/\n\n\[Work Type: (.*?)\]/)
+        if (match) {
+          wt = match[1]
+          desc = desc.replace(/\n\n\[Work Type: .*?\]/, '')
+        }
+        if (!['Remote', 'Hybrid', 'On-site', 'Contract', 'Full-time', 'Part-time'].includes(wt)) {
+          setCustomWorkType(wt)
+          wt = 'Custom'
+        }
+        setWorkType(wt)
+
         setFormData({
           job_title: foundJob.job_title,
-          job_description: foundJob.job_description,
+          job_description: desc,
           required_skills: Array.isArray(foundJob.required_skills) ? foundJob.required_skills : [],
           interview_meeting_link: foundJob.interview_meeting_link || foundJob.meeting_link,
           application_deadline: foundJob.application_deadline,
@@ -219,6 +235,7 @@ export function EditJobSection() {
       const token = localStorage.getItem('token')
       
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
+      const finalWorkType = workType === 'Custom' ? customWorkType : workType;
       const resp = await fetch(`${backendUrl}/api/job-postings/${jobId}`, {
         method: 'PATCH',
         headers: {
@@ -227,7 +244,7 @@ export function EditJobSection() {
         },
         body: JSON.stringify({
           job_title: formData.job_title,
-          job_description: formData.job_description,
+          job_description: `${formData.job_description}\n\n[Work Type: ${finalWorkType}]`,
           required_skills: formData.required_skills,
           interview_meeting_link: formData.interview_meeting_link,
           meeting_link: formData.interview_meeting_link,
@@ -392,6 +409,37 @@ export function EditJobSection() {
                     required
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="work_type" className="text-sm font-semibold">Work Type / Location</Label>
+                  <select
+                    id="work_type"
+                    value={workType}
+                    onChange={(e) => setWorkType(e.target.value)}
+                    className="flex h-11 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+                  >
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="On-site">On-site</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Custom">Custom (Type below)</option>
+                  </select>
+                </div>
+                {workType === 'Custom' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom_work_type" className="text-sm font-semibold">Custom Work Type</Label>
+                    <Input
+                      id="custom_work_type"
+                      placeholder="e.g. Remote (US Only)"
+                      className="h-11 border-slate-200"
+                      value={customWorkType}
+                      onChange={(e) => setCustomWorkType(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
                 
                 <div className="space-y-2">
                   <Label htmlFor="job_description" className="text-sm font-semibold">Job Description</Label>

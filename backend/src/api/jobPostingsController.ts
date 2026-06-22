@@ -2,7 +2,7 @@ import type { Request, Response } from 'express'
 import { z } from 'zod'
 import { pool, query } from '../db/index.js'
 import { logger } from '../utils/logger.js'
-import { verifyCaptcha } from '../utils/captcha.js'
+
 import { APPLICATION_INBOX_EMAIL, getRecommendedApplicationSubject } from '../config/applicationInbox.js'
 import { cache, cacheKeys } from '../utils/redis.js'
 
@@ -676,11 +676,6 @@ export async function deleteJobPosting(req: Request, res: Response) {
 export async function getPublicJobPostings(req: Request, res: Response) {
   try {
     const captchaToken = req.headers['x-captcha-token'] as string | undefined
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-    }
-
     const cacheKey = cacheKeys.publicJobs()
     const cached = await cache.get<{ jobs: any[] }>(cacheKey)
     if (cached) return res.json(cached)
@@ -705,11 +700,6 @@ export async function getPublicJobPostings(req: Request, res: Response) {
 export async function getPublicJobPostingById(req: Request, res: Response) {
   try {
     const captchaToken = req.headers['x-captcha-token'] as string | undefined
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-    }
-
     const { id } = req.params
     const cacheKey = cacheKeys.publicJob(id)
     const cached = await cache.get<{ job: any }>(cacheKey)
@@ -738,11 +728,6 @@ export async function getPublicJobPostingById(req: Request, res: Response) {
 export async function getPublicCompanyJobPostings(req: Request, res: Response) {
   try {
     const captchaToken = req.headers['x-captcha-token'] as string | undefined
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-    }
-
     const { companyId } = req.params
     const { rows: jobs } = await query(
       `SELECT jp.job_posting_id, jp.company_id, jp.job_title, jp.job_description, jp.skills_required, jp.application_deadline, jp.status, jp.created_at, jp.job_poster_url, jp.custom_questions, c.company_name, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url

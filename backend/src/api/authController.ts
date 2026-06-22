@@ -5,7 +5,7 @@ import crypto from 'crypto'
 import { z } from 'zod'
 import { query, pool } from '../db/index.js'
 import { EmailService } from '../services/emailService.js'
-import { verifyCaptcha } from '../utils/captcha.js'
+
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) {
@@ -67,10 +67,6 @@ export async function signup(req: Request, res: Response) {
 
   const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email, captchaToken } = result.data
   
-  if (!(await verifyCaptcha(captchaToken))) {
-    return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-  }
-
   const isCandidate = ['candidate', 'jobseeker', 'job seeker', 'job-seeker', 'job_seeker'].includes(company_role)
   const isEmployerAlias = ['employer', 'company', 'recruiter'].includes(company_role)
   const targetRole = isCandidate ? 'candidate' : (isEmployerAlias ? 'hr' : company_role)
@@ -257,8 +253,6 @@ export async function forgotPassword(req: Request, res: Response) {
   const { email, captchaToken } = req.body || {}
   const cleanEmail = CleanEmail.safeParse(email)
   if (!cleanEmail.success) return res.status(400).json({ error: 'Valid email required' })
-
-  if (!(await verifyCaptcha(captchaToken))) return res.status(400).json({ error: 'Invalid captcha' })
 
   try {
     const { rows } = await query<{ user_id: string, email: string, name: string | null }>(

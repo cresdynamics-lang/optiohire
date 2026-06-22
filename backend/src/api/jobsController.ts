@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
-import { verifyCaptcha } from '../utils/captcha.js'
+
 import { cache, cacheKeys } from '../utils/redis.js'
 import crypto from 'crypto'
 
@@ -93,13 +93,6 @@ export async function getApplicantsByJob(req: Request, res: Response) {
 // GET all public active job postings
 export async function getPublicJobs(req: Request, res: Response) {
   try {
-    const captchaToken = req.headers['x-captcha-token'] as string | undefined
-    
-    // Verify captcha
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-    }
 
     // Try cache first
     const cacheKey = cacheKeys.publicJobs()
@@ -132,14 +125,6 @@ export async function getPublicJobs(req: Request, res: Response) {
 // GET single public job posting by ID
 export async function getPublicJobById(req: Request, res: Response) {
   try {
-    const captchaToken = req.headers['x-captcha-token'] as string | undefined
-    
-    // Verify captcha
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-    }
-
     const { id } = req.params
     if (!id || id === 'undefined') {
       return res.status(400).json({ error: 'Invalid job ID' })

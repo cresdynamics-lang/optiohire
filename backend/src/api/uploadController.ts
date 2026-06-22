@@ -5,7 +5,7 @@ import { saveFile } from '../utils/storage.js'
 import { logger } from '../utils/logger.js'
 import path from 'path'
 import crypto from 'crypto'
-import { verifyCaptcha } from '../utils/captcha.js'
+
 
 // Configure multer for memory storage (we'll save to disk/S3 after validation)
 const storage = multer.memoryStorage()
@@ -189,12 +189,6 @@ export async function uploadPublicCandidateDocument(req: Request, res: Response)
   try {
     const captchaToken = req.headers['x-captcha-token'] as string | undefined
     
-    // Verify captcha
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return res.status(400).json({ error: 'Invalid captcha. Please try again.' })
-    }
-
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' })
     }
