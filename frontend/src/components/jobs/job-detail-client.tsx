@@ -3,10 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import {
-  ArrowLeft, Building2, Clock, Calendar, CheckCircle2,
-  Briefcase, ChevronRight, Share2, AlertCircle, Sparkles, Globe, Linkedin, Twitter
-} from 'lucide-react'
+import { Heart, Share2, Briefcase, MapPin, DollarSign, Clock, Building2, ChevronRight, CheckCircle2, Globe, Linkedin, Twitter, Sparkles, Mail, ArrowLeft, Calendar, AlertCircle } from 'lucide-react'
+import { SimilarJobs } from './similar-jobs'
 // removed recaptcha import
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -406,6 +404,9 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
                 </div>
               )}
             </div>
+
+            {/* Similar Jobs Widget */}
+            <SimilarJobs currentJob={job} />
 
             {/* Browse more */}
             <Link
