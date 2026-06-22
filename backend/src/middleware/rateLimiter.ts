@@ -10,7 +10,7 @@ const isProduction = process.env.NODE_ENV === 'production'
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: isProduction ? 1000 : 10_000,
+  max: 100000,
   message: {
     error: 'Too many requests',
     details: 'Please try again later.'
@@ -45,7 +45,7 @@ export const apiLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5000, // Limit each IP to 5 requests per windowMs
+  max: 100000, // Limit each IP to 5 requests per windowMs
   message: {
     error: 'Too many authentication attempts',
     details: 'Please try again after 15 minutes.'
@@ -81,7 +81,7 @@ export const authLimiter = rateLimit({
  */
 export const passwordResetRequestLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Allow legitimate retries but still throttle abuse
+  max: 100000, // Allow legitimate retries but still throttle abuse
   message: {
     error: 'Too many password reset attempts',
     details: 'Please try again after 15 minutes.'
@@ -104,7 +104,7 @@ export const passwordResetRequestLimiter = rateLimit({
  */
 export const passwordResetFlowLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 30,
+  max: 100000,
   message: {
     error: 'Too many password reset attempts',
     details: 'Please wait a few minutes and try again.'
@@ -126,7 +126,7 @@ export const passwordResetFlowLimiter = rateLimit({
  */
 export const aiOperationLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 20, // Limit each IP to 20 requests per minute
+  max: 100000, // Limit each IP to 20 requests per minute
   message: {
     error: 'Too many AI operations',
     details: 'Please wait a moment before making another request.'

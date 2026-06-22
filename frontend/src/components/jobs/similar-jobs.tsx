@@ -58,7 +58,26 @@ export function SimilarJobs({ currentJob }: { currentJob: Job }) {
     fetchJobs()
   }, [currentJob])
 
-  if (isLoading || similarJobs.length === 0) return null
+  if (isLoading) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="mb-6 h-6 w-32 rounded-lg bg-slate-100 animate-pulse" />
+        <div className="flex flex-col gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 animate-pulse">
+              <div className="h-12 w-12 rounded-xl bg-slate-100 shrink-0" />
+              <div className="flex flex-col gap-2 w-full">
+                <div className="h-4 w-3/4 rounded bg-slate-100" />
+                <div className="h-3 w-1/2 rounded bg-slate-100" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (similarJobs.length === 0) return null
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
