@@ -172,7 +172,7 @@ export async function signin(req: Request, res: Response) {
   const { email, password, portal } = result.data
 
   try {
-    const { rows } = await query<{ user_id: string, password_hash: string, role: string, is_active: boolean, name: string | null, company_role: string | null, created_at: string }>(
+    const { rows } = await query<{ user_id: string, password_hash: string, role: string, is_active: boolean, name: string | null, company_role: string | null, created_at: string, last_login_at: string | null }>(
       `SELECT * FROM users WHERE email = $1`, [email]
     )
     if (rows.length === 0 || !(await bcrypt.compare(password, rows[0].password_hash))) {
@@ -217,9 +217,12 @@ export async function signin(req: Request, res: Response) {
     }
 
     const token = jwt.sign({ sub: user.user_id, email, role: user.role }, JWT_SECRET, { expiresIn: '7d' })
+    
+    query(`UPDATE users SET last_login_at = NOW() WHERE user_id = $1`, [user.user_id]).catch(e => console.error('Failed to update last_login_at', e))
+    
     return res.status(200).json({ 
       token, 
-      user: { id: user.user_id, email, name: user.name, role: user.role, company_role: user.company_role, ...companyInfo } 
+      user: { id: user.user_id, email, name: user.name, role: user.role, company_role: user.company_role, previous_login_at: user.last_login_at, ...companyInfo } 
     })
   } catch (err) {
     console.error('Signin error:', err)
@@ -406,7 +409,7 @@ export async function googleSignIn(req: Request, res: Response) {
     if (!info.email || info.email_verified !== 'true') return res.status(401).json({ error: 'Verified email required' })
 
     const email = info.email.toLowerCase().trim()
-    const { rows: user } = await query<{ user_id: string, role: string, name: string | null, is_active: boolean, company_role: string | null }>(
+    const { rows: user } = await query<{ user_id: string, role: string, name: string | null, is_active: boolean, company_role: string | null, last_login_at: string | null }>(
       `SELECT * FROM users WHERE email = $1`, [email]
     )
     if (user.length === 0) return res.status(401).json({ error: 'User does not exist. Sign up first.' })
@@ -438,7 +441,10 @@ export async function googleSignIn(req: Request, res: Response) {
     }
 
     const token = jwt.sign({ sub: u.user_id, email, role: u.role }, JWT_SECRET, { expiresIn: '7d' })
-    return res.status(200).json({ token, user: { id: u.user_id, email, name: u.name || info.name || 'User', role: u.role, company_role: u.company_role, ...companyInfo } })
+    
+    query(`UPDATE users SET last_login_at = NOW() WHERE user_id = $1`, [u.user_id]).catch(e => console.error('Failed to update last_login_at', e))
+    
+    return res.status(200).json({ token, user: { id: u.user_id, email, name: u.name || info.name || 'User', role: u.role, company_role: u.company_role, previous_login_at: u.last_login_at, ...companyInfo } })
   } catch (err) {
     return res.status(500).json({ error: 'Google sign-in failed' })
   }

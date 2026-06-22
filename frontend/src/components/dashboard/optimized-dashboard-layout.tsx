@@ -14,6 +14,7 @@ import { Sidebar } from './sidebar'
 import { ChatbotWidget } from './chatbot-widget'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ProfileCompletenessBanner } from '@/components/candidate/ProfileCompletenessBanner'
+import { ReturningCandidateWelcomeModal } from '@/components/candidate/ReturningCandidateWelcomeModal'
 
 // Simple Error Boundary component
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
@@ -911,6 +912,17 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
       {/* Toast Notification System */}
       <Toaster />
       {!isJobSeeker && <ChatbotWidget />}
+
+      {/* Returning Candidate Welcome Modal */}
+      {isJobSeeker && user?.previous_login_at && (
+        <ReturningCandidateWelcomeModal 
+          user={user} 
+          onClose={() => {}} 
+          onSuccess={() => {
+            // Optional: trigger profile refresh if needed
+          }} 
+        />
+      )}
     </div>
   )
 }

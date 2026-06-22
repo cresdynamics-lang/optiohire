@@ -26,8 +26,12 @@ async function ensureCandidateFeatureTables() {
       ADD COLUMN IF NOT EXISTS cover_letter_url text,
       ADD COLUMN IF NOT EXISTS recommendation_letter_url text;
     `)
+    await query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;
+    `)
   } catch (err) {
-    console.warn('Failed to add columns to candidate_profiles', err)
+    console.warn('Failed to add columns', err)
   }
 
   await query(`
@@ -663,6 +667,13 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
 export const onboardProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId!
+    
+    try {
+      await ensureCandidateFeatureTables()
+    } catch (e) {
+      console.warn('ensureCandidateFeatureTables error:', e)
+    }
+
     const { bio, jobCategory } = req.body
     
     let profile = await candidateRepo.getProfileByUserId(userId)

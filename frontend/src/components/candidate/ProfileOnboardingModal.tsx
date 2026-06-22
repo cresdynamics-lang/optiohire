@@ -111,7 +111,14 @@ export function ProfileOnboardingModal({
           className="hidden"
           accept=".pdf,.doc,.docx"
           onChange={(e) => {
-            if (e.target.files?.[0]) setFile(e.target.files[0])
+            const file = e.target.files?.[0]
+            if (file) {
+              if (file.size > 10 * 1024 * 1024) {
+                toast.error('File exceeds 10MB limit')
+                return
+              }
+              setFile(file)
+            }
           }}
         />
       </label>
