@@ -30,6 +30,7 @@ import { SingleDateTimePicker } from '@/components/ui/single-date-time-picker'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useAuth } from '@/hooks/use-auth'
 import Link from 'next/link'
+import { JobPreviewSheet } from './job-preview-sheet'
 
 const APPLICATION_INBOX_EMAIL = 'jobs@optiohire.com'
 
@@ -269,7 +270,7 @@ export function CreateJobSection() {
         setShowSuccessDialog(true)
         setStatus({ status: 'success', message: 'Job created successfully!' })
       } else {
-        throw new Error(data.error?.message || data.error || 'Failed to create job posting')
+        throw new Error(data.details || data.error?.message || data.error || 'Failed to create job posting')
       }
     } catch (error: any) {
       setStatus({ status: 'error', message: error.message })
@@ -597,20 +598,27 @@ export function CreateJobSection() {
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting || isUploadingPoster}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 h-12 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Job...
-                    </>
-                  ) : (
-                    'Publish Job Posting'
-                  )}
-                </Button>
+                <div className="flex gap-4">
+                  <JobPreviewSheet 
+                    formData={formData} 
+                    workType={workType} 
+                    customWorkType={customWorkType} 
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting || isUploadingPoster}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 h-12 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Job...
+                      </>
+                    ) : (
+                      'Publish Job Posting'
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>

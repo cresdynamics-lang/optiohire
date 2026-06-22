@@ -17,11 +17,24 @@ export const apiLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  handler: (req, res) => {
+  handler: (req, res, next, options) => {
     logger.warn(`Rate limit exceeded for IP: ${req.ip}`)
+    const resetTime = (req as any).rateLimit?.resetTime
+    const now = new Date()
+    const diffSeconds = resetTime ? Math.max(0, Math.ceil((resetTime.getTime() - now.getTime()) / 1000)) : 15 * 60
+    const minutes = Math.floor(diffSeconds / 60)
+    const seconds = diffSeconds % 60
+    
+    let timeStr = ''
+    if (minutes > 0) timeStr += `${minutes}m `
+    if (seconds > 0) timeStr += `${seconds}s`
+    if (!timeStr) timeStr = 'a moment'
+    else timeStr = timeStr.trim()
+
     res.status(429).json({
-      error: 'Too many requests',
-      details: 'Please try again later.'
+      error: 'Rate Limit Exceeded',
+      details: `You have made too many requests. Please try again in ${timeStr}.`,
+      retryAfter: diffSeconds
     })
   }
 })
@@ -40,11 +53,24 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Don't count successful requests
-  handler: (req, res) => {
+  handler: (req, res, next, options) => {
     logger.warn(`Auth rate limit exceeded for IP: ${req.ip}`)
+    const resetTime = (req as any).rateLimit?.resetTime
+    const now = new Date()
+    const diffSeconds = resetTime ? Math.max(0, Math.ceil((resetTime.getTime() - now.getTime()) / 1000)) : 15 * 60
+    const minutes = Math.floor(diffSeconds / 60)
+    const seconds = diffSeconds % 60
+    
+    let timeStr = ''
+    if (minutes > 0) timeStr += `${minutes}m `
+    if (seconds > 0) timeStr += `${seconds}s`
+    if (!timeStr) timeStr = 'a moment'
+    else timeStr = timeStr.trim()
+
     res.status(429).json({
-      error: 'Too many authentication attempts',
-      details: 'Please try again after 15 minutes.'
+      error: 'Authentication Rate Limit Exceeded',
+      details: `Too many authentication attempts. Please try again in ${timeStr}.`,
+      retryAfter: diffSeconds
     })
   }
 })
