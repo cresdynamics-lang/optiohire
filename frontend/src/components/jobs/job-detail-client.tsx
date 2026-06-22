@@ -405,6 +405,31 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
               )}
             </div>
 
+            {/* Talent Pool CTA */}
+            <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 shadow-sm">
+              <div className="absolute -right-4 -top-4 opacity-10">
+                <Sparkles className="h-24 w-24 text-blue-600" />
+              </div>
+              <div className="relative z-10">
+                <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-blue-100/80 px-3 py-1 text-xs font-semibold text-blue-800">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Not a perfect match?
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-slate-900 leading-snug">
+                  Join our Elite Talent Pool
+                </h3>
+                <p className="mb-6 text-sm text-slate-600 leading-relaxed">
+                  OptioHire partners with top companies worldwide. Create a free candidate profile and let our AI do the heavy lifting. We'll instantly email you when the perfect role finds you—no hustling required.
+                </p>
+                <Link
+                  href="/candidate/auth/signup"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-all duration-300 hover:shadow-md"
+                >
+                  Join Talent Pool <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+
             {/* Similar Jobs Widget */}
             <SimilarJobs currentJob={job} />
 
