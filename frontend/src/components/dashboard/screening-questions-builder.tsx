@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Plus, Trash2, GripVertical, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Plus, Trash2, GripVertical, Sparkles, AlertCircle, CheckCircle2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

@@ -57,9 +57,12 @@ export function JobsSection() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       })
 
-      if (!response.ok) throw new Error('Failed to load job postings')
+      const data = await response.json().catch(() => ({}))
+      
+      if (!response.ok) {
+        throw new Error(data.details || data.error || 'Failed to load job postings')
+      }
 
-      const data = await response.json()
       const jobPostings = data.jobs || []
       
       if (jobPostings.length === 0) {
@@ -200,6 +203,25 @@ export function JobsSection() {
 
       {isLoading ? (
         <div className="flex justify-center py-12"><RefreshCw className="w-8 h-8 animate-spin text-[#2D2DDD]" /></div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-3xl border border-red-200/90 shadow-sm mt-6">
+          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+            <RefreshCw className="w-10 h-10 text-red-500" />
+          </div>
+          <h3 className="text-2xl font-bold font-figtree text-slate-900 mb-2">Error Loading Jobs</h3>
+          <p className="text-slate-500 max-w-md mx-auto mb-8">
+            {error}
+          </p>
+          <Button 
+            size="lg" 
+            variant="outline"
+            className="rounded-xl px-8 h-12 text-base shadow-sm" 
+            onClick={loadJobs}
+          >
+            <RefreshCw className="w-5 h-5 mr-2" /> 
+            Try Again
+          </Button>
+        </div>
       ) : jobs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-3xl border border-slate-200/90 shadow-sm mt-6">
           <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
@@ -230,10 +252,28 @@ export function JobsSection() {
                 className="group relative"
               >
                 <Card 
-                  className="cursor-pointer border-slate-200 bg-white transition-all hover:border-[#2D2DDD]/30 hover:shadow-md   overflow-hidden"
+                  className="cursor-pointer border-slate-200 bg-white transition-all hover:border-[#2D2DDD]/30 hover:shadow-md overflow-hidden flex flex-col"
                   onClick={() => handleViewDetails(job.id)}
                 >
-                  <CardContent className="p-6">
+                  <div className="w-full h-32 bg-gradient-to-br from-indigo-50 to-blue-50 relative border-b border-slate-100 flex items-center justify-center overflow-hidden">
+                    {job.job_poster_url ? (
+                      <img 
+                        src={job.job_poster_url} 
+                        alt={`${job.job_title} poster`} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`flex flex-col items-center justify-center ${job.job_poster_url ? 'hidden' : ''}`}>
+                      <Briefcase className="w-6 h-6 text-[#2D2DDD]/40 mb-1" />
+                      <span className="text-xs font-medium text-slate-400">Add a job poster (recommended)</span>
+                    </div>
+                  </div>
+                  <CardContent className="p-6 flex-1">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-3">
                         <h3 className="font-bold text-xl text-foreground group-hover:text-[#2D2DDD] transition-colors">

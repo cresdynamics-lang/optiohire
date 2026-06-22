@@ -46,7 +46,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const dynamicOgImage = `https://optiohire.com/api/og/job?title=${encodeURIComponent(job.job_title)}&company=${encodeURIComponent(job.company_name)}`;
     
     // Choose the best available image: poster > company logo > dynamic OG image
-    const ogImage = job.job_poster_url || job.company_logo_url || dynamicOgImage;
+    let ogImage = job.job_poster_url || job.company_logo_url || dynamicOgImage;
+    if (ogImage && ogImage.startsWith('/')) {
+      ogImage = `${backendUrl}${ogImage}`;
+    }
     
     return {
       title,
