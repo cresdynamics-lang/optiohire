@@ -85,7 +85,7 @@ export function ReturningCandidateWelcomeModal({
               }, 2000)
             } else {
               setUploadStatus('idle')
-              toast.error(data.error || 'Failed to update profile')
+              toast.error(data.details || data.error || 'Failed to update profile')
             }
           } catch (e) {
             setUploadStatus('idle')
