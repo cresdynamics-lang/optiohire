@@ -14,9 +14,10 @@ interface ScreeningQuestionsBuilderProps {
   onChange: (questions: CustomQuestion[]) => void
   jobTitle: string
   jobDescription: string
+  token?: string | null
 }
 
-export function ScreeningQuestionsBuilder({ questions, onChange, jobTitle, jobDescription }: ScreeningQuestionsBuilderProps) {
+export function ScreeningQuestionsBuilder({ questions, onChange, jobTitle, jobDescription, token }: ScreeningQuestionsBuilderProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState('')
 
@@ -79,9 +80,15 @@ export function ScreeningQuestionsBuilder({ questions, onChange, jobTitle, jobDe
     setIsGenerating(true)
     setError('')
     try {
+      const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const authToken = token || storedToken;
+      
       const response = await fetch('/api/job-postings/generate-questions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({
           job_title: jobTitle,
           job_description: jobDescription

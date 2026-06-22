@@ -86,7 +86,8 @@ const nextConfig = {
       { source: '/api/analytics/:path*', destination: `${backendUrl}/api/analytics/:path*` },
       { source: '/api/user/:path*', destination: `${backendUrl}/api/user/:path*` },
       { source: '/api/templates/:path*', destination: `${backendUrl}/api/templates/:path*` },
-      { source: '/api/contact', destination: `${backendUrl}/contact` }
+      { source: '/api/contact', destination: `${backendUrl}/contact` },
+      { source: '/storage/:path*', destination: `${backendUrl}/storage/:path*` }
     ]
   },
 
