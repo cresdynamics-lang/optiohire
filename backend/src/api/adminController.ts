@@ -27,8 +27,21 @@ export async function getAllUsers(req: Request, res: Response) {
       params.push(`%${search}%`)
     }
     if (role) {
-      conditions.push(`role = $${paramIndex++}`)
-      params.push(role)
+      if (role === 'admin') {
+        conditions.push(`role = $${paramIndex++}`)
+        params.push('admin')
+      } else if (role === 'hr') {
+        // HR if company_role is hr, or if they are linked to a company
+        conditions.push(`(company_role = 'hr' OR EXISTS (SELECT 1 FROM companies c WHERE c.user_id = users.user_id OR LOWER(c.hr_email) = LOWER(users.email)))`)
+      } else if (role === 'candidate') {
+        // Candidate if company_role is candidate, or in talent pool, or applied to a job
+        conditions.push(`(company_role = 'candidate' OR EXISTS (SELECT 1 FROM talent_pool tp WHERE LOWER(tp.email) = LOWER(users.email)) OR EXISTS (SELECT 1 FROM applications a WHERE LOWER(a.email) = LOWER(users.email)))`)
+      } else if (role === 'user') {
+        conditions.push(`role = 'user'`)
+      } else {
+        conditions.push(`role = $${paramIndex++}`)
+        params.push(role)
+      }
     }
     if (status === 'active') {
       conditions.push(`is_active = true`)
@@ -84,7 +97,7 @@ export async function getAllUsers(req: Request, res: Response) {
     }>(
       `SELECT ${selectFields}
        FROM users 
-       ${whereClause ? whereClause.replace(/(\w+)(?=\s*(?:=|ILIKE|IS))/g, 'users.$1') : ''}
+       ${whereClause}
        ORDER BY users.created_at DESC 
        LIMIT $1 OFFSET $2`,
       params

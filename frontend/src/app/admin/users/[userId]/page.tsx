@@ -57,7 +57,7 @@ export default function UserDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const isSeniorAdmin = currentAdmin?.email === 'jobs@optiohire.com'
+  const isSeniorAdmin = currentAdmin?.role === 'admin'
 
   useEffect(() => {
     if (!currentAdmin || currentAdmin.role !== 'admin') {

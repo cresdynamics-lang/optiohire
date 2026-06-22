@@ -400,7 +400,7 @@ export async function resendEmail(req: AuthRequest, res: Response) {
  */
 export async function getDeadLetterEmails(req: Request, res: Response) {
   try {
-    const { page = '1', limit = '50', emailType } = req.query
+    const { page = '1', limit = '50', emailType, showPending = 'false' } = req.query
     const offset = (Number(page) - 1) * Number(limit)
     const maxAttempts = Number(process.env.EMAIL_RETRY_MAX_ATTEMPTS || 8)
 
@@ -422,11 +422,17 @@ export async function getDeadLetterEmails(req: Request, res: Response) {
       })
     }
 
-    let whereClause = `WHERE status = 'failed'
+    let whereClause = ''
+    if (showPending === 'true') {
+      whereClause = `WHERE status IN ('pending', 'processing') OR (status = 'failed' AND COALESCE((metadata->>'is_retry_eligible')::boolean, true) = true AND COALESCE((metadata->>'retry_count')::int, 0) < $3)`
+    } else {
+      whereClause = `WHERE status = 'failed'
       AND (
         COALESCE((metadata->>'is_retry_eligible')::boolean, true) = false
         OR COALESCE((metadata->>'retry_count')::int, 0) >= $3
       )`
+    }
+
     const params: any[] = [Number(limit), offset, maxAttempts]
     let paramIndex = 4
 
@@ -445,11 +451,16 @@ export async function getDeadLetterEmails(req: Request, res: Response) {
     )
 
     const countParams: any[] = [maxAttempts]
-    let countWhereClause = `WHERE status = 'failed'
+    let countWhereClause = ''
+    if (showPending === 'true') {
+      countWhereClause = `WHERE status IN ('pending', 'processing') OR (status = 'failed' AND COALESCE((metadata->>'is_retry_eligible')::boolean, true) = true AND COALESCE((metadata->>'retry_count')::int, 0) < $1)`
+    } else {
+      countWhereClause = `WHERE status = 'failed'
       AND (
         COALESCE((metadata->>'is_retry_eligible')::boolean, true) = false
         OR COALESCE((metadata->>'retry_count')::int, 0) >= $1
       )`
+    }
     
     if (emailType) {
       countWhereClause += ` AND email_type = $2`
