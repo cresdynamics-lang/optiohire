@@ -87,7 +87,7 @@ export async function getActivityTelemetry(req: Request, res: Response) {
       WHERE status_code IS NOT NULL
     `
     if (dateFilter) {
-      statusCodesQuery += ` AND created_at BETWEEN $${params.length + 1} AND $${params.length + 2}`
+      statusCodesQuery += ` AND created_at BETWEEN $1 AND $2`
     }
     statusCodesQuery += ` GROUP BY status_category ORDER BY count DESC`
 
@@ -128,7 +128,7 @@ export async function getActivityTelemetry(req: Request, res: Response) {
       WHERE response_time_ms IS NOT NULL
     `
     if (dateFilter) {
-      responseTimeQuery += ` AND created_at BETWEEN $${params.length + 1} AND $${params.length + 2}`
+      responseTimeQuery += ` AND created_at BETWEEN $1 AND $2`
     }
     responseTimeQuery += ` GROUP BY time_range
       ORDER BY 
@@ -157,7 +157,7 @@ export async function getActivityTelemetry(req: Request, res: Response) {
       WHERE endpoint IS NOT NULL
     `
     if (dateFilter) {
-      topEndpointsQuery += ` AND created_at BETWEEN $${params.length + 1} AND $${params.length + 2}`
+      topEndpointsQuery += ` AND created_at BETWEEN $1 AND $2`
     }
     topEndpointsQuery += ` GROUP BY endpoint, method ORDER BY count DESC LIMIT 15`
 

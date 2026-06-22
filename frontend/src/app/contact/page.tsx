@@ -80,7 +80,7 @@ const infoHighlights = [
 ]
 
 import { contactSchema, type ContactFormValues } from '@/lib/schemas/contact'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 
 const fadeUp = (index: number, disable: boolean) => ({
   initial: disable ? undefined : { opacity: 0, y: 28 },
@@ -99,7 +99,7 @@ export default function ContactPage() {
   const prefersReducedMotion = useReducedMotion()
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const disableMotion = prefersReducedMotion ?? false
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
 
   const {
     register,

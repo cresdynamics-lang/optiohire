@@ -412,7 +412,7 @@ Job Description: ${payload.job_description}`;
     // Support job_category column if it exists in DB (will silently ignore if column missing on old DB until migration runs)
     let insertQuery = `INSERT INTO job_postings 
        (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status, custom_questions, job_category)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN', $11, $12)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'ACTIVE', $11, $12)
        RETURNING job_posting_id`;
     let insertArgs = [companyId, payload.job_title, payload.job_description, payload.job_description, cleanSkills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null, JSON.stringify(payload.custom_questions || []), jobCategory];
 
@@ -426,7 +426,7 @@ Job Description: ${payload.job_description}`;
         logger.warn('job_category column missing, falling back to legacy INSERT');
         insertQuery = `INSERT INTO job_postings 
          (company_id, job_title, job_description, responsibilities, skills_required, application_deadline, interview_slots, interview_meeting_link, meeting_link, job_poster_url, status, custom_questions)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN', $11)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'ACTIVE', $11)
          RETURNING job_posting_id`;
         insertArgs = [companyId, payload.job_title, payload.job_description, payload.job_description, cleanSkills, applicationDeadline.toISOString(), null, meetingLink, meetingLink, payload.job_poster_url || null, JSON.stringify(payload.custom_questions || [])];
         const result = await client.query<{ job_posting_id: string }>(insertQuery, insertArgs);

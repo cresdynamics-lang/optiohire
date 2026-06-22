@@ -4,11 +4,11 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { contactSchema, type ContactFormValues } from '@/lib/schemas/contact'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 
 export default function DemoPage() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
   const {
     register,
     handleSubmit,

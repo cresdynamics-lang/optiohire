@@ -170,7 +170,7 @@ export function SingleDateTimePicker({
         }
         return (
           <p className="mt-2 text-xs text-muted-foreground">
-            Selected {format(displayDate, "MMM dd, yyyy 'at' HH:mm")}
+            Selected {format(displayDate, "MMM dd, yyyy 'at' h:mm a")}
           </p>
         )
       })()}

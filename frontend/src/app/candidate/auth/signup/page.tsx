@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
 import { Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 
 const candidateSignUpSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -30,7 +30,7 @@ type CandidateSignUpData = z.infer<typeof candidateSignUpSchema>
 function CandidateSignUpForm() {
   const router = useRouter()
   const { signUp } = useAuth()
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
   const [step, setStep] = useState(2) // Start at credentials
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)

@@ -564,7 +564,7 @@ export function CreateJobSection() {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploadingPoster}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 h-12 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none"
                 >
                   {isSubmitting ? (
@@ -584,7 +584,7 @@ export function CreateJobSection() {
 
       {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-2xl w-full bg-white border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-4xl w-full bg-white border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
           <DialogTitle className="sr-only">Job Published Successfully</DialogTitle>
           {/* Header */}
           <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-purple-700 px-12 py-16 flex flex-col items-center justify-center text-white relative overflow-hidden">

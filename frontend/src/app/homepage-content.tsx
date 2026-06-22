@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useRef, useState, useEffect } from 'react'
 import { Building2, Clock, Briefcase, ArrowRight } from 'lucide-react'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 
 type InteractiveCardProps = {
   title: string
@@ -149,7 +149,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
   const [featuredJobs, setFeaturedJobs] = useState<Job[]>([])
   const [loadingJobs, setLoadingJobs] = useState(true)
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
   
   const carouselRef = useRef<HTMLDivElement>(null)
   

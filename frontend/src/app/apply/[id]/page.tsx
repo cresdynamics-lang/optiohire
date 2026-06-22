@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Building2, Clock, AlertCircle, Loader2
 } from 'lucide-react'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 import { ApplyForm } from '@/components/jobs/apply-form'
 
 interface Job {
@@ -23,7 +23,7 @@ export default function ApplyPage() {
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
 
   useEffect(() => {
     if (!executeRecaptcha) return

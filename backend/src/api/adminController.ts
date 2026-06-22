@@ -233,7 +233,7 @@ export async function getUserById(req: Request, res: Response) {
       }>(
         `SELECT company_id, company_name, company_email, hr_email, hiring_manager_email 
          FROM companies 
-         WHERE user_id = $1 OR hr_email = $2 OR company_email = $2 
+         WHERE user_id::text = $1::text OR hr_email = $2 OR company_email = $2 
          LIMIT 1`,
         [user.user_id, user.email]
       )
@@ -410,8 +410,28 @@ export async function updateUser(req: Request, res: Response) {
     let paramIndex = 1
 
     if (role !== undefined) {
-      updates.push(`role = $${paramIndex++}`)
-      params.push(role)
+      if (role === 'hr' || role === 'candidate') {
+        updates.push(`role = $${paramIndex++}`)
+        params.push('user')
+        
+        const { rows: colCheckCR } = await query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'company_role'`)
+        if (colCheckCR.length > 0) {
+          updates.push(`company_role = $${paramIndex++}`)
+          params.push(role)
+        }
+      } else if (role === 'user') {
+        updates.push(`role = $${paramIndex++}`)
+        params.push('user')
+        
+        const { rows: colCheckCR } = await query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'company_role'`)
+        if (colCheckCR.length > 0) {
+          updates.push(`company_role = $${paramIndex++}`)
+          params.push(null)
+        }
+      } else {
+        updates.push(`role = $${paramIndex++}`)
+        params.push(role)
+      }
     }
     if (is_active !== undefined) {
       updates.push(`is_active = $${paramIndex++}`)

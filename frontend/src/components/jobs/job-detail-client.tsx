@@ -7,7 +7,7 @@ import {
   ArrowLeft, Building2, Clock, Calendar, CheckCircle2,
   Briefcase, ChevronRight, Share2, AlertCircle, Sparkles, Globe, Linkedin, Twitter
 } from 'lucide-react'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -54,7 +54,7 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [logoError, setLogoError] = useState(false)
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
 
   useEffect(() => {
     if (!executeRecaptcha) return

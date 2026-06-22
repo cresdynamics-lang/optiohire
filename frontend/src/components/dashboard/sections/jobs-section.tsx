@@ -116,6 +116,22 @@ export function JobsSection() {
     }
   }
 
+  const handleToggleStatus = async (jobId: string, currentStatus: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      const newStatus = currentStatus?.toUpperCase() === 'ACTIVE' ? 'PAUSED' : 'ACTIVE'
+      const response = await fetch(`/api/job-postings/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+      if (!response.ok) throw new Error('Failed to update status')
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus } : j))
+    } catch (err) {
+      setError('Failed to update job status')
+    }
+  }
+
   const Pagination = () => {
     if (totalPages <= 1) return null
     return (
@@ -238,6 +254,9 @@ export function JobsSection() {
                           <DropdownMenuContent align="end" className="w-40 rounded-xl">
                             <DropdownMenuItem onClick={() => handleEditJob(job.id)} className="cursor-pointer">
                               <Edit className="w-4 h-4 mr-2" /> Edit Posting
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleToggleStatus(job.id, job.status || '')} className="cursor-pointer">
+                              <RefreshCw className="w-4 h-4 mr-2" /> {job.status?.toUpperCase() === 'ACTIVE' ? 'Pause Posting' : 'Activate Posting'}
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => setJobToDelete(job)} 

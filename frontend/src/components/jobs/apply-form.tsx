@@ -12,7 +12,7 @@ import { uploadPublicResume, submitApplication } from '@/lib/public-api'
 import { Loader2, CheckCircle2, AlertCircle, FileText, UploadCloud } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 import { useRef } from 'react'
 import { CustomQuestion } from '@/types'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -43,7 +43,7 @@ export function ApplyForm({ jobPostingId, customQuestions = [] }: ApplyFormProps
   const [isDragging, setIsDragging] = useState(false)
   const [customAnswers, setCustomAnswers] = useState<Record<string, any>>({})
   const { toast } = useToast()
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
 
   const handleCustomAnswerChange = (questionId: string, value: any) => {
     setCustomAnswers(prev => ({ ...prev, [questionId]: value }))

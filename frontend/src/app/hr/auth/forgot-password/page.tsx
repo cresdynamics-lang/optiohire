@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowLeft, Mail, CheckCircle, KeyRound, Loader2 } from 'lucide-react'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 import { useRef } from 'react'
 import { useOtpResend } from '@/hooks/use-otp-resend'
 
@@ -25,7 +25,7 @@ type VerifyCodeFormData = z.infer<typeof verifyCodeSchema>
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
   const [step, setStep] = useState<'email' | 'code'>('email')
   const [email, setEmail] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)

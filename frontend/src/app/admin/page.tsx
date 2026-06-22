@@ -85,6 +85,7 @@ function AdminDashboardContent() {
   const [resetPasswordValue, setResetPasswordValue] = useState('')
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false)
   const [resetPasswordError, setResetPasswordError] = useState<string | null>(null)
+  const [roleFilter, setRoleFilter] = useState<'all' | 'hr' | 'candidate' | 'admin'>('all')
   const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const sectionFromUrl = searchParams.get('section') as 'users' | 'admins' | null
@@ -305,9 +306,19 @@ function AdminDashboardContent() {
 
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
+      // Admin section strictly filters out non-admins
       if (activeSection === 'admins' && u.role !== 'admin') {
         return false
       }
+      
+      // Filter by role
+      if (activeSection === 'users' && roleFilter !== 'all') {
+        if (roleFilter === 'admin' && u.role !== 'admin') return false
+        if (roleFilter === 'hr' && u.company_role !== 'hr') return false
+        if (roleFilter === 'candidate' && u.company_role !== 'candidate') return false
+      }
+
+      // Filter by search term
       if (searchTerm && activeSection !== 'admins') {
         return (
           u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -318,7 +329,7 @@ function AdminDashboardContent() {
       }
       return true
     })
-  }, [users, searchTerm, activeSection])
+  }, [users, searchTerm, activeSection, roleFilter])
 
   if (authLoading) {
     return (
@@ -519,18 +530,44 @@ function AdminDashboardContent() {
           </div>
         )}
 
-        {/* Search - Only show for users section */}
+        {/* Search & Filter - Only show for users section */}
         {activeSection === 'users' && (
-          <Card className="border border-border dark:border-gray-800  shadow-sm">
-            <CardContent className="pt-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground " />
+          <Card className="border border-border dark:border-gray-800 shadow-sm">
+            <CardContent className="pt-6 flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder="Search by email, name, or company..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-border dark:border-gray-700 bg-white  pl-10 text-foreground  placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
+                  className="border-border dark:border-gray-700 bg-white pl-10 text-foreground placeholder:text-muted-foreground"
                 />
+              </div>
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                <button
+                  onClick={() => setRoleFilter('all')}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${roleFilter === 'all' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setRoleFilter('hr')}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${roleFilter === 'hr' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  HR
+                </button>
+                <button
+                  onClick={() => setRoleFilter('candidate')}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${roleFilter === 'candidate' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Candidate
+                </button>
+                <button
+                  onClick={() => setRoleFilter('admin')}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${roleFilter === 'admin' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Admin
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -599,7 +636,7 @@ function AdminDashboardContent() {
                               ? 'border border-primary/30 dark:border-primary/40 bg-primary/10 /20 text-primary dark:text-[#8f97ff]'
                               : 'border border-blue-200 dark:border-blue-800/40 bg-blue-50 /40 text-blue-700 '
                           }`}>
-                            {user.role}
+                            {user.role === 'admin' ? 'Admin' : (user.company_role === 'hr' ? 'HR' : user.company_role === 'candidate' ? 'Candidate' : 'User')}
                           </span>
                         </div>
                       </div>
@@ -642,7 +679,7 @@ function AdminDashboardContent() {
                                   ? 'bg-primary/10 text-primary /20 dark:text-[#8f97ff]'
                                   : 'bg-blue-100 text-blue-800 /50 '
                               }`}>
-                                {user.role}
+                                {user.role === 'admin' ? 'Admin' : (user.company_role === 'hr' ? 'HR' : user.company_role === 'candidate' ? 'Candidate' : 'User')}
                               </span>
                             </div>
                           </div>

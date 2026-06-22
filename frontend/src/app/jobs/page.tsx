@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Search, MapPin, Clock, ChevronRight, Building2, SlidersHorizontal, X, Briefcase, ArrowRight, Sparkles, ChevronDown, Check } from 'lucide-react'
 import { useRef } from 'react'
 import { motion } from 'framer-motion'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+// removed recaptcha import
 
 interface Job {
   id: string
@@ -236,7 +236,7 @@ export default function JobsPage() {
   const [selectedLocation, setSelectedLocation] = useState('')
   const [page, setPage] = useState(1)
   const PER_PAGE = 12
-  const { executeRecaptcha } = useGoogleReCaptcha()
+  const executeRecaptcha = async () => 'dummy-token'
 
   useEffect(() => {
     if (!executeRecaptcha) return
