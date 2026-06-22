@@ -28,28 +28,11 @@ export const upload = multer({
   },
 })
 
-// File filter for candidate documents (CV/resume/portfolio docs)
 const candidateDocumentFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedMimes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain',
-    'application/rtf',
-    'application/vnd.oasis.opendocument.text',
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/webp',
-  ]
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true)
+  if (file.mimetype.startsWith('audio/') || file.mimetype.startsWith('video/')) {
+    cb(new Error('Invalid file type. Audio and video formats are not allowed.'))
   } else {
-    cb(
-      new Error(
-        'Invalid file type. Allowed: PDF, DOC, DOCX, TXT, RTF, ODT, JPEG, PNG, WebP.'
-      )
-    )
+    cb(null, true)
   }
 }
 

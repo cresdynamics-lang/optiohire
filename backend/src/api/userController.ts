@@ -36,6 +36,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       'is_active',
       'created_at',
       'updated_at',
+      'last_login_at',
       hasNameColumn ? 'name' : 'NULL::text as name',
       hasCompanyRoleColumn ? 'company_role' : 'NULL::text as company_role'
     ].join(', ')
@@ -47,6 +48,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       is_active: boolean
       created_at: string
       updated_at: string | null
+      last_login_at: string | null
       name?: string | null
       company_role?: string | null
     }>(
@@ -201,6 +203,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       is_active: user.is_active,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      previous_login_at: user.last_login_at,
       hasCompany,
       companyId,
       companyName,

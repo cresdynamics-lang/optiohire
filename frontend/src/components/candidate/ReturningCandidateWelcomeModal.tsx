@@ -166,7 +166,7 @@ export function ReturningCandidateWelcomeModal({
                   <input
                     type="file"
                     className="hidden"
-                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+                    accept="*/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
                       if (file) {

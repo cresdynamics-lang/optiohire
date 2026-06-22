@@ -5,7 +5,8 @@ import { CertificateRepository } from '../repositories/certificateRepository.js'
 import { SkillAnalysisService } from '../services/ai/skillAnalysisService.js'
 import { LearningRoadmapService } from '../services/ai/learningRoadmapService.js'
 import crypto from 'crypto'
-
+import path from 'path'
+import { saveFile } from '../utils/storage.js'
 const candidateRepo = new CandidateProfileRepository()
 const certRepo = new CertificateRepository()
 const skillAnalysisService = new SkillAnalysisService()
@@ -681,9 +682,6 @@ export const onboardProfile = async (req: Request, res: Response): Promise<void>
       profile = await candidateRepo.createProfile(userId)
     }
 
-    const { saveFile } = await import('../utils/storage.js')
-    const path = await import('path')
-    const crypto = await import('crypto')
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } || {}
     
@@ -766,7 +764,7 @@ export const onboardProfile = async (req: Request, res: Response): Promise<void>
     })
   } catch (error: any) {
     console.error('Error onboarding profile:', error)
-    res.status(500).json({ success: false, error: 'Internal server error' })
+    res.status(500).json({ success: false, error: 'Internal server error', details: error.message || String(error) })
   }
 }
 

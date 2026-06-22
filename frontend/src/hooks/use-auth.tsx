@@ -19,6 +19,7 @@ interface AuthUser {
   companyLogoUrl?: string | null
   companyLocation?: string | null
   admin_permissions?: Record<string, boolean>
+  previous_login_at?: string | null
 }
 
 export type SignOutOptions = {
@@ -118,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       hiringManagerEmail: isCandidate ? undefined : (u.hiringManagerEmail || null),
       companyLogoUrl: isCandidate ? undefined : (u.companyLogoUrl || null),
       companyLocation: isCandidate ? undefined : (u.companyLocation || null),
+      previous_login_at: u.previous_login_at || null,
     }
     setUser(nextUser)
     fallbackUserRef.current = nextUser
@@ -259,6 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             hiringManagerEmail: userData.hiring_manager_email || userData.hiringManagerEmail || null,
             companyLogoUrl: userData.companyLogoUrl || null,
             companyLocation: userData.companyLocation || null,
+            previous_login_at: userData.previous_login_at || null,
           }
 
           if (
@@ -393,6 +396,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             : data?.company?.hiring_manager_email || data?.user?.hiringManagerEmail || hiring_manager_email,
           companyLogoUrl: isCandidate ? undefined : data?.company?.company_logo_url || data?.user?.companyLogoUrl || null,
           companyLocation: isCandidate ? undefined : data?.company?.company_location || data?.user?.companyLocation || null,
+          previous_login_at: data?.user?.previous_login_at || null,
         }
         setUser(nextUser)
         fallbackUserRef.current = nextUser
@@ -469,6 +473,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           hiringManagerEmail: isCandidate ? undefined : (u.hiringManagerEmail || null),
           companyLogoUrl: isCandidate ? undefined : (u.companyLogoUrl || null),
           companyLocation: isCandidate ? undefined : (u.companyLocation || null),
+          previous_login_at: u.previous_login_at || null,
         }
         setUser(nextUser)
         fallbackUserRef.current = nextUser
@@ -493,6 +498,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('admin_email')
     localStorage.removeItem('admin_name')
     localStorage.removeItem('admin_token')
+    sessionStorage.removeItem('hasSeenWelcomeModal')
     fallbackUserRef.current = null
 
     const host = typeof window !== 'undefined' ? window.location.host : ''
