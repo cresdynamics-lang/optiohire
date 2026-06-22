@@ -2,6 +2,18 @@ import type { Request, Response } from 'express'
 import { query } from '../db/index.js'
 import { verifyCaptcha } from '../utils/captcha.js'
 import { cache, cacheKeys } from '../utils/redis.js'
+import crypto from 'crypto'
+
+function slugify(text: string) {
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+}
 
 export async function createJob(req: Request, res: Response) {
   try {
@@ -13,18 +25,23 @@ export async function createJob(req: Request, res: Response) {
       skills_required,
       application_deadline,
       interview_slots,
-      interview_meeting_link
+      interview_meeting_link,
+      job_poster_url
     } = req.body || {}
 
     if (!company_id || !job_title || !job_description || !responsibilities) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
+    const baseSlug = slugify(job_title);
+    const shortId = crypto.randomBytes(3).toString('hex');
+    const slug = `${baseSlug}-${shortId}`;
+
     const { rows } = await query<{ job_posting_id: string }>(
       `insert into job_postings (
          company_id, job_title, job_description, responsibilities, skills_required,
-         application_deadline, interview_slots, interview_meeting_link
-       ) values ($1,$2,$3,$4,$5,$6,$7,$8)
+         application_deadline, interview_slots, interview_meeting_link, job_poster_url, slug
+       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        returning job_posting_id`,
       [
         company_id,
@@ -34,7 +51,9 @@ export async function createJob(req: Request, res: Response) {
         (skills_required ?? []) as string[],
         application_deadline ?? null,
         interview_slots ? JSON.stringify(interview_slots) : null,
-        interview_meeting_link ?? null
+        interview_meeting_link ?? null,
+        job_poster_url ?? null,
+        slug
       ]
     )
 
@@ -90,7 +109,7 @@ export async function getPublicJobs(req: Request, res: Response) {
     }
 
     const { rows } = await query(
-      `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
+      `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.slug, jp.job_title, jp.job_description, 
               jp.responsibilities, jp.skills_required, jp.application_deadline, 
               jp.status, jp.created_at, jp.custom_questions, jp.job_poster_url, c.company_name, c.company_email, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url
        FROM job_postings jp
@@ -134,12 +153,12 @@ export async function getPublicJobById(req: Request, res: Response) {
     }
 
     const { rows } = await query(
-      `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.job_title, jp.job_description, 
+      `SELECT jp.job_posting_id as id, jp.job_posting_id, jp.slug, jp.job_title, jp.job_description, 
               jp.responsibilities, jp.skills_required, jp.application_deadline, 
               jp.status, jp.created_at, jp.custom_questions, jp.job_poster_url, c.company_name, c.company_email, c.company_logo_url, c.website_url, c.linkedin_url, c.twitter_url
        FROM job_postings jp
        JOIN companies c ON jp.company_id = c.company_id
-       WHERE jp.job_posting_id = $1 AND jp.status = 'ACTIVE'`,
+       WHERE (jp.job_posting_id::text = $1 OR jp.slug = $1) AND jp.status = 'ACTIVE'`,
       [id]
     )
     

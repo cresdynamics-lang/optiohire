@@ -1,0 +1,1 @@
+{"status":"ok","timestamp":"2026-06-20T17:11:02.520Z","uptime":107145.173548121,"environment":"production","database":"connected"}

@@ -10,6 +10,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 interface Job {
   id: string
   job_posting_id: string
+  slug?: string
   job_title: string
   job_description: string
   responsibilities: string
@@ -129,7 +130,7 @@ function JobCard({ job }: { job: Job }) {
 
   return (
     <Link
-      href={`/jobs/${job.job_posting_id}`}
+      href={`/jobs/${job.slug || job.job_posting_id}`}
       className="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-xl hover:-translate-y-1"
     >
       {/* Conspicuous Deadline Badge */}
