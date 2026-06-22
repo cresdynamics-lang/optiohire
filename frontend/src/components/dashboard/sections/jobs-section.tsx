@@ -252,15 +252,15 @@ export function JobsSection() {
                 className="group relative"
               >
                 <Card 
-                  className="cursor-pointer border-slate-200 bg-white transition-all hover:border-[#2D2DDD]/30 hover:shadow-md overflow-hidden flex flex-col"
+                  className={`cursor-pointer border-slate-200 bg-white transition-all hover:border-[#2D2DDD]/30 hover:shadow-md overflow-hidden flex ${viewMode === 'linear' ? 'flex-col sm:flex-row' : 'flex-col'}`}
                   onClick={() => handleViewDetails(job.id)}
                 >
-                  <div className="w-full h-32 bg-gradient-to-br from-indigo-50 to-blue-50 relative border-b border-slate-100 flex items-center justify-center overflow-hidden">
+                  <div className={`${viewMode === 'linear' ? 'w-full sm:w-1/3 sm:min-w-[250px] sm:max-w-[300px] sm:border-r sm:border-b-0' : 'w-full h-32'} bg-gradient-to-br from-indigo-50 to-blue-50 relative border-b border-slate-100 flex items-center justify-center overflow-hidden shrink-0`}>
                     {job.job_poster_url ? (
                       <img 
                         src={job.job_poster_url} 
                         alt={`${job.job_title} poster`} 
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover absolute inset-0"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -268,12 +268,12 @@ export function JobsSection() {
                         }}
                       />
                     ) : null}
-                    <div className={`flex flex-col items-center justify-center ${job.job_poster_url ? 'hidden' : ''}`}>
+                    <div className={`flex flex-col items-center justify-center p-6 ${job.job_poster_url ? 'hidden' : ''}`}>
                       <Briefcase className="w-6 h-6 text-[#2D2DDD]/40 mb-1" />
-                      <span className="text-xs font-medium text-slate-400">Add a job poster (recommended)</span>
+                      <span className="text-xs font-medium text-slate-400 text-center">Add a job poster (recommended)</span>
                     </div>
                   </div>
-                  <CardContent className="p-6 flex-1">
+                  <CardContent className={`p-6 flex-1 flex flex-col ${viewMode === 'linear' ? 'justify-center' : ''}`}>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-3">
                         <h3 className="font-bold text-xl text-foreground group-hover:text-[#2D2DDD] transition-colors">
