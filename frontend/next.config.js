@@ -71,7 +71,7 @@ const nextConfig = {
   },
 
   async rewrites() {
-    const backendUrl = 'https://api.optiohire.com';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'https://api.optiohire.com';
 
     return [
       { source: '/api/upload/:path*', destination: `${backendUrl}/api/upload/:path*` },

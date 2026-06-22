@@ -123,7 +123,7 @@ export function CreateJobSection() {
         } else {
           try {
             const errorData = JSON.parse(xhr.responseText)
-            setStatus({ status: 'error', message: errorData.error || 'Upload failed' })
+            setStatus({ status: 'error', message: errorData.details || errorData.error || 'Upload failed' })
           } catch {
             setStatus({ status: 'error', message: `Upload failed with status ${xhr.status}` })
           }
