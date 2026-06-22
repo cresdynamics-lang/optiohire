@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, Share2, Briefcase, MapPin, DollarSign, Clock, Building2, ChevronRight, CheckCircle2, Globe, Linkedin, Twitter, Sparkles, Mail, ArrowLeft, Calendar, AlertCircle } from 'lucide-react'
+import { Heart, Share2, Briefcase, MapPin, DollarSign, Clock, Building2, ChevronRight, CheckCircle2, Globe, Linkedin, Twitter, Sparkles, Mail, ArrowLeft, Calendar, AlertCircle, Target } from 'lucide-react'
 import { SimilarJobs } from './similar-jobs'
 // removed recaptcha import
 import ReactMarkdown from 'react-markdown'
@@ -138,7 +138,7 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#ffffff_60%)]">
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Back button */}
         <Link
           href="/jobs"
@@ -148,7 +148,7 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
           All Jobs
         </Link>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_380px]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
           {/* Main content */}
           <div className="space-y-8">
             {job.job_poster_url ? (
@@ -320,7 +320,7 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Apply CTA */}
-            <div className="sticky top-24 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <h3 className="mb-1 text-base font-bold text-slate-900">Ready to apply?</h3>
               <p className="mb-5 text-sm text-slate-500">
                 Submit your application directly to {job.company_name}.
@@ -456,11 +456,11 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
             {/* Talent Pool CTA */}
             <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 shadow-sm">
               <div className="absolute -right-4 -top-4 opacity-10">
-                <Sparkles className="h-24 w-24 text-blue-600" />
+                <Target className="h-24 w-24 text-blue-600" />
               </div>
               <div className="relative z-10">
                 <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-blue-100/80 px-3 py-1 text-xs font-semibold text-blue-800">
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <Target className="h-3.5 w-3.5" />
                   Not a perfect match?
                 </div>
                 <h3 className="mb-2 text-xl font-bold text-slate-900 leading-snug">
