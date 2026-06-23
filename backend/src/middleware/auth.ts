@@ -81,6 +81,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     // STRICT: Check if user has a company (except for admin and candidates)
     const isCandidateUser = 
       userRecord.role === 'candidate' || 
+      userRecord.role === 'user' ||
       (userRecord as any).company_role === 'candidate' || 
       (userRecord as any).company_role === 'job_seeker' ||
       (userRecord as any).company_role === 'jobseeker';
