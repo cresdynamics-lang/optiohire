@@ -122,7 +122,7 @@ export function JobsSection() {
   const handleToggleStatus = async (jobId: string, currentStatus: string) => {
     try {
       const token = localStorage.getItem('token')
-      const newStatus = currentStatus?.toUpperCase() === 'ACTIVE' ? 'PAUSED' : 'ACTIVE'
+      const newStatus = currentStatus?.toLowerCase() === 'active' ? 'paused' : 'active'
       const response = await fetch(`/api/job-postings/${jobId}`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },

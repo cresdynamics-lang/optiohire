@@ -21,7 +21,7 @@ export interface ExtractedData {
   experience_years_found: number;
   education_found: string;
   education_meets_requirement: boolean;
-  is_developer?: boolean;
+  is_relevant_profession?: boolean;
   links?: {
     linkedin?: string | null;
     github?: string | null;

@@ -78,6 +78,7 @@ interface CandidateDashboardData {
     total_score: number
     bio?: string
     job_category?: string
+    cv_url?: string | null
     is_returning?: boolean
   }
   skills: CandidateSkill[]
@@ -151,7 +152,7 @@ export function TalentProfileSection() {
       if (result.success) {
         setData(result.data)
         // Show onboarding modal if profile is incomplete and hasn't been prompted yet
-        if (result.data?.profile && !result.data.profile.bio && !result.data.profile.job_category && !hasPromptedOnboarding && !result.data.needsAlumniUpdate) {
+        if (result.data?.profile && !result.data.profile.bio && !result.data.profile.job_category && !result.data.profile.cv_url && !hasPromptedOnboarding && !result.data.needsAlumniUpdate) {
           setShowOnboarding(true)
           setHasPromptedOnboarding(true)
         }
@@ -282,7 +283,7 @@ export function TalentProfileSection() {
           <div className="rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">
             Growth score: {data.profile.total_score}
           </div>
-          {(!data.profile.bio || !data.profile.job_category) && !data.profile.is_returning && (
+          {(!data.profile.bio && !data.profile.job_category && !data.profile.cv_url) && !data.profile.is_returning && (
             <Button variant="outline" size="sm" onClick={() => setShowOnboarding(true)}>
               Complete Profile
             </Button>

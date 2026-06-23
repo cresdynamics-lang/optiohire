@@ -643,12 +643,12 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
       const emailService = new EmailService();
       
       for (const admin of admins) {
-        await emailService.sendAdminUploadNotificationEmail({
+        emailService.sendAdminUploadNotificationEmail({
           adminEmail: admin.email,
           candidateName,
           documentType: 'Certificate',
           dashboardLink: `${frontendUrl}/admin/certificates`
-        });
+        }).catch((err: any) => console.warn('Failed to send admin notification for certificate upload', err));
       }
     } catch (err) {
       console.warn('Failed to send admin notification for certificate upload', err);
@@ -743,7 +743,7 @@ export const onboardProfile = async (req: Request, res: Response): Promise<void>
             const { rows: admins } = await query("SELECT email FROM users WHERE role = 'admin' AND is_active = true")
             
             for (const admin of admins) {
-              await emailService.sendAdminUploadNotificationEmail({
+              emailService.sendAdminUploadNotificationEmail({
                 adminEmail: admin.email,
                 candidateName: userRows[0].name || userRows[0].email.split('@')[0],
                 documentType: 'Profile Documents (CV/Cover Letter/Rec Letter)',

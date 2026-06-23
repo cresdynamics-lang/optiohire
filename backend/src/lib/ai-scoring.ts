@@ -2,7 +2,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { logger } from '../utils/logger.js'
 import { groqService } from '../services/ai/groqService.js'
 import { openRouterService } from '../services/ai/openRouterService.js'
-import { getCompactSkillTaxonomy } from './skillTaxonomy.js'
+import { getRelevantTaxonomyCategories, serializeTaxonomyForPrompt } from './skillTaxonomy.js'
+import { getExtractionGuideForCategory, serializeExtractionGuideForPrompt } from './skillExtractionGuide.js'
 import { computeScores, ExtractedData, DEFAULT_SCORING_WEIGHTS, ScoringWeights } from './scoringWeights.js'
 
 export interface ScoringResult {
@@ -76,6 +77,8 @@ export class AIScoringEngine {
     }
 
     // Call 1: Fast Extraction
+    const relevantTaxonomy = getRelevantTaxonomyCategories(input.job.title, input.job.required_skills);
+    
     const extractionPrompt = `
 JOB:
 Title: ${input.job.title}
@@ -86,12 +89,12 @@ Education Required: ${input.job.education_required || 'None'}
 CANDIDATE CV (truncated):
 ${this.truncateToTokens(input.cvText, 1200)}
 
-TECHNICAL CONTRIBUTIONS (GitHub/Portfolio):
+EXTERNAL EVIDENCE (Portfolio/Links):
 ${JSON.stringify(input.candidateEvidence?.link_insights || [], null, 2)}
 
 Return this exact JSON:
 {
-  "is_developer": boolean,
+  "is_relevant_profession": boolean,
   "found_skills": [],
   "missing_skills": [],
   "partial_skills": [],
@@ -102,7 +105,7 @@ Return this exact JSON:
     "linkedin": null,
     "github": null,
     "portfolio": null,
-    "other": []
+        "other": []
   },
   "contribution_verification": {
     "verified_skills": [],
@@ -111,19 +114,26 @@ Return this exact JSON:
   }
 }`;
 
-    const extractionSystemPrompt = `You are a recruiting analysis engine. Extract and score ONLY what is asked.
+    const extractionSystemPrompt = `You are a universal recruiting analysis engine. Extract and score ONLY what is asked.
 Return ONLY valid JSON. No explanation outside the JSON object.
 
-DETERMINE IF DEVELOPER:
-Look at the CV and TECHNICAL CONTRIBUTIONS. Set "is_developer" to true if they have repos, code projects, or a clear dev background.
+DETERMINE PROFESSION FIT:
+Look at the CV and EXTERNAL EVIDENCE. Set "is_relevant_profession" to true if the candidate has a clear background matching the job category/title.
 
 VERIFY SKILLS:
-Compare the Required Skills with their TECHNICAL CONTRIBUTIONS. 
-- "verified_skills": Skills mentioned in the CV that you can actually see proof of in their GitHub repos or technical links.
-- "claimed_but_not_found": Skills mentioned in the CV as "expert" or "primary" but have zero evidence in their contributions.
+Compare the Required Skills with their CV experiences, stated achievements, quantifiable metrics, and any EXTERNAL EVIDENCE. 
+- "verified_skills": Skills mentioned in the CV that you can actually see proof of through their described experience or provided external links.
+- "claimed_but_not_found": Skills mentioned simply as keywords but have zero evidence in their actual work history or contributions.
 
-Skill taxonomy categories:
-${getCompactSkillTaxonomy()}`;
+Skill taxonomy categories (dynamically routed for this job):
+${serializeTaxonomyForPrompt(relevantTaxonomy.categories)}
+
+EXTRACTION RUBRIC FOR REQUIRED SKILLS:
+${serializeExtractionGuideForPrompt(
+  relevantTaxonomy.categories
+    .map((c) => getExtractionGuideForCategory(c.id))
+    .filter((g): g is NonNullable<typeof g> => g !== undefined)
+)}`;
 
     let extracted: ExtractedData;
 
@@ -146,7 +156,7 @@ ${getCompactSkillTaxonomy()}`;
         found_skills: [], missing_skills: input.job.required_skills, partial_skills: [],
         experience_years_found: 0, education_found: 'Unknown', education_meets_requirement: false,
         links: { linkedin: null, github: null, portfolio: null, other: [] },
-        is_developer: false,
+        is_relevant_profession: false,
         contribution_verification: { verified_skills: [], claimed_but_not_found: [], summary: 'Extraction failed' }
       };
     }
@@ -204,8 +214,8 @@ Return ONLY valid JSON: { "final_reasoning": "..." }`;
       scored_at: new Date().toISOString(),
       model_used: model,
       weights_used: weights,
-      developer_verification: {
-        is_developer: extracted.is_developer,
+      profession_verification: {
+        is_relevant_profession: extracted.is_relevant_profession,
         contribution_analysis: extracted.contribution_verification
       },
       skill_match: {
