@@ -49,6 +49,25 @@ router.post('/profile/onboarding', (req, res, next) => {
     next()
   })
 }, onboardProfile)
+
+router.post('/profile/alumni-update', (req, res, next) => {
+  const uploadMiddleware = uploadCandidateDocumentMiddleware.fields([
+    { name: 'cv', maxCount: 1 }
+  ])
+  
+  uploadMiddleware(req, res, (err: any) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ success: false, error: 'File upload error', details: err.message })
+    } else if (err) {
+      return res.status(400).json({ success: false, error: 'Invalid file', details: err.message })
+    }
+    next()
+  })
+}, async (req, res) => {
+  const { alumniUpdate } = await import('../api/candidateController.js')
+  return alumniUpdate(req, res)
+})
+
 router.post('/certificate', uploadCandidateDocumentMiddleware.single('certificate'), uploadCertificate)
 router.post('/missions/:missionId/complete', completeMission)
 
