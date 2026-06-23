@@ -256,7 +256,7 @@ export const getCandidateApplications = async (req: Request, res: Response): Pro
     res.status(200).json({ applications: rows })
   } catch (error) {
     console.error('Candidate applications fetch error:', error)
-    res.status(500).json({ error: 'Failed to load application history' })
+    res.status(500).json({ error: 'Failed to load application history', details: String(error?.stack || error?.message || error) })
   }
 }
 
@@ -382,7 +382,7 @@ export const submitCandidateApplication = async (req: Request, res: Response): P
     })
   } catch (error) {
     console.error('Candidate application submit error:', error)
-    res.status(500).json({ error: 'Failed to submit application' })
+    res.status(500).json({ error: 'Failed to submit application', details: String(error?.stack || error?.message || error) })
   }
 }
 
