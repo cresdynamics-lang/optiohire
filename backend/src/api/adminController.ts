@@ -1361,8 +1361,9 @@ export async function getAIAuditTrail(req: Request, res: Response) {
 
 export async function markSupportTicketSeen(req: Request, res: Response) {
   try {
-    const user = (req as any).user;
-    if (!user || user.role !== 'admin') {
+    const userRole = (req as any).userRole;
+    const userEmail = (req as any).userEmail;
+    if (userRole !== 'admin') {
       return res.status(403).json({ error: 'Only admins can update support tickets' });
     }
 
@@ -1373,7 +1374,7 @@ export async function markSupportTicketSeen(req: Request, res: Response) {
     try {
       result = await query(
         `UPDATE support_tickets SET seen_at = NOW(), status = 'seen', seen_by = $1 WHERE ticket_id = $2 RETURNING *`,
-        [user.email, id]
+        [userEmail, id]
       );
     } catch (colErr) {
       // Fallback if schema doesn't have seen_at

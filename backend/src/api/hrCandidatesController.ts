@@ -210,7 +210,7 @@ export async function updateCandidateStatus(req: Request, res: Response) {
 export async function recordCandidateView(req: Request, res: Response) {
   try {
     const candidateId = req.params.id
-    const hrUserId = (req as any).user?.userId
+    const hrUserId = (req as any).userId
 
     if (!hrUserId) {
       return res.status(401).json({ error: 'Unauthorized' })

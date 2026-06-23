@@ -9,8 +9,12 @@ const emailService = new EmailService()
 
 export async function scheduleDemo(req: Request, res: Response) {
   try {
-    const user = (req as any).user
-    if (!user || user.role === 'admin') {
+    const authReq = req as any
+    const userRole = authReq.userRole
+    const userEmail = authReq.userEmail
+    const userCompanyName = authReq.companyName // Might be undefined depending on middleware
+
+    if (!userRole || userRole === 'admin') {
       return res.status(403).json({ error: 'Only HR/Employers can schedule demos' })
     }
 
@@ -29,11 +33,11 @@ export async function scheduleDemo(req: Request, res: Response) {
     try {
       if (googleCalendarService.isEnabled()) {
         const event = await googleCalendarService.createMeetEvent({
-          summary: `OptioHire Demo with ${user.companyName || user.email}`,
-          description: `Product demo scheduled by ${user.email} from ${user.companyName || 'Unknown Company'}`,
+          summary: `OptioHire Demo with ${userCompanyName || userEmail}`,
+          description: `Product demo scheduled by ${userEmail} from ${userCompanyName || 'Unknown Company'}`,
           start: demoDate.toISOString(),
           end: new Date(demoDate.getTime() + 60 * 60 * 1000).toISOString(), // 1 hour duration
-          attendees: [user.email, process.env.ADMIN_EMAIL || 'admin@optiohire.com']
+          attendees: [userEmail, process.env.ADMIN_EMAIL || 'admin@optiohire.com']
         })
         meetingLink = event.meetingLink
       } else {
@@ -49,7 +53,7 @@ export async function scheduleDemo(req: Request, res: Response) {
       `INSERT INTO demos (hr_email, company_name, demo_time, meeting_link, status) 
        VALUES ($1, $2, $3, $4, 'open') 
        RETURNING *`,
-      [user.email, user.companyName || null, demoDate.toISOString(), meetingLink || null]
+      [userEmail, userCompanyName || null, demoDate.toISOString(), meetingLink || null]
     )
 
     // Notify admins
@@ -57,7 +61,7 @@ export async function scheduleDemo(req: Request, res: Response) {
     try {
       await emailService.sendDemoScheduledAdminAlert(
         adminEmail, 
-        { email: user.email, companyName: user.companyName }, 
+        { email: userEmail, companyName: userCompanyName }, 
         demoDate.toISOString(), 
         meetingLink
       )
@@ -77,8 +81,8 @@ export async function scheduleDemo(req: Request, res: Response) {
 
 export async function getAdminDemos(req: Request, res: Response) {
   try {
-    const user = (req as any).user
-    if (!user || user.role !== 'admin') {
+    const userRole = (req as any).userRole
+    if (userRole !== 'admin') {
       return res.status(403).json({ error: 'Only admins can view all demos' })
     }
 
@@ -92,8 +96,8 @@ export async function getAdminDemos(req: Request, res: Response) {
 
 export async function markDemoSeen(req: Request, res: Response) {
   try {
-    const user = (req as any).user
-    if (!user || user.role !== 'admin') {
+    const userRole = (req as any).userRole
+    if (userRole !== 'admin') {
       return res.status(403).json({ error: 'Only admins can update demos' })
     }
 
