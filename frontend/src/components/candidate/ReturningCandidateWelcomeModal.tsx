@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -120,6 +120,9 @@ export function ReturningCandidateWelcomeModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto p-0 rounded-2xl">
+        <DialogDescription className="sr-only">
+          Welcome back modal for returning candidates to update their profile and skills.
+        </DialogDescription>
         <div className="flex flex-col md:flex-row">
           
           {/* LEFT COLUMN: Main Interaction */}

@@ -133,7 +133,14 @@ export class CandidateProfileRepository {
            updated_at = NOW()
        WHERE profile_id = $1
        RETURNING *`,
-      [profileId, data.bio, data.job_category, data.cv_url, data.cover_letter_url, data.recommendation_letter_url]
+      [
+        profileId, 
+        data.bio !== undefined ? data.bio : null, 
+        data.job_category !== undefined ? data.job_category : null, 
+        data.cv_url !== undefined ? data.cv_url : null, 
+        data.cover_letter_url !== undefined ? data.cover_letter_url : null, 
+        data.recommendation_letter_url !== undefined ? data.recommendation_letter_url : null
+      ]
     )
     if (rows.length === 0) throw new Error('Profile not found')
     return rows[0]
@@ -159,7 +166,7 @@ export class CandidateProfileRepository {
            updated_at = NOW()
        WHERE profile_id = $1
        RETURNING *`,
-      [profileId, data.cv_url, JSON.stringify(data.metadata_projects || null)]
+      [profileId, data.cv_url !== undefined ? data.cv_url : null, JSON.stringify(data.metadata_projects || null)]
     )
     if (rows.length === 0) throw new Error('Profile not found')
     return rows[0]
