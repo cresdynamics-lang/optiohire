@@ -764,6 +764,11 @@ export const onboardProfile = async (req: Request, res: Response): Promise<void>
     })
   } catch (error: any) {
     console.error('Error onboarding profile:', error)
+    try {
+      import('fs').then(fs => {
+        fs.writeFileSync('onboard_error.log', String(error.stack || error.message))
+      })
+    } catch(e) {}
     res.status(500).json({ success: false, error: 'Internal server error', details: error.message || String(error) })
   }
 }
