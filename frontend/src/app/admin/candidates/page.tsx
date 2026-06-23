@@ -68,6 +68,29 @@ export default function AdminCandidatesPage() {
     }
   }
 
+  const handleRescore = async (id: string) => {
+    if (!confirm('Send this candidate back to the AI queue for re-profiling? They will receive new emails once finished.')) return
+    setActionLoading(`rescore-${id}`)
+    try {
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      const res = await fetch(`/api/admin/audit/rescore`, {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ application_id: id })
+      })
+      if (!res.ok) throw new Error('Failed to queue re-profiling')
+      alert('Candidate successfully sent back for AI Re-Profiling!')
+      await fetchCandidates()
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const filteredCandidates = candidates.filter(c => 
     c.candidate_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,17 +190,28 @@ export default function AdminCandidatesPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {(c.status === 'HIRED' || c.status === 'REJECTED') && (
+                    <div className="flex justify-end gap-2">
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleRevert(c.id)}
-                        disabled={actionLoading === c.id}
+                        onClick={() => handleRescore(c.id)}
+                        disabled={actionLoading === `rescore-${c.id}`}
                       >
-                        {actionLoading === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
-                        Revert
+                        {actionLoading === `rescore-${c.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
+                        Re-Profile (AI)
                       </Button>
-                    )}
+                      {(c.status === 'HIRED' || c.status === 'REJECTED') && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleRevert(c.id)}
+                          disabled={actionLoading === c.id}
+                        >
+                          {actionLoading === c.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
+                          Revert HR
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
