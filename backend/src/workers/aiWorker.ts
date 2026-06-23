@@ -425,6 +425,9 @@ export class AIWorker {
       candidateLoginUrl: `${frontendUrl}/auth/signin`,
       candidateTemporaryPassword: candidateCredentials.temporaryPassword,
       isNewCandidateAccount: candidateCredentials.isNewAccount,
+      // AI insights
+      aiScore: aiResult.score,
+      aiReasoning: aiResult.reasoning,
     }
 
     try {

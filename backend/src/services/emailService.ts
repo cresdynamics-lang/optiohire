@@ -404,6 +404,8 @@ The OptioHire Team`
     candidateLoginUrl?: string | null
     candidateTemporaryPassword?: string | null
     isNewCandidateAccount?: boolean
+    aiScore?: number
+    aiReasoning?: string
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -412,8 +414,25 @@ The OptioHire Team`
 
     const customTemplate = await this.getCustomTemplate(data.companyId, 'SHORTLIST')
 
-    let subject = `You've been shortlisted – ${cleanedJobTitle} - ${companyName}`
+    let subject = `Exciting News: Next Steps for the ${cleanedJobTitle} Position at ${companyName}`
     const hasInterviewDetails = !!(data.interviewLink || data.interviewDate || data.interviewTime)
+
+    let aiAnalysisBlock = ''
+    let aiAnalysisText = ''
+    if (data.aiScore !== undefined && data.aiReasoning) {
+      aiAnalysisBlock = `
+        <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 4px;">
+          <p style="margin: 0 0 10px 0; font-weight: 600; color: #166534;">AI Profile Analysis Report</p>
+          <p style="margin: 0 0 5px 0; font-size: 14px; color: #15803d;"><strong>AI Match Score:</strong> ${data.aiScore}%</p>
+          <p style="margin: 0; font-size: 14px; color: #15803d;"><strong>AI Verdict:</strong> ${data.aiReasoning}</p>
+        </div>`
+      aiAnalysisText = `
+--- AI Profile Analysis Report ---
+AI Match Score: ${data.aiScore}%
+AI Verdict: ${data.aiReasoning}
+----------------------------------
+`
+    }
 
     // Build candidate dashboard block if new account was provisioned
     const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
@@ -484,10 +503,12 @@ Please change your password after your first login for security.
 <body>
   <div class="container">
     ${rawHtml}
+    ${aiAnalysisBlock}
   </div>
 </body>
 </html>`
       text = customTemplate.body_text ? parseTemplate(customTemplate.body_text, vars) : rawHtml.replace(/<[^>]*>/g, '')
+      text += aiAnalysisText
       
       // Append dashboard block to custom template
       if (dashboardBlock) {
@@ -509,6 +530,8 @@ Please change your password after your first login for security.
     <p>Dear ${candidateName},</p>
     
     <p>Congratulations! After reviewing your application for the <strong>${cleanedJobTitle}</strong> position - <strong>${companyName}</strong>, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.</p>
+    
+    ${aiAnalysisBlock}
     
     ${hasInterviewDetails ? `
     <p>Your final interview has been scheduled as follows:</p>
@@ -539,7 +562,7 @@ Please change your password after your first login for security.
         ? `Dear ${candidateName},
 
 Congratulations! After reviewing your application for the ${cleanedJobTitle} position - ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
-
+${aiAnalysisText}
 Your final interview has been scheduled as follows:
 
 Position: ${cleanedJobTitle}
@@ -556,7 +579,7 @@ Company Email: ${hrEmail}`
         : `Dear ${candidateName},
 
 Congratulations! After reviewing your application for the ${cleanedJobTitle} position - ${companyName}, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process.
-
+${aiAnalysisText}
 Our HR team will send you the interview date, time, and meeting link once your interview has been scheduled. You do not need to take any action at this time.
 
 If you have any questions, feel free to contact our HR team at ${hrEmail}.
@@ -593,6 +616,8 @@ Company Email: ${hrEmail}`
     candidateTemporaryPassword?: string | null
     isNewCandidateAccount?: boolean
     rejectSource?: 'SYSTEM' | 'HR'
+    aiScore?: number
+    aiReasoning?: string
   }) {
     const hrEmail = data.companyEmail || DEFAULT_FROM_EMAIL
     const candidateName = getCandidateDisplayName(data.candidateName, data.candidateEmail)
@@ -602,6 +627,23 @@ Company Email: ${hrEmail}`
     const customTemplate = await this.getCustomTemplate(data.companyId, 'REJECT')
 
     let subject = `Update on Your Application for the ${jobTitle} Position - ${companyName}`
+
+    let aiAnalysisBlock = ''
+    let aiAnalysisText = ''
+    if (data.aiScore !== undefined && data.aiReasoning) {
+      aiAnalysisBlock = `
+        <div style="margin-top: 20px; padding: 15px; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 4px;">
+          <p style="margin: 0 0 10px 0; font-weight: 600; color: #b91c1c;">AI Profile Analysis Report</p>
+          <p style="margin: 0 0 5px 0; font-size: 14px; color: #991b1b;"><strong>AI Match Score:</strong> ${data.aiScore}%</p>
+          <p style="margin: 0; font-size: 14px; color: #991b1b;"><strong>AI Verdict:</strong> ${data.aiReasoning}</p>
+        </div>`
+      aiAnalysisText = `
+--- AI Profile Analysis Report ---
+AI Match Score: ${data.aiScore}%
+AI Verdict: ${data.aiReasoning}
+----------------------------------
+`
+    }
 
     // Build candidate dashboard block if new account was provisioned
     const loginUrl = data.candidateLoginUrl || 'https://optiohire.com/auth/signin'
@@ -695,6 +737,7 @@ Please change your password after your first login for security.
     <p>Dear ${candidateName},</p>
     <p>Thank you for taking the time to apply for the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>. We appreciate the effort you put into your application.</p>
     <p>After an initial review of your profile against the core requirements of this role, we regret to inform you that we will not be moving forward with your application at this time.</p>
+    ${aiAnalysisBlock}
     <p>However, we were impressed by your background and have <strong>added your profile to our exclusive Talent Pool</strong>. This means our team will keep you in mind for future opportunities that better match your skills and experience within <strong>${companyName}</strong>.</p>
     <p>If you have any questions, please feel free to contact us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
     <p>We sincerely appreciate your interest in our company and wish you the very best in your job search.</p>
@@ -712,7 +755,7 @@ Please change your password after your first login for security.
 Thank you for taking the time to apply for the ${jobTitle} position at ${companyName}. We appreciate the effort you put into your application.
 
 After an initial review of your profile against the core requirements of this role, we regret to inform you that we will not be moving forward with your application at this time.
-
+${aiAnalysisText}
 However, we were impressed by your background and have added your profile to our exclusive Talent Pool. This means our team will keep you in mind for future opportunities that better match your skills and experience within ${companyName}.
 
 If you have any questions, please feel free to contact us at ${hrEmail}.
@@ -738,6 +781,7 @@ Company Email: ${hrEmail}`
     <p>Dear ${candidateName},</p>
     <p>Thank you for taking the time to apply for the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>. We truly appreciate the effort you put into your application and the time you invested in the selection process.</p>
     <p>After a detailed review by our HR team, we regret to inform you that we will not be moving forward with your application at this time. This decision was not easy, as we received a high number of strong applications.</p>
+    ${aiAnalysisBlock}
     <p>However, your profile is impressive, and we have <strong>added you to our exclusive Talent Pool</strong>. We encourage you to apply for future opportunities, and we will proactively reach out if a role opens up that aligns perfectly with your expertise.</p>
     <p>If you have any questions or would like feedback regarding your application, please feel free to contact us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
     <p>We sincerely appreciate your interest in our company and wish you the very best in your future career endeavors.</p>
@@ -755,7 +799,7 @@ Company Email: ${hrEmail}`
 Thank you for taking the time to apply for the ${jobTitle} position at ${companyName}. We truly appreciate the effort you put into your application and the time you invested in the selection process.
 
 After a detailed review by our HR team, we regret to inform you that we will not be moving forward with your application at this time. This decision was not easy, as we received a high number of strong applications.
-
+${aiAnalysisText}
 However, your profile is impressive, and we have added you to our exclusive Talent Pool. We encourage you to apply for future opportunities, and we will proactively reach out if a role opens up that aligns perfectly with your expertise.
 
 If you have any questions or would like feedback regarding your application, please feel free to contact us at ${hrEmail}.

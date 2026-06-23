@@ -31,68 +31,77 @@ async function ensureCandidateFeatureTables() {
       ALTER TABLE users
       ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;
     `)
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS candidate_missions (
+        mission_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
+        mission_title text NOT NULL,
+        mission_description text NOT NULL,
+        target_skill text NOT NULL,
+        learning_resources jsonb DEFAULT '[]'::jsonb,
+        status text NOT NULL DEFAULT 'PENDING',
+        completed_at timestamptz,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `)
+    await query(`CREATE INDEX IF NOT EXISTS idx_candidate_missions_profile ON candidate_missions(profile_id)`)
+    await query(`CREATE INDEX IF NOT EXISTS idx_candidate_missions_status ON candidate_missions(status)`)
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS candidate_interview_sessions (
+        session_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
+        interview_type text NOT NULL,
+        target_role text,
+        score integer,
+        feedback text,
+        ai_analysis jsonb,
+        status text NOT NULL DEFAULT 'COMPLETED',
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `)
+    await query(`CREATE INDEX IF NOT EXISTS idx_candidate_interview_sessions_profile ON candidate_interview_sessions(profile_id)`)
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS candidate_career_goals (
+        goal_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
+        target_role text NOT NULL,
+        timeline_months integer,
+        milestones jsonb DEFAULT '[]'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `)
+
+    await query(`CREATE INDEX IF NOT EXISTS idx_candidate_interview_sessions_created ON candidate_interview_sessions(created_at DESC)`)
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS recruiter_profile_views (
+        view_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
+        hr_user_id uuid NOT NULL,
+        viewed_at timestamptz NOT NULL DEFAULT now()
+      )
+    `)
+    await query(`CREATE INDEX IF NOT EXISTS idx_recruiter_profile_views_profile ON recruiter_profile_views(profile_id)`)
+    await query(`CREATE INDEX IF NOT EXISTS idx_recruiter_profile_views_viewed_at ON recruiter_profile_views(viewed_at DESC)`)
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS candidate_score_history (
+        history_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
+        total_score integer NOT NULL,
+        recorded_at date NOT NULL DEFAULT CURRENT_DATE,
+        UNIQUE (profile_id, recorded_at)
+      )
+    `)
+    await query(`CREATE INDEX IF NOT EXISTS idx_candidate_score_history_profile ON candidate_score_history(profile_id)`)
   } catch (err) {
-    console.warn('Failed to add columns', err)
+    console.warn('Failed in ensureCandidateFeatureTables:', err)
   }
-
-  await query(`
-    CREATE TABLE IF NOT EXISTS candidate_missions (
-      mission_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
-      mission_title text NOT NULL,
-      mission_description text NOT NULL,
-      target_skill text NOT NULL,
-      learning_resources jsonb DEFAULT '[]'::jsonb,
-      status text NOT NULL DEFAULT 'PENDING',
-      completed_at timestamptz,
-      created_at timestamptz NOT NULL DEFAULT now(),
-      updated_at timestamptz NOT NULL DEFAULT now()
-    )
-  `)
-  await query(`CREATE INDEX IF NOT EXISTS idx_candidate_missions_profile ON candidate_missions(profile_id)`)
-  await query(`CREATE INDEX IF NOT EXISTS idx_candidate_missions_status ON candidate_missions(status)`)
-
-  await query(`
-    CREATE TABLE IF NOT EXISTS candidate_interview_sessions (
-      session_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
-      interview_type text NOT NULL,
-      target_role text,
-      level text,
-      overall_score integer NOT NULL DEFAULT 0,
-      clarity_score integer NOT NULL DEFAULT 0,
-      relevance_score integer NOT NULL DEFAULT 0,
-      depth_score integer NOT NULL DEFAULT 0,
-      feedback text,
-      recommendations jsonb DEFAULT '[]'::jsonb,
-      transcript jsonb DEFAULT '[]'::jsonb,
-      created_at timestamptz NOT NULL DEFAULT now()
-    )
-  `)
-  await query(`CREATE INDEX IF NOT EXISTS idx_candidate_interview_sessions_profile ON candidate_interview_sessions(profile_id)`)
-  await query(`CREATE INDEX IF NOT EXISTS idx_candidate_interview_sessions_created ON candidate_interview_sessions(created_at DESC)`)
-
-  await query(`
-    CREATE TABLE IF NOT EXISTS recruiter_profile_views (
-      view_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
-      hr_user_id uuid NOT NULL,
-      viewed_at timestamptz NOT NULL DEFAULT now()
-    )
-  `)
-  await query(`CREATE INDEX IF NOT EXISTS idx_recruiter_profile_views_profile ON recruiter_profile_views(profile_id)`)
-  await query(`CREATE INDEX IF NOT EXISTS idx_recruiter_profile_views_viewed_at ON recruiter_profile_views(viewed_at DESC)`)
-
-  await query(`
-    CREATE TABLE IF NOT EXISTS candidate_score_history (
-      history_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      profile_id uuid NOT NULL REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
-      total_score integer NOT NULL,
-      recorded_at date NOT NULL DEFAULT CURRENT_DATE,
-      UNIQUE (profile_id, recorded_at)
-    )
-  `)
-  await query(`CREATE INDEX IF NOT EXISTS idx_candidate_score_history_profile ON candidate_score_history(profile_id)`)
 }
 
 async function ensureCandidateMissions(profileId: string, gapAnalysis: any) {

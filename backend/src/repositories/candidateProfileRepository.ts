@@ -123,27 +123,51 @@ export class CandidateProfileRepository {
     profileId: string, 
     data: { bio?: string, job_category?: string, cv_url?: string, cover_letter_url?: string, recommendation_letter_url?: string }
   ): Promise<CandidateProfile> {
-    const { rows } = await query<CandidateProfile>(
-      `UPDATE candidate_profiles
-       SET bio = COALESCE($2, bio),
-           job_category = COALESCE($3, job_category),
-           cv_url = COALESCE($4, cv_url),
-           cover_letter_url = COALESCE($5, cover_letter_url),
-           recommendation_letter_url = COALESCE($6, recommendation_letter_url),
-           updated_at = NOW()
-       WHERE profile_id = $1
-       RETURNING *`,
-      [
-        profileId, 
-        data.bio !== undefined ? data.bio : null, 
-        data.job_category !== undefined ? data.job_category : null, 
-        data.cv_url !== undefined ? data.cv_url : null, 
-        data.cover_letter_url !== undefined ? data.cover_letter_url : null, 
-        data.recommendation_letter_url !== undefined ? data.recommendation_letter_url : null
-      ]
-    )
-    if (rows.length === 0) throw new Error('Profile not found')
-    return rows[0]
+    try {
+      const { rows } = await query<CandidateProfile>(
+        `UPDATE candidate_profiles
+         SET bio = COALESCE($2, bio),
+             job_category = COALESCE($3, job_category),
+             cv_url = COALESCE($4, cv_url),
+             cover_letter_url = COALESCE($5, cover_letter_url),
+             recommendation_letter_url = COALESCE($6, recommendation_letter_url),
+             updated_at = NOW()
+         WHERE profile_id = $1
+         RETURNING *`,
+        [
+          profileId, 
+          data.bio !== undefined ? data.bio : null, 
+          data.job_category !== undefined ? data.job_category : null, 
+          data.cv_url !== undefined ? data.cv_url : null, 
+          data.cover_letter_url !== undefined ? data.cover_letter_url : null, 
+          data.recommendation_letter_url !== undefined ? data.recommendation_letter_url : null
+        ]
+      )
+      if (rows.length === 0) throw new Error('Profile not found')
+      return rows[0]
+    } catch (err: any) {
+      if (err?.code === '42703' || String(err?.message || '').includes('does not exist')) {
+        // Fallback for when the new columns haven't been added to the database yet
+        const { rows } = await query<CandidateProfile>(
+          `UPDATE candidate_profiles
+           SET bio = COALESCE($2, bio),
+               job_category = COALESCE($3, job_category),
+               cv_url = COALESCE($4, cv_url),
+               updated_at = NOW()
+           WHERE profile_id = $1
+           RETURNING *`,
+          [
+            profileId, 
+            data.bio !== undefined ? data.bio : null, 
+            data.job_category !== undefined ? data.job_category : null, 
+            data.cv_url !== undefined ? data.cv_url : null
+          ]
+        )
+        if (rows.length === 0) throw new Error('Profile not found')
+        return rows[0]
+      }
+      throw err
+    }
   }
 
   async setInitialAlternativeScore(profileId: string, score: number): Promise<void> {
