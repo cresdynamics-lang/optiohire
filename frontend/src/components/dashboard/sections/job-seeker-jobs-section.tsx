@@ -488,9 +488,7 @@ export function JobSeekerJobsSection() {
               const isExpanded = expandedJobId === job.job_posting_id
               const isSubmitting = submittingJobId === job.job_posting_id
               const isUploading = uploadingJobId === job.job_posting_id
-              const hasApplicationEvidence = Boolean(
-                form.resumeUrl || form.linkedinUrl || form.githubUrl || form.otherUrl
-              )
+              const hasApplicationEvidence = true // Form allows optional evidence now
               return (
                 <Card 
                   key={job.job_posting_id} 
@@ -601,7 +599,7 @@ export function JobSeekerJobsSection() {
                               </div>
 
                               <div className="space-y-2">
-                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Or Paste CV Link</label>
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Or Paste CV Link (Optional)</label>
                                 <div className="relative">
                                   <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                   <Input
@@ -617,7 +615,7 @@ export function JobSeekerJobsSection() {
                             <div className="space-y-4">
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-2">
-                                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">LinkedIn</label>
+                                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">LinkedIn (Optional)</label>
                                   <Input
                                     placeholder="linkedin.com/in/..."
                                     value={form.linkedinUrl}
@@ -625,7 +623,7 @@ export function JobSeekerJobsSection() {
                                   />
                                 </div>
                                 <div className="space-y-2">
-                                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">GitHub</label>
+                                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">GitHub (Optional)</label>
                                   <Input
                                     placeholder="github.com/..."
                                     value={form.githubUrl}
@@ -635,7 +633,7 @@ export function JobSeekerJobsSection() {
                               </div>
                               
                               <div className="space-y-2">
-                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Other Link / Portfolio</label>
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Other Link / Portfolio (Optional)</label>
                                 <Input
                                   placeholder="Portfolio or website"
                                   value={form.otherUrl}
@@ -665,12 +663,7 @@ export function JobSeekerJobsSection() {
                           </div>
 
                           <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                            {!hasApplicationEvidence ? (
-                              <p className="text-xs text-amber-600 sm:mr-auto flex items-center">
-                                <AlertTriangle className="h-3.5 w-3.5 mr-1" />
-                                Please add at least one link or upload a CV.
-                              </p>
-                            ) : null}
+
                             <Button
                               type="button"
                               variant="ghost"

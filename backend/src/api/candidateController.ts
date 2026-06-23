@@ -283,10 +283,7 @@ export const submitCandidateApplication = async (req: Request, res: Response): P
       res.status(400).json({ error: 'jobPostingId is required' })
       return
     }
-    if (!resumeUrl && !linkedinUrl && !githubUrl && !otherUrl) {
-      res.status(400).json({ error: 'Provide at least one application link (CV, LinkedIn, GitHub, or other link).' })
-      return
-    }
+    // Application evidence (CV, LinkedIn, etc.) is now optional as requested.
 
     const email = (authEmail || bodyEmail || '').toLowerCase().trim()
     if (!email) {
