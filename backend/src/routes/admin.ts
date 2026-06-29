@@ -190,10 +190,12 @@ router.get('/candidates', authenticate, requireAdmin, getAllCandidates)
 router.post('/candidates/:id/revert', authenticate, requireAdmin, revertCandidate)
 
 // Talent Pool & AI Email
-import { getTalentPool, generatePersonalisedEmail, bulkGenerateAndSend } from '../api/adminTalentPoolController.js'
+import { getTalentPool, generatePersonalisedEmail, bulkGenerateAndSend, generateHtmlEmail, bulkCustomHtmlEmail } from '../api/adminTalentPoolController.js'
 router.get('/talent-pool', authenticate, requireAdmin, getTalentPool)
 router.post('/talent-pool/generate-email', authenticate, requireAdmin, generatePersonalisedEmail)
 router.post('/talent-pool/bulk-email', authenticate, requireAdmin, bulkGenerateAndSend)
+router.post('/talent-pool/generate-html-email', authenticate, requireAdmin, generateHtmlEmail)
+router.post('/talent-pool/bulk-custom-html-email', authenticate, requireAdmin, bulkCustomHtmlEmail)
 
 // Security Audit Logs
 import { getSecurityLogs } from '../api/adminSecurityLogsController.js'

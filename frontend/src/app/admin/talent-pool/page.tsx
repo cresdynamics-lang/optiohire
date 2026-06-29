@@ -45,6 +45,15 @@ export default function AdminTalentPoolPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSending, setIsSending] = useState(false)
 
+  // Bulk Custom HTML Modal state
+  const [htmlModalOpen, setHtmlModalOpen] = useState(false)
+  const [htmlContent, setHtmlContent] = useState('')
+  const [htmlPrompt, setHtmlPrompt] = useState('A tech startup welcome email for our talent pool')
+  const [htmlSubject, setHtmlSubject] = useState('Update from OptioHire')
+  const [isGeneratingHtml, setIsGeneratingHtml] = useState(false)
+  const [isSendingHtml, setIsSendingHtml] = useState(false)
+  const [previewMode, setPreviewMode] = useState(false)
+
   const fetchPool = async () => {
     try {
       const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
@@ -185,6 +194,66 @@ export default function AdminTalentPoolPage() {
     }
   }
 
+  const generateHtmlWithAI = async () => {
+    if (!htmlPrompt) return
+    setIsGeneratingHtml(true)
+    try {
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      const res = await fetch(`/api/admin/talent-pool/generate-html-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ prompt: htmlPrompt })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setHtmlContent(data.html)
+        setPreviewMode(true)
+      } else {
+        alert(data.error)
+      }
+    } catch (e: any) {
+      alert(`Error generating HTML: ${e.message}`)
+    } finally {
+      setIsGeneratingHtml(false)
+    }
+  }
+
+  const sendBulkCustomHtml = async () => {
+    if (selectedIds.length === 0) return
+    if (!htmlContent) return
+    if (!confirm(`Send this HTML email to ${selectedIds.length} candidates?`)) return
+    
+    setIsSendingHtml(true)
+    const selectedTalents = talents.filter(t => selectedIds.includes(t.id))
+    
+    try {
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+      const res = await fetch(`/api/admin/talent-pool/bulk-custom-html-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          candidates: selectedTalents.map(t => ({
+            candidateName: t.candidate_name,
+            email: t.email
+          })),
+          htmlContent,
+          subject: htmlSubject
+        })
+      })
+      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      alert(`Successfully queued ${data.sentCount} emails!`)
+      setHtmlModalOpen(false)
+      setSelectedIds([])
+    } catch (e: any) {
+      alert(`Bulk send error: ${e.message}`)
+    } finally {
+      setIsSendingHtml(false)
+    }
+  }
+
+
   const filteredTalents = talents.filter(t => 
     t.candidate_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -199,6 +268,13 @@ export default function AdminTalentPoolPage() {
           <p className="text-muted-foreground">Engage with past candidates using AI-generated personalised emails.</p>
         </div>
         <div className="flex gap-3">
+          <Button 
+            onClick={() => setHtmlModalOpen(true)}
+            disabled={selectedIds.length === 0}
+            variant="outline"
+          >
+            Custom HTML Email ({selectedIds.length})
+          </Button>
           <Button 
             onClick={handleBulkEmail} 
             disabled={selectedIds.length === 0 || isBulkLoading}
@@ -323,19 +399,81 @@ export default function AdminTalentPoolPage() {
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setEmailModalOpen(false)}>Cancel</Button>
-            <Button 
-              onClick={sendSingleEmail} 
-              disabled={isGenerating || isSending}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
+            <Button onClick={sendSingleEmail} disabled={isGenerating || isSending || !emailDraft}>
               {isSending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Send Email
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={htmlModalOpen} onOpenChange={setHtmlModalOpen}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Custom Bulk HTML Email</DialogTitle>
+            <DialogDescription>
+              Write or generate an HTML email template. Use {'{{candidateName}}'} to personalize.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col gap-4 flex-1 overflow-y-auto pr-2">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1 space-y-1">
+                <label className="text-sm font-medium">AI Generator Prompt</label>
+                <Input 
+                  placeholder="e.g. A welcome email..." 
+                  value={htmlPrompt}
+                  onChange={(e) => setHtmlPrompt(e.target.value)}
+                />
+              </div>
+              <Button onClick={generateHtmlWithAI} disabled={isGeneratingHtml || !htmlPrompt}>
+                {isGeneratingHtml ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Generate HTML
+              </Button>
+            </div>
+            
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Email Subject</label>
+              <Input 
+                value={htmlSubject}
+                onChange={(e) => setHtmlSubject(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex justify-between items-center mt-2">
+              <label className="text-sm font-medium">HTML Content</label>
+              <Button variant="ghost" size="sm" onClick={() => setPreviewMode(!previewMode)}>
+                {previewMode ? 'Show Code' : 'Show Preview'}
+              </Button>
+            </div>
+            
+            {previewMode ? (
+              <div 
+                className="flex-1 border rounded-md p-4 bg-white text-black overflow-y-auto"
+                dangerouslySetInnerHTML={{ __html: htmlContent || '<p class="text-gray-500">No HTML to preview.</p>' }}
+              />
+            ) : (
+              <Textarea 
+                className="flex-1 font-mono text-xs"
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                placeholder="<html>...</html>"
+              />
+            )}
+          </div>
+          
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setHtmlModalOpen(false)}>Cancel</Button>
+            <Button onClick={sendBulkCustomHtml} disabled={isSendingHtml || !htmlContent}>
+              {isSendingHtml ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+              Send to {selectedIds.length} Candidates
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }
