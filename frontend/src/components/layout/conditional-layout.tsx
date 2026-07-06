@@ -29,6 +29,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
     pathname.startsWith('/hr') || 
     pathname.startsWith('/admin') || 
     pathname.startsWith('/console') ||
+    pathname.startsWith('/institutions') ||
     pathname === '/privacy'
 
   // Determine if Navbar and Footer should be rendered
@@ -40,7 +41,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const isMainDomain = !isSubdomain && (host.includes('optiohire.com') || host.includes('localhost'))
   const showNavbar = !loading && (
     (!user && !isAppInterface) || 
-    (user && isMainDomain && !pathname.startsWith('/hr'))
+    (user && isMainDomain && !pathname.startsWith('/hr') && !pathname.startsWith('/institutions'))
   )
   
   const showFooter = !isAppInterface
