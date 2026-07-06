@@ -22,7 +22,8 @@ import {
   AlertTriangle,
   X,
   ShieldAlert,
-  Cpu
+  Cpu,
+  GraduationCap
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -59,6 +60,13 @@ const navigationGroups: NavGroup[] = [
       { name: 'Candidates Pipeline', href: '/admin/candidates', icon: UserCheck },
       { name: 'Talent Pool', href: '/admin/talent-pool', icon: Users },
       { name: 'Certificates', href: '/admin/certificates', icon: FileText },
+    ]
+  },
+  {
+    label: 'Institutions',
+    items: [
+      { name: 'Institutions', href: '/admin/institutions', icon: GraduationCap },
+      { name: 'Onboarding Forms', href: '/admin/institutions/onboarding', icon: Send },
     ]
   },
   {

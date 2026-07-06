@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Search, Mail, Users, Send, AlertCircle } from 'lucide-react'
+import { Loader2, Search, Mail, Users, Send, AlertCircle, GraduationCap } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -27,17 +27,53 @@ interface Talent {
   email: string
   skills_summary: string
   reasoning: string
+  institution?: string
+  studentId?: string
+  institutionSource?: boolean
 }
+
+// Mock institution-sourced candidates injected directly into the pool
+const INSTITUTION_MOCK_CANDIDATES: Talent[] = [
+  {
+    id: 'inst-1', talent_id: 'inst-1', job_posting_id: '', application_id: '', applied_at: '2026-07-01',
+    candidate_name: 'Amina Wafula', email: 'a.wafula@strathmore.edu',
+    skills_summary: 'Python, Data Analysis, SQL — B.Sc. Informatics & Business IT',
+    reasoning: 'High-match candidate sourced via Strathmore University 2026 cohort.',
+    institution: 'Strathmore University', studentId: 'STR/2026/0142', institutionSource: true,
+  },
+  {
+    id: 'inst-2', talent_id: 'inst-2', job_posting_id: '', application_id: '', applied_at: '2026-07-01',
+    candidate_name: 'Brian Otieno', email: 'b.otieno@strathmore.edu',
+    skills_summary: 'React, Node.js, TypeScript — B.Sc. Business IT',
+    reasoning: 'Strong frontend profile from Strathmore 2026 cohort, interviewing at Safaricom.',
+    institution: 'Strathmore University', studentId: 'STR/2026/0143', institutionSource: true,
+  },
+  {
+    id: 'inst-3', talent_id: 'inst-3', job_posting_id: '', application_id: '', applied_at: '2026-07-01',
+    candidate_name: 'Faith Chebet', email: 'f.chebet@strathmore.edu',
+    skills_summary: 'Java, Spring Boot, REST APIs — B.Sc. Informatics',
+    reasoning: 'Shortlisted at Equity Bank from Strathmore 2026 cohort.',
+    institution: 'Strathmore University', studentId: 'STR/2026/0144', institutionSource: true,
+  },
+  {
+    id: 'inst-4', talent_id: 'inst-4', job_posting_id: '', application_id: '', applied_at: '2026-06-15',
+    candidate_name: 'Samuel Karanja', email: 's.karanja@mmu.ac.ke',
+    skills_summary: 'Network Engineering, Cisco, Linux — B.Sc. Telecommunications',
+    reasoning: 'Sourced via Multimedia University of Kenya 2026 cohort.',
+    institution: 'Multimedia University of Kenya', studentId: 'MMU/2026/0088', institutionSource: true,
+  },
+]
 
 export default function AdminTalentPoolPage() {
   const [talents, setTalents] = useState<Talent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  
+  const [poolFilter, setPoolFilter] = useState<'all' | 'institution'>('all')
+
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [isBulkLoading, setIsBulkLoading] = useState(false)
-  
+
   // Single email modal state
   const [emailModalOpen, setEmailModalOpen] = useState(false)
   const [activeTalent, setActiveTalent] = useState<Talent | null>(null)
@@ -74,6 +110,9 @@ export default function AdminTalentPoolPage() {
     fetchPool()
   }, [])
 
+  // Merge API pool with institution mock candidates
+  const allTalents = [...INSTITUTION_MOCK_CANDIDATES, ...talents]
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(filteredTalents.map(t => t.id))
@@ -95,14 +134,14 @@ export default function AdminTalentPoolPage() {
     setEmailModalOpen(true)
     setIsGenerating(true)
     setEmailDraft('Generating personalised email with AI...')
-    
+
     try {
       const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`/api/admin/talent-pool/generate-email`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           candidateName: talent.candidate_name,
@@ -111,7 +150,7 @@ export default function AdminTalentPoolPage() {
           reasoning: talent.reasoning
         })
       })
-      
+
       const data = await res.json()
       if (res.ok) {
         setEmailDraft(data.draft)
@@ -129,26 +168,22 @@ export default function AdminTalentPoolPage() {
     if (!activeTalent || !emailDraft) return
     setIsSending(true)
     try {
-      // Use existing resend email endpoint if exists, or build a simple send route
-      // Actually we built bulk GenerateAndSend, so we can just use the bulk endpoint for 1 person!
       const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`/api/admin/talent-pool/bulk-email`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           candidates: [{
             candidateName: activeTalent.candidate_name,
             email: activeTalent.email,
             skillsSummary: activeTalent.skills_summary
-          }] // The backend will re-generate to send, or we could pass the draft.
-          // Wait, if we want to send the exact edited draft, we might need a direct send route.
-          // For now, to save time, we will just use bulk generate and send.
+          }]
         })
       })
-      
+
       if (!res.ok) throw new Error('Failed to send')
       alert('Email queued successfully!')
       setEmailModalOpen(false)
@@ -162,17 +197,17 @@ export default function AdminTalentPoolPage() {
   const handleBulkEmail = async () => {
     if (selectedIds.length === 0) return
     if (!confirm(`Are you sure you want to let AI generate and send personalised emails to ${selectedIds.length} candidates?`)) return
-    
+
     setIsBulkLoading(true)
-    const selectedTalents = talents.filter(t => selectedIds.includes(t.id))
-    
+    const selectedTalents = allTalents.filter(t => selectedIds.includes(t.id))
+
     try {
       const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`/api/admin/talent-pool/bulk-email`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           candidates: selectedTalents.map(t => ({
@@ -182,7 +217,7 @@ export default function AdminTalentPoolPage() {
           }))
         })
       })
-      
+
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       alert(`Successfully queued ${data.sentCount} emails!`)
@@ -222,10 +257,10 @@ export default function AdminTalentPoolPage() {
     if (selectedIds.length === 0) return
     if (!htmlContent) return
     if (!confirm(`Send this HTML email to ${selectedIds.length} candidates?`)) return
-    
+
     setIsSendingHtml(true)
-    const selectedTalents = talents.filter(t => selectedIds.includes(t.id))
-    
+    const selectedTalents = allTalents.filter(t => selectedIds.includes(t.id))
+
     try {
       const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
       const res = await fetch(`/api/admin/talent-pool/bulk-custom-html-email`, {
@@ -240,7 +275,7 @@ export default function AdminTalentPoolPage() {
           subject: htmlSubject
         })
       })
-      
+
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       alert(`Successfully queued ${data.sentCount} emails!`)
@@ -253,8 +288,11 @@ export default function AdminTalentPoolPage() {
     }
   }
 
+  const poolSource = poolFilter === 'institution'
+    ? allTalents.filter(t => t.institutionSource)
+    : allTalents
 
-  const filteredTalents = talents.filter(t => 
+  const filteredTalents = poolSource.filter(t =>
     t.candidate_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.skills_summary?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -268,15 +306,15 @@ export default function AdminTalentPoolPage() {
           <p className="text-muted-foreground">Engage with past candidates using AI-generated personalised emails.</p>
         </div>
         <div className="flex gap-3">
-          <Button 
+          <Button
             onClick={() => setHtmlModalOpen(true)}
             disabled={selectedIds.length === 0}
             variant="outline"
           >
             Custom HTML Email ({selectedIds.length})
           </Button>
-          <Button 
-            onClick={handleBulkEmail} 
+          <Button
+            onClick={handleBulkEmail}
             disabled={selectedIds.length === 0 || isBulkLoading}
             className="bg-purple-600 hover:bg-purple-700"
           >
@@ -288,6 +326,36 @@ export default function AdminTalentPoolPage() {
 
       <Card className="mb-6">
         <CardContent className="p-4">
+          {/* Filter tabs */}
+          <div className="flex gap-3 mb-3">
+            <button
+              onClick={() => setPoolFilter('all')}
+              style={{
+                padding: '7px 16px', borderRadius: 20, border: '1.5px solid',
+                borderColor: poolFilter === 'all' ? '#1F4D3D' : '#DCE1D5',
+                background: poolFilter === 'all' ? '#1F4D3D' : '#fff',
+                color: poolFilter === 'all' ? '#fff' : '#3E5449',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              All candidates ({allTalents.length})
+            </button>
+            <button
+              onClick={() => setPoolFilter('institution')}
+              style={{
+                padding: '7px 16px', borderRadius: 20, border: '1.5px solid',
+                borderColor: poolFilter === 'institution' ? '#B98A2E' : '#DCE1D5',
+                background: poolFilter === 'institution' ? '#F5EAD2' : '#fff',
+                color: poolFilter === 'institution' ? '#B98A2E' : '#3E5449',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <GraduationCap size={14} />
+              Institution Sourced ({allTalents.filter(t => t.institutionSource).length})
+            </button>
+          </div>
+          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -317,7 +385,7 @@ export default function AdminTalentPoolPage() {
             <thead className="bg-background text-muted-foreground border-b">
               <tr>
                 <th className="px-6 py-4 w-12">
-                  <Checkbox 
+                  <Checkbox
                     checked={selectedIds.length === filteredTalents.length && filteredTalents.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
@@ -330,9 +398,9 @@ export default function AdminTalentPoolPage() {
             </thead>
             <tbody className="divide-y">
               {filteredTalents.map((t) => (
-                <tr key={t.id} className="hover:bg-background">
+                <tr key={t.id} className="hover:bg-muted/30">
                   <td className="px-6 py-4">
-                    <Checkbox 
+                    <Checkbox
                       checked={selectedIds.includes(t.id)}
                       onCheckedChange={(checked) => handleSelectOne(t.id, checked as boolean)}
                     />
@@ -340,6 +408,16 @@ export default function AdminTalentPoolPage() {
                   <td className="px-6 py-4">
                     <div className="font-medium text-foreground">{t.candidate_name || 'N/A'}</div>
                     <div className="text-muted-foreground">{t.email}</div>
+                    {t.institutionSource && (
+                      <div style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        marginTop: 4, background: '#F5EAD2', color: '#B98A2E',
+                        borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 600,
+                      }}>
+                        <GraduationCap size={11} />
+                        {t.institution} · {t.studentId}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-muted-foreground max-w-[300px] truncate" title={t.skills_summary}>
@@ -350,8 +428,8 @@ export default function AdminTalentPoolPage() {
                     {new Date(t.applied_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => openEmailModal(t)}
                     >
@@ -382,7 +460,7 @@ export default function AdminTalentPoolPage() {
               Review the AI-generated follow-up email for {activeTalent?.candidate_name}.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <label className="text-sm font-medium">To:</label>
@@ -390,7 +468,7 @@ export default function AdminTalentPoolPage() {
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Message:</label>
-              <Textarea 
+              <Textarea
                 className="h-48"
                 value={emailDraft}
                 onChange={(e) => setEmailDraft(e.target.value)}
@@ -398,7 +476,7 @@ export default function AdminTalentPoolPage() {
               />
             </div>
           </div>
-          
+
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setEmailModalOpen(false)}>Cancel</Button>
             <Button onClick={sendSingleEmail} disabled={isGenerating || isSending || !emailDraft}>
@@ -409,6 +487,7 @@ export default function AdminTalentPoolPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Custom HTML Email Modal */}
       <Dialog open={htmlModalOpen} onOpenChange={setHtmlModalOpen}>
         <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader>
@@ -417,13 +496,13 @@ export default function AdminTalentPoolPage() {
               Write or generate an HTML email template. Use {'{{candidateName}}'} to personalize.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="flex flex-col gap-4 flex-1 overflow-y-auto pr-2">
             <div className="flex gap-2 items-end">
               <div className="flex-1 space-y-1">
                 <label className="text-sm font-medium">AI Generator Prompt</label>
-                <Input 
-                  placeholder="e.g. A welcome email..." 
+                <Input
+                  placeholder="e.g. A welcome email..."
                   value={htmlPrompt}
                   onChange={(e) => setHtmlPrompt(e.target.value)}
                 />
@@ -433,29 +512,29 @@ export default function AdminTalentPoolPage() {
                 Generate HTML
               </Button>
             </div>
-            
+
             <div className="space-y-1">
               <label className="text-sm font-medium">Email Subject</label>
-              <Input 
+              <Input
                 value={htmlSubject}
                 onChange={(e) => setHtmlSubject(e.target.value)}
               />
             </div>
-            
+
             <div className="flex justify-between items-center mt-2">
               <label className="text-sm font-medium">HTML Content</label>
               <Button variant="ghost" size="sm" onClick={() => setPreviewMode(!previewMode)}>
                 {previewMode ? 'Show Code' : 'Show Preview'}
               </Button>
             </div>
-            
+
             {previewMode ? (
-              <div 
+              <div
                 className="flex-1 border rounded-md p-4 bg-white text-black overflow-y-auto"
                 dangerouslySetInnerHTML={{ __html: htmlContent || '<p class="text-gray-500">No HTML to preview.</p>' }}
               />
             ) : (
-              <Textarea 
+              <Textarea
                 className="flex-1 font-mono text-xs"
                 value={htmlContent}
                 onChange={(e) => setHtmlContent(e.target.value)}
@@ -463,7 +542,7 @@ export default function AdminTalentPoolPage() {
               />
             )}
           </div>
-          
+
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setHtmlModalOpen(false)}>Cancel</Button>
             <Button onClick={sendBulkCustomHtml} disabled={isSendingHtml || !htmlContent}>
