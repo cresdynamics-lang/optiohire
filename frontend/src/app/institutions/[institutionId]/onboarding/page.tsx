@@ -2,7 +2,7 @@
 
 import { useState, useRef, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Check, ChevronRight, ChevronLeft, Send } from 'lucide-react'
+import { Upload, ChevronRight, ChevronLeft, Send, Loader2 } from 'lucide-react'
 
 interface CsvRow {
     [key: string]: string
@@ -42,40 +42,97 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
     const [mapping, setMapping] = useState<Record<string, string>>({})
     const [validated, setValidated] = useState<{ valid: MappedCandidate[]; flagged: any[]; duplicates: number }>({ valid: [], flagged: [], duplicates: 0 })
     const [sending, setSending] = useState(false)
-    const [sendProgress, setSendProgress] = useState(0)
+    const [sendingStage, setSendingStage] = useState('')
     const [sent, setSent] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('institution_token') : null
 
-    // ─── File parsing ────────────────────────────────────────────────
+    // ─── Robust CSV Parsing ──────────────────────────────────────────
 
     const parseCSV = (text: string): { headers: string[]; rows: CsvRow[] } => {
-        const lines = text.trim().split('\n')
-        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''))
+        const lines: string[][] = []
+        let row: string[] = []
+        let inQuotes = false
+        let entry = ''
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i]
+            const nextChar = text[i + 1]
+
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    entry += '"'
+                    i++ // Skip next quote
+                } else {
+                    inQuotes = !inQuotes
+                }
+            } else if (char === ',' && !inQuotes) {
+                row.push(entry.trim())
+                entry = ''
+            } else if ((char === '\n' || char === '\r') && !inQuotes) {
+                if (char === '\r' && nextChar === '\n') {
+                    i++ // Skip \n
+                }
+                row.push(entry.trim())
+                if (row.length > 0 && (row.length > 1 || row[0] !== '')) {
+                    lines.push(row)
+                }
+                row = []
+                entry = ''
+            } else {
+                entry += char
+            }
+        }
+        if (entry || row.length > 0) {
+            row.push(entry.trim())
+            lines.push(row)
+        }
+
+        if (lines.length === 0) return { headers: [], rows: [] }
+        const headers = lines[0].map(h => h.replace(/^"|"$/g, '').trim())
         const rows = lines.slice(1).map(line => {
-            const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''))
-            const row: CsvRow = {}
-            headers.forEach((h, i) => { row[h] = vals[i] || '' })
-            return row
+            const r: CsvRow = {}
+            headers.forEach((h, idx) => {
+                r[h] = (line[idx] || '').replace(/^"|"$/g, '').trim()
+            })
+            return r
         })
         return { headers, rows }
     }
 
     const handleFile = (file: File) => {
+        setError(null)
         setFilename(file.name)
+        const ext = file.name.split('.').pop()?.toLowerCase()
+        
+        if (ext === 'xlsx' || ext === 'xls') {
+            setError('Excel (.xlsx/.xls) files are not directly supported. Please save your file as CSV (.csv) first, then upload.')
+            setFilename('')
+            return
+        }
+
         const reader = new FileReader()
         reader.onload = e => {
-            const { headers, rows } = parseCSV(e.target!.result as string)
-            setCsvHeaders(headers)
-            setCsvRows(rows)
-            // Auto-map based on common field names
-            const autoMap: Record<string, string> = {}
-            OPTIOHIRE_FIELDS.forEach(field => {
-                const match = headers.find(h => h.toLowerCase().includes(field.key.replace('full_', '').replace('_', '')) || h.toLowerCase() === field.key)
-                if (match) autoMap[field.key] = match
-            })
-            setMapping(autoMap)
+            try {
+                const { headers, rows } = parseCSV(e.target!.result as string)
+                if (headers.length === 0 || rows.length === 0) {
+                    setError('The CSV file appears to be empty or invalid.')
+                    return
+                }
+                setCsvHeaders(headers)
+                setCsvRows(rows)
+                // Auto-map based on common field names
+                const autoMap: Record<string, string> = {}
+                OPTIOHIRE_FIELDS.forEach(field => {
+                    const match = headers.find(h => h.toLowerCase().includes(field.key.replace('full_', '').replace('_', '')) || h.toLowerCase() === field.key)
+                    if (match) autoMap[field.key] = match
+                })
+                setMapping(autoMap)
+                setStep(2)
+            } catch (err) {
+                setError('Failed to parse CSV file.')
+            }
         }
         reader.readAsText(file)
     }
@@ -83,7 +140,7 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault()
         const file = e.dataTransfer.files[0]
-        if (file) { handleFile(file); setStep(2) }
+        if (file) { handleFile(file) }
     }
 
     // ─── Validation (step 2 → 3) ─────────────────────────────────
@@ -126,8 +183,9 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
         if (!token) return
         setSending(true)
         setError(null)
+        
         try {
-            // First create the cohort
+            setSendingStage('1. Creating graduating cohort...')
             const cohortRes = await fetch(`/api/institutions/${institutionId}/cohorts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -138,27 +196,25 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
 
             const cohortId = cohortData.id
 
-            // Simulate progress
-            const interval = setInterval(() => setSendProgress(p => Math.min(p + 8, 92)), 300)
-
+            setSendingStage('2. Enrolling candidates & preparing email queue...')
             const commitRes = await fetch(`/api/institutions/${institutionId}/cohorts/${cohortId}/commit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ valid: validated.valid, filename })
             })
-            clearInterval(interval)
-            setSendProgress(100)
 
             if (!commitRes.ok) {
                 const d = await commitRes.json()
-                setError(d.error || 'Failed to commit')
+                setError(d.error || 'Failed to commit candidates')
             } else {
+                setSendingStage('3. Onboarding invitations sent successfully!')
                 setSent(true)
             }
         } catch {
-            setError('Network error')
+            setError('A network error occurred. Please try again.')
         } finally {
             setSending(false)
+            setSendingStage('')
         }
     }
 
@@ -240,6 +296,11 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                             </div>
                         </div>
 
+                        {error && (
+                            <div style={{ background: '#F5E3DE', border: '1px solid #e8c8c0', borderRadius: 8, color: '#9C3B2C', padding: '12px 16px', fontSize: 13, marginBottom: 20 }}>
+                                ⚠ {error}
+                            </div>
+                        )}
 
                         <div
                             onDrop={handleDrop} onDragOver={e => e.preventDefault()}
@@ -250,15 +311,15 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                                 <Upload size={22} />
                             </div>
                             <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 16, margin: '0 0 6px' }}>Drag your student list here</h3>
-                            <p style={{ fontSize: 12.5, color: '#3E5449', margin: '0 0 16px' }}>CSV or Excel — name, email, student ID, department, expected graduation. Up to 5,000 rows.</p>
+                            <p style={{ fontSize: 12.5, color: '#3E5449', margin: '0 0 16px' }}>CSV format containing name, email, student ID, department, etc. Up to 5,000 rows.</p>
                             <button style={{ background: '#1F4D3D', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                                Choose file
+                                Choose CSV file
                             </button>
                             {filename && <div style={{ marginTop: 12, fontSize: 12, color: '#1F4D3D', fontWeight: 600 }}>📄 {filename}</div>}
                             <div style={{ marginTop: 12, fontSize: 11.5, color: '#3E5449' }}>or paste from Google Sheets · <span style={{ color: '#1F4D3D', fontWeight: 600, cursor: 'pointer' }}>download our template</span></div>
                         </div>
-                        <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }}
-                            onChange={e => { const f = e.target.files?.[0]; if (f) { handleFile(f); setStep(2) } }} />
+                        <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }}
+                            onChange={e => { const f = e.target.files?.[0]; if (f) { handleFile(f) } }} />
                     </div>
                 )}
 
@@ -302,7 +363,7 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                             ['Duplicate entries removed', validated.duplicates.toString()],
                             ['Flagged for manual check', validated.flagged.length > 0 ? `${validated.flagged.length} (missing data)` : '0'],
                         ].map(([k, v]) => (
-                            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>
+                            <div key={k} style={{ display: 'flex', justifyStyle: 'space-between', padding: '9px 0', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>
                                 <div style={{ color: '#3E5449' }}>{k}</div>
                                 <div style={{ fontWeight: 600, color: k === 'Flagged for manual check' && validated.flagged.length > 0 ? '#9C3B2C' : '#152A22' }}>{v}</div>
                             </div>
@@ -345,9 +406,9 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                     <div style={{ padding: 20 }}>
                         {sent ? (
                             <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#E4EEE7', color: '#1F4D3D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>✓</div>
-                                <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 22, margin: '0 0 8px' }}>Invitations sent!</h3>
-                                <p style={{ color: '#3E5449', fontSize: 13 }}>{validated.valid.length} students have been added to the cohort and invites are on their way.</p>
+                                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#E4EEE7', color: '#1F4D3D', display: 'flex', alignItems: 'center', justifyStyle: 'center', margin: '0 auto 16px', fontSize: 28, fontWeight: 'bold' }}>✓</div>
+                                <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 22, margin: '0 0 8px' }}>Invitations queued!</h3>
+                                <p style={{ color: '#3E5449', fontSize: 13 }}>{validated.valid.length} students have been enrolled, and onboarding emails are being dispatched in the background.</p>
                                 <button onClick={() => router.push(`/institutions/${institutionId}/roster`)}
                                     style={{ marginTop: 20, background: '#1F4D3D', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                                     View Roster →
@@ -373,24 +434,22 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                                 {error && <div style={{ color: '#9C3B2C', textAlign: 'center', fontSize: 13, marginBottom: 12 }}>{error}</div>}
 
                                 {sending && (
-                                    <div style={{ maxWidth: 520, margin: '0 auto 16px' }}>
-                                        <div style={{ height: 8, background: '#EFE9D8', borderRadius: 20, overflow: 'hidden', marginBottom: 6 }}>
-                                            <div style={{ height: '100%', background: 'linear-gradient(90deg,#1F4D3D,#2F6B54)', borderRadius: 20, width: `${sendProgress}%`, transition: 'width .3s ease' }} />
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#3E5449' }}>
-                                            <span>{Math.round(sendProgress / 100 * validated.valid.length)} of {validated.valid.length} queued</span>
-                                            <span>Processing…</span>
-                                        </div>
+                                    <div style={{ maxWidth: 520, margin: '0 auto 24px', textAlign: 'center', padding: '10px 0' }}>
+                                        <Loader2 className="animate-spin" size={32} style={{ color: '#1F4D3D', margin: '0 auto 12px' }} />
+                                        <div style={{ fontSize: 14, fontWeight: 600, color: '#152A22' }}>{sendingStage}</div>
+                                        <div style={{ fontSize: 12, color: '#3E5449', marginTop: 4 }}>Please do not close this window while processing.</div>
                                     </div>
                                 )}
 
-                                <div style={{ textAlign: 'center' }}>
-                                    <button onClick={handleCommit} disabled={sending}
-                                        style={{ background: '#B98A2E', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? .7 : 1, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                                        <Send size={16} />
-                                        {sending ? 'Sending…' : `Send ${validated.valid.length} invitations`}
-                                    </button>
-                                </div>
+                                {!sending && (
+                                    <div style={{ textAlign: 'center' }}>
+                                        <button onClick={handleCommit}
+                                            style={{ background: '#B98A2E', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                                            <Send size={16} />
+                                            Send {validated.valid.length} invitations
+                                        </button>
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Download, RefreshCw } from 'lucide-react'
+import { Search, Download, RefreshCw, X, Eye, Mail } from 'lucide-react'
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
     enrolled: { bg: '#F1F1EA', color: '#7A7A6E' },
@@ -28,9 +28,23 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
     const [selectedCohort, setSelectedCohort] = useState<string>('')
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [search, setSearch] = useState('')
+    const [debouncedSearch, setDebouncedSearch] = useState('')
     const [pagination, setPagination] = useState({ page: 1, total: 0, pages: 1 })
+    const [resending, setResending] = useState(false)
+    
+    // Candidate details modal state
+    const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null)
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('institution_token') : null
+
+    // Search Debouncing
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search)
+            setPagination(p => ({ ...p, page: 1 }))
+        }, 400)
+        return () => clearTimeout(timer)
+    }, [search])
 
     useEffect(() => {
         if (!token) { router.replace('/institutions/auth/signin'); return }
@@ -50,7 +64,7 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
             page: pagination.page.toString(),
             limit: '50',
             ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
-            ...(search ? { search } : {}),
+            ...(debouncedSearch ? { search: debouncedSearch } : {}),
         })
         fetch(`/api/institutions/${institutionId}/cohorts/${selectedCohort}/roster?${params}`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -58,7 +72,7 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
             setCandidates(d.candidates || [])
             setPagination(d.pagination || { page: 1, total: 0, pages: 1 })
         }).catch(() => setError('Failed to load roster')).finally(() => setLoading(false))
-    }, [institutionId, selectedCohort, statusFilter, search, pagination.page, token])
+    }, [institutionId, selectedCohort, statusFilter, debouncedSearch, pagination.page, token])
 
     const getInitials = (name: string) => (name || '?').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
@@ -70,6 +84,77 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                 {status.replace('_', ' ')}
             </span>
         )
+    }
+
+    const handleExportCSV = async () => {
+        if (!selectedCohort || !token) return
+        try {
+            const res = await fetch(`/api/institutions/${institutionId}/cohorts/${selectedCohort}/roster?all=true`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const d = await res.json()
+            const list = d.candidates || []
+            if (list.length === 0) { alert('No candidates to export.'); return }
+
+            const headers = ['Name', 'Email', 'Student ID', 'Department', 'Phone', 'Status', 'Match Score', 'Matched To', 'Last Activity']
+            const csvRows = [
+                headers.join(','),
+                ...list.map((c: any) => [
+                    `"${c.candidate_name || ''}"`,
+                    `"${c.email || ''}"`,
+                    `"${c.student_id || ''}"`,
+                    `"${c.department || ''}"`,
+                    `"${c.phone || ''}"`,
+                    `"${c.row_status || ''}"`,
+                    c.match_score || '',
+                    `"${c.matched_to || ''}"`,
+                    c.last_activity ? new Date(c.last_activity).toLocaleDateString() : ''
+                ].join(','))
+            ]
+            const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n")
+            const encodedUri = encodeURI(csvContent)
+            const link = document.createElement("a")
+            link.setAttribute("href", encodedUri)
+            link.setAttribute("download", `roster_${cohorts.find(c => c.id === selectedCohort)?.name || 'cohort'}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        } catch {
+            alert('Failed to export CSV.')
+        }
+    }
+
+    const handleResendInvites = async () => {
+        if (!selectedCohort || !token) return
+        if (!confirm('Are you sure you want to resend onboarding emails to all pending/inactive candidates in this cohort?')) return
+        setResending(true)
+        try {
+            const res = await fetch(`/api/institutions/${institutionId}/cohorts/${selectedCohort}/resend-invites`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = await res.json()
+            alert(data.message || 'Invitations resent.')
+        } catch {
+            alert('Failed to resend invitations.')
+        } finally {
+            setResending(false)
+        }
+    }
+
+    const handleResendSingle = async (candidateId: string, email: string) => {
+        if (!selectedCohort || !token) return
+        if (!confirm(`Resend invitation email to ${email}?`)) return
+        try {
+            const res = await fetch(`/api/institutions/${institutionId}/cohorts/${selectedCohort}/roster/${candidateId}/resend-invite`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            const data = await res.json()
+            alert(data.message || 'Invitation resent.')
+        } catch {
+            alert('Failed to resend invitation.')
+        }
     }
 
     return (
@@ -85,16 +170,23 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                 </div>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     {cohorts.length > 1 && (
-                        <select value={selectedCohort} onChange={e => setSelectedCohort(e.target.value)}
+                        <select value={selectedCohort} onChange={e => { setSelectedCohort(e.target.value); setPagination(p => ({ ...p, page: 1 })) }}
                             style={{ border: '1px solid #DCE1D5', background: '#fff', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontWeight: 600, color: '#152A22' }}>
                             {cohorts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                     )}
-                    <button style={{ border: '1px solid #DCE1D5', background: '#fff', padding: '9px 15px', borderRadius: 8, fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}>
+                    <button 
+                        onClick={handleExportCSV}
+                        style={{ border: '1px solid #DCE1D5', background: '#fff', padding: '9px 15px', borderRadius: 8, fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}
+                    >
                         <Download size={14} /> Export CSV
                     </button>
-                    <button style={{ background: '#1F4D3D', color: '#fff', border: 'none', padding: '9px 15px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                        Resend invites to inactive
+                    <button 
+                        onClick={handleResendInvites}
+                        disabled={resending}
+                        style={{ background: '#1F4D3D', color: '#fff', border: 'none', padding: '9px 15px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: resending ? 'not-allowed' : 'pointer', opacity: resending ? .7 : 1 }}
+                    >
+                        {resending ? 'Resending...' : 'Resend invites to inactive'}
                     </button>
                 </div>
             </div>
@@ -113,7 +205,7 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                         />
                     </div>
                     {FILTERS.map(f => (
-                        <button key={f} onClick={() => setStatusFilter(f)} style={{
+                        <button key={f} onClick={() => { setStatusFilter(f); setPagination(p => ({ ...p, page: 1 })) }} style={{
                             border: `1px solid ${statusFilter === f ? '#2F6B54' : '#DCE1D5'}`,
                             background: statusFilter === f ? '#E4EEE7' : '#fff',
                             color: statusFilter === f ? '#1F4D3D' : '#3E5449',
@@ -127,7 +219,7 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                 {/* Table */}
                 {loading ? (
                     <div style={{ padding: 40, textAlign: 'center', color: '#3E5449', fontSize: 13 }}>
-                        <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite', marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
+                        <RefreshCw size={20} className="animate-spin" style={{ marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
                         Loading roster…
                     </div>
                 ) : candidates.length === 0 ? (
@@ -163,7 +255,7 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                                     <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, verticalAlign: 'middle' }}>
                                         {c.match_score ? (
                                             <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600, color: c.match_score >= 80 ? '#2A7A52' : c.match_score >= 65 ? '#B98A2E' : '#3E5449' }}>
-                                                {c.match_score}%
+                                                {Math.round(c.match_score)}%
                                             </span>
                                         ) : <span style={{ color: '#3E5449' }}>—</span>}
                                     </td>
@@ -172,8 +264,20 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                                     </td>
                                     <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', verticalAlign: 'middle' }}>
                                         <div style={{ display: 'flex', gap: 6 }}>
-                                            <button style={{ border: '1px solid #DCE1D5', background: '#fff', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>👁</button>
-                                            <button style={{ border: '1px solid #DCE1D5', background: '#fff', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>✉</button>
+                                            <button 
+                                                onClick={() => setSelectedCandidate(c)}
+                                                style={{ border: '1px solid #DCE1D5', background: '#fff', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                title="View Details"
+                                            >
+                                                <Eye size={14} style={{ color: '#3E5449' }} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleResendSingle(c.id, c.email)}
+                                                style={{ border: '1px solid #DCE1D5', background: '#fff', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                title="Resend Invite"
+                                            >
+                                                <Mail size={14} style={{ color: '#3E5449' }} />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -184,7 +288,7 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
 
                 {/* Pagination */}
                 {pagination.total > 0 && (
-                    <div style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ padding: '14px 20px', display: 'flex', justifyStyle: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 12, color: '#3E5449' }}>Showing {candidates.length} of {pagination.total} students</span>
                         <div style={{ display: 'flex', gap: 6 }}>
                             <button disabled={pagination.page <= 1} onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))} style={{ border: '1px solid #DCE1D5', background: '#fff', padding: '9px 15px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer', opacity: pagination.page <= 1 ? .5 : 1 }}>Prev</button>
@@ -193,6 +297,72 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                     </div>
                 )}
             </div>
+
+            {/* Candidate Details Modal */}
+            {selectedCandidate && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', padding: 16 }}>
+                    <div style={{ background: '#fff', border: '1px solid #DCE1D5', borderRadius: 12, width: '100%', maxWidth: 500, boxShadow: '0 10px 25px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                        {/* Modal Header */}
+                        <div style={{ background: '#1F4D3D', color: '#fff', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 600, margin: 0 }}>Student Profile Details</h3>
+                            <button onClick={() => setSelectedCandidate(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div style={{ padding: 20 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, borderBottom: '1px solid #DCE1D5', paddingBottom: 16 }}>
+                                <div style={{ width: 44, height: 44, borderRadius: 10, background: '#E4EEE7', color: '#1F4D3D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16 }}>
+                                    {getInitials(selectedCandidate.candidate_name || '')}
+                                </div>
+                                <div>
+                                    <h4 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{selectedCandidate.candidate_name}</h4>
+                                    <span style={{ fontSize: 12, color: '#3E5449' }}>{selectedCandidate.email}</span>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
+                                    <span style={{ color: '#3E5449', fontWeight: 500 }}>Student ID</span>
+                                    <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>{selectedCandidate.student_id || '—'}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
+                                    <span style={{ color: '#3E5449', fontWeight: 500 }}>Department</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.department || '—'}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
+                                    <span style={{ color: '#3E5449', fontWeight: 500 }}>Phone</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.phone || '—'}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
+                                    <span style={{ color: '#3E5449', fontWeight: 500 }}>Funnel Status</span>
+                                    <StatusSeal status={selectedCandidate.row_status} />
+                                </div>
+                                <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
+                                    <span style={{ color: '#3E5449', fontWeight: 500 }}>Matched Role</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.matched_to || '—'}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
+                                    <span style={{ color: '#3E5449', fontWeight: 500 }}>Match Score</span>
+                                    <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>{selectedCandidate.match_score ? `${Math.round(selectedCandidate.match_score)}%` : '—'}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
+                                    <span style={{ color: '#3E5449', fontWeight: 500 }}>Last Activity</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.last_activity ? new Date(selectedCandidate.last_activity).toLocaleString() : '—'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div style={{ background: '#F3F5EF', padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                            <button onClick={() => setSelectedCandidate(null)} style={{ border: '1px solid #DCE1D5', background: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

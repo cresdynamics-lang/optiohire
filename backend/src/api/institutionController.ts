@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import { query, pool } from '../db/index.js'
 import { logger } from '../utils/logger.js'
 import type { AuthRequest } from '../middleware/auth.js'
+import { EmailService } from '../services/emailService.js'
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -46,14 +47,26 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
         const role = await ensureAdminAccess(req.userId!, institutionId)
         if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
 
-        // Aggregate cohort funnel stats for the "current" (most recent active) cohort
-        const { rows: cohortRows } = await query<{ id: string; name: string }>(
-            `SELECT id, name FROM cohorts
-       WHERE institution_id = $1 AND status = 'active'
-       ORDER BY created_at DESC LIMIT 1`,
-            [institutionId]
-        )
-        const cohort = cohortRows[0]
+        // Get cohortId from query param if available, otherwise get the most recent active cohort
+        const reqCohortId = req.query.cohortId as string | undefined
+        let cohort = null
+
+        if (reqCohortId) {
+            const { rows: cohortRows } = await query<{ id: string; name: string }>(
+                `SELECT id, name FROM cohorts
+                 WHERE institution_id = $1 AND id = $2`,
+                [institutionId, reqCohortId]
+            )
+            cohort = cohortRows[0]
+        } else {
+            const { rows: cohortRows } = await query<{ id: string; name: string }>(
+                `SELECT id, name FROM cohorts
+                 WHERE institution_id = $1 AND status = 'active'
+                 ORDER BY created_at DESC LIMIT 1`,
+                [institutionId]
+            )
+            cohort = cohortRows[0]
+        }
 
         let stats = {
             enrolled: 0, activated: 0, shortlisted: 0, interviewing: 0, placed: 0, interning: 0, requires_review: 0, pool: 0
@@ -64,14 +77,91 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
         if (cohort) {
             const { rows: statRows } = await query<{ row_status: string; count: string }>(
                 `SELECT row_status, COUNT(*) as count
-         FROM cohort_candidates
-         WHERE cohort_id = $1
-         GROUP BY row_status`,
+                 FROM cohort_candidates
+                 WHERE cohort_id = $1
+                 GROUP BY row_status`,
                 [cohort.id]
             )
             statRows.forEach(r => {
                 const key = r.row_status as keyof typeof stats
                 if (key in stats) stats[key] = parseInt(r.count)
+            })
+
+            // Aggregate placements/internships by employer from matched_to
+            const { rows: employerRows } = await query<{ matched_to: string; count: string; avg_score: string }>(
+                `SELECT matched_to, COUNT(*) as count, AVG(match_score) as avg_score
+                 FROM cohort_candidates
+                 WHERE cohort_id = $1 AND row_status IN ('placed', 'interning') AND matched_to IS NOT NULL AND matched_to != ''
+                 GROUP BY matched_to
+                 ORDER BY count DESC, avg_score DESC
+                 LIMIT 5`,
+                [cohort.id]
+            )
+            topEmployers = employerRows.map(r => {
+                const parts = r.matched_to.split(/—|-/);
+                const employer = parts[0]?.trim() || r.matched_to;
+                const roleType = parts[1]?.trim() || 'General';
+                return {
+                    employer,
+                    role_type: roleType,
+                    placed: parseInt(r.count),
+                    avg_score: r.avg_score ? Math.round(parseFloat(r.avg_score)) : 0
+                };
+            })
+
+            // Get recent activity timeline for this cohort
+            const { rows: activityRows } = await query<{ candidate_name: string; row_status: string; matched_to: string | null; last_activity: Date }>(
+                `SELECT candidate_name, row_status, matched_to, last_activity
+                 FROM cohort_candidates
+                 WHERE cohort_id = $1 AND last_activity IS NOT NULL
+                 ORDER BY last_activity DESC
+                 LIMIT 10`,
+                [cohort.id]
+            )
+            recentActivity = activityRows.map(r => {
+                let title = '';
+                let desc = '';
+                const name = r.candidate_name || 'Candidate';
+
+                switch (r.row_status) {
+                    case 'placed':
+                        title = `${name} placed`;
+                        desc = `Placed at ${r.matched_to || 'Employer'}`;
+                        break;
+                    case 'interning':
+                        title = `${name} started internship`;
+                        desc = `Interning at ${r.matched_to || 'Employer'}`;
+                        break;
+                    case 'interviewing':
+                        title = `${name} interviewing`;
+                        desc = `Interviewing for ${r.matched_to || 'Role'}`;
+                        break;
+                    case 'shortlisted':
+                        title = `${name} shortlisted`;
+                        desc = `Shortlisted for ${r.matched_to || 'Role'}`;
+                        break;
+                    case 'activated':
+                        title = `${name} activated account`;
+                        desc = `Completed profile setup`;
+                        break;
+                    case 'invited':
+                        title = `Invitation sent to ${name}`;
+                        desc = `Awaiting account activation`;
+                        break;
+                    case 'requires_review':
+                        title = `Review required for ${name}`;
+                        desc = `Low-confidence CV extraction flagged`;
+                        break;
+                    default:
+                        title = `${name} status updated to ${r.row_status}`;
+                        desc = r.matched_to || '';
+                }
+
+                return {
+                    title,
+                    desc,
+                    time: r.last_activity
+                };
             })
         }
 
@@ -99,6 +189,17 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
 
         return res.json({
             institution,
+            current_cohort: cohort || null,
+            stats,
+            cohorts,
+            top_employers: topEmployers,
+            recent_activity: recentActivity
+        })
+    } catch (err) {
+        logger.error('getInstitutionDashboard error', { err })
+        return res.status(500).json({ error: 'Failed to fetch dashboard' })
+    }
+}n,
             current_cohort: cohort || null,
             stats,
             cohorts,
@@ -206,9 +307,10 @@ export async function getRoster(req: AuthRequest, res: Response) {
         const role = await ensureAdminAccess(req.userId!, institutionId)
         if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
 
+        const all = req.query.all === 'true'
         const page = Math.max(1, parseInt(req.query.page as string) || 1)
-        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50))
-        const offset = (page - 1) * limit
+        const limit = all ? 100000 : Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50))
+        const offset = all ? 0 : (page - 1) * limit
         const status = req.query.status as string | undefined
         const search = req.query.search as string | undefined
 
@@ -370,11 +472,25 @@ export async function commitUpload(req: AuthRequest, res: Response) {
             // Log notification
             await client.query(
                 `INSERT INTO institution_notifications (institution_id, cohort_id, type, recipients, sent_at)
-         VALUES ($1, $2, 'onboarding_invite', $3, now())`,
+          VALUES ($1, $2, 'onboarding_invite', $3, now())`,
                 [institutionId, cohortId, inserted]
             )
 
+            const { rows: instRows } = await client.query(
+                `SELECT name FROM institutions WHERE id = $1`,
+                [institutionId]
+            )
+            const instName = instRows[0]?.name || 'Your Institution'
+
             await client.query('COMMIT')
+
+            // Send invite emails in background asynchronously
+            const emailService = new EmailService()
+            valid.forEach(candidate => {
+                sendCohortInviteEmail(emailService, instName, candidate.candidate_name, candidate.email, candidate.student_id, candidate.department)
+                    .catch(err => logger.error('Failed to send onboarding invite', { email: candidate.email, err }));
+            });
+
             return res.json({ inserted, message: `${inserted} candidates added to cohort. Invitations queued.` })
         } catch (err) {
             await client.query('ROLLBACK')
@@ -570,5 +686,137 @@ export async function createInstitution(req: AuthRequest, res: Response) {
         return res.status(500).json({ error: 'Failed to create institution' })
     } finally {
         client.release()
+    }
+}
+
+// ─────────────────────────────────────────────
+// HELPERS & NEW ACTIONS (Resends & Invites)
+// ─────────────────────────────────────────────
+
+async function sendCohortInviteEmail(
+    emailService: any,
+    institutionName: string,
+    candidateName: string,
+    candidateEmail: string,
+    studentId?: string | null,
+    department?: string | null
+) {
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '')
+    const activationUrl = `${appUrl}/auth/signup?email=${encodeURIComponent(candidateEmail)}`
+    
+    const html = `
+<div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #152A22; background-color: #F3F5EF;">
+  <div style="background-color: #1F4D3D; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: #ffffff; margin: 0; font-family: Georgia, serif; font-size: 24px;">Your Career Profile is Ready</h1>
+  </div>
+  <div style="background-color: #ffffff; padding: 24px; border-radius: 0 0 8px 8px; border: 1px solid #DCE1D5; border-top: none;">
+    <p>Hello ${candidateName},</p>
+    <p>Your profile for the <strong>${institutionName}</strong> graduating cohort has been created on OptioHire.</p>
+    <p>Activate your account to complete your profile, upload your CV, and start matching with top employers.</p>
+    <div style="background-color: #FAFBF7; padding: 16px; border-radius: 6px; border: 1px solid #DCE1D5; margin: 20px 0;">
+      <div style="margin-bottom: 8px;"><strong>Student ID:</strong> ${studentId || '—'}</div>
+      <div><strong>Department:</strong> ${department || '—'}</div>
+    </div>
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="${activationUrl}" style="background-color: #B98A2E; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Activate Profile</a>
+    </div>
+    <hr style="border: none; border-top: 1px solid #DCE1D5; margin: 24px 0;" />
+    <p style="font-size: 12px; color: #3E5449;">If the button above does not work, copy and paste this link into your browser: <br />${activationUrl}</p>
+  </div>
+</div>
+    `
+    const text = `Hello ${candidateName},\n\nYour profile for the ${institutionName} graduating cohort has been created on OptioHire.\n\nActivate your account to complete your profile, upload your CV, and start matching with top employers.\n\nStudent ID: ${studentId || '—'}\nDepartment: ${department || '—'}\n\nActivate here: ${activationUrl}`
+
+    await emailService.sendEmail({
+        to: candidateEmail,
+        subject: `Your ${institutionName} Career Profile is ready — activate on OptioHire`,
+        html,
+        text,
+        emailType: 'onboarding_invite',
+        recipientName: candidateName,
+        useSecondaryKey: true
+    })
+}
+
+export async function resendCohortInvites(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId, cohortId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId, ['owner', 'roster_manager'])
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        const { rows: instRows } = await query<{ name: string }>(
+            `SELECT name FROM institutions WHERE id = $1`,
+            [institutionId]
+        )
+        const instName = instRows[0]?.name || 'Your Institution'
+
+        const { rows: candidates } = await query<{ candidate_name: string; email: string; student_id: string; department: string }>(
+            `SELECT candidate_name, email, student_id, department 
+             FROM cohort_candidates 
+             WHERE cohort_id = $1 AND row_status = 'invited'`,
+            [cohortId]
+        )
+
+        if (candidates.length === 0) {
+            return res.json({ message: 'No inactive candidates to invite.' })
+        }
+
+        const emailService = new EmailService()
+        candidates.forEach(c => {
+            sendCohortInviteEmail(emailService, instName, c.candidate_name, c.email, c.student_id, c.department)
+                .catch(err => logger.error('Failed to resend onboarding invite', { email: c.email, err }))
+        })
+
+        // Log a notification
+        await query(
+            `INSERT INTO institution_notifications (institution_id, cohort_id, type, recipients, sent_at)
+             VALUES ($1, $2, 'reminder', $3, now())`,
+            [institutionId, cohortId, candidates.length]
+        )
+
+        return res.json({ message: `Queued resending ${candidates.length} invitations.` })
+    } catch (err) {
+        logger.error('resendCohortInvites error', { err })
+        return res.status(500).json({ error: 'Failed to resend invites' })
+    }
+}
+
+export async function resendCandidateInvite(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId, cohortId, candidateId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId, ['owner', 'roster_manager'])
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        const { rows: instRows } = await query<{ name: string }>(
+            `SELECT name FROM institutions WHERE id = $1`,
+            [institutionId]
+        )
+        const instName = instRows[0]?.name || 'Your Institution'
+
+        const { rows: candidates } = await query<{ candidate_name: string; email: string; student_id: string; department: string; row_status: string }>(
+            `SELECT candidate_name, email, student_id, department, row_status
+             FROM cohort_candidates 
+             WHERE cohort_id = $1 AND id = $2`,
+            [cohortId, candidateId]
+        )
+
+        if (candidates.length === 0) {
+            return res.status(404).json({ error: 'Candidate not found in this cohort.' })
+        }
+
+        const candidate = candidates[0]
+        const emailService = new EmailService()
+        await sendCohortInviteEmail(emailService, instName, candidate.candidate_name, candidate.email, candidate.student_id, candidate.department)
+
+        // Update last activity
+        await query(
+            `UPDATE cohort_candidates SET last_activity = now() WHERE id = $1`,
+            [candidateId]
+        )
+
+        return res.json({ message: `Invitation resent to ${candidate.email}.` })
+    } catch (err) {
+        logger.error('resendCandidateInvite error', { err })
+        return res.status(500).json({ error: 'Failed to resend invite' })
     }
 }

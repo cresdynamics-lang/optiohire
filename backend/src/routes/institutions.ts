@@ -11,7 +11,9 @@ import {
     updateSettings,
     listAdmins,
     createInstitution,
-    institutionSignin
+    institutionSignin,
+    resendCohortInvites,
+    resendCandidateInvite
 } from '../api/institutionController.js'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
 
@@ -35,6 +37,8 @@ router.post('/:id/cohorts', authenticate, createCohort)
 
 // ── Roster ───────────────────────────────────────────────────────
 router.get('/:id/cohorts/:cohortId/roster', authenticate, getRoster)
+router.post('/:id/cohorts/:cohortId/resend-invites', authenticate, resendCohortInvites)
+router.post('/:id/cohorts/:cohortId/roster/:candidateId/resend-invite', authenticate, resendCandidateInvite)
 
 // ── Bulk Upload ──────────────────────────────────────────────────
 router.post('/:id/cohorts/:cohortId/uploads', authenticate, uploadRoster)
