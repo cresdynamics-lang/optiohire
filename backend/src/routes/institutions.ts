@@ -14,7 +14,8 @@ import {
     institutionSignin,
     resendCohortInvites,
     resendCandidateInvite,
-    institutionSignup
+    institutionSignup,
+    getPublicInstitutionByToken
 } from '../api/institutionController.js'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
 
@@ -23,6 +24,9 @@ export const router = Router()
 // ── Auth (institution login/signup) ──────────────────────────────
 router.post('/auth/signin', institutionSignin)
 router.post('/auth/signup', institutionSignup)
+
+// ── Public Endpoint ────────────────────────────────────────────────
+router.get('/public/:token', getPublicInstitutionByToken)
 
 // ── Admin: create institution (platform admin only) ──────────────
 router.post('/', authenticate, requireAdmin, createInstitution)

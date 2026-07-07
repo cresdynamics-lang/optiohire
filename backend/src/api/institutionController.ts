@@ -877,3 +877,40 @@ export async function resendCandidateInvite(req: AuthRequest, res: Response) {
         return res.status(500).json({ error: 'Failed to resend invite' })
     }
 }
+// ---------------------------------------------
+// PUBLIC ENDPOINTS
+// ---------------------------------------------
+
+export async function getPublicInstitutionByToken(req: Request, res: Response) {
+    try {
+        const { token } = req.params;
+        // token can be the ID or the slug
+        const { rows } = await query(
+            `SELECT id, name, slug, contact_email, brand_accent_hex, country 
+             FROM institutions 
+             WHERE id = $1 OR slug = $1 LIMIT 1`,
+            [token]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Institution not found' });
+        }
+        return res.json(rows[0]);
+    } catch (err) {
+        // If token is not a valid UUID, the query above might throw an error (invalid input syntax for type uuid)
+        // so we catch it and try querying just by slug.
+        try {
+            const { rows } = await query(
+                `SELECT id, name, slug, contact_email, brand_accent_hex, country 
+                 FROM institutions 
+                 WHERE slug = $1 LIMIT 1`,
+                [req.params.token]
+            );
+            if (rows.length === 0) {
+                return res.status(404).json({ error: 'Institution not found' });
+            }
+            return res.json(rows[0]);
+        } catch (fallbackErr) {
+            return res.status(500).json({ error: 'Failed to fetch public institution data' });
+        }
+    }
+}

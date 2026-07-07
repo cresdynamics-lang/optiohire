@@ -5,10 +5,10 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PRIVATE_KEY = readFileSync(resolve(__dirname, 'optiohire_server_key'), 'utf8');
 
-const HOST = process.env.SSH_HOST || '67.205.164.114';
+const HOST = process.env.SSH_HOST || '49.13.75.61';
 const USER = process.env.SSH_USER || 'root';
+const PASSWORD = process.env.SSH_PASSWORD || '%c#Bx@D-+r2rof=0H3dY';
 
 function runRemote(conn, command) {
   return new Promise((resolve, reject) => {
@@ -45,7 +45,7 @@ async function deploy() {
     conn
       .on('ready', resolve)
       .on('error', reject)
-      .connect({ host: HOST, port: 22, username: USER, privateKey: PRIVATE_KEY, readyTimeout: 60000, keepaliveInterval: 10000 });
+      .connect({ host: HOST, port: 22, username: USER, password: PASSWORD, readyTimeout: 60000, keepaliveInterval: 10000 });
   });
 
   console.log('\n✅ Connected to server!\n');
@@ -78,7 +78,7 @@ async function deploy() {
     if (appCheck.includes('NOT_FOUND')) {
       // Clone the repo
       console.log('\n📥 === CLONING REPO ===');
-      await runRemote(conn, 'cd /root && git clone YOUR_GIT_REPO_URL optiohire');
+      await runRemote(conn, 'cd /root && git clone https://github.com/cresdynamics-lang/optiohire optiohire');
     } else {
       // Pull latest (force)
       console.log('\n⬇️  === PULLING LATEST CODE ===');

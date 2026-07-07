@@ -23,7 +23,7 @@ async function main() {
   const conn = new Client();
   await new Promise((res, rej) =>
     conn.on('ready', res).on('error', rej)
-      .connect({ host: '67.205.164.114', port: 22, username: 'root', privateKey: PRIVATE_KEY, readyTimeout: 30000 })
+      .connect({ host: '49.13.75.61', port: 22, username: 'root', privateKey: PRIVATE_KEY, readyTimeout: 30000 })
   );
 
   console.log('=== ADDING DATABASE_URL TO FRONTEND ===');

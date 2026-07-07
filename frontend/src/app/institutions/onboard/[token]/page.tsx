@@ -1,43 +1,7 @@
-'use client';
-import React, { useState } from 'react';
+﻿'use client';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import './onboard.css';
-
-// Mock institution data pre-filled from admin record (keyed by token)
-const MOCK_INSTITUTIONS: Record<string, {
-  name: string;
-  shortName: string;
-  type: string;
-  location: string;
-  contactName: string;
-  contactEmail: string;
-  contactTitle: string;
-  pathways: string[];
-  levels: string[];
-}> = {
-  'preview-token': {
-    name: 'Strathmore University',
-    shortName: 'SU',
-    type: 'University',
-    location: 'Nairobi, KE',
-    contactName: 'Joyce Nduta',
-    contactEmail: 'j.nduta@strathmore.edu',
-    contactTitle: 'Head, Career Services',
-    pathways: ['attachment', 'job-ready'],
-    levels: ['degree'],
-  },
-  'kca-token': {
-    name: 'KCA University',
-    shortName: 'KCA',
-    type: 'University',
-    location: 'Nairobi, KE',
-    contactName: 'Peter Waweru',
-    contactEmail: 'p.waweru@kca.ac.ke',
-    contactTitle: 'Career Services Coordinator',
-    pathways: ['internship', 'attachment'],
-    levels: ['diploma', 'degree'],
-  },
-};
 
 const STEPS = [
   { num: 1, label: 'Verify identity' },
@@ -49,11 +13,14 @@ const STEPS = [
 
 export default function OnboardPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = React.use(params);
-  const inst = MOCK_INSTITUTIONS[token] || MOCK_INSTITUTIONS['preview-token'];
+  
+  const [inst, setInst] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
-  const [contactName, setContactName] = useState(inst.contactName);
-  const [contactTitle, setContactTitle] = useState(inst.contactTitle);
+  const [contactName, setContactName] = useState('');
+  const [contactTitle, setContactTitle] = useState('');
   const [contactPhone, setContactPhone] = useState('+254 7');
   const [website, setWebsite] = useState('');
   const [address, setAddress] = useState('');
@@ -61,13 +28,30 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
   const [yearEst, setYearEst] = useState('');
   const [cohortSize, setCohortSize] = useState('');
   const [gradPeriod, setGradPeriod] = useState('2026-11');
-  const [levels, setLevels] = useState<string[]>(inst.levels);
-  const [pathways, setPathways] = useState<string[]>(inst.pathways);
+  const [levels, setLevels] = useState<string[]>([]);
+  const [pathways, setPathways] = useState<string[]>([]);
   const [password, setPassword] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    const fetchInstitution = async () => {
+      try {
+        const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+        const res = await fetch(\\/api/institutions/public/\\);
+        if (!res.ok) throw new Error('Institution not found or link expired');
+        const data = await res.json();
+        setInst(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInstitution();
+  }, [token]);
 
   function toggleLevel(l: string) {
     setLevels(prev => prev.includes(l) ? prev.filter(x => x !== l) : [...prev, l]);
@@ -78,17 +62,34 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
 
   async function handleActivate() {
     setSending(true);
+    // TODO: Send data to backend to activate admin and create cohort preferences
     await new Promise(r => setTimeout(r, 1800));
     setSending(false);
     setStep(5);
   }
 
-  const instId = inst.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  if (loading) {
+    return <div className="onboard-root"><div style={{padding: 40, textAlign: 'center'}}>Loading...</div></div>;
+  }
+
+  if (error || !inst) {
+    return (
+      <div className="onboard-root">
+        <div style={{padding: 40, textAlign: 'center'}}>
+          <h2>Access Denied</h2>
+          <p>{error || 'Invalid token'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const shortName = inst.name ? inst.name.substring(0, 2).toUpperCase() : 'IN';
+  const typeStr = 'Institution';
+  const locationStr = inst.country || 'KE';
 
   return (
     <div className="onboard-root">
       <div className="onboard-shell">
-        {/* ===== LEFT PANEL ===== */}
         <aside className="onboard-left">
           <div className="onboard-brand">
             <div className="mark">O</div>
@@ -99,10 +100,10 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
           </div>
 
           <div className="inst-chip">
-            <div className="crest">{inst.shortName}</div>
+            <div className="crest">{shortName}</div>
             <div>
               <div className="ct1">{inst.name}</div>
-              <div className="ct2">{inst.type} · {inst.location}</div>
+              <div className="ct2">{typeStr} · {locationStr}</div>
             </div>
           </div>
 
@@ -119,7 +120,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
             {STEPS.map(s => (
               <div
                 key={s.num}
-                className={`ostep ${step === s.num ? 'active' : ''} ${step > s.num ? 'done' : ''}`}
+                className={\ostep \ \\}
               >
                 <div className="num">
                   {step > s.num ? '✓' : s.num}
@@ -130,20 +131,18 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
           </nav>
         </aside>
 
-        {/* ===== RIGHT PANEL ===== */}
         <main className="onboard-right">
-          {/* Progress dots */}
           <div className="onboard-progress">
             {STEPS.map(s => (
               <div
                 key={s.num}
-                className={`prog-dot ${step === s.num ? 'active' : ''} ${step > s.num ? 'done' : ''}`}
+                className={\prog-dot \ \\}
               />
             ))}
           </div>
 
-          {/* ===== STEP 1 — Verify Identity ===== */}
-          <div className={`step-panel ${step === 1 ? 'active' : ''}`}>
+          {/* ===== STEP 1 ===== */}
+          <div className={\step-panel \\}>
             <div className="step-eyebrow">Step 1 of 4</div>
             <h1 className="step-title">Confirm your details</h1>
             <p className="step-desc">
@@ -155,15 +154,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
                 Institution name
                 <span className="prefilled-badge">✓ Pre-filled</span>
               </label>
-              <input className="prefilled-field" value={inst.name} readOnly />
-            </div>
-
-            <div className="form-section">
-              <label className="field-label">
-                Institution type
-                <span className="prefilled-badge">✓ Pre-filled</span>
-              </label>
-              <input className="prefilled-field" value={inst.type} readOnly />
+              <input className="prefilled-field" value={inst.name || ''} readOnly />
             </div>
 
             <div className="form-row-2">
@@ -182,7 +173,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
                 Work email
                 <span className="prefilled-badge">✓ Pre-filled</span>
               </label>
-              <input className="prefilled-field" value={inst.contactEmail} readOnly />
+              <input className="prefilled-field" value={inst.contact_email || ''} readOnly />
             </div>
 
             <div className="form-section">
@@ -198,8 +189,8 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
             </div>
           </div>
 
-          {/* ===== STEP 2 — Institution Profile ===== */}
-          <div className={`step-panel ${step === 2 ? 'active' : ''}`}>
+          {/* ===== STEP 2 ===== */}
+          <div className={\step-panel \\}>
             <div className="step-eyebrow">Step 2 of 4</div>
             <h1 className="step-title">Institution profile</h1>
             <p className="step-desc">
@@ -255,8 +246,8 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
             </div>
           </div>
 
-          {/* ===== STEP 3 — Cohort Preferences ===== */}
-          <div className={`step-panel ${step === 3 ? 'active' : ''}`}>
+          {/* ===== STEP 3 ===== */}
+          <div className={\step-panel \\}>
             <div className="step-eyebrow">Step 3 of 4</div>
             <h1 className="step-title">Cohort preferences</h1>
             <p className="step-desc">
@@ -275,7 +266,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
                 ].map(l => (
                   <button
                     key={l.key}
-                    className={`select-pill ${levels.includes(l.key) ? 'active' : ''}`}
+                    className={\select-pill \\}
                     onClick={() => toggleLevel(l.key)}
                   >
                     {l.label}
@@ -296,7 +287,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
                 ].map(p => (
                   <button
                     key={p.key}
-                    className={`select-pill gold-active ${pathways.includes(p.key) ? 'active' : ''}`}
+                    className={\select-pill gold-active \\}
                     onClick={() => togglePathway(p.key)}
                   >
                     {p.label}
@@ -333,8 +324,8 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
             </div>
           </div>
 
-          {/* ===== STEP 4 — Activate Account ===== */}
-          <div className={`step-panel ${step === 4 ? 'active' : ''}`}>
+          {/* ===== STEP 4 ===== */}
+          <div className={\step-panel \\}>
             <div className="step-eyebrow">Step 4 of 4</div>
             <h1 className="step-title">Set your password</h1>
             <p className="step-desc">
@@ -353,7 +344,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
                 fontWeight: 500,
               }}
             >
-              Signing in as: <strong>{inst.contactEmail}</strong>
+              Signing in as: <strong>{inst.contact_email}</strong>
             </div>
 
             <div className="form-section">
@@ -400,7 +391,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
             <div className="form-footer">
               <button className="btn" onClick={() => setStep(3)}>← Back</button>
               <button
-                className={`btn btn-gold btn-lg ${(!termsAccepted || password.length < 8 || password !== confirmPw || sending) ? '' : ''}`}
+                className={\tn btn-gold btn-lg \\}
                 onClick={handleActivate}
                 disabled={!termsAccepted || password.length < 8 || password !== confirmPw || sending}
                 style={{ opacity: (!termsAccepted || password.length < 8 || password !== confirmPw) ? 0.5 : 1 }}
@@ -410,8 +401,8 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
             </div>
           </div>
 
-          {/* ===== STEP 5 — Success ===== */}
-          <div className={`step-panel ${step === 5 ? 'active' : ''}`}>
+          {/* ===== STEP 5 ===== */}
+          <div className={\step-panel \\}>
             <div className="success-screen">
               <div className="success-icon">🎓</div>
               <h2>Your console is ready!</h2>
@@ -442,7 +433,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
                 <div className="next-step-item">
                   <div className="ns-num">3</div>
                   <div>
-                    <strong>Send 596 invitations in one click</strong><br />
+                    <strong>Send invitations in one click</strong><br />
                     <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
                       Each student gets a personalised onboarding email and their profile is pre-loaded.
                     </span>
@@ -451,7 +442,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
               </div>
 
               <Link
-                href={`/institutions/${instId}/overview`}
+                href={\/institutions/\/overview\}
                 className="btn btn-primary btn-lg"
                 style={{ textDecoration: 'none' }}
               >

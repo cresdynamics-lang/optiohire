@@ -3,6 +3,7 @@
 import { useState, useRef, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, ChevronRight, ChevronLeft, Send, Loader2 } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 interface CsvRow {
     [key: string]: string
@@ -101,38 +102,54 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
         return { headers, rows }
     }
 
+    const processCSVText = (text: string) => {
+        try {
+            const { headers, rows } = parseCSV(text)
+            if (headers.length === 0 || rows.length === 0) {
+                setError('The file appears to be empty or invalid.')
+                return
+            }
+            setCsvHeaders(headers)
+            setCsvRows(rows)
+            // Auto-map based on common field names
+            const autoMap: Record<string, string> = {}
+            OPTIOHIRE_FIELDS.forEach(field => {
+                const match = headers.find(h => h.toLowerCase().includes(field.key.replace('full_', '').replace('_', '')) || h.toLowerCase() === field.key)
+                if (match) autoMap[field.key] = match
+            })
+            setMapping(autoMap)
+            setStep(2)
+        } catch (err) {
+            setError('Failed to parse file.')
+        }
+    }
+
     const handleFile = (file: File) => {
         setError(null)
         setFilename(file.name)
         const ext = file.name.split('.').pop()?.toLowerCase()
         
         if (ext === 'xlsx' || ext === 'xls') {
-            setError('Excel (.xlsx/.xls) files are not directly supported. Please save your file as CSV (.csv) first, then upload.')
-            setFilename('')
+            const reader = new FileReader()
+            reader.onload = e => {
+                try {
+                    const data = e.target!.result
+                    const workbook = XLSX.read(data, { type: 'array' })
+                    const firstSheetName = workbook.SheetNames[0]
+                    const worksheet = workbook.Sheets[firstSheetName]
+                    const csvContent = XLSX.utils.sheet_to_csv(worksheet)
+                    processCSVText(csvContent)
+                } catch (err) {
+                    setError('Failed to parse Excel file.')
+                }
+            }
+            reader.readAsArrayBuffer(file)
             return
         }
 
         const reader = new FileReader()
         reader.onload = e => {
-            try {
-                const { headers, rows } = parseCSV(e.target!.result as string)
-                if (headers.length === 0 || rows.length === 0) {
-                    setError('The CSV file appears to be empty or invalid.')
-                    return
-                }
-                setCsvHeaders(headers)
-                setCsvRows(rows)
-                // Auto-map based on common field names
-                const autoMap: Record<string, string> = {}
-                OPTIOHIRE_FIELDS.forEach(field => {
-                    const match = headers.find(h => h.toLowerCase().includes(field.key.replace('full_', '').replace('_', '')) || h.toLowerCase() === field.key)
-                    if (match) autoMap[field.key] = match
-                })
-                setMapping(autoMap)
-                setStep(2)
-            } catch (err) {
-                setError('Failed to parse CSV file.')
-            }
+            processCSVText(e.target!.result as string)
         }
         reader.readAsText(file)
     }
@@ -311,14 +328,14 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                                 <Upload size={22} />
                             </div>
                             <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 16, margin: '0 0 6px' }}>Drag your student list here</h3>
-                            <p style={{ fontSize: 12.5, color: '#3E5449', margin: '0 0 16px' }}>CSV format containing name, email, student ID, department, etc. Up to 5,000 rows.</p>
+                            <p style={{ fontSize: 12.5, color: '#3E5449', margin: '0 0 16px' }}>CSV or Excel format containing name, email, student ID, department, etc. Up to 5,000 rows.</p>
                             <button style={{ background: '#1F4D3D', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                                Choose CSV file
+                                Choose CSV / Excel file
                             </button>
                             {filename && <div style={{ marginTop: 12, fontSize: 12, color: '#1F4D3D', fontWeight: 600 }}>📄 {filename}</div>}
                             <div style={{ marginTop: 12, fontSize: 11.5, color: '#3E5449' }}>or paste from Google Sheets · <span style={{ color: '#1F4D3D', fontWeight: 600, cursor: 'pointer' }}>download our template</span></div>
                         </div>
-                        <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }}
+                        <input ref={fileRef} type="file" accept=".csv, .xlsx, .xls" style={{ display: 'none' }}
                             onChange={e => { const f = e.target.files?.[0]; if (f) { handleFile(f) } }} />
                     </div>
                 )}
