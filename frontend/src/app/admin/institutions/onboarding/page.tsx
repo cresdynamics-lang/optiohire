@@ -1,73 +1,22 @@
+
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Send, Eye, RefreshCw, Mail, CheckCircle2, Clock, AlertCircle, ExternalLink } from 'lucide-react';
+import { Send, Eye, RefreshCw, Mail, CheckCircle2, Clock, AlertCircle, ExternalLink, Plus } from 'lucide-react';
+import { format } from 'date-fns';
 
 type FormStatus = 'completed' | 'opened' | 'not_opened';
 
 interface OnboardingRecord {
   id: string;
-  institution: string;
-  sentTo: string;
-  sentAt: string;
-  openedAt: string | null;
-  completedAt: string | null;
+  institution_name: string;
+  sent_to: string;
+  sent_at: string;
+  opened_at: string | null;
+  completed_at: string | null;
   status: FormStatus;
   token: string;
 }
-
-const MOCK_RECORDS: OnboardingRecord[] = [
-  {
-    id: '1',
-    institution: 'Strathmore University',
-    sentTo: 'j.nduta@strathmore.edu',
-    sentAt: 'Jun 14, 2026 · 09:14',
-    openedAt: 'Jun 14, 2026 · 10:02',
-    completedAt: 'Jun 14, 2026 · 10:28',
-    status: 'completed',
-    token: 'preview-token',
-  },
-  {
-    id: '2',
-    institution: 'Multimedia University of Kenya',
-    sentTo: 's.karanja@mmu.ac.ke',
-    sentAt: 'May 28, 2026 · 11:30',
-    openedAt: 'May 28, 2026 · 14:15',
-    completedAt: 'May 28, 2026 · 14:44',
-    status: 'completed',
-    token: 'mmu-token',
-  },
-  {
-    id: '3',
-    institution: 'KCA University',
-    sentTo: 'p.waweru@kca.ac.ke',
-    sentAt: 'Jul 1, 2026 · 08:00',
-    openedAt: 'Jul 1, 2026 · 09:45',
-    completedAt: null,
-    status: 'opened',
-    token: 'kca-token',
-  },
-  {
-    id: '4',
-    institution: 'Zetech University',
-    sentTo: 'a.mwangi@zetech.ac.ke',
-    sentAt: 'Jul 3, 2026 · 16:22',
-    openedAt: null,
-    completedAt: null,
-    status: 'not_opened',
-    token: 'zetech-token',
-  },
-  {
-    id: '5',
-    institution: 'Kabarak University',
-    sentTo: 'm.cheptoo@kabarak.ac.ke',
-    sentAt: 'Jul 4, 2026 · 10:05',
-    openedAt: null,
-    completedAt: null,
-    status: 'not_opened',
-    token: 'kabarak-token',
-  },
-];
 
 const STATUS_CONFIG: Record<FormStatus, { label: string; icon: React.ReactNode; bg: string; color: string }> = {
   completed: {
@@ -88,31 +37,113 @@ const STATUS_CONFIG: Record<FormStatus, { label: string; icon: React.ReactNode; 
 };
 
 export default function AdminOnboardingFormsPage() {
-  const [records, setRecords] = useState<OnboardingRecord[]>(MOCK_RECORDS);
+  const [records, setRecords] = useState<OnboardingRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [resendingId, setResendingId] = useState<string | null>(null);
+  
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [newInstName, setNewInstName] = useState('');
+  const [newInstEmail, setNewInstEmail] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    fetchRecords();
+  }, []);
+
+  async function fetchRecords() {
+    try {
+      const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${url}/api/admin/institutions/onboarding`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRecords(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResend(id: string) {
+    setResendingId(id);
+    try {
+      const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+      const token = localStorage.getItem('token');
+      await fetch(`${url}/api/admin/institutions/onboarding/${id}/resend`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchRecords();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setResendingId(null);
+    }
+  }
+
+  async function handleCreateInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+      const token = localStorage.getItem('token');
+      await fetch(`${url}/api/admin/institutions/onboarding/invite`, {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ institutionName: newInstName, contactEmail: newInstEmail })
+      });
+      setShowModal(false);
+      setNewInstName('');
+      setNewInstEmail('');
+      await fetchRecords();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCreating(false);
+    }
+  }
 
   const completed = records.filter(r => r.status === 'completed').length;
   const opened = records.filter(r => r.status === 'opened').length;
   const notOpened = records.filter(r => r.status === 'not_opened').length;
 
-  async function handleResend(id: string) {
-    setResendingId(id);
-    await new Promise(r => setTimeout(r, 1200));
-    setResendingId(null);
-  }
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '—';
+    return format(new Date(dateStr), 'MMM d, yyyy · HH:mm');
+  };
 
   return (
     <div style={{ padding: '28px 32px', maxWidth: 1100, margin: '0 auto', fontFamily: "'Inter', sans-serif" }}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <Mail size={20} color="#1F4D3D" />
-          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 600, color: '#152A22', margin: 0 }}>
-            Onboarding Forms
-          </h1>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <Mail size={20} color="#1F4D3D" />
+            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 600, color: '#152A22', margin: 0 }}>
+              Onboarding Forms
+            </h1>
+          </div>
+          <p style={{ fontSize: 13, color: '#3E5449', margin: 0 }}>
+            Track all institution onboarding invitations — who has opened, completed, or not yet responded.
+          </p>
         </div>
-        <p style={{ fontSize: 13, color: '#3E5449', margin: 0 }}>
-          Track all institution onboarding invitations — who has opened, completed, or not yet responded.
-        </p>
+        <button 
+          onClick={() => setShowModal(true)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: '#1F4D3D', color: 'white', padding: '10px 16px',
+            borderRadius: 6, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer'
+          }}
+        >
+          <Plus size={16} /> New Invite
+        </button>
       </div>
 
       {/* Stats */}
@@ -126,7 +157,7 @@ export default function AdminOnboardingFormsPage() {
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 30, fontWeight: 600, color: s.color }}>{s.value}</div>
             <div style={{ fontSize: 12.5, color: '#3E5449', marginTop: 4 }}>{s.label}</div>
             <div style={{ marginTop: 8, height: 4, background: '#F0F0F0', borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: s.color, width: `${(s.value / records.length) * 100}%`, borderRadius: 10 }} />
+              <div style={{ height: '100%', background: s.color, width: records.length > 0 ? `${(s.value / records.length) * 100}%` : '0%', borderRadius: 10 }} />
             </div>
           </div>
         ))}
@@ -143,18 +174,22 @@ export default function AdminOnboardingFormsPage() {
             </tr>
           </thead>
           <tbody>
-            {records.map((r, idx) => {
+            {loading ? (
+              <tr><td colSpan={7} style={{ padding: 20, textAlign: 'center' }}>Loading...</td></tr>
+            ) : records.length === 0 ? (
+              <tr><td colSpan={7} style={{ padding: 20, textAlign: 'center', color: '#666' }}>No invites found.</td></tr>
+            ) : records.map((r, idx) => {
               const cfg = STATUS_CONFIG[r.status];
               return (
                 <tr key={r.id} style={{ borderBottom: idx < records.length - 1 ? '1px solid #DCE1D5' : 'none' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#F9FAF7')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
                 >
-                  <td style={{ padding: '13px 14px', fontWeight: 600, color: '#152A22' }}>{r.institution}</td>
-                  <td style={{ padding: '13px 14px', fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#3E5449' }}>{r.sentTo}</td>
-                  <td style={{ padding: '13px 14px', fontSize: 12, color: '#3E5449' }}>{r.sentAt}</td>
-                  <td style={{ padding: '13px 14px', fontSize: 12, color: r.openedAt ? '#152A22' : '#bbb' }}>{r.openedAt || '—'}</td>
-                  <td style={{ padding: '13px 14px', fontSize: 12, color: r.completedAt ? '#1F4D3D' : '#bbb', fontWeight: r.completedAt ? 600 : 400 }}>{r.completedAt || '—'}</td>
+                  <td style={{ padding: '13px 14px', fontWeight: 600, color: '#152A22' }}>{r.institution_name}</td>
+                  <td style={{ padding: '13px 14px', fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#3E5449' }}>{r.sent_to}</td>
+                  <td style={{ padding: '13px 14px', fontSize: 12, color: '#3E5449' }}>{formatDate(r.sent_at)}</td>
+                  <td style={{ padding: '13px 14px', fontSize: 12, color: r.opened_at ? '#152A22' : '#bbb' }}>{formatDate(r.opened_at)}</td>
+                  <td style={{ padding: '13px 14px', fontSize: 12, color: r.completed_at ? '#1F4D3D' : '#bbb', fontWeight: r.completed_at ? 600 : 400 }}>{formatDate(r.completed_at)}</td>
                   <td style={{ padding: '13px 14px' }}>
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -201,6 +236,44 @@ export default function AdminOnboardingFormsPage() {
           </tbody>
         </table>
       </div>
+      
+      {/* Modal */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', padding: 30, borderRadius: 12, width: 400 }}>
+            <h2 style={{ marginTop: 0, color: '#1F4D3D' }}>Send Onboarding Invite</h2>
+            <form onSubmit={handleCreateInvite}>
+              <div style={{ marginBottom: 15 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5 }}>Institution Name</label>
+                <input 
+                  required
+                  value={newInstName}
+                  onChange={e => setNewInstName(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: 6 }} 
+                  placeholder="e.g. Strathmore University"
+                />
+              </div>
+              <div style={{ marginBottom: 25 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5 }}>Contact Email</label>
+                <input 
+                  required
+                  type="email"
+                  value={newInstEmail}
+                  onChange={e => setNewInstEmail(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: 6 }} 
+                  placeholder="jane.doe@univ.edu"
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '10px 16px', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+                <button type="submit" disabled={creating} style={{ padding: '10px 16px', background: '#1F4D3D', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                  {creating ? 'Sending...' : 'Send Invite'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

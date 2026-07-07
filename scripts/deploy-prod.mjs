@@ -7,14 +7,15 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const HOST = process.env.SSH_HOST || '49.13.75.61';
-const USER = process.env.SSH_USER || 'root';
-const PASSWORD = process.env.SSH_PASSWORD || '%c#Bx@D-+r2rof=0H3dY';
+const USER = process.env.SSH_USER || 'ops';
+const PASSWORD = process.env.SSH_PASSWORD || 'ggGU^Mo!uJu_p-hauU94';
 
 function runRemote(conn, command) {
+  const sudoCommand = `echo "${PASSWORD}" | sudo -S bash -c '${command.replace(/'/g, "'\\''")}'`;
   return new Promise((resolve, reject) => {
     let output = '';
     let errorOutput = '';
-    conn.exec(command, (err, stream) => {
+    conn.exec(sudoCommand, (err, stream) => {
       if (err) return reject(err);
       stream
         .on('data', (data) => {

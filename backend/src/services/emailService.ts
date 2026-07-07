@@ -2902,7 +2902,223 @@ The OptioHire AI Team`;
       html,
       text: `Hello ${data.candidateName},\n\nPlease complete your profile to become visible to recruiters and our AI matching system.\n\nComplete Profile: ${data.onboardingLink}\n\nBest,\nThe OptioHire Team`,
       emailType: 'ProfileCompletionReminder'
+    
+  // ---------------------------------------------------------
+  // INSTITUTION & COHORT EMAILS
+  // ---------------------------------------------------------
+
+  async sendInstitutionOnboardingInvite(data: {
+    institutionName: string;
+    contactEmail: string;
+    token: string;
+    appUrl?: string;
+  }) {
+    const baseUrl = data.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://optiohire.com';
+    const link = `${baseUrl}/institutions/onboard/${data.token}`;
+
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #152A22;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #1F4D3D; font-size: 24px; font-weight: bold;">OptioHire</h1>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #DCE1D5; border-radius: 8px; padding: 30px;">
+        <h2 style="margin-top: 0; color: #1F4D3D;">Welcome to OptioHire!</h2>
+        <p style="font-size: 16px; line-height: 1.5; color: #3E5449;">
+          You have been invited to set up the institution console for <strong>${data.institutionName}</strong>. 
+          Through this portal, you can seamlessly onboard your graduating cohorts, manage student rosters, and track their placement success.
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${link}" style="background-color: #B98A2E; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+            Complete Institution Profile
+          </a>
+        </div>
+        <p style="font-size: 14px; color: #7B8A82; margin-top: 20px;">
+          If the button doesn't work, copy and paste this link into your browser:<br>
+          <a href="${link}" style="color: #1F4D3D;">${link}</a>
+        </p>
+      </div>
+    </div>
+    `;
+
+    const text = `Welcome to OptioHire!\n\nYou have been invited to set up the institution console for ${data.institutionName}.\n\nPlease complete your profile here: ${link}`;
+
+    await this.sendEmail({
+      to: data.contactEmail,
+      subject: `Action Required: Set up ${data.institutionName} on OptioHire`,
+      html,
+      text,
+      emailType: 'InstitutionOnboardingInvite'
     });
+  }
+
+  async sendInstitutionWelcome(data: {
+    institutionName: string;
+    contactEmail: string;
+    contactName: string;
+    appUrl?: string;
+  }) {
+    const baseUrl = data.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://optiohire.com';
+    const loginLink = `${baseUrl}/institutions/auth/signin`;
+
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #152A22;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #1F4D3D; font-size: 24px; font-weight: bold;">OptioHire</h1>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #DCE1D5; border-radius: 8px; padding: 30px;">
+        <h2 style="margin-top: 0; color: #1F4D3D;">Welcome aboard, ${data.contactName}!</h2>
+        <p style="font-size: 16px; line-height: 1.5; color: #3E5449;">
+          Your institution profile for <strong>${data.institutionName}</strong> has been successfully activated. 
+          You can now log in to your dashboard to manage your cohorts and track placements.
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${loginLink}" style="background-color: #1F4D3D; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+            Access Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+    `;
+
+    const text = `Welcome aboard, ${data.contactName}!\n\nYour profile for ${data.institutionName} is now active.\n\nLogin here: ${loginLink}`;
+
+    await this.sendEmail({
+      to: data.contactEmail,
+      subject: `Welcome to OptioHire, ${data.institutionName}!`,
+      html,
+      text,
+      emailType: 'InstitutionWelcome'
+    });
+  }
+
+  async sendCohortInviteEmail(
+    instName: string,
+    candidateName: string,
+    email: string,
+    studentId: string,
+    department: string,
+    appUrl?: string
+  ) {
+    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://optiohire.com';
+    const registerLink = `${baseUrl}/auth/signup?inst=${encodeURIComponent(instName)}&sid=${encodeURIComponent(studentId)}&email=${encodeURIComponent(email)}`;
+    
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #152A22;">
+      <div style="background: #ffffff; border: 1px solid #DCE1D5; border-radius: 8px; padding: 30px;">
+        <h2 style="margin-top: 0; color: #1F4D3D;">Launch Your Career with OptioHire</h2>
+        <p style="font-size: 16px; line-height: 1.5; color: #3E5449;">
+          Hello ${candidateName},
+        </p>
+        <p style="font-size: 16px; line-height: 1.5; color: #3E5449;">
+          <strong>${instName}</strong> has partnered with OptioHire to help you find the best career opportunities tailored to your skills in the <strong>${department}</strong> department.
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${registerLink}" style="background-color: #B98A2E; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+            Activate Your Profile
+          </a>
+        </div>
+        <p style="font-size: 14px; color: #7B8A82; margin-top: 20px;">
+          Use your student ID: <strong>${studentId}</strong> during registration if prompted.<br><br>
+          Best of luck,<br>The OptioHire Team
+        </p>
+      </div>
+    </div>
+    `;
+
+    const text = `Hello ${candidateName},\n\n${instName} has partnered with OptioHire to help you launch your career.\n\nActivate your profile: ${registerLink}\nStudent ID: ${studentId}\n\nBest,\nThe OptioHire Team`;
+
+    await this.sendEmail({
+      to: email,
+      subject: `Invitation to OptioHire via ${instName}`,
+      html,
+      text,
+      emailType: 'CohortInvite'
+    });
+  }
+
+  async sendCohortUploadSuccess(data: {
+    institutionName: string;
+    contactEmail: string;
+    cohortName: string;
+    validRows: number;
+    duplicateRows: number;
+    appUrl?: string;
+  }) {
+    const baseUrl = data.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://optiohire.com';
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #152A22;">
+      <div style="background: #ffffff; border: 1px solid #DCE1D5; border-radius: 8px; padding: 30px;">
+        <h2 style="margin-top: 0; color: #1F4D3D;">Roster Upload Successful</h2>
+        <p style="font-size: 16px; line-height: 1.5; color: #3E5449;">
+          Your candidate roster for <strong>${data.cohortName}</strong> has been processed successfully.
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px;">
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 10px 0; color: #3E5449;">Valid Candidates:</td>
+            <td style="padding: 10px 0; text-align: right; font-weight: bold;">${data.validRows}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #3E5449;">Duplicates Ignored:</td>
+            <td style="padding: 10px 0; text-align: right; font-weight: bold;">${data.duplicateRows}</td>
+          </tr>
+        </table>
+        <p style="font-size: 14px; color: #7B8A82; margin-top: 20px;">
+          Invitations are currently being queued and will be dispatched shortly.<br>
+          <a href="${baseUrl}/institutions" style="color: #1F4D3D;">View Dashboard</a>
+        </p>
+      </div>
+    </div>
+    `;
+
+    const text = `Roster Upload Successful for ${data.cohortName}\n\nValid Candidates: ${data.validRows}\nDuplicates: ${data.duplicateRows}`;
+
+    await this.sendEmail({
+      to: data.contactEmail,
+      subject: `Roster Upload Processed: ${data.cohortName}`,
+      html,
+      text,
+      emailType: 'CohortUploadSuccess'
+    });
+  }
+
+  async sendInstitutionWeeklySummary(data: {
+    institutionName: string;
+    contactEmail: string;
+    placedCount: number;
+    interviewingCount: number;
+    appUrl?: string;
+  }) {
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #152A22;">
+      <div style="background: #ffffff; border: 1px solid #DCE1D5; border-radius: 8px; padding: 30px;">
+        <h2 style="margin-top: 0; color: #1F4D3D;">Weekly Placement Summary</h2>
+        <p style="font-size: 16px; line-height: 1.5; color: #3E5449;">
+          Here is the latest placement activity for <strong>${data.institutionName}</strong>:
+        </p>
+        <div style="display: flex; gap: 20px; margin: 20px 0;">
+          <div style="flex: 1; background: #F3F5EF; padding: 20px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold; color: #1F4D3D;">${data.placedCount}</div>
+            <div style="font-size: 12px; color: #3E5449; text-transform: uppercase;">Placed</div>
+          </div>
+          <div style="flex: 1; background: #F5EAD2; padding: 20px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold; color: #B98A2E;">${data.interviewingCount}</div>
+            <div style="font-size: 12px; color: #3E5449; text-transform: uppercase;">Interviewing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+    const text = `Weekly Summary for ${data.institutionName}\nPlaced: ${data.placedCount}\nInterviewing: ${data.interviewingCount}`;
+    
+    await this.sendEmail({
+      to: data.contactEmail,
+      subject: `Weekly Summary: ${data.institutionName} Placements`,
+      html,
+      text,
+      emailType: 'InstitutionWeeklySummary'
+    });
+  }
+});
   }
 }
 

@@ -139,6 +139,12 @@ router.patch('/settings/:settingKey', updateSystemSetting)
 router.get('/settings/feature-flags', getFeatureFlags)
 router.patch('/settings/feature-flags/:flagKey', updateFeatureFlag)
 
+// Institution Onboarding
+import { createOnboardingInvite, getOnboardingInvites, resendOnboardingInvite } from '../api/adminInstitutionController.js'
+router.post('/institutions/onboarding/invite', createOnboardingInvite)
+router.get('/institutions/onboarding', getOnboardingInvites)
+router.post('/institutions/onboarding/:id/resend', resendOnboardingInvite)
+
 // Time Tracking & Activity
 router.get('/activity', getActivityLogs)
 router.get('/activity/:userId', getUserActivity)

@@ -15,7 +15,8 @@ import {
     resendCohortInvites,
     resendCandidateInvite,
     institutionSignup,
-    getPublicInstitutionByToken
+    getPublicInstitutionByToken,
+    activateInstitution
 } from '../api/institutionController.js'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
 
@@ -27,6 +28,7 @@ router.post('/auth/signup', institutionSignup)
 
 // ── Public Endpoint ────────────────────────────────────────────────
 router.get('/public/:token', getPublicInstitutionByToken)
+router.post('/onboard/:token/activate', activateInstitution)
 
 // ── Admin: create institution (platform admin only) ──────────────
 router.post('/', authenticate, requireAdmin, createInstitution)

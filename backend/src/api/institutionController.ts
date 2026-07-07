@@ -884,7 +884,39 @@ export async function resendCandidateInvite(req: AuthRequest, res: Response) {
 export async function getPublicInstitutionByToken(req: Request, res: Response) {
     try {
         const { token } = req.params;
-        // token can be the ID or the slug
+        
+        // First try to look up in onboarding invites
+        const { rows: inviteRows } = await query(
+            `SELECT id, token, institution_name as name, sent_to as contact_email, status
+             FROM institution_onboarding_invites
+             WHERE token = $1 LIMIT 1`,
+            [token]
+        );
+
+        if (inviteRows.length > 0) {
+            const invite = inviteRows[0];
+            
+            // Mark as opened if it was not opened
+            if (invite.status === 'not_opened') {
+                await query(
+                    `UPDATE institution_onboarding_invites 
+                     SET status = 'opened', opened_at = now() 
+                     WHERE token = $1`,
+                    [token]
+                );
+            }
+            
+            // Return shape expected by frontend
+            return res.json({
+                isInvite: true,
+                token: invite.token,
+                name: invite.name,
+                contact_email: invite.contact_email,
+                status: invite.status
+            });
+        }
+
+        // Fallback for older tokens or IDs
         const { rows } = await query(
             `SELECT id, name, slug, contact_email, brand_accent_hex, country 
              FROM institutions 
@@ -896,8 +928,6 @@ export async function getPublicInstitutionByToken(req: Request, res: Response) {
         }
         return res.json(rows[0]);
     } catch (err) {
-        // If token is not a valid UUID, the query above might throw an error (invalid input syntax for type uuid)
-        // so we catch it and try querying just by slug.
         try {
             const { rows } = await query(
                 `SELECT id, name, slug, contact_email, brand_accent_hex, country 
@@ -912,5 +942,104 @@ export async function getPublicInstitutionByToken(req: Request, res: Response) {
         } catch (fallbackErr) {
             return res.status(500).json({ error: 'Failed to fetch public institution data' });
         }
+    }
+}
+
+export async function activateInstitution(req: Request, res: Response) {
+    try {
+        const { token } = req.params;
+        const { 
+            contactName, 
+            contactTitle, 
+            contactPhone, 
+            password,
+            brandColor,
+            website,
+            address,
+            country
+        } = req.body;
+
+        // Verify token
+        const { rows: inviteRows } = await query(
+            `SELECT * FROM institution_onboarding_invites WHERE token = $1`,
+            [token]
+        );
+
+        if (inviteRows.length === 0) {
+            return res.status(404).json({ error: 'Invalid or expired token' });
+        }
+
+        const invite = inviteRows[0];
+        if (invite.status === 'completed') {
+            return res.status(400).json({ error: 'This invite has already been used' });
+        }
+
+        const slug = invite.institution_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+        // Generate password hash
+        const bcrypt = await import('bcryptjs');
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        await query('BEGIN');
+
+        try {
+            // Create User
+            const { rows: userRows } = await query(
+                `INSERT INTO users (full_name, email, password_hash, role)
+                 VALUES ($1, $2, $3, 'institution_admin')
+                 RETURNING user_id`,
+                [contactName, invite.sent_to, hashedPassword]
+            );
+            const userId = userRows[0].user_id;
+
+            // Create Institution
+            const { rows: instRows } = await query(
+                `INSERT INTO institutions (name, slug, country, contact_email, brand_accent_hex)
+                 VALUES ($1, $2, $3, $4, $5)
+                 RETURNING id`,
+                [invite.institution_name, country || 'KE', invite.sent_to, brandColor || '#1F4D3D']
+            );
+            const instId = instRows[0].id;
+
+            // Link Admin
+            await query(
+                `INSERT INTO institution_admins (institution_id, user_id, role)
+                 VALUES ($1, $2, 'owner')`,
+                [instId, userId]
+            );
+
+            // Update Invite
+            await query(
+                `UPDATE institution_onboarding_invites 
+                 SET status = 'completed', completed_at = now() 
+                 WHERE token = $1`,
+                [token]
+            );
+
+            await query('COMMIT');
+
+            // Send Welcome Email
+            const emailService = new EmailService();
+            await emailService.sendInstitutionWelcome({
+                institutionName: invite.institution_name,
+                contactEmail: invite.sent_to,
+                contactName: contactName
+            });
+
+            return res.json({ message: 'Institution activated successfully' });
+        } catch (txErr: any) {
+            await query('ROLLBACK');
+            logger.error('Error activating institution transaction:', txErr);
+            // Handle duplicate slug or email
+            if (txErr.code === '23505') {
+                 return res.status(400).json({ error: 'An account or institution with this email/name already exists.' });
+            }
+            throw txErr;
+        }
+
+    } catch (err) {
+        logger.error('Error activating institution:', err);
+        return res.status(500).json({ error: 'Failed to activate institution' });
     }
 }
