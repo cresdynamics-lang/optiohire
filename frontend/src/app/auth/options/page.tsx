@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Building2, ArrowLeft, ChevronRight, UserCircle2 } from 'lucide-react'
+import { Building2, ArrowLeft, ChevronRight, UserCircle2, GraduationCap } from 'lucide-react'
 
 function AuthOptionsContent() {
   const router = useRouter()
@@ -25,6 +25,13 @@ function AuthOptionsContent() {
       description: isSignUp ? 'Create a profile and apply to top companies' : 'Track your applications and interviews',
       icon: <UserCircle2 className="w-8 h-8 text-blue-600" />,
       href: isSignUp ? 'https://applications.optiohire.com/auth/signup' : 'https://applications.optiohire.com/auth/signin',
+      color: 'blue',
+    },
+    {
+      title: isSignUp ? 'I represent an institution' : 'I am an Institution',
+      description: isSignUp ? 'Offer career services to your students' : 'Manage your career services portal',
+      icon: <GraduationCap className="w-8 h-8 text-blue-600" />,
+      href: isSignUp ? '/institutions/auth/signup' : '/institutions/auth/signin',
       color: 'blue',
     },
   ]
