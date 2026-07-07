@@ -199,17 +199,6 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
         logger.error('getInstitutionDashboard error', { err })
         return res.status(500).json({ error: 'Failed to fetch dashboard' })
     }
-}n,
-            current_cohort: cohort || null,
-            stats,
-            cohorts,
-            top_employers: topEmployers,
-            recent_activity: recentActivity
-        })
-    } catch (err) {
-        logger.error('getInstitutionDashboard error', { err })
-        return res.status(500).json({ error: 'Failed to fetch dashboard' })
-    }
 }
 
 // ─────────────────────────────────────────────
