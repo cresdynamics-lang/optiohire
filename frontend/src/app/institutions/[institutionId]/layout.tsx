@@ -1,121 +1,227 @@
-'use client';
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import './institutions.css';
+'use client'
+
+import { useEffect, useState, createContext, useContext } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import {
+    LayoutDashboard, Upload, Users, KanbanSquare, Bell, BookOpen, Settings, LogOut,
+    ChevronDown, Menu, X
+} from 'lucide-react'
+
+// ─── Context ────────────────────────────────────────────────────────────────
+
+interface InstitutionCtx {
+    institution: { id: string; name: string; slug: string; my_role?: string } | null
+    user: { id: string; email: string; name: string } | null
+    token: string | null
+}
+
+const InstitutionContext = createContext<InstitutionCtx>({ institution: null, user: null, token: null })
+export const useInstitution = () => useContext(InstitutionContext)
+
+const navItems = [
+    { label: 'Overview', icon: LayoutDashboard, tab: 'overview', href: '' },
+    { label: 'Bulk Onboarding', icon: Upload, tab: 'onboarding', href: '/onboarding' },
+    { label: 'Candidate Roster', icon: Users, tab: 'roster', href: '/roster', count: null },
+    { label: 'Placement Tracker', icon: KanbanSquare, tab: 'tracker', href: '/tracker' },
+]
+
+const communicationNav = [
+    { label: 'Notifications', icon: Bell, tab: 'notifications', href: '/notifications', count: null },
+]
+
+const programmeNav = [
+    { label: 'Cohorts', icon: BookOpen, tab: 'cohorts', href: '/cohorts' },
+    { label: 'Settings', icon: Settings, tab: 'settings', href: '/settings' },
+]
 
 export default function InstitutionLayout({
-  children,
-  params,
+    children,
+    params,
 }: {
-  children: React.ReactNode;
-  params: Promise<{ institutionId: string }>;
+    children: React.ReactNode
+    params: Promise<{ institutionId: string }>
 }) {
-  const unwrappedParams = React.use(params);
-  const pathname = usePathname();
-  const instId = unwrappedParams.institutionId || 'strathmore';
+    const router = useRouter()
+    const pathname = usePathname()
+    const [institution, setInstitution] = useState<InstitutionCtx['institution']>(null)
+    const [user, setUser] = useState<InstitutionCtx['user']>(null)
+    const [token, setToken] = useState<string | null>(null)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
+    const [institutionId, setInstitutionId] = useState<string>('')
 
-  // Helper to determine active state
-  const isActive = (path: string) => {
-    return pathname.includes(`/institutions/${instId}/${path}`) ? 'active' : '';
-  };
+    useEffect(() => {
+        params.then(p => setInstitutionId(p.institutionId))
+    }, [params])
 
-  return (
-    <div className="institutions-body">
-      <div className="shell">
-        {/* ============ SIDEBAR ============ */}
-        <aside className="sidebar">
-          <div className="brand">
-            <div className="mark">O</div>
-            <div>
-              <div className="name">OptioHire</div>
-              <div className="sub">Institution Console</div>
+    useEffect(() => {
+        const t = localStorage.getItem('institution_token')
+        const inst = localStorage.getItem('institution_data')
+        const u = localStorage.getItem('institution_user')
+        if (!t || !inst) {
+            router.replace('/institutions/auth/signin')
+            return
+        }
+        setToken(t)
+        try { setInstitution(JSON.parse(inst)) } catch { }
+        try { setUser(JSON.parse(u || '{}')) } catch { }
+    }, [router])
+
+    const signOut = () => {
+        localStorage.removeItem('institution_token')
+        localStorage.removeItem('institution_data')
+        localStorage.removeItem('institution_user')
+        router.replace('/institutions/auth/signin')
+    }
+
+    const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+
+    const buildHref = (suffix: string) => `/institutions/${institutionId}${suffix}`
+
+    const isActive = (suffix: string) => {
+        const target = buildHref(suffix)
+        if (suffix === '') return pathname === target
+        return pathname.startsWith(target)
+    }
+
+    const Sidebar = () => (
+        <aside
+            style={{
+                background: '#1F4D3D',
+                color: '#EAF2ED',
+                padding: '24px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 28,
+                width: 248,
+                minHeight: '100vh',
+                position: 'sticky',
+                top: 0,
+                height: '100vh',
+                overflowY: 'auto',
+                flexShrink: 0,
+            }}
+        >
+            {/* Brand */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 8px' }}>
+                <div style={{
+                    width: 34, height: 34, borderRadius: '50%', background: '#B98A2E',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'Fraunces, serif', fontWeight: 700, color: '#1F4D3D', fontSize: 16, flexShrink: 0
+                }}>O</div>
+                <div>
+                    <div style={{ fontFamily: 'Fraunces, serif', fontSize: 17, fontWeight: 600, color: '#fff' }}>OptioHire</div>
+                    <div style={{ fontSize: 10.5, color: '#B9D3C6', letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 1 }}>Institution Console</div>
+                </div>
             </div>
-          </div>
 
-          <div className="institution-chip">
-            <div className="crest"></div>
-            <div>
-              <div className="t1">Strathmore University</div>
-              <div className="t2">Career Services · Nairobi, KE</div>
+            {/* Institution chip */}
+            {institution && (
+                <div style={{
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)',
+                    borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10
+                }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 6, background: 'linear-gradient(135deg, #B98A2E, #8f6a1f)', flexShrink: 0 }} />
+                    <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#fff', lineHeight: 1.25 }}>{institution.name}</div>
+                        <div style={{ fontSize: 10.5, color: '#AFCABB' }}>Career Services · KE</div>
+                    </div>
+                </div>
+            )}
+
+            {/* Nav */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.09em', color: '#7FA292', margin: '10px 0 2px 10px' }}>Pipeline</div>
+                {navItems.map(item => (
+                    <Link key={item.tab} href={buildHref(item.href)}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 11, padding: '9px 10px', borderRadius: 8,
+                            fontSize: 13.5, color: isActive(item.href) ? '#fff' : '#CFE3D8', fontWeight: isActive(item.href) ? 600 : 400,
+                            background: isActive(item.href) ? 'rgba(255,255,255,0.14)' : 'transparent',
+                            textDecoration: 'none', transition: 'all .12s ease'
+                        }}>
+                        <item.icon size={16} style={{ flexShrink: 0, opacity: .85 }} />
+                        <span style={{ flex: 1 }}>{item.label}</span>
+                    </Link>
+                ))}
+
+                <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.09em', color: '#7FA292', margin: '10px 0 2px 10px' }}>Communication</div>
+                {communicationNav.map(item => (
+                    <Link key={item.tab} href={buildHref(item.href)}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 11, padding: '9px 10px', borderRadius: 8,
+                            fontSize: 13.5, color: isActive(item.href) ? '#fff' : '#CFE3D8', fontWeight: isActive(item.href) ? 600 : 400,
+                            background: isActive(item.href) ? 'rgba(255,255,255,0.14)' : 'transparent',
+                            textDecoration: 'none', transition: 'all .12s ease'
+                        }}>
+                        <item.icon size={16} style={{ flexShrink: 0, opacity: .85 }} />
+                        <span style={{ flex: 1 }}>{item.label}</span>
+                    </Link>
+                ))}
+
+                <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.09em', color: '#7FA292', margin: '10px 0 2px 10px' }}>Programme</div>
+                {programmeNav.map(item => (
+                    <Link key={item.tab} href={buildHref(item.href)}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 11, padding: '9px 10px', borderRadius: 8,
+                            fontSize: 13.5, color: isActive(item.href) ? '#fff' : '#CFE3D8', fontWeight: isActive(item.href) ? 600 : 400,
+                            background: isActive(item.href) ? 'rgba(255,255,255,0.14)' : 'transparent',
+                            textDecoration: 'none', transition: 'all .12s ease'
+                        }}>
+                        <item.icon size={16} style={{ flexShrink: 0, opacity: .85 }} />
+                        <span style={{ flex: 1 }}>{item.label}</span>
+                    </Link>
+                ))}
+            </nav>
+
+            {/* Footer */}
+            <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#F5EAD2', color: '#1F4D3D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                    {user?.name ? getInitials(user.name) : 'U'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, color: '#fff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>
+                    <div style={{ fontSize: 10.5, color: '#9EC1AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
+                </div>
+                <button onClick={signOut} title="Sign out" style={{ background: 'none', border: 'none', color: '#9EC1AF', cursor: 'pointer', padding: 4 }}>
+                    <LogOut size={15} />
+                </button>
             </div>
-          </div>
-
-          <nav className="navlist">
-            <div className="nav-group-label">Pipeline</div>
-            <Link href={`/institutions/${instId}/overview`} className={isActive('overview')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="7" height="9" rx="1.5" />
-                <rect x="14" y="3" width="7" height="5" rx="1.5" />
-                <rect x="14" y="12" width="7" height="9" rx="1.5" />
-                <rect x="3" y="16" width="7" height="5" rx="1.5" />
-              </svg>
-              Overview
-            </Link>
-            <Link href={`/institutions/${instId}/onboarding`} className={isActive('onboarding')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 3v12" />
-                <path d="M7 10l5 5 5-5" />
-                <path d="M4 20h16" />
-              </svg>
-              Bulk Onboarding
-            </Link>
-            <Link href={`/institutions/${instId}/roster`} className={isActive('roster')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="9" cy="8" r="3.2" />
-                <path d="M3.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6" />
-                <circle cx="18" cy="9" r="2.4" />
-                <path d="M15 20c0-2.6 1.8-4.6 4-4.9" />
-              </svg>
-              Candidate Roster
-              <span className="navcount">600</span>
-            </Link>
-            <Link href={`/institutions/${instId}/tracker`} className={isActive('tracker')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 6h18M3 12h18M3 18h10" />
-              </svg>
-              Placement Tracker
-            </Link>
-            <div className="nav-group-label">Communication</div>
-            <Link href={`/institutions/${instId}/notifications`} className={isActive('notifications')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.7 21a2 2 0 01-3.4 0" />
-              </svg>
-              Notifications
-              <span className="navcount">12</span>
-            </Link>
-            <div className="nav-group-label">Programme</div>
-            <Link href={`/institutions/${instId}/cohorts`} className={isActive('cohorts')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 10L12 5 2 10l10 5 10-5z" />
-                <path d="M6 12.5V17c0 1.5 3 3 6 3s6-1.5 6-3v-4.5" />
-              </svg>
-              Cohorts
-            </Link>
-            <Link href={`/institutions/${instId}/settings`} className={isActive('settings')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" />
-              </svg>
-              Settings
-            </Link>
-          </nav>
-
-          <div className="sidebar-footer">
-            <div className="avatar">JN</div>
-            <div>
-              <div className="who">Joyce Nduta</div>
-              <div className="role">Head, Career Services</div>
-            </div>
-          </div>
         </aside>
+    )
 
-        {/* ============ MAIN ============ */}
-        <main className="main">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+    return (
+        <InstitutionContext.Provider value={{ institution, user, token }}>
+            <div style={{ display: 'flex', minHeight: '100vh', background: '#F3F5EF', fontFamily: 'Inter, sans-serif' }}>
+                {/* Desktop sidebar */}
+                <div className="hidden md:block">
+                    <Sidebar />
+                </div>
+
+                {/* Mobile hamburger */}
+                <div className="md:hidden fixed top-4 left-4 z-50">
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        style={{ background: '#1F4D3D', color: '#fff', border: 'none', borderRadius: 8, padding: 10, cursor: 'pointer' }}
+                    >
+                        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </div>
+
+                {/* Mobile sidebar overlay */}
+                {sidebarOpen && (
+                    <div className="md:hidden fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setSidebarOpen(false)}>
+                        <div onClick={e => e.stopPropagation()} style={{ width: 248 }}>
+                            <Sidebar />
+                        </div>
+                    </div>
+                )}
+
+                {/* Main content */}
+                <main style={{ flex: 1, overflowY: 'auto', minHeight: '100vh' }}>
+                    {children}
+                </main>
+            </div>
+        </InstitutionContext.Provider>
+    )
 }

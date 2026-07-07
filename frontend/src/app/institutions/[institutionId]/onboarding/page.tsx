@@ -1,378 +1,460 @@
-'use client';
-import React, { useState } from 'react';
+'use client'
 
-export default function OnboardingPage({ params }: { params: Promise<{ institutionId: string }> }) {
-  const unwrappedParams = React.use(params);
-  const instId = unwrappedParams.institutionId || 'strathmore';
-  const [step, setStep] = useState(1);
-  const [level, setLevel] = useState('degree');
-  const [tracks, setTracks] = useState<Record<string, boolean>>({ internship: false, attachment: true, 'job-ready': true });
-  
-  // Upload simulation state
-  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'success'>('idle');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadLabel, setUploadLabel] = useState('Reading file…');
-  const [sendProgress, setSendProgress] = useState(false);
+import { useState, useRef, use } from 'react'
+import { useRouter } from 'next/navigation'
+import { Upload, ChevronRight, ChevronLeft, Send, Loader2 } from 'lucide-react'
 
-  const toggleTrack = (track: string) => {
-    setTracks(prev => ({ ...prev, [track]: !prev[track] }));
-  };
+interface CsvRow {
+    [key: string]: string
+}
 
-  const simulateUpload = () => {
-    setUploadState('uploading');
-    const stages = [
-        { p: 20, t: 'Reading file…' },
-        { p: 45, t: 'Detecting columns…' },
-        { p: 70, t: 'Validating email addresses…' },
-        { p: 90, t: 'Checking for duplicates…' },
-        { p: 100, t: 'Finalising…' }
-    ];
-    let i = 0;
-    setUploadProgress(0);
-    
-    const nextStep = () => {
-        if (i < stages.length) {
-            setUploadProgress(stages[i].p);
-            setUploadLabel(stages[i].t);
-            i++;
-            setTimeout(nextStep, 450);
-        } else {
-            setTimeout(() => {
-                setUploadState('success');
-            }, 300);
+interface MappedCandidate {
+    candidate_name: string
+    email: string
+    student_id?: string
+    department?: string
+    phone?: string
+    raw_row: CsvRow
+}
+
+type Step = 1 | 2 | 3 | 4
+
+const OPTIOHIRE_FIELDS = [
+    { key: 'email', label: 'Email address', required: true },
+    { key: 'full_name', label: 'Candidate name', required: true },
+    { key: 'student_id', label: 'Student ID', required: false },
+    { key: 'department', label: 'Department / Programme', required: false },
+    { key: 'phone', label: 'Phone number', required: false },
+    { key: 'grad_year', label: 'Expected graduation year', required: false },
+]
+
+export default function BulkOnboardingPage({ params }: { params: Promise<{ institutionId: string }> }) {
+    const { institutionId } = use(params)
+    const router = useRouter()
+    const fileRef = useRef<HTMLInputElement>(null)
+    const [step, setStep] = useState<Step>(1)
+    const [cohortName, setCohortName] = useState('')
+    const [academicLevel, setAcademicLevel] = useState('')
+    const [placementTracks, setPlacementTracks] = useState<string[]>([])
+    const [csvHeaders, setCsvHeaders] = useState<string[]>([])
+    const [csvRows, setCsvRows] = useState<CsvRow[]>([])
+    const [filename, setFilename] = useState('')
+    const [mapping, setMapping] = useState<Record<string, string>>({})
+    const [validated, setValidated] = useState<{ valid: MappedCandidate[]; flagged: any[]; duplicates: number }>({ valid: [], flagged: [], duplicates: 0 })
+    const [sending, setSending] = useState(false)
+    const [sendingStage, setSendingStage] = useState('')
+    const [sent, setSent] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('institution_token') : null
+
+    // ─── Robust CSV Parsing ──────────────────────────────────────────
+
+    const parseCSV = (text: string): { headers: string[]; rows: CsvRow[] } => {
+        const lines: string[][] = []
+        let row: string[] = []
+        let inQuotes = false
+        let entry = ''
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i]
+            const nextChar = text[i + 1]
+
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    entry += '"'
+                    i++ // Skip next quote
+                } else {
+                    inQuotes = !inQuotes
+                }
+            } else if (char === ',' && !inQuotes) {
+                row.push(entry.trim())
+                entry = ''
+            } else if ((char === '\n' || char === '\r') && !inQuotes) {
+                if (char === '\r' && nextChar === '\n') {
+                    i++ // Skip \n
+                }
+                row.push(entry.trim())
+                if (row.length > 0 && (row.length > 1 || row[0] !== '')) {
+                    lines.push(row)
+                }
+                row = []
+                entry = ''
+            } else {
+                entry += char
+            }
         }
-    };
-    nextStep();
-  };
+        if (entry || row.length > 0) {
+            row.push(entry.trim())
+            lines.push(row)
+        }
 
-  const resetUpload = () => setUploadState('idle');
+        if (lines.length === 0) return { headers: [], rows: [] }
+        const headers = lines[0].map(h => h.replace(/^"|"$/g, '').trim())
+        const rows = lines.slice(1).map(line => {
+            const r: CsvRow = {}
+            headers.forEach((h, idx) => {
+                r[h] = (line[idx] || '').replace(/^"|"$/g, '').trim()
+            })
+            return r
+        })
+        return { headers, rows }
+    }
 
-  return (
-    <>
-      <div className="topbar">
-        <div className="heading">
-          <div className="eyebrow">Bulk Onboarding</div>
-          <h1>Bring a new cohort into OptioHire</h1>
-          <div className="desc">
-            Upload your student list once. Everyone gets an account, an onboarding email,
-            and a place in the pipeline — automatically.
-          </div>
+    const handleFile = (file: File) => {
+        setError(null)
+        setFilename(file.name)
+        const ext = file.name.split('.').pop()?.toLowerCase()
+        
+        if (ext === 'xlsx' || ext === 'xls') {
+            setError('Excel (.xlsx/.xls) files are not directly supported. Please save your file as CSV (.csv) first, then upload.')
+            setFilename('')
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onload = e => {
+            try {
+                const { headers, rows } = parseCSV(e.target!.result as string)
+                if (headers.length === 0 || rows.length === 0) {
+                    setError('The CSV file appears to be empty or invalid.')
+                    return
+                }
+                setCsvHeaders(headers)
+                setCsvRows(rows)
+                // Auto-map based on common field names
+                const autoMap: Record<string, string> = {}
+                OPTIOHIRE_FIELDS.forEach(field => {
+                    const match = headers.find(h => h.toLowerCase().includes(field.key.replace('full_', '').replace('_', '')) || h.toLowerCase() === field.key)
+                    if (match) autoMap[field.key] = match
+                })
+                setMapping(autoMap)
+                setStep(2)
+            } catch (err) {
+                setError('Failed to parse CSV file.')
+            }
+        }
+        reader.readAsText(file)
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        const file = e.dataTransfer.files[0]
+        if (file) { handleFile(file) }
+    }
+
+    // ─── Validation (step 2 → 3) ─────────────────────────────────
+
+    const runValidation = () => {
+        const emailKey = mapping.email
+        const nameKey = mapping.full_name
+        if (!emailKey || !nameKey) { setError('Please map the Email and Name columns'); return }
+        setError(null)
+
+        const valid: MappedCandidate[] = []
+        const flagged: any[] = []
+        const seen = new Set<string>()
+        let dups = 0
+
+        csvRows.forEach(row => {
+            const email = (row[emailKey] || '').toLowerCase().trim()
+            const name = (row[nameKey] || '').trim()
+            if (!email || !email.includes('@')) { flagged.push({ ...row, _reason: 'Missing or invalid email' }); return }
+            if (!name) { flagged.push({ ...row, _reason: 'Missing name' }); return }
+            if (seen.has(email)) { dups++; return }
+            seen.add(email)
+            valid.push({
+                candidate_name: name,
+                email,
+                student_id: row[mapping.student_id || ''] || undefined,
+                department: row[mapping.department || ''] || undefined,
+                phone: row[mapping.phone || ''] || undefined,
+                raw_row: row
+            })
+        })
+
+        setValidated({ valid, flagged, duplicates: dups })
+        setStep(3)
+    }
+
+    // ─── Commit (step 4) ─────────────────────────────────────────
+
+    const handleCommit = async () => {
+        if (!token) return
+        setSending(true)
+        setError(null)
+        
+        try {
+            setSendingStage('1. Creating graduating cohort...')
+            const cohortRes = await fetch(`/api/institutions/${institutionId}/cohorts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ name: cohortName || 'New Cohort', academic_level: academicLevel, placement_tracks: placementTracks })
+            })
+            const cohortData = await cohortRes.json()
+            if (!cohortRes.ok) { setError(cohortData.error || 'Failed to create cohort'); setSending(false); return }
+
+            const cohortId = cohortData.id
+
+            setSendingStage('2. Enrolling candidates & preparing email queue...')
+            const commitRes = await fetch(`/api/institutions/${institutionId}/cohorts/${cohortId}/commit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ valid: validated.valid, filename })
+            })
+
+            if (!commitRes.ok) {
+                const d = await commitRes.json()
+                setError(d.error || 'Failed to commit candidates')
+            } else {
+                setSendingStage('3. Onboarding invitations sent successfully!')
+                setSent(true)
+            }
+        } catch {
+            setError('A network error occurred. Please try again.')
+        } finally {
+            setSending(false)
+            setSendingStage('')
+        }
+    }
+
+    const toggleTrack = (t: string) => setPlacementTracks(p => p.includes(t) ? p.filter(x => x !== t) : [...p, t])
+
+    const StepIndicator = () => (
+        <div style={{ display: 'flex', padding: '0 20px', marginTop: 2 }}>
+            {(['Upload list', 'Map fields', 'Review', 'Send invitations'] as const).map((label, i) => {
+                const n = (i + 1) as Step
+                const done = step > n
+                const active = step === n
+                return (
+                    <button key={n} onClick={() => n < step && setStep(n)}
+                        style={{ flex: 1, textAlign: 'left', padding: '16px 16px 16px 0', position: 'relative', border: 'none', background: 'none', cursor: n < step ? 'pointer' : 'default' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{
+                                width: 26, height: 26, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                fontFamily: 'IBM Plex Mono, monospace', fontSize: 11.5,
+                                border: `1.6px solid ${active || done ? '#1F4D3D' : '#DCE1D5'}`,
+                                background: active ? '#1F4D3D' : done ? '#E4EEE7' : 'transparent',
+                                color: active ? '#fff' : done ? '#1F4D3D' : '#3E5449'
+                            }}>
+                                {done ? '✓' : n}
+                            </span>
+                            <span style={{ fontSize: 12.5, fontWeight: 600, color: active ? '#152A22' : '#3E5449' }}>{label}</span>
+                        </span>
+                        <span style={{ position: 'absolute', bottom: 0, left: 0, right: 16, height: 2, background: active || done ? '#1F4D3D' : '#DCE1D5', display: 'block' }} />
+                    </button>
+                )
+            })}
         </div>
-      </div>
+    )
 
-      <div className="panel">
-        <div className="wizard-steps">
-          <button className={`wstep ${step === 1 ? 'active' : step > 1 ? 'done' : ''}`} onClick={() => setStep(1)}>
-            <span className="num">1</span><span className="label">Cohort details</span>
-          </button>
-          <button className={`wstep ${step === 2 ? 'active' : step > 2 ? 'done' : ''}`} onClick={() => setStep(2)}>
-            <span className="num">2</span><span className="label">Upload list</span>
-          </button>
-          <button className={`wstep ${step === 3 ? 'active' : step > 3 ? 'done' : ''}`} onClick={() => setStep(3)}>
-            <span className="num">3</span><span className="label">Map fields</span>
-          </button>
-          <button className={`wstep ${step === 4 ? 'active' : step > 4 ? 'done' : ''}`} onClick={() => setStep(4)}>
-            <span className="num">4</span><span className="label">Review</span>
-          </button>
-          <button className={`wstep ${step === 5 ? 'active' : step > 5 ? 'done' : ''}`} onClick={() => setStep(5)}>
-            <span className="num">5</span><span className="label">Send invitations</span>
-          </button>
+    return (
+        <div style={{ padding: '26px 34px 60px', maxWidth: 1240, fontFamily: 'Inter, sans-serif', color: '#152A22' }}>
+            <div style={{ marginBottom: 26 }}>
+                <div style={{ fontSize: 11, letterSpacing: '.09em', textTransform: 'uppercase', color: '#B98A2E', fontWeight: 600, marginBottom: 4 }}>Bulk Onboarding</div>
+                <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: 26, fontWeight: 600, margin: 0, letterSpacing: '-0.01em' }}>Bring a new cohort into OptioHire</h1>
+                <p style={{ color: '#3E5449', fontSize: 13.5, marginTop: 4, maxWidth: 520 }}>Upload your student list once. Everyone gets an account, an email, and a place in the pipeline — automatically.</p>
+            </div>
+
+            <div style={{ background: '#fff', border: '1px solid #DCE1D5', borderRadius: 10, boxShadow: '0 1px 2px rgba(21,42,34,0.06), 0 6px 20px rgba(21,42,34,0.06)' }}>
+                <StepIndicator />
+
+                {/* ── Step 1: Cohort details + Upload ── */}
+                {step === 1 && (
+                    <div style={{ padding: 20 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#3E5449', marginBottom: 6 }}>Cohort name *</label>
+                                <input value={cohortName} onChange={e => setCohortName(e.target.value)} placeholder="2026 · Informatics & Business IT"
+                                    style={{ width: '100%', border: '1px solid #DCE1D5', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', background: '#F3F5EF' }} />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#3E5449', marginBottom: 6 }}>Academic level</label>
+                                <select value={academicLevel} onChange={e => setAcademicLevel(e.target.value)}
+                                    style={{ width: '100%', border: '1px solid #DCE1D5', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', background: '#F3F5EF' }}>
+                                    <option value="">Select level</option>
+                                    <option value="certificate">Certificate</option>
+                                    <option value="diploma">Diploma</option>
+                                    <option value="degree">Degree</option>
+                                    <option value="postgraduate">Postgraduate</option>
+                                </select>
+                            </div>
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#3E5449', marginBottom: 6 }}>Placement tracks</label>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    {['internship', 'attachment', 'job_ready'].map(t => (
+                                        <button key={t} onClick={() => toggleTrack(t)} style={{
+                                            border: `1px solid ${placementTracks.includes(t) ? '#1F4D3D' : '#DCE1D5'}`,
+                                            background: placementTracks.includes(t) ? '#E4EEE7' : '#fff',
+                                            color: placementTracks.includes(t) ? '#1F4D3D' : '#3E5449',
+                                            padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                                        }}>
+                                            {t.replace('_', ' ')}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div style={{ background: '#F5E3DE', border: '1px solid #e8c8c0', borderRadius: 8, color: '#9C3B2C', padding: '12px 16px', fontSize: 13, marginBottom: 20 }}>
+                                ⚠ {error}
+                            </div>
+                        )}
+
+                        <div
+                            onDrop={handleDrop} onDragOver={e => e.preventDefault()}
+                            style={{ border: '2px dashed #DCE1D5', borderRadius: 12, padding: '44px 24px', textAlign: 'center', background: '#F3F5EF', cursor: 'pointer' }}
+                            onClick={() => fileRef.current?.click()}
+                        >
+                            <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#E4EEE7', color: '#1F4D3D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                                <Upload size={22} />
+                            </div>
+                            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 16, margin: '0 0 6px' }}>Drag your student list here</h3>
+                            <p style={{ fontSize: 12.5, color: '#3E5449', margin: '0 0 16px' }}>CSV format containing name, email, student ID, department, etc. Up to 5,000 rows.</p>
+                            <button style={{ background: '#1F4D3D', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                                Choose CSV file
+                            </button>
+                            {filename && <div style={{ marginTop: 12, fontSize: 12, color: '#1F4D3D', fontWeight: 600 }}>📄 {filename}</div>}
+                            <div style={{ marginTop: 12, fontSize: 11.5, color: '#3E5449' }}>or paste from Google Sheets · <span style={{ color: '#1F4D3D', fontWeight: 600, cursor: 'pointer' }}>download our template</span></div>
+                        </div>
+                        <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }}
+                            onChange={e => { const f = e.target.files?.[0]; if (f) { handleFile(f) } }} />
+                    </div>
+                )}
+
+                {/* ── Step 2: Field mapping ── */}
+                {step === 2 && (
+                    <div style={{ padding: 20 }}>
+                        <div style={{ marginBottom: 14, fontSize: 13, color: '#3E5449' }}>
+                            <strong>{filename}</strong> — {csvRows.length} rows detected. Match each column to an OptioHire field.
+                        </div>
+                        {OPTIOHIRE_FIELDS.map(field => (
+                            <div key={field.key} style={{ display: 'grid', gridTemplateColumns: '1fr 32px 1fr', gap: 10, alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #DCE1D5' }}>
+                                <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, background: '#EFE9D8', padding: '6px 10px', borderRadius: 6 }}>
+                                    {field.label} {field.required ? <span style={{ color: '#9C3B2C' }}>*</span> : ''}
+                                </div>
+                                <div style={{ textAlign: 'center', color: '#3E5449' }}>→</div>
+                                <select value={mapping[field.key] || ''} onChange={e => setMapping(m => ({ ...m, [field.key]: e.target.value }))}
+                                    style={{ width: '100%', border: '1px solid #DCE1D5', borderRadius: 6, padding: '7px 8px', fontSize: 12.5 }}>
+                                    <option value="">— skip —</option>
+                                    {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                                </select>
+                            </div>
+                        ))}
+                        {error && <div style={{ color: '#9C3B2C', fontSize: 13, marginTop: 12 }}>{error}</div>}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+                            <button onClick={() => setStep(1)} style={{ border: '1px solid #DCE1D5', background: '#fff', padding: '9px 15px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                            <button onClick={runValidation} style={{ background: '#1F4D3D', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                                Continue to review
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Step 3: Review ── */}
+                {step === 3 && (
+                    <div style={{ padding: 20 }}>
+                        {[
+                            ['Institution', 'Loaded from your account'],
+                            ['Cohort name', cohortName || 'Unnamed Cohort'],
+                            ['Rows detected', csvRows.length.toString()],
+                            ['Valid entries', validated.valid.length.toString()],
+                            ['Duplicate entries removed', validated.duplicates.toString()],
+                            ['Flagged for manual check', validated.flagged.length > 0 ? `${validated.flagged.length} (missing data)` : '0'],
+                        ].map(([k, v]) => (
+                            <div key={k} style={{ display: 'flex', justifyStyle: 'space-between', padding: '9px 0', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>
+                                <div style={{ color: '#3E5449' }}>{k}</div>
+                                <div style={{ fontWeight: 600, color: k === 'Flagged for manual check' && validated.flagged.length > 0 ? '#9C3B2C' : '#152A22' }}>{v}</div>
+                            </div>
+                        ))}
+
+                        {validated.valid.length > 0 && (
+                            <div style={{ marginTop: 16, overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr>{['Name', 'Student ID', 'Department', 'Email'].map(h => <th key={h} style={{ textAlign: 'left', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '.06em', color: '#3E5449', fontWeight: 600, padding: '10px 14px', borderBottom: '1px solid #DCE1D5' }}>{h}</th>)}</tr>
+                                    </thead>
+                                    <tbody>
+                                        {validated.valid.slice(0, 4).map((r, i) => (
+                                            <tr key={i}>
+                                                <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>{r.candidate_name}</td>
+                                                <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>{r.student_id || '—'}</td>
+                                                <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>{r.department || '—'}</td>
+                                                <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>{r.email}</td>
+                                            </tr>
+                                        ))}
+                                        {validated.valid.length > 4 && (
+                                            <tr><td colSpan={4} style={{ padding: '12px 14px', color: '#3E5449', textAlign: 'center', fontSize: 13 }}>+ {validated.valid.length - 4} more rows</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+                            <button onClick={() => setStep(2)} style={{ border: '1px solid #DCE1D5', background: '#fff', padding: '9px 15px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Back</button>
+                            <button onClick={() => setStep(4)} style={{ background: '#1F4D3D', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                                Looks good — continue
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Step 4: Send ── */}
+                {step === 4 && (
+                    <div style={{ padding: 20 }}>
+                        {sent ? (
+                            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#E4EEE7', color: '#1F4D3D', display: 'flex', alignItems: 'center', justifyStyle: 'center', margin: '0 auto 16px', fontSize: 28, fontWeight: 'bold' }}>✓</div>
+                                <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 22, margin: '0 0 8px' }}>Invitations queued!</h3>
+                                <p style={{ color: '#3E5449', fontSize: 13 }}>{validated.valid.length} students have been enrolled, and onboarding emails are being dispatched in the background.</p>
+                                <button onClick={() => router.push(`/institutions/${institutionId}/roster`)}
+                                    style={{ marginTop: 20, background: '#1F4D3D', color: '#fff', border: 'none', padding: '10px 22px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                                    View Roster →
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div style={{ textAlign: 'center', padding: '10px 0 20px' }}>
+                                    <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 19, margin: '0 0 8px' }}>Ready to onboard {validated.valid.length} students</h3>
+                                    <p style={{ color: '#3E5449', fontSize: 13, maxWidth: 480, margin: '0 auto' }}>
+                                        Each student receives a personal onboarding email inviting them to activate their OptioHire account, complete their profile, and upload their CV.
+                                    </p>
+                                </div>
+
+                                <div style={{ background: '#F3F5EF', border: '1px solid #DCE1D5', borderRadius: 10, padding: '16px 20px', maxWidth: 520, margin: '0 auto 20px' }}>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <label style={{ fontSize: 12, fontWeight: 600, color: '#3E5449', display: 'block', marginBottom: 6 }}>Email subject line</label>
+                                        <input defaultValue={`Your ${localStorage.getItem('institution_data') ? JSON.parse(localStorage.getItem('institution_data') || '{}').name : 'University'} Career Profile is ready — activate on OptioHire`}
+                                            style={{ width: '100%', border: '1px solid #DCE1D5', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', background: '#fff' }} />
+                                    </div>
+                                </div>
+
+                                {error && <div style={{ color: '#9C3B2C', textAlign: 'center', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+
+                                {sending && (
+                                    <div style={{ maxWidth: 520, margin: '0 auto 24px', textAlign: 'center', padding: '10px 0' }}>
+                                        <Loader2 className="animate-spin" size={32} style={{ color: '#1F4D3D', margin: '0 auto 12px' }} />
+                                        <div style={{ fontSize: 14, fontWeight: 600, color: '#152A22' }}>{sendingStage}</div>
+                                        <div style={{ fontSize: 12, color: '#3E5449', marginTop: 4 }}>Please do not close this window while processing.</div>
+                                    </div>
+                                )}
+
+                                {!sending && (
+                                    <div style={{ textAlign: 'center' }}>
+                                        <button onClick={handleCommit}
+                                            style={{ background: '#B98A2E', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                                            <Send size={16} />
+                                            Send {validated.valid.length} invitations
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
-
-        {/* Step 1 — Cohort details */}
-        {step === 1 && (
-          <div className="panel-body wizard-panel">
-            <div className="cohort-form-section">
-              <label className="field-label">Cohort name</label>
-              <p className="field-hint">This is how the batch will appear across your dashboard and to students in their onboarding email.</p>
-              <input
-                style={{ width: '100%', maxWidth: '420px', border: '1px solid var(--line)', borderRadius: '8px', padding: '9px 12px', fontSize: '13px', fontFamily: 'inherit', background: 'var(--paper)' }}
-                defaultValue="2026 · Informatics & Business IT"
-              />
-            </div>
-
-            <div className="cohort-form-section">
-              <label className="field-label">Academic level</label>
-              <p className="field-hint">Select the qualification this cohort is studying towards. This tailors the roles OptioHire matches them to.</p>
-              <div className="select-pill-group">
-                <button className={`select-pill ${level === 'certificate' ? 'active' : ''}`} onClick={() => setLevel('certificate')}>
-                  Certificate<span className="sub">6–12 months</span>
-                </button>
-                <button className={`select-pill ${level === 'diploma' ? 'active' : ''}`} onClick={() => setLevel('diploma')}>
-                  Diploma<span className="sub">1–2 years</span>
-                </button>
-                <button className={`select-pill ${level === 'degree' ? 'active' : ''}`} onClick={() => setLevel('degree')}>
-                  Undergraduate Degree<span className="sub">3–4 years</span>
-                </button>
-                <button className={`select-pill ${level === 'postgraduate' ? 'active' : ''}`} onClick={() => setLevel('postgraduate')}>
-                  Postgraduate<span className="sub">Masters / PGD</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="cohort-form-section">
-              <label className="field-label">Programme / department</label>
-              <p className="field-hint">Used for matching and shown on each candidate&apos;s profile.</p>
-              <input
-                style={{ width: '100%', maxWidth: '420px', border: '1px solid var(--line)', borderRadius: '8px', padding: '9px 12px', fontSize: '13px', fontFamily: 'inherit', background: 'var(--paper)' }}
-                defaultValue="Informatics & Business IT"
-              />
-            </div>
-
-            <div className="cohort-form-section">
-              <label className="field-label">What are you onboarding them for?</label>
-              <p className="field-hint">Select every pathway that applies — a cohort can be matched to more than one. This decides which employer roles they can be shortlisted against.</p>
-              <div className="select-pill-group">
-                <button className={`select-pill gold-active ${tracks['internship'] ? 'active' : ''}`} onClick={() => toggleTrack('internship')}>
-                  Internship<span className="sub">Short-term, learning-focused</span>
-                </button>
-                <button className={`select-pill gold-active ${tracks['attachment'] ? 'active' : ''}`} onClick={() => toggleTrack('attachment')}>
-                  Industrial Attachment<span className="sub">Academic requirement, fixed term</span>
-                </button>
-                <button className={`select-pill gold-active ${tracks['job-ready'] ? 'active' : ''}`} onClick={() => toggleTrack('job-ready')}>
-                  Job-Ready Graduate<span className="sub">Full-time placement</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="cohort-form-section" style={{ marginBottom: '6px' }}>
-              <label className="field-label">Expected completion</label>
-              <input
-                type="month"
-                style={{ border: '1px solid var(--line)', borderRadius: '8px', padding: '9px 12px', fontSize: '13px', fontFamily: 'inherit', background: 'var(--paper)' }}
-                defaultValue="2026-11"
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '18px' }}>
-              <button className="btn btn-primary" onClick={() => setStep(2)}>Continue to upload list</button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2 — Upload */}
-        {step === 2 && (
-          <div className="panel-body wizard-panel">
-            {uploadState === 'idle' && (
-              <div className="dropzone">
-                <div className="icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 3v12" />
-                    <path d="M7 10l5 5 5-5" />
-                    <path d="M4 20h16" />
-                  </svg>
-                </div>
-                <h3>Drag your student list here</h3>
-                <p>CSV or Excel — name, email, student ID, department, expected graduation. Up to 5,000 rows.</p>
-                <button className="btn btn-primary" onClick={simulateUpload}>Choose file</button>
-                <div style={{ marginTop: '16px', fontSize: '11.5px', color: 'var(--ink-soft)' }}>
-                  or paste from Google Sheets · <a href="#" style={{ color: 'var(--primary)', fontWeight: 600 }} onClick={e => e.preventDefault()}>download our template</a>
-                </div>
-              </div>
-            )}
-
-            {uploadState === 'uploading' && (
-              <div className="upload-progress-card">
-                <div className="file-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                    <path d="M14 2v6h6" />
-                  </svg>
-                </div>
-                <h3 style={{ fontSize: '14.5px', marginBottom: '4px' }}>graduating_class_2026.csv</h3>
-                <p style={{ marginBottom: '14px' }}>Uploading and scanning rows…</p>
-                <div className="progress-track" style={{ maxWidth: '360px', margin: '0 auto 8px' }}>
-                  <div className="progress-fill" style={{ width: `${uploadProgress}%` }}></div>
-                </div>
-                <div style={{ fontSize: '11.5px', color: 'var(--ink-soft)' }}>{uploadLabel}</div>
-              </div>
-            )}
-
-            {uploadState === 'success' && (
-              <div>
-                <div className="upload-success-card">
-                  <div className="head">
-                    <div className="check">✓</div>
-                    <div>
-                      <div className="t1">graduating_class_2026.csv uploaded successfully</div>
-                      <div className="t2">Ready to map fields</div>
-                    </div>
-                  </div>
-                  <div className="meta-grid">
-                    <div className="meta-tile">
-                      <div className="n">600</div>
-                      <div className="l">Rows detected</div>
-                    </div>
-                    <div className="meta-tile">
-                      <div className="n">6</div>
-                      <div className="l">Columns found</div>
-                    </div>
-                    <div className="meta-tile">
-                      <div className="n">82 KB</div>
-                      <div className="l">File size</div>
-                    </div>
-                    <div className="meta-tile">
-                      <div className="n">596</div>
-                      <div className="l">Valid email rows</div>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '6px' }}>
-                    Columns detected
-                  </div>
-                  <div className="col-chip-row">
-                    <span className="col-chip">full_name</span>
-                    <span className="col-chip">student_email</span>
-                    <span className="col-chip">reg_no</span>
-                    <span className="col-chip">programme</span>
-                    <span className="col-chip">grad_year</span>
-                    <span className="col-chip">phone</span>
-                  </div>
-                  <table style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
-                    <thead>
-                      <tr>
-                        <th>full_name</th>
-                        <th>student_email</th>
-                        <th>reg_no</th>
-                        <th>programme</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>Amina Wafula</td>
-                        <td className="mono">a.wafula@strathmore.edu</td>
-                        <td className="mono">STR/2026/0142</td>
-                        <td>Informatics</td>
-                      </tr>
-                      <tr>
-                        <td>Brian Otieno</td>
-                        <td className="mono">b.otieno@strathmore.edu</td>
-                        <td className="mono">STR/2026/0143</td>
-                        <td>Business IT</td>
-                      </tr>
-                      <tr>
-                        <td>Faith Chebet</td>
-                        <td className="mono">f.chebet@strathmore.edu</td>
-                        <td className="mono">STR/2026/0144</td>
-                        <td>Informatics</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div style={{ fontSize: '11px', color: 'var(--ink-soft)', marginTop: '10px' }}>
-                    Showing 3 of 600 rows · 4 rows flagged with missing or invalid emails will be skipped, and 3 duplicates were removed automatically.
-                  </div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '18px' }}>
-                  <button className="btn" onClick={resetUpload}>Replace file</button>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn" onClick={() => setStep(1)}>Back</button>
-                    <button className="btn btn-primary" onClick={() => setStep(3)}>Continue to map fields</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 3 — Map fields */}
-        {step === 3 && (
-          <div className="panel-body wizard-panel">
-            <div style={{ marginBottom: '14px', fontSize: '13px', color: 'var(--ink-soft)' }}>
-              <b>graduating_class_2026.csv</b> — 600 rows detected. Match each column to an OptioHire field.
-            </div>
-            {[
-              { csv: 'full_name', target: 'Candidate name' },
-              { csv: 'student_email', target: 'Email address' },
-              { csv: 'reg_no', target: 'Student ID' },
-              { csv: 'programme', target: 'Department / Programme' },
-              { csv: 'grad_year', target: 'Expected graduation year' },
-              { csv: 'phone', target: 'Phone number' },
-            ].map((f, idx) => (
-              <div className="mapping-row" key={idx}>
-                <div className="csvcol">{f.csv}</div>
-                <div>→</div>
-                <select defaultValue={f.target}>
-                  <option>{f.target}</option>
-                </select>
-              </div>
-            ))}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '18px' }}>
-              <button className="btn" onClick={() => setStep(2)}>Back</button>
-              <button className="btn btn-primary" onClick={() => setStep(4)}>Continue to review</button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4 — Review */}
-        {step === 4 && (
-          <div className="panel-body wizard-panel">
-            <div className="summary-line"><div className="k">Institution</div><div className="v">Strathmore University</div></div>
-            <div className="summary-line"><div className="k">Cohort name</div><div className="v">2026 · Informatics &amp; Business IT</div></div>
-            <div className="summary-line"><div className="k">Academic level</div><div className="v">Undergraduate Degree</div></div>
-            <div className="summary-line"><div className="k">Onboarding for</div><div className="v">Industrial Attachment, Job-Ready Graduate</div></div>
-            <div className="summary-line"><div className="k">Rows detected</div><div className="v">600</div></div>
-            <div className="summary-line"><div className="k">Valid emails</div><div className="v">596</div></div>
-            <div className="summary-line"><div className="k">Duplicate entries removed</div><div className="v">3</div></div>
-            <div className="summary-line"><div className="k">Flagged for manual check</div><div className="v" style={{ color: 'var(--rust)' }}>4 (missing email)</div></div>
-            
-            <div style={{ marginTop: '16px' }}>
-              <table>
-                <thead>
-                  <tr><th>Name</th><th>Student ID</th><th>Department</th><th>Email</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>Amina Wafula</td><td className="mono">STR/2026/0142</td><td>Informatics</td><td>a.wafula@strathmore.edu</td></tr>
-                  <tr><td>Brian Otieno</td><td className="mono">STR/2026/0143</td><td>Business IT</td><td>b.otieno@strathmore.edu</td></tr>
-                  <tr><td>Faith Chebet</td><td className="mono">STR/2026/0144</td><td>Informatics</td><td>f.chebet@strathmore.edu</td></tr>
-                  <tr><td colSpan={4} style={{ color: 'var(--ink-soft)', textAlign: 'center' }}>+ 593 more rows</td></tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '18px' }}>
-              <button className="btn" onClick={() => setStep(3)}>Back</button>
-              <button className="btn btn-primary" onClick={() => setStep(5)}>Looks good — continue</button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 5 — Send invitations */}
-        {step === 5 && (
-          <div className="panel-body wizard-panel">
-            <div style={{ textAlign: 'center', padding: '10px 0 20px' }}>
-              <h3 style={{ fontSize: '19px', marginBottom: '8px' }}>Ready to onboard 596 students</h3>
-              <p style={{ color: 'var(--ink-soft)', fontSize: '13px', maxWidth: '480px', margin: '0 auto' }}>
-                Each student receives a personal onboarding email inviting them to activate their OptioHire account, complete their profile, and upload their CV. Institution data (student ID, department, cohort, and pathway) is pre-filled for them.
-              </p>
-            </div>
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: '10px', padding: '16px 20px', maxWidth: '520px', margin: '0 auto 20px' }}>
-              <div className="field-group" style={{ marginBottom: '10px' }}>
-                <label>Email preview — subject line</label>
-                <input defaultValue="Your Strathmore Career Profile is ready — activate on OptioHire" />
-              </div>
-              <div className="field-group" style={{ marginBottom: 0 }}>
-                <label>Sender</label>
-                <input defaultValue="careers@strathmore.edu, via OptioHire" />
-              </div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <button className="btn btn-gold" style={{ padding: '12px 28px', fontSize: '14px' }} onClick={() => setSendProgress(true)}>
-                Send 596 invitations
-              </button>
-            </div>
-            
-            {sendProgress && (
-              <div style={{ maxWidth: '520px', margin: '20px auto 0' }}>
-                <div className="progress-track">
-                  <div className="progress-fill" style={{ width: '74%' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: 'var(--ink-soft)' }}>
-                  <span>441 of 596 sent</span><span>Estimated 40 seconds remaining</span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </>
-  );
+    )
 }
