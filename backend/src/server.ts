@@ -28,6 +28,7 @@ import { router as uploadRouter } from './routes/upload.js'
 import { router as webhooksRouter } from './routes/webhooks.js'
 import { router as templatesRouter } from './routes/templates.js'
 import { router as demosRouter } from './routes/demos.js'
+import { router as institutionsRouter } from './routes/institutions.js'
 import { router as adminCertificatesRouter } from './routes/certificates.js'
 
 import { ensureStorageDir } from './utils/storage.js'
@@ -52,10 +53,10 @@ app.set('trust proxy', true)
 // Temporarily add to app.ts or any router — remove after testing
 app.get('/debug/ip', (req, res) => {
   res.json({
-    'req.ip':                    req.ip,
-    'x-forwarded-for header':    req.headers['x-forwarded-for'],
-    'x-real-ip header':          req.headers['x-real-ip'],
-    'trust proxy setting':       app.get('trust proxy'),
+    'req.ip': req.ip,
+    'x-forwarded-for header': req.headers['x-forwarded-for'],
+    'x-real-ip header': req.headers['x-real-ip'],
+    'trust proxy setting': app.get('trust proxy'),
   });
 });
 
@@ -76,14 +77,14 @@ app.use(compression({
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true)
-    
+
     // Check if origin is in the explicitly allowed list
     if (allowedOrigins.includes(origin)) return callback(null, true)
-    
+
     // Dynamic check for all subdomains of optiohire.com
     const isSubdomain = origin.endsWith('.optiohire.com') || origin === 'https://optiohire.com'
     if (isSubdomain) return callback(null, true)
-    
+
     return callback(new Error(`CORS blocked origin: \${origin}`))
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -133,6 +134,7 @@ app.use('/api', scheduleRouter)
 app.use('/contact', contactRouter)
 app.use('/auth', authRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/institutions', institutionsRouter)
 app.use('/api/user', userRouter)
 
 app.use('/api/user/preferences', userPreferencesRouter)
@@ -162,9 +164,9 @@ async function start() {
     try {
       const resendService = new ResendService()
       await resendService.getDiagnostics()
-    } catch (err) {}
+    } catch (err) { }
   }
-  
+
   const redisEnabled = String(process.env.REDIS_ENABLED || '').trim().toLowerCase() === 'true'
   if (redisEnabled) {
     initRedis()
@@ -177,7 +179,7 @@ async function start() {
   } else {
     logger.info('⚠️ Redis is disabled. BullMQ workers will NOT be started.');
   }
-  
+
   app.listen(port, '0.0.0.0', () => {
     logger.info(`Backend listening on http://0.0.0.0:${port}`)
   })

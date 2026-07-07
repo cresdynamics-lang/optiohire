@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strathmore University — OptioHire Institution Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#152A22;
+    --ink-soft:#3E5449;
+    --paper:#F3F5EF;
+    --paper-raised:#FFFFFF;
+    --line:#DCE1D5;
+    --primary:#1F4D3D;
+    --primary-light:#2F6B54;
+    --primary-pale:#E4EEE7;
+    --gold:#B98A2E;
+    --gold-pale:#F5EAD2;
+    --rust:#9C3B2C;
+    --rust-pale:#F5E3DE;
+    --sky:#3E6C8E;
+    --sky-pale:#E1EBF0;
+    --sand:#EFE9D8;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(21,42,34,0.06), 0 6px 20px rgba(21,42,34,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* ===== Shell layout ===== */
+  .shell{display:grid;grid-template-columns:248px 1fr;min-height:100vh;}
+
+  /* ===== Sidebar ===== */
+  .sidebar{
+    background:var(--primary);
+    color:#EAF2ED;
+    padding:24px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:0 8px;}
+  .brand .mark{
+    width:34px;height:34px;border-radius:50%;
+    background:var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:700;color:var(--primary);
+    font-size:16px;
+    flex-shrink:0;
+  }
+  .brand .name{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:#fff;}
+  .brand .sub{font-size:10.5px;color:#B9D3C6;letter-spacing:.06em;text-transform:uppercase;margin-top:1px;}
+
+  .institution-chip{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:8px;
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .institution-chip .crest{
+    width:30px;height:30px;border-radius:6px;
+    background:linear-gradient(135deg,var(--gold),#8f6a1f);
+    flex-shrink:0;
+  }
+  .institution-chip .t1{font-size:12.5px;font-weight:600;color:#fff;line-height:1.25;}
+  .institution-chip .t2{font-size:10.5px;color:#AFCABB;}
+
+  nav.navlist{display:flex;flex-direction:column;gap:2px;}
+  .navlist button{
+    all:unset;
+    display:flex;align-items:center;gap:11px;
+    padding:9px 10px;border-radius:8px;
+    font-size:13.5px;color:#CFE3D8;
+    transition:background .12s ease, color .12s ease;
+  }
+  .navlist button svg{flex-shrink:0;opacity:.85;}
+  .navlist button:hover{background:rgba(255,255,255,0.07);color:#fff;}
+  .navlist button.active{background:rgba(255,255,255,0.14);color:#fff;font-weight:600;}
+  .navlist .navcount{
+    margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+    background:rgba(255,255,255,0.12);padding:1px 6px;border-radius:20px;color:#DCEAE2;
+  }
+  .nav-group-label{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#7FA292;margin:10px 0 2px 10px;}
+
+  .sidebar-footer{margin-top:auto;border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;display:flex;align-items:center;gap:10px;}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--gold-pale);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+  .sidebar-footer .who{font-size:12.5px;color:#fff;font-weight:600;}
+  .sidebar-footer .role{font-size:10.5px;color:#9EC1AF;}
+
+  /* ===== Main ===== */
+  .main{padding:26px 34px 60px;max-width:1240px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;gap:20px;}
+  .topbar .heading .eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:4px;}
+  .topbar h1{font-size:26px;}
+  .topbar .desc{color:var(--ink-soft);font-size:13.5px;margin-top:4px;max-width:520px;}
+  .topbar-actions{display:flex;gap:10px;align-items:center;}
+
+  .btn{
+    border:1px solid var(--line);
+    background:var(--paper-raised);
+    padding:9px 15px;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink);
+    display:inline-flex;align-items:center;gap:7px;
+    transition:border-color .12s;
+  }
+  .btn:hover{border-color:var(--primary-light);}
+  .btn-primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .btn-primary:hover{background:var(--primary-light);}
+  .btn-gold{background:var(--gold);color:#fff;border-color:var(--gold);}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--ink-soft);}
+
+  select.cohort-select{
+    border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--ink);
+  }
+
+  .tab-section{display:none;}
+  .tab-section.active{display:block;animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+
+  /* ===== Stat cards ===== */
+  .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:28px;}
+  .stat-card{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 16px 14px;box-shadow:var(--shadow);
+  }
+  .stat-card .n{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--primary);}
+  .stat-card .l{font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.3;}
+  .stat-card .delta{font-size:10.5px;font-weight:600;margin-top:8px;display:inline-flex;align-items:center;gap:4px;}
+  .delta.up{color:#2A7A52;}
+  .delta.flat{color:var(--ink-soft);}
+
+  /* ===== Panels ===== */
+  .panel{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    margin-bottom:24px;
+  }
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line);}
+  .panel-head h2{font-size:16.5px;}
+  .panel-head .hint{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .panel-body{padding:20px;}
+  .two-col{display:grid;grid-template-columns:1.5fr 1fr;gap:22px;}
+
+  /* ===== Funnel (signature element: matriculation ledger) ===== */
+  .ledger{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 2px 8px;}
+  .ledger-stage{
+    flex:1;min-width:118px;position:relative;padding:14px 14px 16px;
+    border-right:1px dashed var(--line);
+  }
+  .ledger-stage:last-child{border-right:none;}
+  .ledger-stage .stamp{
+    width:52px;height:52px;border-radius:50%;
+    border:2.5px solid currentColor;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:700;font-size:16px;
+    margin-bottom:10px;
+    transform:rotate(-4deg);
+  }
+  .ledger-stage .stage-name{font-size:11.5px;font-weight:600;color:var(--ink);}
+  .ledger-stage .stage-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .ledger-stage.s1 .stamp{color:var(--ink-soft);}
+  .ledger-stage.s2 .stamp{color:var(--sky);}
+  .ledger-stage.s3 .stamp{color:var(--gold);}
+  .ledger-stage.s4 .stamp{color:#2A7A52;}
+  .ledger-stage.s5 .stamp{color:var(--primary);}
+
+  /* ===== Seal-style status badges ===== */
+  .seal{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:3px 10px 3px 8px;border-radius:20px;
+    font-size:11px;font-weight:700;letter-spacing:.02em;
+    border:1.4px dashed currentColor;
+  }
+  .seal .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .seal.enrolled{color:#7A7A6E;background:#F1F1EA;}
+  .seal.invited{color:var(--sky);background:var(--sky-pale);}
+  .seal.activated{color:#2A7A52;background:#E3F1E9;}
+  .seal.shortlisted{color:var(--gold);background:var(--gold-pale);}
+  .seal.interviewing{color:#6B4FA0;background:#EDE6F5;}
+  .seal.placed{color:var(--primary);background:var(--primary-pale);}
+  .seal.internship{color:#1E7E8C;background:#DCF0F2;}
+  .seal.pool{color:var(--ink-soft);background:#EEEEE6;}
+  .seal.review{color:var(--rust);background:var(--rust-pale);}
+
+  /* ===== Table ===== */
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--ink-soft);font-weight:600;padding:10px 14px;border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle;}
+  tbody tr:hover{background:#FAFBF7;}
+  .cand-name{display:flex;align-items:center;gap:10px;}
+  .cand-name .av{width:30px;height:30px;border-radius:8px;background:var(--primary-pale);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+  .cand-name .info .n{font-weight:600;font-size:13px;}
+  .cand-name .info .id{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);}
+  .score{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .score.hi{color:#2A7A52;}
+  .score.mid{color:var(--gold);}
+  .score.lo{color:var(--ink-soft);}
+  .row-actions{display:flex;gap:6px;}
+  .icon-btn{border:1px solid var(--line);background:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+  .icon-btn:hover{border-color:var(--primary-light);}
+
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line);}
+  .search{
+    flex:1;min-width:200px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;background:var(--paper);
+  }
+  .filter-chip{
+    border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--ink-soft);
+  }
+  .filter-chip.active{background:var(--primary-pale);color:var(--primary);border-color:var(--primary-light);}
+
+  /* ===== Onboarding wizard ===== */
+  .wizard-steps{display:flex;padding:0 20px;margin-top:2px;}
+  .wstep{
+    flex:1;text-align:left;padding:16px 16px 16px 0;position:relative;border:none;background:none;
+  }
+  .wstep .num{
+    width:26px;height:26px;border-radius:50%;border:1.6px solid var(--line);
+    display:inline-flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;color:var(--ink-soft);margin-right:8px;
+  }
+  .wstep.active .num{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .wstep.done .num{background:var(--primary-pale);border-color:var(--primary-light);color:var(--primary);}
+  .wstep .label{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  .wstep.active .label{color:var(--ink);}
+  .wstep::after{content:"";position:absolute;bottom:0;left:0;right:16px;height:2px;background:var(--line);}
+  .wstep.active::after,.wstep.done::after{background:var(--primary);}
+
+  .dropzone{
+    border:2px dashed var(--line);border-radius:12px;padding:44px 24px;text-align:center;
+    background:var(--paper);
+  }
+  .dropzone .icon{width:52px;height:52px;border-radius:50%;background:var(--primary-pale);color:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+  .dropzone h3{font-size:16px;margin-bottom:6px;}
+  .dropzone p{font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;}
+
+  .mapping-row{display:grid;grid-template-columns:1fr 32px 1fr;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);}
+  .mapping-row .csvcol{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--sand);padding:6px 10px;border-radius:6px;}
+  .mapping-row select{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-size:12.5px;}
+
+  .summary-line{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .summary-line .k{color:var(--ink-soft);}
+  .summary-line .v{font-weight:600;}
+
+  .progress-track{height:8px;background:var(--sand);border-radius:20px;overflow:hidden;margin:10px 0;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-light));border-radius:20px;}
+
+  /* ===== Kanban ===== */
+  .kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;overflow-x:auto;}
+  .kcol{background:var(--paper);border:1px solid var(--line);border-radius:10px;min-width:170px;}
+  .kcol-head{padding:11px 12px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);display:flex;justify-content:space-between;}
+  .kcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;margin:9px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+  .kcard .n{font-size:12.5px;font-weight:700;}
+  .kcard .m{font-size:11px;color:var(--ink-soft);margin-top:3px;}
+  .kcard .sc{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--primary);margin-top:6px;font-weight:600;}
+
+  /* ===== Notifications ===== */
+  .timeline{padding:6px 20px 20px;}
+  .tl-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .tl-item:last-child{border-bottom:none;}
+  .tl-icon{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .tl-body .t{font-size:13px;font-weight:600;}
+  .tl-body .d{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .tl-body .time{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);margin-top:5px;}
+
+  .metric-row{display:flex;gap:20px;padding:18px 20px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .metric{flex:1;min-width:120px;}
+  .metric .n{font-family:'Fraunces',serif;font-size:22px;color:var(--primary);}
+  .metric .l{font-size:11px;color:var(--ink-soft);}
+
+  /* ===== Cohorts ===== */
+  .cohort-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .cohort-card{border:1px solid var(--line);border-radius:10px;padding:18px;background:var(--paper-raised);}
+  .cohort-card .tag{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);font-weight:700;}
+  .cohort-card h3{font-size:17px;margin:6px 0 4px;}
+  .cohort-card .meta{font-size:12px;color:var(--ink-soft);margin-bottom:14px;}
+  .bar{height:6px;background:var(--sand);border-radius:10px;overflow:hidden;margin-bottom:6px;}
+  .bar span{display:block;height:100%;background:var(--primary);}
+  .cohort-card .stat-line{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);}
+
+  /* ===== Settings ===== */
+  .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .field-group{margin-bottom:16px;}
+  .field-group label{font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;}
+  .field-group input, .field-group textarea{
+    width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;background:var(--paper);
+  }
+  .swatches{display:flex;gap:8px;}
+  .swatch{width:30px;height:30px;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line);}
+
+  .badge-count{background:var(--rust);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;}
+
+  @media (max-width:1000px){
+    .shell{grid-template-columns:1fr;}
+    .sidebar{position:relative;height:auto;}
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .two-col{grid-template-columns:1fr;}
+    .kanban{grid-template-columns:repeat(3,1fr);}
+    .cohort-grid{grid-template-columns:1fr;}
+    .settings-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">O</div>
+      <div>
+        <div class="name">OptioHire</div>
+        <div class="sub">Institution Console</div>
+      </div>
+    </div>
+
+    <div class="institution-chip">
+      <div class="crest"></div>
+      <div>
+        <div class="t1">Strathmore University</div>
+        <div class="t2">Career Services · Nairobi, KE</div>
+      </div>
+    </div>
+
+    <nav class="navlist">
+      <div class="nav-group-label">Pipeline</div>
+      <button class="active" data-tab="overview">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Overview
+      </button>
+      <button data-tab="onboarding">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+        Bulk Onboarding
+      </button>
+      <button data-tab="roster">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6"/><circle cx="18" cy="9" r="2.4"/><path d="M15 20c0-2.6 1.8-4.6 4-4.9"/></svg>
+        Candidate Roster
+        <span class="navcount">600</span>
+      </button>
+      <button data-tab="tracker">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h10"/></svg>
+        Placement Tracker
+      </button>
+      <div class="nav-group-label">Communication</div>
+      <button data-tab="notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+        Notifications
+        <span class="navcount">12</span>
+      </button>
+      <div class="nav-group-label">Programme</div>
+      <button data-tab="cohorts">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12.5V17c0 1.5 3 3 6 3s6-1.5 6-3v-4.5"/></svg>
+        Cohorts
+      </button>
+      <button data-tab="settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
+        Settings
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">JN</div>
+      <div>
+        <div class="who">Joyce Nduta</div>
+        <div class="role">Head, Career Services</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <!-- ============ OVERVIEW ============ -->
+    <section class="tab-section active" id="overview">
+      <div class="topbar">
+        <div class="heading">
+          <div class="eyebrow">2026 Graduating Cohort</div>
+          <h1>Good morning, Joyce.</h1>
+          <div class="desc">600 finalists from B.Sc. Informatics &amp; Business IT are moving through the OptioHire pipeline. Here's where they stand today.</div>
+        </div>
+        <div class="topbar-actions">
+          <select class="cohort-select">
+            <option>2026 · Informatics &amp; IT (600)</option>
+            <option>2025 · Informatics &amp; IT (540)</option>
+            <option>2026 · Commerce (310)</option>
+          </select>
+          <button class="btn btn-primary" onclick="showTab('onboarding')">+ New Cohort Upload</button>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="n">600</div>
+          <div class="l">Students onboarded</div>
+          <div class="delta flat">Full cohort loaded</div>
+        </div>
+        <div class="stat-card">
+          <div class="n">487</div>
+          <div class="l">Accounts activated</div>
+          <div class="delta up">↑ 81% activation rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="n">152</div>
+          <div class="l">Shortlisted somewhere</div>
+          <div class="delta up">↑ 18 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="n">64</div>
+          <div class="l">In interview stage</div>
+          <div class="delta up">↑ 9 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="n">38</div>
+          <div class="l">Placed — full-time</div>
+          <div class="delta up">↑ 6 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="n">91</div>
+          <div class="l">Placed — internship</div>
+          <div class="delta up">↑ 14 this week</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>The Matriculation Ledger</h2>
+            <div class="hint">Every student's journey from enrolment to placement, stamped stage by stage.</div>
+          </div>
+          <button class="btn btn-ghost">Export ledger →</button>
+        </div>
+        <div class="ledger">
+          <div class="ledger-stage s1">
+            <div class="stamp">600</div>
+            <div class="stage-name">Enrolled by institution</div>
+            <div class="stage-count">100% of cohort</div>
+          </div>
+          <div class="ledger-stage s2">
+            <div class="stamp">487</div>
+            <div class="stage-name">Invitation activated</div>
+            <div class="stage-count">81% opened &amp; set up profile</div>
+          </div>
+          <div class="ledger-stage s3">
+            <div class="stamp">152</div>
+            <div class="stage-name">Shortlisted by employer</div>
+            <div class="stage-count">31% of activated</div>
+          </div>
+          <div class="ledger-stage s4">
+            <div class="stamp">64</div>
+            <div class="stage-name">Interviewing</div>
+            <div class="stage-count">42% of shortlisted</div>
+          </div>
+          <div class="ledger-stage s5">
+            <div class="stamp">129</div>
+            <div class="stage-name">Placed or interning</div>
+            <div class="stage-count">38 hired · 91 interning</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Where our graduates are landing</h2>
+              <div class="hint">Top employers matching this cohort, by placements secured</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <table>
+              <thead><tr><th>Employer</th><th>Role type</th><th>Placed</th><th>Avg. match score</th></tr></thead>
+              <tbody>
+                <tr><td>Cres Dynamics</td><td>Backend Engineering</td><td>11</td><td class="score hi">88%</td></tr>
+                <tr><td>Safaricom PLC</td><td>Graduate Trainee</td><td>9</td><td class="score hi">84%</td></tr>
+                <tr><td>Equity Bank</td><td>Data &amp; Analytics Intern</td><td>7</td><td class="score mid">76%</td></tr>
+                <tr><td>Twiga Foods</td><td>Software Engineering Intern</td><td>6</td><td class="score mid">73%</td></tr>
+                <tr><td>iHub Nairobi</td><td>Product Design Intern</td><td>4</td><td class="score mid">71%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>This week</h2>
+              <div class="hint">Activity across the cohort</div>
+            </div>
+          </div>
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-icon" style="background:var(--primary-pale);color:var(--primary);">✓</div>
+              <div class="tl-body">
+                <div class="t">6 students moved to Placed</div>
+                <div class="d">Cres Dynamics, Safaricom, Equity Bank</div>
+                <div class="time">2 days ago</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-icon" style="background:var(--gold-pale);color:var(--gold);">★</div>
+              <div class="tl-body">
+                <div class="t">18 new shortlists issued</div>
+                <div class="d">Across 9 open roles matched to this cohort</div>
+                <div class="time">3 days ago</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-icon" style="background:var(--sky-pale);color:var(--sky);">✉</div>
+              <div class="tl-body">
+                <div class="t">113 activation reminders sent</div>
+                <div class="d">To students who haven't opened onboarding email</div>
+                <div class="time">4 days ago</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-icon" style="background:var(--rust-pale);color:var(--rust);">!</div>
+              <div class="tl-body">
+                <div class="t">7 profiles flagged for review</div>
+                <div class="d">Low extraction confidence on uploaded CVs</div>
+                <div class="time">5 days ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BULK ONBOARDING ============ -->
+    <section class="tab-section" id="onboarding">
+      <div class="topbar">
+        <div class="heading">
+          <div class="eyebrow">Bulk Onboarding</div>
+          <h1>Bring a new cohort into OptioHire</h1>
+          <div class="desc">Upload your student list once. Everyone gets an account, an onboarding email, and a place in the pipeline — automatically.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="wizard-steps">
+          <button class="wstep done" onclick="setWizard(1)"><span class="num">✓</span><span class="label">Upload list</span></button>
+          <button class="wstep active" onclick="setWizard(2)"><span class="num">2</span><span class="label">Map fields</span></button>
+          <button class="wstep" onclick="setWizard(3)"><span class="num">3</span><span class="label">Review</span></button>
+          <button class="wstep" onclick="setWizard(4)"><span class="num">4</span><span class="label">Send invitations</span></button>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="panel-body wizard-panel" id="wiz-1" style="display:none;">
+          <div class="dropzone">
+            <div class="icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+            </div>
+            <h3>Drag your student list here</h3>
+            <p>CSV or Excel — name, email, student ID, department, expected graduation. Up to 5,000 rows.</p>
+            <button class="btn btn-primary">Choose file</button>
+            <div style="margin-top:16px;font-size:11.5px;color:var(--ink-soft);">or paste from Google Sheets · <a href="#" style="color:var(--primary);font-weight:600;">download our template</a></div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="panel-body wizard-panel" id="wiz-2">
+          <div style="margin-bottom:14px;font-size:13px;color:var(--ink-soft);"><b>graduating_class_2026.csv</b> — 600 rows detected. Match each column to an OptioHire field.</div>
+          <div class="mapping-row"><div class="csvcol">full_name</div><div>→</div><select><option>Candidate name</option></select></div>
+          <div class="mapping-row"><div class="csvcol">student_email</div><div>→</div><select><option>Email address</option></select></div>
+          <div class="mapping-row"><div class="csvcol">reg_no</div><div>→</div><select><option>Student ID</option></select></div>
+          <div class="mapping-row"><div class="csvcol">programme</div><div>→</div><select><option>Department / Programme</option></select></div>
+          <div class="mapping-row"><div class="csvcol">grad_year</div><div>→</div><select><option>Expected graduation year</option></select></div>
+          <div class="mapping-row"><div class="csvcol">phone</div><div>→</div><select><option>Phone number</option></select></div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;">
+            <button class="btn" onclick="setWizard(1)">Back</button>
+            <button class="btn btn-primary" onclick="setWizard(3)">Continue to review</button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="panel-body wizard-panel" id="wiz-3" style="display:none;">
+          <div class="summary-line"><div class="k">Institution</div><div class="v">Strathmore University</div></div>
+          <div class="summary-line"><div class="k">Cohort name</div><div class="v">2026 · Informatics &amp; Business IT</div></div>
+          <div class="summary-line"><div class="k">Rows detected</div><div class="v">600</div></div>
+          <div class="summary-line"><div class="k">Valid emails</div><div class="v">596</div></div>
+          <div class="summary-line"><div class="k">Duplicate entries removed</div><div class="v">3</div></div>
+          <div class="summary-line"><div class="k">Flagged for manual check</div><div class="v" style="color:var(--rust);">4 (missing email)</div></div>
+          <div style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Name</th><th>Student ID</th><th>Department</th><th>Email</th></tr></thead>
+              <tbody>
+                <tr><td>Amina Wafula</td><td class="mono">STR/2026/0142</td><td>Informatics</td><td>a.wafula@strathmore.edu</td></tr>
+                <tr><td>Brian Otieno</td><td class="mono">STR/2026/0143</td><td>Business IT</td><td>b.otieno@strathmore.edu</td></tr>
+                <tr><td>Faith Chebet</td><td class="mono">STR/2026/0144</td><td>Informatics</td><td>f.chebet@strathmore.edu</td></tr>
+                <tr><td colspan="4" style="color:var(--ink-soft);text-align:center;">+ 593 more rows</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;">
+            <button class="btn" onclick="setWizard(2)">Back</button>
+            <button class="btn btn-primary" onclick="setWizard(4)">Looks good — continue</button>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="panel-body wizard-panel" id="wiz-4" style="display:none;">
+          <div style="text-align:center;padding:10px 0 20px;">
+            <h3 style="font-size:19px;margin-bottom:8px;">Ready to onboard 596 students</h3>
+            <p style="color:var(--ink-soft);font-size:13px;max-width:480px;margin:0 auto;">Each student receives a personal onboarding email inviting them to activate their OptioHire account, complete their profile, and upload their CV. Institution data (student ID, department, cohort) is pre-filled for them.</p>
+          </div>
+          <div style="background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 20px;max-width:520px;margin:0 auto 20px;">
+            <div class="field-group" style="margin-bottom:10px;">
+              <label>Email preview — subject line</label>
+              <input value="Your Strathmore Career Profile is ready — activate on OptioHire" />
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Sender</label>
+              <input value="careers@strathmore.edu, via OptioHire" />
+            </div>
+          </div>
+          <div style="text-align:center;">
+            <button class="btn btn-gold" style="padding:12px 28px;font-size:14px;" onclick="startSend()">Send 596 invitations</button>
+          </div>
+          <div id="send-progress" style="display:none;max-width:520px;margin:20px auto 0;">
+            <div class="progress-track"><div class="progress-fill" style="width:74%;"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);">
+              <span>441 of 596 sent</span><span>Estimated 40 seconds remaining</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ROSTER ============ -->
+    <section class="tab-section" id="roster">
+      <div class="topbar">
+        <div class="heading">
+          <div class="eyebrow">2026 · Informatics &amp; Business IT</div>
+          <h1>Candidate Roster</h1>
+          <div class="desc">All 600 students from this cohort and where each one stands in the OptioHire pipeline.</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn">Export CSV</button>
+          <button class="btn btn-primary">Resend invites to inactive</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <input class="search" placeholder="Search by name, student ID or department…">
+          <div class="filter-chip active">All (600)</div>
+          <div class="filter-chip">Activated (487)</div>
+          <div class="filter-chip">Shortlisted (152)</div>
+          <div class="filter-chip">Interviewing (64)</div>
+          <div class="filter-chip">Placed (129)</div>
+          <div class="filter-chip">Needs review (11)</div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Candidate</th><th>Department</th><th>Status</th><th>Matched to</th><th>Match score</th><th>Last activity</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="cand-name"><div class="av">AW</div><div class="info"><div class="n">Amina Wafula</div><div class="id">STR/2026/0142</div></div></div></td>
+              <td>Informatics</td>
+              <td><span class="seal placed"><span class="dot"></span>Placed</span></td>
+              <td>Cres Dynamics — Backend Eng.</td>
+              <td class="score hi">92%</td>
+              <td>2 days ago</td>
+              <td><div class="row-actions"><button class="icon-btn">👁</button><button class="icon-btn">✉</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="cand-name"><div class="av">BO</div><div class="info"><div class="n">Brian Otieno</div><div class="id">STR/2026/0143</div></div></div></td>
+              <td>Business IT</td>
+              <td><span class="seal interviewing"><span class="dot"></span>Interviewing</span></td>
+              <td>Safaricom — Graduate Trainee</td>
+              <td class="score hi">85%</td>
+              <td>Yesterday</td>
+              <td><div class="row-actions"><button class="icon-btn">👁</button><button class="icon-btn">✉</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="cand-name"><div class="av">FC</div><div class="info"><div class="n">Faith Chebet</div><div class="id">STR/2026/0144</div></div></div></td>
+              <td>Informatics</td>
+              <td><span class="seal shortlisted"><span class="dot"></span>Shortlisted</span></td>
+              <td>Equity Bank — Data Intern</td>
+              <td class="score mid">78%</td>
+              <td>3 days ago</td>
+              <td><div class="row-actions"><button class="icon-btn">👁</button><button class="icon-btn">✉</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="cand-name"><div class="av">DK</div><div class="info"><div class="n">Dennis Kiplagat</div><div class="id">STR/2026/0145</div></div></div></td>
+              <td>Informatics</td>
+              <td><span class="seal activated"><span class="dot"></span>Activated</span></td>
+              <td>— in Talent Pool —</td>
+              <td class="score lo">—</td>
+              <td>5 days ago</td>
+              <td><div class="row-actions"><button class="icon-btn">👁</button><button class="icon-btn">✉</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="cand-name"><div class="av">GM</div><div class="info"><div class="n">Grace Mwikali</div><div class="id">STR/2026/0146</div></div></div></td>
+              <td>Business IT</td>
+              <td><span class="seal invited"><span class="dot"></span>Invited</span></td>
+              <td>—</td>
+              <td class="score lo">—</td>
+              <td>Hasn't opened invite</td>
+              <td><div class="row-actions"><button class="icon-btn">👁</button><button class="icon-btn">✉</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="cand-name"><div class="av">SN</div><div class="info"><div class="n">Samuel Njoroge</div><div class="id">STR/2026/0147</div></div></div></td>
+              <td>Informatics</td>
+              <td><span class="seal internship"><span class="dot"></span>Interning</span></td>
+              <td>Twiga Foods — SWE Intern</td>
+              <td class="score hi">81%</td>
+              <td>1 week ago</td>
+              <td><div class="row-actions"><button class="icon-btn">👁</button><button class="icon-btn">✉</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="cand-name"><div class="av">LW</div><div class="info"><div class="n">Lucy Wanjiru</div><div class="id">STR/2026/0148</div></div></div></td>
+              <td>Business IT</td>
+              <td><span class="seal review"><span class="dot"></span>Needs review</span></td>
+              <td>Low CV extraction confidence</td>
+              <td class="score lo">0.62</td>
+              <td>Today</td>
+              <td><div class="row-actions"><button class="icon-btn">👁</button><button class="icon-btn">✉</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="cand-name"><div class="av">PM</div><div class="info"><div class="n">Peter Mutua</div><div class="id">STR/2026/0149</div></div></div></td>
+              <td>Informatics</td>
+              <td><span class="seal pool"><span class="dot"></span>Talent Pool</span></td>
+              <td>Auto re-matched nightly</td>
+              <td class="score lo">68%</td>
+              <td>4 days ago</td>
+              <td><div class="row-actions"><button class="icon-btn">👁</button><button class="icon-btn">✉</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:var(--ink-soft);">Showing 8 of 600 students</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn">Prev</button>
+            <button class="btn">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PLACEMENT TRACKER ============ -->
+    <section class="tab-section" id="tracker">
+      <div class="topbar">
+        <div class="heading">
+          <div class="eyebrow">Live pipeline</div>
+          <h1>Placement Tracker</h1>
+          <div class="desc">Every student's card moves left to right as the Watcher Engine and employers act on their application.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-body">
+          <div class="kanban">
+            <div class="kcol">
+              <div class="kcol-head">Enrolled <span>113</span></div>
+              <div class="kcard"><div class="n">Grace Mwikali</div><div class="m">Business IT · not yet activated</div></div>
+              <div class="kcard"><div class="n">Kevin Barasa</div><div class="m">Informatics · not yet activated</div></div>
+            </div>
+            <div class="kcol">
+              <div class="kcol-head">Activated <span>184</span></div>
+              <div class="kcard"><div class="n">Dennis Kiplagat</div><div class="m">Profile complete · no matches yet</div></div>
+              <div class="kcard"><div class="n">Nancy Achieng</div><div class="m">Profile complete · in Talent Pool</div></div>
+            </div>
+            <div class="kcol">
+              <div class="kcol-head">Shortlisted <span>88</span></div>
+              <div class="kcard"><div class="n">Faith Chebet</div><div class="m">Equity Bank — Data Intern</div><div class="sc">78% match</div></div>
+              <div class="kcard"><div class="n">Moses Kamau</div><div class="m">iHub Nairobi — Product Design</div><div class="sc">74% match</div></div>
+            </div>
+            <div class="kcol">
+              <div class="kcol-head">Interviewing <span>64</span></div>
+              <div class="kcard"><div class="n">Brian Otieno</div><div class="m">Safaricom — Graduate Trainee</div><div class="sc">85% match</div></div>
+              <div class="kcard"><div class="n">Rehema Ali</div><div class="m">Cres Dynamics — QA Engineer</div><div class="sc">80% match</div></div>
+            </div>
+            <div class="kcol">
+              <div class="kcol-head">Placed <span>38</span></div>
+              <div class="kcard"><div class="n">Amina Wafula</div><div class="m">Cres Dynamics — Backend Eng.</div><div class="sc">92% match</div></div>
+              <div class="kcard"><div class="n">John Mbugua</div><div class="m">Safaricom — Graduate Trainee</div><div class="sc">89% match</div></div>
+            </div>
+            <div class="kcol">
+              <div class="kcol-head">Interning <span>91</span></div>
+              <div class="kcard"><div class="n">Samuel Njoroge</div><div class="m">Twiga Foods — SWE Intern</div><div class="sc">81% match</div></div>
+              <div class="kcard"><div class="n">Winnie Chepkoech</div><div class="m">Equity Bank — Analytics Intern</div><div class="sc">77% match</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NOTIFICATIONS ============ -->
+    <section class="tab-section" id="notifications">
+      <div class="topbar">
+        <div class="heading">
+          <div class="eyebrow">Communication log</div>
+          <h1>Notifications</h1>
+          <div class="desc">Every email OptioHire has sent on the institution's behalf, and how students responded.</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary">Compose bulk update</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="metric-row">
+          <div class="metric"><div class="n">596</div><div class="l">Onboarding invites sent</div></div>
+          <div class="metric"><div class="n">91%</div><div class="l">Open rate</div></div>
+          <div class="metric"><div class="n">81%</div><div class="l">Activation rate</div></div>
+          <div class="metric"><div class="n">113</div><div class="l">Reminders queued for inactive</div></div>
+        </div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-icon" style="background:var(--sky-pale);color:var(--sky);">✉</div>
+            <div class="tl-body">
+              <div class="t">Onboarding invitation — 596 recipients</div>
+              <div class="d">"Your Strathmore Career Profile is ready — activate on OptioHire" · 543 opened · 483 activated</div>
+              <div class="time">Sent Jun 28, 2026 · 09:14 EAT</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-icon" style="background:var(--gold-pale);color:var(--gold);">★</div>
+            <div class="tl-body">
+              <div class="t">Shortlist alert — Faith Chebet</div>
+              <div class="d">Notified: "You've been shortlisted by Equity Bank for Data &amp; Analytics Intern"</div>
+              <div class="time">Jul 1, 2026 · 16:40 EAT</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-icon" style="background:var(--primary-pale);color:var(--primary);">✓</div>
+            <div class="tl-body">
+              <div class="t">Placement confirmation — Amina Wafula</div>
+              <div class="d">Sent to both candidate and Cres Dynamics hiring manager</div>
+              <div class="time">Jul 3, 2026 · 11:02 EAT</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-icon" style="background:var(--sky-pale);color:var(--sky);">↻</div>
+            <div class="tl-body">
+              <div class="t">Activation reminder — 113 recipients</div>
+              <div class="d">Second nudge to students who haven't completed their profile</div>
+              <div class="time">Jul 4, 2026 · 08:00 EAT</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-icon" style="background:var(--rust-pale);color:var(--rust);">!</div>
+            <div class="tl-body">
+              <div class="t">Manual review requested — 11 profiles</div>
+              <div class="d">Low-confidence CV extractions flagged for career-office audit</div>
+              <div class="time">Jul 4, 2026 · 14:22 EAT</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ COHORTS ============ -->
+    <section class="tab-section" id="cohorts">
+      <div class="topbar">
+        <div class="heading">
+          <div class="eyebrow">Programme history</div>
+          <h1>Cohorts</h1>
+          <div class="desc">Every batch of students Strathmore has onboarded into OptioHire, and how each one performed.</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="showTab('onboarding')">+ New cohort</button>
+        </div>
+      </div>
+
+      <div class="cohort-grid">
+        <div class="cohort-card">
+          <div class="tag">Active</div>
+          <h3>2026 · Informatics &amp; IT</h3>
+          <div class="meta">600 students · onboarded Jun 28, 2026</div>
+          <div class="bar"><span style="width:22%;"></span></div>
+          <div class="stat-line"><span>129 placed / interning</span><span>22%</span></div>
+        </div>
+        <div class="cohort-card">
+          <div class="tag">Active</div>
+          <h3>2026 · Commerce</h3>
+          <div class="meta">310 students · onboarded Jun 30, 2026</div>
+          <div class="bar"><span style="width:9%;"></span></div>
+          <div class="stat-line"><span>28 placed / interning</span><span>9%</span></div>
+        </div>
+        <div class="cohort-card">
+          <div class="tag" style="color:var(--ink-soft);">Closed</div>
+          <h3>2025 · Informatics &amp; IT</h3>
+          <div class="meta">540 students · onboarded May 2025</div>
+          <div class="bar"><span style="width:64%;"></span></div>
+          <div class="stat-line"><span>346 placed / interning</span><span>64%</span></div>
+        </div>
+        <div class="cohort-card">
+          <div class="tag" style="color:var(--ink-soft);">Closed</div>
+          <h3>2025 · Commerce</h3>
+          <div class="meta">298 students · onboarded May 2025</div>
+          <div class="bar"><span style="width:58%;"></span></div>
+          <div class="stat-line"><span>173 placed / interning</span><span>58%</span></div>
+        </div>
+        <div class="cohort-card">
+          <div class="tag" style="color:var(--ink-soft);">Closed</div>
+          <h3>2024 · Informatics &amp; IT</h3>
+          <div class="meta">467 students · onboarded May 2024</div>
+          <div class="bar"><span style="width:71%;"></span></div>
+          <div class="stat-line"><span>331 placed / interning</span><span>71%</span></div>
+        </div>
+        <div class="cohort-card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--ink-soft);cursor:pointer;" onclick="showTab('onboarding')">
+          <div>
+            <div style="font-size:26px;">+</div>
+            <div style="font-size:13px;font-weight:600;">Onboard a new cohort</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section class="tab-section" id="settings">
+      <div class="topbar">
+        <div class="heading">
+          <div class="eyebrow">Institution profile</div>
+          <h1>Settings</h1>
+          <div class="desc">Branding, admin access, and how student data flows in and out of OptioHire.</div>
+        </div>
+      </div>
+
+      <div class="settings-grid">
+        <div class="panel">
+          <div class="panel-head"><h2>Branding</h2></div>
+          <div class="panel-body">
+            <div class="field-group">
+              <label>Institution name</label>
+              <input value="Strathmore University">
+            </div>
+            <div class="field-group">
+              <label>Careers office contact email</label>
+              <input value="careers@strathmore.edu">
+            </div>
+            <div class="field-group">
+              <label>Accent colour shown to your students</label>
+              <div class="swatches">
+                <div class="swatch" style="background:#1F4D3D;"></div>
+                <div class="swatch" style="background:#B98A2E;"></div>
+                <div class="swatch" style="background:#3E6C8E;"></div>
+                <div class="swatch" style="background:#9C3B2C;"></div>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Onboarding email signature</label>
+              <textarea rows="3">Career Services Office — Strathmore University
+Madaraka Estate, Ole Sangale Road, Nairobi</textarea>
+            </div>
+            <button class="btn btn-primary">Save branding</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Admin access</h2></div>
+          <div class="panel-body">
+            <table>
+              <thead><tr><th>Name</th><th>Role</th><th>Access</th></tr></thead>
+              <tbody>
+                <tr><td>Joyce Nduta</td><td>Head, Career Services</td><td><span class="seal placed">Full access</span></td></tr>
+                <tr><td>Peter Kariuki</td><td>Careers Officer</td><td><span class="seal activated">Roster &amp; uploads</span></td></tr>
+                <tr><td>Susan Adhiambo</td><td>Registrar liaison</td><td><span class="seal pool">View only</span></td></tr>
+              </tbody>
+            </table>
+            <button class="btn" style="margin-top:14px;">+ Invite team member</button>
+          </div>
+
+          <div class="panel-head" style="border-top:1px solid var(--line);"><h2>Data &amp; integrations</h2></div>
+          <div class="panel-body">
+            <div class="field-group">
+              <label>Student Information System sync</label>
+              <input value="Not connected — upload CSV manually">
+            </div>
+            <div class="field-group">
+              <label>Data retention for graduated cohorts</label>
+              <input value="Indefinite — for Talent Pool re-matching">
+            </div>
+            <button class="btn">Request SIS integration</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function showTab(id){
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.navlist button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const btn = document.querySelector('.navlist button[data-tab="'+id+'"]');
+    if(btn) btn.classList.add('active');
+    window.scrollTo({top:0,behavior:'instant'});
+  }
+  document.querySelectorAll('.navlist button[data-tab]').forEach(btn=>{
+    btn.addEventListener('click', ()=> showTab(btn.getAttribute('data-tab')));
+  });
+
+  function setWizard(n){
+    for(let i=1;i<=4;i++){
+      document.getElementById('wiz-'+i).style.display = (i===n)?'block':'none';
+    }
+    document.querySelectorAll('.wstep').forEach((el,idx)=>{
+      el.classList.remove('active','done');
+      if(idx+1 < n) el.classList.add('done');
+      if(idx+1 === n) el.classList.add('active');
+    });
+  }
+  setWizard(2);
+
+  function startSend(){
+    document.getElementById('send-progress').style.display='block';
+  }
+</script>
+
+</body>
+</html>
