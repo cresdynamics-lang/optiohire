@@ -13,14 +13,16 @@ import {
     createInstitution,
     institutionSignin,
     resendCohortInvites,
-    resendCandidateInvite
+    resendCandidateInvite,
+    institutionSignup
 } from '../api/institutionController.js'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
 
 export const router = Router()
 
-// ── Auth (institution login) ─────────────────────────────────────
+// ── Auth (institution login/signup) ──────────────────────────────
 router.post('/auth/signin', institutionSignin)
+router.post('/auth/signup', institutionSignup)
 
 // ── Admin: create institution (platform admin only) ──────────────
 router.post('/', authenticate, requireAdmin, createInstitution)

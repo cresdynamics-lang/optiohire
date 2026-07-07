@@ -635,6 +635,74 @@ export async function institutionSignin(req: Request, res: Response) {
 }
 
 // ─────────────────────────────────────────────
+// AUTH: Institution self-service sign-up
+// ─────────────────────────────────────────────
+
+export async function institutionSignup(req: Request, res: Response) {
+    const { name, slug, contact_email, country, admin_email, admin_name, admin_password } = req.body
+    if (!name || !slug || !contact_email || !admin_email || !admin_password) {
+        return res.status(400).json({ error: 'name, slug, contact_email, admin_email, admin_password required' })
+    }
+
+    const client = await pool.connect()
+    try {
+        await client.query('BEGIN')
+        const bcrypt = await import('bcrypt')
+        const hash = await bcrypt.default.hash(admin_password, 10)
+
+        // Upsert user
+        const { rows: userRows } = await client.query(
+            `INSERT INTO users (email, password_hash, name, role, is_active, company_role)
+       VALUES ($1, $2, $3, 'user', true, 'institution')
+       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
+       RETURNING user_id`,
+            [admin_email.toLowerCase().trim(), hash, admin_name || admin_email]
+        )
+        const userId = userRows[0].user_id
+
+        // Create institution
+        const { rows: instRows } = await client.query(
+            `INSERT INTO institutions (name, slug, contact_email, country)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+            [name, slug.toLowerCase().replace(/\s+/g, '-'), contact_email, country || 'KE']
+        )
+        const institution = instRows[0]
+
+        // Create admin link
+        const { rows: adminRows } = await client.query(
+            `INSERT INTO institution_admins (institution_id, user_id, role)
+       VALUES ($1, $2, 'owner')
+       RETURNING id`,
+            [institution.id, userId]
+        )
+
+        await client.query('COMMIT')
+        
+        // Generate JWT token so they log in immediately upon signup
+        const jwt = await import('jsonwebtoken')
+        const JWT_SECRET = process.env.JWT_SECRET!
+        const token = jwt.default.sign(
+            { sub: userId, email: admin_email, role: 'user', portal: 'institution', institution_id: institution.id },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        )
+
+        return res.status(201).json({
+            token,
+            user: { id: userId, email: admin_email, name: admin_name || admin_email, role: 'user' },
+            institution: { id: institution.id, name: institution.name, slug: institution.slug, my_role: 'owner' }
+        })
+    } catch (err) {
+        await client.query('ROLLBACK')
+        logger.error('institutionSignup error', { err })
+        return res.status(500).json({ error: 'Failed to register institution' })
+    } finally {
+        client.release()
+    }
+}
+
+// ─────────────────────────────────────────────
 // ADMIN: create institution + first admin
 // ─────────────────────────────────────────────
 
