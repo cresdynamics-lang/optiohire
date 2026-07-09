@@ -146,9 +146,7 @@ export default function InstitutionSignInPage() {
                     </div>
                 </motion.div>
 
-                <p className="text-center text-sm" style={{ color: '#B9D3C6' }}>
-                    New career services office? <Link href="/institutions/auth/signup" className="font-semibold text-white hover:underline">Register here →</Link>
-                </p>
+
                 <p className="text-center text-sm -mt-2" style={{ color: '#B9D3C6' }}>
                     Not an institution admin? <Link href="/hr/auth/signin" className="font-semibold text-white hover:underline">Employer login →</Link>
                 </p>

@@ -64,7 +64,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
     setSending(true);
     try {
       const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-      const res = await fetch(\`\${url}/api/institutions/onboard/\${token}/activate\`, {
+      const res = await fetch(`${url}/api/institutions/onboard/${token}/activate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -2902,7 +2902,8 @@ The OptioHire AI Team`;
       html,
       text: `Hello ${data.candidateName},\n\nPlease complete your profile to become visible to recruiters and our AI matching system.\n\nComplete Profile: ${data.onboardingLink}\n\nBest,\nThe OptioHire Team`,
       emailType: 'ProfileCompletionReminder'
-    
+    });
+  }
   // ---------------------------------------------------------
   // INSTITUTION & COHORT EMAILS
   // ---------------------------------------------------------
@@ -3117,8 +3118,6 @@ The OptioHire AI Team`;
       text,
       emailType: 'InstitutionWeeklySummary'
     });
-  }
-});
   }
 }
 
