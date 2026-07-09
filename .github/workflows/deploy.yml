@@ -17,6 +17,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Build Backend
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Copy dist folder via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "backend/dist"
+          target: "/var/www/optiohire"
+
       - name: Deploy Backend via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -24,20 +49,19 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          command_timeout: 20m
+          command_timeout: 10m
           script: |
             set -e
-            echo "=== Pulling latest code ==="
+            echo "=== Pulling latest code for other files ==="
             cd /var/www/optiohire
             git fetch origin main
             git checkout main
             git reset --hard origin/main
 
-            echo "=== Building backend ==="
+            echo "=== Installing Prod Dependencies ==="
             cd /var/www/optiohire/backend
             npm ci
-            npm run build
-            
+
             echo "=== Running Database Migrations ==="
             npm run db:schema
             npx tsx migrate-prod.ts
