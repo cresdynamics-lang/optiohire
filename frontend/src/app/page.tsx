@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <div className="min-h-screen bg-[#070711]">
+      <div className="min-h-screen bg-[#0f1729]">
         <LandingPage />
       </div>
     </>

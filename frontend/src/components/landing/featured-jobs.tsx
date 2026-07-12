@@ -15,12 +15,7 @@ interface Job {
   created_at: string
 }
 
-const ACCENTS = [
-  'from-blue-500/20 to-indigo-500/10 border-blue-400/30',
-  'from-emerald-500/20 to-teal-500/10 border-emerald-400/30',
-  'from-fuchsia-500/20 to-purple-500/10 border-fuchsia-400/30',
-  'from-amber-500/20 to-orange-500/10 border-amber-400/30',
-]
+const DOTS = ['bg-[#8ea6cf]', 'bg-[#8fceb3]', 'bg-[#c9a98d]', 'bg-[#b39bd0]']
 
 export default function FeaturedJobs() {
   const router = useRouter()
@@ -63,7 +58,7 @@ export default function FeaturedJobs() {
           className="mb-12 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end"
         >
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Open roles</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8ea6cf]">Open roles</p>
             <h2 className="mt-3 text-4xl font-bold tracking-tight text-white sm:text-5xl">
               Companies are hiring right now
             </h2>
@@ -98,7 +93,7 @@ export default function FeaturedJobs() {
         ) : jobs.length > 0 ? (
           <div ref={carouselRef} className="scrollbar-hide -mx-4 flex gap-6 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0">
             {jobs.map((job, index) => {
-              const accent = ACCENTS[index % ACCENTS.length]
+              const dot = DOTS[index % DOTS.length]
               const dateText = new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
               return (
                 <motion.div
@@ -106,9 +101,10 @@ export default function FeaturedJobs() {
                   onClick={() => router.push(`/jobs/${job.job_posting_id}`)}
                   whileHover={shouldReduceMotion ? undefined : { y: -6 }}
                   transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-                  className={`group flex min-h-[380px] w-[340px] shrink-0 cursor-pointer flex-col rounded-[28px] border bg-gradient-to-br ${accent} p-7 backdrop-blur`}
+                  className="group flex min-h-[380px] w-[340px] shrink-0 cursor-pointer flex-col rounded-[28px] border border-white/10 bg-white/[0.04] p-7 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
                 >
-                  <div className="mb-8 self-start rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold text-slate-200">
+                  <div className="mb-8 flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-xs font-semibold text-slate-300">
+                    <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
                     {dateText}
                   </div>
                   <div className="flex-1">
@@ -131,13 +127,13 @@ export default function FeaturedJobs() {
                           className="h-10 w-10 shrink-0 rounded-lg bg-white/90 object-contain p-1"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-xs font-bold text-white">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] text-xs font-bold text-white">
                           {job.company_name.slice(0, 2).toUpperCase()}
                         </div>
                       )}
                       <p className="truncate text-sm font-semibold text-white">{job.company_name}</p>
                     </div>
-                    <span className="flex items-center gap-1 text-sm font-semibold text-blue-300 transition-transform group-hover:translate-x-1">
+                    <span className="flex items-center gap-1 text-sm font-semibold text-[#8ea6cf] transition-transform group-hover:translate-x-1">
                       Details <ChevronRight className="h-4 w-4" />
                     </span>
                   </div>

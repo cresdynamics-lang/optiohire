@@ -63,7 +63,7 @@ export default function PricingPage() {
   const faqs = [
     {
       question: 'Is there a free trial?',
-      answer: 'Yes! We offer a 14-day free trial with full access to all Professional plan features. No credit card required.'
+      answer: 'Yes! We offer a 7-day free trial with full access to all Professional plan features. No credit card required.'
     },
     {
       question: 'Can I change plans anytime?',
@@ -93,7 +93,7 @@ export default function PricingPage() {
           </p>
           <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800">
             <Star className="w-4 h-4" />
-            14-day free trial • No credit card required
+            7-day free trial • No credit card required
           </div>
         </div>
       </section>
@@ -187,7 +187,7 @@ export default function PricingPage() {
             Ready to Get Started?
           </h2>
           <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
-            Evaluate OptioHire with a 14-day free trial and see how skills-first
+            Evaluate OptioHire with a 7-day free trial and see how skills-first
             screening improves hiring quality and speed.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

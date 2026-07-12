@@ -24,6 +24,12 @@ import {
 import { Button } from '@/components/ui/button'
 import FeaturedJobs from '@/components/landing/featured-jobs'
 
+/* ---------- flat design tokens ---------- */
+
+const CARD = 'rounded-3xl border border-white/10 bg-white/[0.04]'
+const CARD_HOVER = 'transition-colors hover:border-white/20 hover:bg-white/[0.07]'
+const ACCENT = 'text-[#8ea6cf]' // single muted-blue accent, no gradients
+
 /* ---------- shared helpers ---------- */
 
 function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; delay?: number; className?: string }) {
@@ -43,7 +49,7 @@ function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; 
 
 function Eyebrow({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
+    <span className={`inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${ACCENT}`}>
       {children}
     </span>
   )
@@ -51,13 +57,13 @@ function Eyebrow({ children }: { children: ReactNode }) {
 
 function Counter({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
+  const inView = useInView(ref, { once: true, margin: '-40px' })
   const [n, setN] = useState(0)
   useEffect(() => {
     if (inView) setN(value)
   }, [inView, value])
   return (
-    <span ref={ref} className="tabular-nums">
+    <span ref={ref} className="tabular-nums text-white">
       {prefix}
       <NumberFlow value={n} />
       {suffix}
@@ -69,13 +75,7 @@ function Counter({ value, prefix = '', suffix = '' }: { value: number; prefix?: 
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden px-4 pb-16 pt-16 sm:px-6 sm:pt-20">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute -top-40 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(45,45,221,0.35),transparent_65%)] blur-2xl" />
-        <div className="absolute right-0 top-40 h-[380px] w-[380px] rounded-full bg-[radial-gradient(circle,rgba(21,163,107,0.18),transparent_65%)] blur-2xl" />
-        <div className="hero-dot-grid absolute inset-0 opacity-[0.15]" />
-      </div>
-
+    <section className="relative px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         <Reveal>
           <Eyebrow>
@@ -85,31 +85,29 @@ function Hero() {
         <Reveal delay={0.05}>
           <h1 className="mt-7 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl">
             Hiring isn&apos;t broken by a lack of talent.
-            <span className="mt-2 block bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-300 bg-clip-text text-transparent">
-              It&apos;s missing the engine.
-            </span>
+            <span className="mt-2 block text-[#8ea6cf]">It&apos;s missing the engine.</span>
           </h1>
         </Reveal>
         <Reveal delay={0.1}>
-          <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-slate-300 sm:text-xl">
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-slate-400 sm:text-xl">
             OptioHire receives applications, screens CVs, scores candidates fairly, and hands your team
             interview-ready shortlists — all on one transparent, end-to-end platform.
           </p>
         </Reveal>
         <Reveal delay={0.15}>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Button asChild size="lg" className="gap-2 rounded-2xl bg-white px-7 py-6 text-base font-semibold text-slate-900 hover:bg-slate-100">
+            <Button asChild size="lg" className="gap-2 rounded-2xl bg-white px-7 py-6 text-base font-semibold text-slate-900 hover:bg-slate-200">
               <Link href="/auth/options?mode=signup">
-                Get Started <ArrowRight className="h-5 w-5" />
+                Start Free Trial <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-2xl border-white/20 bg-white/5 px-7 py-6 text-base font-medium text-white hover:bg-white/10">
+            <Button asChild variant="outline" size="lg" className="rounded-2xl border-white/15 bg-transparent px-7 py-6 text-base font-medium text-white hover:bg-white/5">
               <Link href="/how-it-works">See how it works</Link>
             </Button>
           </div>
         </Reveal>
         <Reveal delay={0.2}>
-          <p className="mt-8 text-sm text-slate-400">
+          <p className="mt-8 text-sm text-slate-500">
             Trusted by modern recruitment teams · Faster, fairer hiring · Full decision audit trail
           </p>
         </Reveal>
@@ -130,14 +128,14 @@ const STATS = [
 function Stats() {
   return (
     <section className="relative px-4 py-14 sm:px-6">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur sm:p-10">
+      <div className={`mx-auto max-w-6xl ${CARD} p-8 sm:p-10`}>
         <Reveal className="mb-8 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">The platform, by the numbers</p>
+          <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>The platform, by the numbers</p>
         </Reveal>
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {STATS.map((s, i) => (
             <Reveal key={s.label} delay={i * 0.06} className="text-center">
-              <div className="bg-gradient-to-b from-white to-slate-400 bg-clip-text text-4xl font-extrabold text-transparent sm:text-5xl">
+              <div className="text-4xl font-extrabold text-white sm:text-5xl">
                 <Counter value={s.value} suffix={s.suffix} />
               </div>
               <p className="mt-2 text-sm font-medium text-slate-400">{s.label}</p>
@@ -163,7 +161,7 @@ function Stakes() {
     <section className="px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-12 max-w-3xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400">The stakes</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c98d8d]">The stakes</p>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">
             Great hires are lost in the pile — every single week.
           </h2>
@@ -175,7 +173,7 @@ function Stakes() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {STAKES.map((s, i) => (
             <Reveal key={s.label} delay={i * 0.06}>
-              <div className="h-full rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+              <div className={`h-full ${CARD} p-6`}>
                 <p className="text-3xl font-extrabold text-white sm:text-4xl">{s.stat}</p>
                 <p className="mt-3 text-sm leading-relaxed text-slate-400">{s.label}</p>
               </div>
@@ -200,7 +198,7 @@ function WhyOldWayFails() {
     <section className="px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-12 max-w-3xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Why the old way fails</p>
+          <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>Why the old way fails</p>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">
             The tools exist. A system that actually decides doesn&apos;t.
           </h2>
@@ -208,12 +206,12 @@ function WhyOldWayFails() {
         <div className="grid gap-5 md:grid-cols-3">
           {OLD_WAYS.map((w, i) => (
             <Reveal key={w.title} delay={i * 0.08}>
-              <div className="h-full rounded-3xl border border-white/10 bg-white/[0.03] p-7">
+              <div className={`h-full ${CARD} p-7`}>
                 <h3 className="text-xl font-bold text-white">{w.title}</h3>
                 <ul className="mt-5 space-y-3">
                   {w.points.map((p) => (
                     <li key={p} className="flex items-center gap-3 text-slate-400">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-rose-400/40 text-rose-400">✕</span>
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#c98d8d]/40 text-xs text-[#c98d8d]">✕</span>
                       {p}
                     </li>
                   ))}
@@ -224,8 +222,7 @@ function WhyOldWayFails() {
         </div>
         <Reveal delay={0.1}>
           <p className="mx-auto mt-12 max-w-2xl text-center text-2xl font-semibold text-white sm:text-3xl">
-            You don&apos;t need another inbox. You need a{' '}
-            <span className="bg-gradient-to-r from-blue-400 to-emerald-300 bg-clip-text text-transparent">system</span>.
+            You don&apos;t need another inbox. You need a <span className={ACCENT}>system</span>.
           </p>
         </Reveal>
       </div>
@@ -249,10 +246,8 @@ function ProcessChain() {
     <section className="px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-14 max-w-3xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">The engine</p>
-          <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">
-            One chain — from application to hire.
-          </h2>
+          <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>The engine</p>
+          <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">One chain — from application to hire.</h2>
           <p className="mt-4 text-lg text-slate-400">
             Six steps that turn a flooded inbox into a fair, fast, defensible hiring decision.
           </p>
@@ -262,10 +257,10 @@ function ProcessChain() {
             const Icon = s.icon
             return (
               <Reveal key={s.title} delay={i * 0.06}>
-                <div className="group h-full rounded-3xl border border-white/10 bg-white/[0.03] p-7 transition-colors hover:border-blue-400/40 hover:bg-white/[0.06]">
+                <div className={`group h-full ${CARD} ${CARD_HOVER} p-7`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold tracking-widest text-slate-500">0{i + 1}</span>
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-blue-500/10 text-blue-300">
+                    <span className="text-sm font-bold tracking-widest text-slate-600">0{i + 1}</span>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.06] text-[#8ea6cf]">
                       <Icon className="h-5 w-5" />
                     </span>
                   </div>
@@ -285,7 +280,7 @@ function ProcessChain() {
 
 type AudienceProps = {
   eyebrow: string
-  accent: 'blue' | 'emerald'
+  badgeClass: string
   title: string
   description: string
   bullets: { icon: typeof ShieldCheck; title: string; desc: string }[]
@@ -294,19 +289,16 @@ type AudienceProps = {
   reverse?: boolean
 }
 
-function AudienceSection({ eyebrow, accent, title, description, bullets, ctaLabel, ctaHref, reverse }: AudienceProps) {
-  const accentText = accent === 'blue' ? 'text-blue-300' : 'text-emerald-300'
-  const accentBtn = accent === 'blue' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-emerald-600 hover:bg-emerald-500'
-  const accentBadge = accent === 'blue' ? 'bg-blue-500/10 text-blue-300' : 'bg-emerald-500/10 text-emerald-300'
+function AudienceSection({ eyebrow, badgeClass, title, description, bullets, ctaLabel, ctaHref, reverse }: AudienceProps) {
   return (
     <section className="px-4 py-16 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div className={`grid items-center gap-10 lg:grid-cols-2 ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
           <Reveal>
-            <p className={`text-xs font-bold uppercase tracking-[0.2em] ${accentText}`}>{eyebrow}</p>
+            <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>{eyebrow}</p>
             <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl md:text-5xl">{title}</h2>
             <p className="mt-4 text-lg text-slate-400">{description}</p>
-            <Button asChild size="lg" className={`mt-8 gap-2 rounded-2xl px-7 py-6 text-base font-semibold text-white ${accentBtn}`}>
+            <Button asChild size="lg" className="mt-8 gap-2 rounded-2xl bg-white px-7 py-6 text-base font-semibold text-slate-900 hover:bg-slate-200">
               <Link href={ctaHref}>
                 {ctaLabel} <ArrowRight className="h-5 w-5" />
               </Link>
@@ -317,8 +309,8 @@ function AudienceSection({ eyebrow, accent, title, description, bullets, ctaLabe
               {bullets.map((b) => {
                 const Icon = b.icon
                 return (
-                  <div key={b.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${accentBadge}`}>
+                  <div key={b.title} className={`${CARD} p-5`}>
+                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${badgeClass}`}>
                       <Icon className="h-5 w-5" />
                     </span>
                     <h3 className="mt-4 text-base font-bold text-white">{b.title}</h3>
@@ -347,7 +339,7 @@ function Values() {
     <section className="px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-12 max-w-3xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Why we exist</p>
+          <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>Why we exist</p>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">
             Close the gap between a CV and real capability.
           </h2>
@@ -357,12 +349,12 @@ function Values() {
             const Icon = v.icon
             return (
               <Reveal key={v.title} delay={i * 0.08}>
-                <div className="h-full rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-transparent p-8">
+                <div className={`h-full ${CARD} p-8`}>
                   <div className="flex items-center gap-4">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 text-2xl font-black text-blue-300">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] text-2xl font-black text-[#8ea6cf]">
                       {v.letter}
                     </span>
-                    <Icon className="h-6 w-6 text-slate-400" />
+                    <Icon className="h-6 w-6 text-slate-500" />
                   </div>
                   <h3 className="mt-6 text-xl font-bold text-white">{v.title}</h3>
                   <p className="mt-2 leading-relaxed text-slate-400">{v.desc}</p>
@@ -404,22 +396,22 @@ function Testimonials() {
     <section className="px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-12 max-w-3xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Real journeys</p>
+          <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>Real journeys</p>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">From stuck to hired — step by step.</h2>
         </Reveal>
         <div className="grid gap-5 md:grid-cols-3">
           {TESTIMONIALS.map((t, i) => (
             <Reveal key={t.name} delay={i * 0.08}>
-              <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-7">
-                <Quote className="h-8 w-8 text-blue-400/60" />
+              <div className={`flex h-full flex-col ${CARD} p-7`}>
+                <Quote className="h-8 w-8 text-[#8ea6cf]/50" />
                 <p className="mt-4 flex-1 text-slate-300">{t.quote}</p>
                 <div className="mt-6 flex items-center gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 text-sm font-bold text-white">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-sm font-bold text-white">
                     {t.name.split(' ').map((w) => w[0]).join('')}
                   </span>
                   <div>
                     <p className="text-sm font-bold text-white">{t.name}</p>
-                    <p className="text-xs text-slate-400">{t.role}</p>
+                    <p className="text-xs text-slate-500">{t.role}</p>
                   </div>
                 </div>
               </div>
@@ -445,7 +437,7 @@ function WhereYouFit() {
     <section className="px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-12 max-w-3xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">One platform, every path</p>
+          <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>One platform, every path</p>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">Where do you fit in?</h2>
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -453,16 +445,13 @@ function WhereYouFit() {
             const Icon = f.icon
             return (
               <Reveal key={f.title} delay={i * 0.06}>
-                <Link
-                  href={f.href}
-                  className="group flex h-full flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-7 transition-colors hover:border-blue-400/40 hover:bg-white/[0.06]"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-300">
+                <Link href={f.href} className={`group flex h-full flex-col ${CARD} ${CARD_HOVER} p-7`}>
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] text-[#8ea6cf]">
                     <Icon className="h-6 w-6" />
                   </span>
                   <h3 className="mt-5 text-lg font-bold text-white">{f.title}</h3>
                   <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{f.desc}</p>
-                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-blue-300 transition-transform group-hover:translate-x-1">
+                  <span className={`mt-5 inline-flex items-center gap-1 text-sm font-semibold ${ACCENT} transition-transform group-hover:translate-x-1`}>
                     Explore <ArrowRight className="h-4 w-4" />
                   </span>
                 </Link>
@@ -480,28 +469,25 @@ function WhereYouFit() {
 function FinalCta() {
   return (
     <section className="px-4 pb-24 pt-10 sm:px-6">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-blue-600/30 via-indigo-600/20 to-emerald-500/20 p-10 text-center sm:p-16">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(45,45,221,0.4),transparent_60%)]" aria-hidden />
-        <div className="relative z-10">
-          <Reveal>
-            <h2 className="mx-auto max-w-3xl text-3xl font-extrabold text-white sm:text-5xl">
-              The future of hiring is being built right now.
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-slate-200">
-              Screen smarter, decide fairer, and hire faster — all in one place.
-            </p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              <Button asChild size="lg" className="gap-2 rounded-2xl bg-white px-8 py-6 text-base font-semibold text-slate-900 hover:bg-slate-100">
-                <Link href="/auth/options?mode=signup">
-                  Get Started <ArrowRight className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="rounded-2xl border-white/25 bg-white/5 px-8 py-6 text-base font-medium text-white hover:bg-white/10">
-                <Link href="/demo">Request a demo</Link>
-              </Button>
-            </div>
-          </Reveal>
-        </div>
+      <div className={`mx-auto max-w-6xl ${CARD} p-10 text-center sm:p-16`}>
+        <Reveal>
+          <h2 className="mx-auto max-w-3xl text-3xl font-extrabold text-white sm:text-5xl">
+            The future of hiring is being built right now.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-slate-400">
+            Screen smarter, decide fairer, and hire faster — all in one place.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+            <Button asChild size="lg" className="gap-2 rounded-2xl bg-white px-8 py-6 text-base font-semibold text-slate-900 hover:bg-slate-200">
+              <Link href="/auth/options?mode=signup">
+                Start Free Trial <ArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="rounded-2xl border-white/15 bg-transparent px-8 py-6 text-base font-medium text-white hover:bg-white/5">
+              <Link href="/demo">Request a demo</Link>
+            </Button>
+          </div>
+        </Reveal>
       </div>
     </section>
   )
@@ -511,7 +497,7 @@ function FinalCta() {
 
 export default function LandingPage() {
   return (
-    <div className="relative overflow-hidden bg-[#070711] text-slate-100">
+    <div className="relative bg-[#0f1729] text-slate-100">
       <Hero />
       <Stats />
       <Stakes />
@@ -519,7 +505,7 @@ export default function LandingPage() {
       <ProcessChain />
       <AudienceSection
         eyebrow="For employers & HR teams"
-        accent="blue"
+        badgeClass="bg-[#1b2842] text-[#9bb4de]"
         title="Stop screening CVs manually. Start hiring confidently."
         description="Cut through hundreds of applicants fairly and fast, with a clear audit trail your stakeholders can trust."
         ctaLabel="Start hiring"
@@ -533,7 +519,7 @@ export default function LandingPage() {
       />
       <AudienceSection
         eyebrow="For job seekers"
-        accent="emerald"
+        badgeClass="bg-[#17302a] text-[#8fceb3]"
         title="Stop guessing. Start landing the right roles."
         description="Cut through the noise, stand out on merit, and track every application with full transparency."
         ctaLabel="Find your next role"

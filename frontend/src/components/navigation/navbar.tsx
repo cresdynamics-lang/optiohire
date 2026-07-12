@@ -196,7 +196,7 @@ export function Navbar() {
                 href="/auth/options?mode=signup"
                 className="whitespace-nowrap rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-black"
               >
-                Get Started
+                Start Free Trial
               </Link>
             </>
           )}
@@ -287,7 +287,7 @@ export function Navbar() {
                         className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white"
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        Get Started
+                        Start Free Trial
                       </Link>
                     </>
                   )}
