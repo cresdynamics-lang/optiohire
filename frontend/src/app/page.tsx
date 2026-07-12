@@ -1,7 +1,4 @@
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import HomeClientWrapper from './home-client-wrapper'
+import LandingPage from '@/components/landing/landing-page'
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -16,8 +13,8 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <div className="min-h-screen bg-[#f7f7f8]">
-        <HomeClientWrapper />
+      <div className="min-h-screen bg-[#070711]">
+        <LandingPage />
       </div>
     </>
   )

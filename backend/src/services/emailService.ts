@@ -1310,7 +1310,7 @@ HireBit System
 <div class="wrap">
   <div class="hdr">
     <div style="display:flex;align-items:center;gap:9px">
-      <img src="https://optiohire.com/assets/logo/logo-removebg-preview.png" alt="OptioHire Logo" style="height: 32px; width: auto;" />
+      <img src="https://optiohire.com/assets/logo/optiohire_mark_dark.png" alt="OptioHire Logo" style="height: 34px; width: 34px;" />
     </div>
     <span class="hdr-badge">Job Confirmation</span>
   </div>
@@ -1388,7 +1388,7 @@ HireBit System
   </div>
   <div class="foot">
     <div style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:12px;">
-      <img src="https://optiohire.com/assets/logo/logo-removebg-preview.png" alt="OptioHire Logo" style="height: 28px; width: auto;" />
+      <img src="https://optiohire.com/assets/logo/optiohire_mark_light.png" alt="OptioHire Logo" style="height: 30px; width: 30px;" />
     </div>
     <p>
       This notification was sent to <strong>${hrEmailAddr}</strong> by OptioHire.<br />

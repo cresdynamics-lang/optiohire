@@ -132,7 +132,7 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
 
   const logoSrc = (user?.companyLogoUrl && user.companyLogoUrl.trim())
     ? user.companyLogoUrl.trim()
-    : '/assets/logo/logo-removebg-preview.png'
+    : '/assets/logo/optiohire_mark_light.png'
 
   const orgName =
     user?.companyName ||

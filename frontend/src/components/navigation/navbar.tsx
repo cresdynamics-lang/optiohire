@@ -76,11 +76,11 @@ export function Navbar() {
         <div className="flex items-center flex-shrink-0 z-10">
           <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
             <Image
-              src="/assets/logo/logo-removebg-preview.png"
+              src="/assets/logo/optiohire_mark_light.png"
               alt="OptioHire logo"
-              width={64}
-              height={64}
-              className="h-[64px] w-[64px] rounded-md object-contain"
+              width={56}
+              height={56}
+              className="h-14 w-14 rounded-md object-contain"
               priority
             />
             <span className="headline-platform text-xl tracking-tight md:text-2xl !font-semibold">

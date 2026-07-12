@@ -65,8 +65,15 @@ export function Footer() {
       <div className="relative mx-auto max-w-7xl px-6 py-10 sm:px-8 md:px-12">
         <div className="mb-10 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="headline-platform-dark text-xl !font-semibold">OptioHire</p>
-            <p className="mt-1 text-sm text-slate-300">Ready to hire better, faster, and fairly? Join forward-thinking Kenyan companies using OptioHire.</p>
+            <div className="flex items-center gap-3">
+              <img
+                src="/assets/logo/optiohire_mark_dark.png"
+                alt="OptioHire logo"
+                className="h-10 w-10 shrink-0 rounded-lg object-contain"
+              />
+              <p className="headline-platform-dark text-xl !font-semibold">OptioHire</p>
+            </div>
+            <p className="mt-2 text-sm text-slate-300">Ready to hire better, faster, and fairly? Join forward-thinking Kenyan companies using OptioHire.</p>
           </div>
           <Link
             href="/hr/auth/signup"

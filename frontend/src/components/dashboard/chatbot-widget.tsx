@@ -418,9 +418,9 @@ export function ChatbotWidget() {
           >
             <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
             <img
-              src="/assets/logo/logo-removebg-preview.png"
+              src="/assets/logo/optiohire_mark_light.png"
               alt="OptioHire AI"
-              className="w-6 h-6 object-contain invert brightness-0"
+              className="w-7 h-7 object-contain rounded-md"
             />
             <span className="font-semibold tracking-wide">Ask AI Agent</span>
             <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4">
@@ -443,9 +443,9 @@ export function ChatbotWidget() {
             <div className="flex items-center gap-4">
               {/* OptioHire Logo - standing on its own, large */}
               <img
-                src="/assets/logo/logo-removebg-preview.png"
+                src="/assets/logo/optiohire_mark_light.png"
                 alt="OptioHire"
-                className="w-16 h-16 object-contain"
+                className="w-14 h-14 object-contain rounded-lg"
               />
               <div>
                 <p className="text-lg font-extrabold leading-tight tracking-tight">OptioHire Agent</p>
@@ -525,9 +525,9 @@ export function ChatbotWidget() {
                         {msg.role === 'assistant' && (
                           <div className="relative w-10 h-10 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
                             <img
-                              src="/assets/logo/logo-removebg-preview.png"
+                              src="/assets/logo/optiohire_mark_light.png"
                               alt="AI"
-                              className="w-10 h-10 object-contain drop-shadow-sm"
+                              className="w-10 h-10 object-contain rounded-md drop-shadow-sm"
                             />
                             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full shadow-sm" />
                           </div>
@@ -556,9 +556,9 @@ export function ChatbotWidget() {
                     <div className="flex justify-start">
                       <div className="w-10 h-10 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
                         <img
-                          src="/assets/logo/logo-removebg-preview.png"
+                          src="/assets/logo/optiohire_mark_light.png"
                           alt="AI"
-                          className="w-10 h-10 object-contain drop-shadow-sm"
+                          className="w-10 h-10 object-contain rounded-md drop-shadow-sm"
                         />
                       </div>
                       <div className="bg-white dark:bg-gray-800 border border-border rounded-2xl rounded-bl-sm shadow-sm">

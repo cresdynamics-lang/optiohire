@@ -45,9 +45,9 @@ const baseMetadata: Metadata = {
     canonical: '/',
   },
   icons: {
-    icon: '/assets/logo/logo-removebg-preview.png',
-    shortcut: '/assets/logo/logo-removebg-preview.png',
-    apple: '/assets/logo/logo-removebg-preview.png',
+    icon: '/assets/logo/optiohire_mark_dark.png',
+    shortcut: '/assets/logo/optiohire_mark_dark.png',
+    apple: '/assets/logo/optiohire_mark_dark.png',
   },
   openGraph: {
     title: 'AI-Powered Recruitment Platform | OptioHire',
@@ -100,8 +100,8 @@ export default function RootLayout({
           `}
         </Script>
         {/* Favicon */}
-        <link rel="icon" href="/assets/logo/logo-removebg-preview.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/assets/logo/logo-removebg-preview.png" />
+        <link rel="icon" href="/assets/logo/optiohire_mark_dark.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/assets/logo/optiohire_mark_dark.png" />
         <link rel="manifest" href="/manifest.json" />
 
         {/* Preconnect to external domains for faster resource loading */}
@@ -116,7 +116,7 @@ export default function RootLayout({
           </>
         )}
         {/* Prefetch logo instead of preload to avoid unused resource warning */}
-        <link rel="prefetch" href="/assets/logo/logo-removebg-preview.png" as="image" type="image/png" />
+        <link rel="prefetch" href="/assets/logo/optiohire_mark_dark.png" as="image" type="image/png" />
         {/* Performance hints */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>

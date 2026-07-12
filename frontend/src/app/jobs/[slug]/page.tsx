@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const slug = resolvedParams.slug;
   
   // Use absolute URL for the fallback image
-  const fallbackImage = 'https://optiohire.com/assets/logo/logo-removebg-preview.png';
+  const fallbackImage = 'https://optiohire.com/assets/logo/optiohire_logo_white.jpg';
 
   try {
     const backendUrl = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com').replace(/\/$/, '')
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const data = await res.json()
     
     // We don't have job title yet, so we use the static fallback image for error cases
-    const staticFallback = 'https://optiohire.com/assets/logo/logo-removebg-preview.png';
+    const staticFallback = 'https://optiohire.com/assets/logo/optiohire_logo_white.jpg';
 
     if (!res.ok || !data.job) {
       return { 
