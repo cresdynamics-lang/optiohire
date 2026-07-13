@@ -1,12 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import NumberFlow from '@number-flow/react'
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   ArrowRight,
-  Sparkles,
   Inbox,
   ScanLine,
   Scale,
@@ -20,9 +18,13 @@ import {
   Users,
   UserCheck,
   Quote,
+  GraduationCap,
+  Rocket,
+  LifeBuoy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import FeaturedJobs from '@/components/landing/featured-jobs'
+import { InstitutionApplyDialog } from '@/components/landing/institution-apply-dialog'
 
 /* ---------- flat design tokens ---------- */
 
@@ -55,17 +57,45 @@ function Eyebrow({ children }: { children: ReactNode }) {
   )
 }
 
-function Counter({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
+function Counter({
+  value,
+  prefix = '',
+  suffix = '',
+  duration = 60,
+}: {
+  value: number
+  prefix?: string
+  suffix?: string
+  duration?: number
+}) {
   const ref = useRef<HTMLSpanElement>(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
+  const shouldReduceMotion = useReducedMotion()
   const [n, setN] = useState(0)
+
   useEffect(() => {
-    if (inView) setN(value)
-  }, [inView, value])
+    if (!inView) return
+    if (shouldReduceMotion) {
+      setN(value)
+      return
+    }
+    // Steady linear count-up over `duration` seconds, driven by rAF.
+    let frame = 0
+    const start = performance.now()
+    const totalMs = duration * 1000
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / totalMs, 1)
+      setN(Math.round(progress * value))
+      if (progress < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [inView, value, duration, shouldReduceMotion])
+
   return (
     <span ref={ref} className="tabular-nums text-white">
       {prefix}
-      <NumberFlow value={n} />
+      {n.toLocaleString('en-US')}
       {suffix}
     </span>
   )
@@ -79,7 +109,7 @@ function Hero() {
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         <Reveal>
           <Eyebrow>
-            <Sparkles className="h-3.5 w-3.5" /> AI hiring engine · Built in Africa
+            Hiring platform · Built in Africa
           </Eyebrow>
         </Reveal>
         <Reveal delay={0.05}>
@@ -326,6 +356,61 @@ function AudienceSection({ eyebrow, badgeClass, title, description, bullets, cta
   )
 }
 
+/* ---------- 8b. Enterprises & Institutions ---------- */
+
+const ENTERPRISE_BULLETS = [
+  { icon: Building2, title: 'Built for scale', desc: 'One scorecard and audit trail across every department and role.' },
+  { icon: GraduationCap, title: 'Institutions & cohorts', desc: 'Onboard universities and manage student cohorts end-to-end.' },
+  { icon: Rocket, title: 'Guided onboarding', desc: 'We set you up and coordinate every step with your team.' },
+  { icon: LifeBuoy, title: 'Dedicated support', desc: 'A partner who tailors the platform to your hiring workflow.' },
+]
+
+function EnterpriseInstitutions() {
+  return (
+    <section className="px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-6xl">
+        <div className={`${CARD} p-8 sm:p-12`}>
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <Reveal>
+              <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>For enterprises & institutions</p>
+              <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl md:text-5xl">
+                Ready to scale hiring across your organization?
+              </h2>
+              <p className="mt-4 text-lg text-slate-400">
+                Apply now and our team will onboard you, coordinate setup, and take you through everything —
+                from a tailored walkthrough to going live with your teams and cohorts.
+              </p>
+              <div className="mt-8">
+                <InstitutionApplyDialog>
+                  <Button size="lg" className="gap-2 rounded-2xl bg-white px-7 py-6 text-base font-semibold text-slate-900 hover:bg-slate-200">
+                    Apply now <ArrowRight className="h-5 w-5" />
+                  </Button>
+                </InstitutionApplyDialog>
+              </div>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {ENTERPRISE_BULLETS.map((b) => {
+                  const Icon = b.icon
+                  return (
+                    <div key={b.title} className={`${CARD} p-5`}>
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#1b2842] text-[#9bb4de]">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <h3 className="mt-4 text-base font-bold text-white">{b.title}</h3>
+                      <p className="mt-1 text-sm leading-relaxed text-slate-400">{b.desc}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* ---------- 9. Values ---------- */
 
 const VALUES = [
@@ -429,7 +514,7 @@ const FITS = [
   { icon: Building2, title: 'Employers & HR', desc: 'Screen, score and shortlist with confidence.', href: '/auth/options?mode=signup' },
   { icon: UserCheck, title: 'Recruiters', desc: 'Fill roles faster with ranked, evidence-based pipelines.', href: '/auth/options?mode=signup' },
   { icon: Users, title: 'Job Seekers', desc: 'Apply once, track everything, get real feedback.', href: 'https://applications.optiohire.com/auth/signup' },
-  { icon: ShieldCheck, title: 'Enterprises', desc: 'One scorecard and audit trail across every department.', href: '/demo' },
+  { icon: ShieldCheck, title: 'Enterprises', desc: 'One scorecard and audit trail across every department.', apply: true },
 ]
 
 function WhereYouFit() {
@@ -443,18 +528,31 @@ function WhereYouFit() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FITS.map((f, i) => {
             const Icon = f.icon
+            const cardBody = (
+              <>
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] text-[#8ea6cf]">
+                  <Icon className="h-6 w-6" />
+                </span>
+                <h3 className="mt-5 text-lg font-bold text-white">{f.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{f.desc}</p>
+                <span className={`mt-5 inline-flex items-center gap-1 text-sm font-semibold ${ACCENT} transition-transform group-hover:translate-x-1`}>
+                  {f.apply ? 'Apply now' : 'Explore'} <ArrowRight className="h-4 w-4" />
+                </span>
+              </>
+            )
             return (
               <Reveal key={f.title} delay={i * 0.06}>
-                <Link href={f.href} className={`group flex h-full flex-col ${CARD} ${CARD_HOVER} p-7`}>
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] text-[#8ea6cf]">
-                    <Icon className="h-6 w-6" />
-                  </span>
-                  <h3 className="mt-5 text-lg font-bold text-white">{f.title}</h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{f.desc}</p>
-                  <span className={`mt-5 inline-flex items-center gap-1 text-sm font-semibold ${ACCENT} transition-transform group-hover:translate-x-1`}>
-                    Explore <ArrowRight className="h-4 w-4" />
-                  </span>
-                </Link>
+                {f.apply ? (
+                  <InstitutionApplyDialog>
+                    <button type="button" className={`group flex h-full w-full flex-col text-left ${CARD} ${CARD_HOVER} p-7`}>
+                      {cardBody}
+                    </button>
+                  </InstitutionApplyDialog>
+                ) : (
+                  <Link href={f.href!} className={`group flex h-full flex-col ${CARD} ${CARD_HOVER} p-7`}>
+                    {cardBody}
+                  </Link>
+                )}
               </Reveal>
             )
           })}
@@ -532,6 +630,7 @@ export default function LandingPage() {
           { icon: CalendarClock, title: 'Direct interviews', desc: 'Schedule and message in one place.' },
         ]}
       />
+      <EnterpriseInstitutions />
       <FeaturedJobs />
       <Values />
       <Testimonials />

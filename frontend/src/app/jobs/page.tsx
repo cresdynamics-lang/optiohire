@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Search, MapPin, Clock, ChevronRight, Building2, SlidersHorizontal, X, Briefcase, ArrowRight, Sparkles, ChevronDown, Check } from 'lucide-react'
+import { Search, MapPin, Clock, ChevronRight, Building2, SlidersHorizontal, X, Briefcase, ArrowRight, ChevronDown, Check } from 'lucide-react'
 import { useRef } from 'react'
 import { motion } from 'framer-motion'
 // removed recaptcha import
@@ -316,7 +316,6 @@ export default function JobsPage() {
         <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-blue-400/20 blur-3xl" aria-hidden />
         <div className="relative mx-auto max-w-4xl text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-blue-100 backdrop-blur">
-            <Sparkles className="h-4 w-4 text-blue-300" />
             {loading ? '...' : `${jobs.length} open position${jobs.length !== 1 ? 's' : ''}`}
           </div>
           <h1 className="mb-4 font-syne text-4xl font-bold leading-tight sm:text-5xl md:text-6xl text-white">
