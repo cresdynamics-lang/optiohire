@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useTheme } from 'next-themes'
 import {
   Bar,
   BarChart,
@@ -143,8 +142,7 @@ const CustomXAxisTick = ({ x, y, payload, isDark }: any) => {
 
 export function ReportsSection() {
   const { user } = useAuth()
-  const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
+  const isDark = false
   
   const [items, setItems] = useState<JobReportItem[]>([])
   const [stats, setStats] = useState<DashboardStats | null>(null)

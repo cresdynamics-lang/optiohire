@@ -8,7 +8,6 @@ import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { ServiceWorker } from '@/components/service-worker'
 import { BottomCtaBanner } from '@/components/ui/bottom-cta-banner'
 import { CaptchaProvider } from '@/components/providers/captcha-provider'
-import { ThemeProvider } from '@/components/providers/theme-provider'
 import { Toaster } from 'react-hot-toast'
 
 const dmSans = {
@@ -126,10 +125,8 @@ export default function RootLayout({
             <AuthProvider>
               <ErrorBoundary>
                 <div className="min-h-screen bg-background">
-                  <ThemeProvider>
-                    <ConditionalLayout>{children}</ConditionalLayout>
-                    <Toaster position="top-right" />
-                  </ThemeProvider>
+                  <ConditionalLayout>{children}</ConditionalLayout>
+                  <Toaster position="top-right" />
                   <ServiceWorker />
                 </div>
               </ErrorBoundary>

@@ -12,7 +12,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { NotificationProvider, useNotifications } from '@/contexts/notification-context'
 import { Sidebar } from './sidebar'
 import { ChatbotWidget } from './chatbot-widget'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { ProfileCompletenessBanner } from '@/components/candidate/ProfileCompletenessBanner'
 import { ReturningCandidateWelcomeModal } from '@/components/candidate/ReturningCandidateWelcomeModal'
 
@@ -786,8 +785,6 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
                 </>
               )}
               
-              <ThemeToggle />
-
               {/* Notifications Bell - Moved to far right */}
               <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
                 <PopoverTrigger asChild>

@@ -113,31 +113,29 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
   return (
     <div
       className={cn(
-        'fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-border bg-background shadow-xl transition-transform duration-200 ease-out',
-        open ? 'translate-x-0' : '-translate-x-full pointer-events-none'
+        'admin-neu neu-raised fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col rounded-none transition-transform duration-200 ease-out lg:translate-x-0',
+        open ? 'translate-x-0' : '-translate-x-full lg:pointer-events-auto pointer-events-none'
       )}
-      aria-hidden={!open}
     >
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">Admin Panel</h2>
+      <div className="flex h-16 shrink-0 items-center justify-between px-5">
+        <h2 className="text-lg font-bold tracking-tight text-[#3b4252]">Admin Panel</h2>
         <Button
           type="button"
-          variant="ghost"
           size="icon"
-          className="shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="neu-pressable h-9 w-9 shrink-0 rounded-full border-0 bg-transparent text-[#6b7280] shadow-none hover:bg-transparent lg:hidden"
           onClick={() => onOpenChange(false)}
           aria-label="Close admin menu"
         >
           <X className="h-5 w-5" />
         </Button>
       </div>
-      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
         {navigationGroups.map((group) => (
           <div key={group.label}>
-            <h3 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h3 className="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#8a93a5]">
               {group.label}
             </h3>
-            <div className="space-y-0.5">
+            <div className="space-y-1.5">
               {group.items.map((item) => {
                 const isAdminRoot = pathname === '/admin'
                 const isActive =
@@ -151,10 +149,10 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
                     prefetch={false}
                     onClick={() => onOpenChange(false)}
                     className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                       isActive
-                        ? item.priority ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-foreground font-semibold shadow-sm'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        ? 'neu-inset font-semibold text-[#2563eb]'
+                        : 'neu-pressable text-[#5b6472] hover:text-[#3b4252]'
                     )}
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
@@ -166,15 +164,15 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
           </div>
         ))}
       </nav>
-      <div className="border-t border-border p-4">
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+      <div className="p-4">
+        <button
+          type="button"
+          className="neu-pressable flex w-full items-center justify-start gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-red-500"
           onClick={() => signOut()}
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="h-4 w-4" />
           Sign Out
-        </Button>
+        </button>
       </div>
     </div>
   )

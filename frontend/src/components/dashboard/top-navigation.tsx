@@ -12,8 +12,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
-import { ThemeToggle } from '@/components/theme-toggle'
-
 const quickNavItems = [
   {
     label: 'Home',
@@ -89,9 +87,6 @@ export function TopNavigation() {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Theme Toggle */}
-        <ThemeToggle />
-
         {/* Notification Bell */}
         <button className="relative p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 rounded-lg border border-border transition-colors bg-background shadow-sm hover:shadow">
           <Bell className="w-5 h-5" />

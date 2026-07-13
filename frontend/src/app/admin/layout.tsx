@@ -2,20 +2,18 @@
 
 import { Suspense, Component, ReactNode, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
+import { AdminGuard } from '@/components/admin/admin-guard'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, Menu, RefreshCw, X, Moon, Sun } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
-
+import { AlertCircle, Menu, RefreshCw, X } from 'lucide-react'
 function AdminSidebarFallback() {
   return (
     <div
-      className="fixed inset-y-0 left-0 z-50 flex h-full w-64 -translate-x-full flex-col border-r border-border bg-background"
+      className="admin-neu fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col"
       aria-hidden
     >
-      <div className="h-16 border-b border-border" />
-      <div className="flex-1 animate-pulse bg-slate-100" />
+      <div className="h-16" />
+      <div className="mx-4 flex-1 animate-pulse rounded-2xl neu-inset" />
     </div>
   )
 }
@@ -80,14 +78,13 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname()
   const isLoginPage = pathname === '/admin/login'
-  const [navOpen, setNavOpen] = useState(true)
+  // Drawer state is only relevant on mobile; the sidebar is permanently visible on desktop.
+  const [navOpen, setNavOpen] = useState(false)
 
-  // Auto-close sidebar on mobile/tablet on mount
+  // Close the mobile drawer on route change.
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setNavOpen(false)
-    }
-  }, [])
+    setNavOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     if (!navOpen) return
@@ -98,72 +95,56 @@ export default function AdminLayout({
     return () => window.removeEventListener('keydown', onKey)
   }, [navOpen])
 
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    if (navOpen) {
-      const prev = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = prev
-      }
-    }
-  }, [navOpen])
-
   if (isLoginPage) {
     return <>{children}</>
   }
 
   return (
     <AdminErrorBoundary>
-      <div className="relative min-h-screen bg-background  text-foreground ">
-        {/* Menu opens the admin nav drawer; sidebar stays hidden until clicked */}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="fixed top-4 left-4 z-[60] h-11 w-11 shrink-0 rounded-full border-border dark:border-gray-800 bg-white  text-slate-700  shadow-sm hover:bg-background dark:hover:bg-gray-800"
-          onClick={() => setNavOpen((o) => !o)}
-          aria-expanded={navOpen}
-          aria-label={navOpen ? 'Close admin menu' : 'Open admin menu'}
-        >
-          {navOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+      <AdminGuard>
+        <div className="admin-neu relative min-h-screen">
+          {/* Mobile top bar with hamburger — sidebar stays fixed on desktop, no toggle needed */}
+          <header className="admin-neu sticky top-0 z-30 flex h-16 items-center gap-3 px-4 lg:hidden">
+            <Button
+              type="button"
+              size="icon"
+              className="neu-pressable h-11 w-11 shrink-0 rounded-full border-0 bg-transparent text-[#3b4252] shadow-none hover:bg-transparent"
+              onClick={() => setNavOpen((o) => !o)}
+              aria-expanded={navOpen}
+              aria-label={navOpen ? 'Close admin menu' : 'Open admin menu'}
+            >
+              {navOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            <span className="text-lg font-semibold tracking-tight text-[#3b4252]">Admin Panel</span>
+          </header>
 
-        {/* Theme Toggle in Admin Header */}
-        <div className="fixed top-4 right-4 z-[60]">
-          <ThemeToggle />
+          {/* Mobile overlay */}
+          {navOpen ? (
+            <button
+              type="button"
+              className="fixed inset-0 z-40 cursor-default bg-slate-900/40 lg:hidden"
+              aria-label="Close menu"
+              onClick={() => setNavOpen(false)}
+            />
+          ) : null}
+
+          <Suspense fallback={<AdminSidebarFallback />}>
+            <AdminErrorBoundary
+              fallback={
+                <div className="admin-neu fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col p-4">
+                  <p className="text-sm text-[#6b7280]">Sidebar unavailable. Please refresh.</p>
+                </div>
+              }
+            >
+              <AdminSidebar open={navOpen} onOpenChange={setNavOpen} />
+            </AdminErrorBoundary>
+          </Suspense>
+
+          <main className="min-h-screen overflow-auto pt-4 transition-all duration-300 ease-out lg:ml-64 lg:pt-6">
+            <AdminErrorBoundary>{children}</AdminErrorBoundary>
+          </main>
         </div>
-
-        {navOpen ? (
-          <button
-            type="button"
-            className="fixed inset-0 z-40 cursor-default bg-slate-900/40"
-            aria-label="Close menu"
-            onClick={() => setNavOpen(false)}
-          />
-        ) : null}
-
-        <Suspense fallback={<AdminSidebarFallback />}>
-          <AdminErrorBoundary
-            fallback={
-              <div className="fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-border bg-background p-4">
-                <p className="text-sm text-muted-foreground">Sidebar unavailable. Please refresh.</p>
-              </div>
-            }
-          >
-            <AdminSidebar open={navOpen} onOpenChange={setNavOpen} />
-          </AdminErrorBoundary>
-        </Suspense>
-
-        <main className={cn(
-          "min-h-screen overflow-auto bg-background pt-16 transition-all duration-300 ease-out",
-          navOpen ? "lg:ml-64" : ""
-        )}>
-          <AdminErrorBoundary>
-            {children}
-          </AdminErrorBoundary>
-        </main>
-      </div>
+      </AdminGuard>
     </AdminErrorBoundary>
   )
 }

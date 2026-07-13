@@ -494,6 +494,54 @@
   pointer-events: none !important;
 }
 
+/* ── Admin neumorphism ──────────────────────────────────────────────── */
+/* Scoped soft-UI surface used across the admin console shell. */
+.admin-neu {
+  --neu-bg: #e0e5ec;
+  --neu-dark: #a3b1c6;
+  --neu-light: #ffffff;
+  --neu-text: #3b4252;
+  --neu-text-muted: #6b7280;
+  --neu-accent: #2563eb;
+  background: var(--neu-bg);
+  color: var(--neu-text);
+}
+
+/* Extruded surface (cards, sidebar, modals) */
+.neu-raised {
+  background: var(--neu-bg, #e0e5ec);
+  box-shadow: 8px 8px 18px var(--neu-dark, #a3b1c6),
+    -8px -8px 18px var(--neu-light, #ffffff);
+}
+
+/* Pressed-in surface (active nav, inputs, wells) */
+.neu-inset {
+  background: var(--neu-bg, #e0e5ec);
+  box-shadow: inset 5px 5px 10px var(--neu-dark, #a3b1c6),
+    inset -5px -5px 10px var(--neu-light, #ffffff);
+}
+
+/* Interactive tappable element that presses in on active */
+.neu-pressable {
+  background: var(--neu-bg, #e0e5ec);
+  box-shadow: 5px 5px 10px var(--neu-dark, #a3b1c6),
+    -5px -5px 10px var(--neu-light, #ffffff);
+  transition: box-shadow 0.16s ease, transform 0.05s ease, color 0.16s ease;
+}
+.neu-pressable:hover {
+  box-shadow: 3px 3px 7px var(--neu-dark, #a3b1c6),
+    -3px -3px 7px var(--neu-light, #ffffff);
+}
+.neu-pressable:active {
+  box-shadow: inset 4px 4px 8px var(--neu-dark, #a3b1c6),
+    inset -4px -4px 8px var(--neu-light, #ffffff);
+  transform: translateY(0.5px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neu-pressable { transition: none; }
+}
+
 /* ── Reduce motion ──────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .oh-feat, .oh-tick-fill, .oh-tick-path,

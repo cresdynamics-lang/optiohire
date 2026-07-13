@@ -16,7 +16,6 @@ import {
   Pie,
   Cell
 } from 'recharts'
-import { useTheme } from 'next-themes'
 
 interface DashboardStats {
   funnel: {
@@ -47,8 +46,7 @@ export function AnalyticsDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
+  const isDark = false
 
   useEffect(() => {
     async function fetchStats() {
