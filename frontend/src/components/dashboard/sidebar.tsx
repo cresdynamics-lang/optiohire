@@ -11,14 +11,15 @@ import {
   ChevronRight,
   Calendar,
   Shield,
-  Mail,
   Target,
   HelpCircle,
   LogOut,
-  Trophy
+  Trophy,
+  Megaphone
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, usePathname } from 'next/navigation'
+import { SidebarAnnouncements } from './sidebar-announcements'
 
 const sidebarItems = [
   {
@@ -46,16 +47,10 @@ const sidebarItems = [
     href: '/hr/interviews',
   },
   {
-    id: 'profile',
-    label: 'Profile',
-    icon: Settings,
-    href: '/hr/profile',
-  },
-  {
-    id: 'templates',
-    label: 'Templates',
-    icon: Mail,
-    href: '/hr/templates',
+    id: 'announcements',
+    label: 'Announcements',
+    icon: Megaphone,
+    href: '/hr/announcements',
   },
   {
     id: 'help',
@@ -68,6 +63,12 @@ const sidebarItems = [
     label: 'Guide (Full Docs)',
     icon: HelpCircle,
     href: 'https://guide.optiohire.com/?view=docs&page=home',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    href: '/hr/settings',
   },
 ]
 
@@ -103,6 +104,12 @@ const jobSeekerSidebarItems = [
     href: '/candidate/leaderboard',
   },
   {
+    id: 'announcements',
+    label: 'Announcements',
+    icon: Megaphone,
+    href: '/candidate/announcements',
+  },
+  {
     id: 'profile',
     label: 'My Profile',
     icon: Settings,
@@ -130,9 +137,21 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
     setMounted(true)
   }, [])
 
-  const logoSrc = (user?.companyLogoUrl && user.companyLogoUrl.trim())
-    ? user.companyLogoUrl.trim()
-    : '/assets/logo/optiohire_mark_light.png'
+  const normalizedCompanyRole = user?.companyRole?.toLowerCase()
+  const normalizedRole = user?.role?.toLowerCase()
+  const isJobSeeker =
+    normalizedCompanyRole === 'candidate' ||
+    normalizedCompanyRole === 'job_seeker' ||
+    normalizedCompanyRole === 'jobseeker' ||
+    normalizedRole === 'candidate' ||
+    normalizedRole === 'job_seeker' ||
+    normalizedRole === 'jobseeker'
+
+  const logoSrc = isJobSeeker
+    ? ((user?.avatarUrl && user.avatarUrl.trim()) ? user.avatarUrl.trim() : null)
+    : ((user?.companyLogoUrl && user.companyLogoUrl.trim())
+        ? user.companyLogoUrl.trim()
+        : '/assets/logo/optiohire_mark_light.png')
 
   const orgName =
     user?.companyName ||
@@ -143,18 +162,12 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
     user?.name ||
     user?.email ||
     'HR workspace'
-  const normalizedCompanyRole = user?.companyRole?.toLowerCase()
-  const normalizedRole = user?.role?.toLowerCase()
-  const isJobSeeker =
-    normalizedCompanyRole === 'candidate' ||
-    normalizedCompanyRole === 'job_seeker' ||
-    normalizedCompanyRole === 'jobseeker' ||
-    normalizedRole === 'candidate' ||
-    normalizedRole === 'job_seeker' ||
-    normalizedRole === 'jobseeker'
   const navItems = isJobSeeker ? jobSeekerSidebarItems : sidebarItems
   const displayOrgName = isJobSeeker ? (user?.name || 'Job Seeker Workspace') : orgName
   const displayProfileLine = isJobSeeker ? (user?.email || 'Candidate account') : profileLine
+  const footerName = user?.name || (isJobSeeker ? 'Candidate' : 'HR Professional')
+  const footerAvatar = isJobSeeker ? logoSrc : null
+  const headerInitial = (displayOrgName || 'U').charAt(0).toUpperCase()
 
   return (
     <div className="relative h-full w-full min-h-0 overflow-y-auto bg-white shadow-[4px_0_40px_-28px_rgba(15,23,42,0.18)] dark:bg-gray-950">
@@ -163,8 +176,8 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
         {/* Header */}
         <div className="border-b border-slate-200/90 bg-white/95 p-4 backdrop-blur-sm sm:p-6 dark:border-gray-800 dark:bg-gray-950/95">
           <div className="flex items-center gap-3">
-            <div className="relative h-11 w-11 shrink-0 rounded-2xl border border-slate-200/90 bg-white p-1 shadow-sm ring-4 ring-blue-500/5 dark:border-gray-700 dark:bg-gray-900">
-              {mounted ? (
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-1 shadow-sm ring-4 ring-blue-500/5 dark:border-gray-700 dark:bg-gray-900">
+              {mounted && logoSrc ? (
                 <Image
                   src={logoSrc}
                   alt={`${displayOrgName} logo`}
@@ -174,6 +187,10 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
                   loading="lazy"
                   quality={85}
                 />
+              ) : isJobSeeker ? (
+                <span className="flex h-full w-full items-center justify-center rounded-xl bg-emerald-50 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                  {headerInitial}
+                </span>
               ) : (
                 <span className="block h-full w-full rounded-xl bg-muted-foreground/15" />
               )}
@@ -242,6 +259,12 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
           })}
           </div>
 
+          <SidebarAnnouncements
+            audience={isJobSeeker ? 'candidate' : 'employer'}
+            viewAllHref={isJobSeeker ? '/candidate/announcements' : '/hr/announcements'}
+            accent={isJobSeeker ? 'emerald' : 'blue'}
+          />
+
           {/* Admin Dashboard Link (only for admins) */}
           {user?.role === 'admin' && (
             <button
@@ -261,18 +284,28 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
           )}
         </nav>
 
-        {/* Footer with HR Profile and Logout */}
+        {/* Footer with profile and logout */}
         <div className="mt-auto border-t border-slate-200/90 bg-slate-50/50 p-4 dark:border-gray-800 dark:bg-gray-900/50">
           <div className="flex items-center gap-3">
-             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 dark:bg-gray-800 dark:text-gray-300">
-               {user?.name ? user.name.charAt(0).toUpperCase() : <Settings className="h-5 w-5" />}
+             <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-slate-600 dark:bg-gray-800 dark:text-gray-300">
+               {mounted && footerAvatar ? (
+                 <Image
+                   src={footerAvatar}
+                   alt={footerName}
+                   fill
+                   sizes="40px"
+                   className="object-cover"
+                 />
+               ) : (
+                 user?.name ? user.name.charAt(0).toUpperCase() : <Settings className="h-5 w-5" />
+               )}
              </div>
              <div className="flex-1 min-w-0">
                <p className="truncate text-sm font-medium text-foreground">
-                 {user?.name || 'HR Professional'}
+                 {footerName}
                </p>
                <p className="truncate text-xs text-slate-500 dark:text-gray-400">
-                 {user?.email || 'hr@company.com'}
+                 {user?.email || (isJobSeeker ? 'candidate@email.com' : 'hr@company.com')}
                </p>
              </div>
           </div>

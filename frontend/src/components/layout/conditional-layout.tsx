@@ -47,11 +47,20 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const showFooter = !isAppInterface
   const showCookieConsent = !isAppInterface
   const isHome = pathname === '/'
+  const fullBleedHero =
+    pathname === '/use-cases' ||
+    pathname.startsWith('/use-cases/') ||
+    pathname === '/how-it-works' ||
+    pathname.startsWith('/how-it-works/') ||
+    pathname === '/about' ||
+    pathname.startsWith('/about/')
+  const mainPad =
+    showNavbar && !isHome && !fullBleedHero ? 'pt-20 min-h-[60vh]' : 'min-h-[60vh]'
 
   return (
     <>
       {showNavbar && <Navbar />}
-      <main className={showNavbar && !isHome ? "pt-20 min-h-[60vh]" : "min-h-[60vh]"}>{children}</main>
+      <main className={mainPad}>{children}</main>
       {showCookieConsent && <CookieConsent />}
       {showFooter && <Footer />}
     </>

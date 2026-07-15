@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import {
   uploadCompanyLogo,
+  uploadProfileImage,
   upload,
   uploadCandidateDocument,
   uploadCandidateDocumentMiddleware,
@@ -13,6 +14,8 @@ export const router = Router()
 
 // Upload company logo (requires HR)
 router.post('/company-logo', authenticate, requireHR, upload.single('image'), uploadCompanyLogo)
+// Generic brand/avatar upload for any authenticated portal user
+router.post('/profile-image', authenticate, upload.single('image'), uploadProfileImage)
 router.post(
   '/candidate-document',
   authenticate,

@@ -38,10 +38,10 @@ const quickNavItems = [
     id: 'interviews',
   },
   {
-    label: 'Profile',
+    label: 'Settings',
     icon: Settings,
-    href: '/hr/profile',
-    id: 'profile',
+    href: '/hr/settings',
+    id: 'settings',
   },
 ]
 

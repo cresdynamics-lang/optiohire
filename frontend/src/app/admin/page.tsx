@@ -52,6 +52,7 @@ interface User {
   password_hash: string
   role: string
   company_role?: string | null
+  category?: 'admin' | 'institution' | 'employer' | 'hr' | 'candidate' | 'other'
   is_active: boolean
   created_at: string
   company?: {
@@ -61,6 +62,18 @@ interface User {
     hr_email: string
     hiring_manager_email: string
   } | null
+}
+
+type UserCategory = 'all' | 'admin' | 'institution' | 'employer' | 'hr' | 'candidate'
+
+interface CategoryCounts {
+  all: number
+  admin: number
+  institution: number
+  employer: number
+  hr: number
+  candidate: number
+  other: number
 }
 
 function AdminDashboardContent() {
@@ -76,6 +89,7 @@ function AdminDashboardContent() {
     adminSession: string | null
     userId?: string
     userEmail?: string | null
+    category?: UserCategory
   }>({ adminEmail: null, adminSession: null })
   const [searchTerm, setSearchTerm] = useState('')
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})
@@ -85,7 +99,8 @@ function AdminDashboardContent() {
   const [resetPasswordValue, setResetPasswordValue] = useState('')
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false)
   const [resetPasswordError, setResetPasswordError] = useState<string | null>(null)
-  const [roleFilter, setRoleFilter] = useState<'all' | 'hr' | 'candidate' | 'admin'>('all')
+  const [roleFilter, setRoleFilter] = useState<UserCategory>('all')
+  const [counts, setCounts] = useState<CategoryCounts | null>(null)
   const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const sectionFromUrl = searchParams.get('section') as 'users' | 'admins' | null
@@ -138,6 +153,7 @@ function AdminDashboardContent() {
     adminSession,
     userId: user?.id,
     userEmail: user?.email ?? null,
+    category: roleFilter,
   }
 
   useEffect(() => {
@@ -175,13 +191,27 @@ function AdminDashboardContent() {
       // Use admin token if available, otherwise use regular token
       const adminToken = localStorage.getItem('admin_token')
       const authToken = adminToken || token
-      const response = await fetch('/api/admin/users?limit=20', {
+      const activeCategory = ctx.category && ctx.category !== 'all' ? ctx.category : ''
+      const listParams = new URLSearchParams({ limit: '500' })
+      if (activeCategory) listParams.set('category', activeCategory)
+      const response = await fetch(`/api/admin/users?${listParams.toString()}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
           'X-Admin-Email': displayEmail || ''
         }
       })
+
+      // Expired/invalid session: clear it and force a clean re-login
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('admin_token')
+        localStorage.removeItem('admin_session')
+        localStorage.removeItem('admin_email')
+        localStorage.removeItem('admin_name')
+        router.replace('/admin/login')
+        return
+      }
 
       if (!response.ok) {
         throw new Error('Failed to load users')
@@ -193,6 +223,7 @@ function AdminDashboardContent() {
         return u.user_id !== currentAdminId && u.email !== currentAdminId && u.email !== displayEmail
       })
       setUsers(filteredUsers)
+      if (data.counts) setCounts(data.counts as CategoryCounts)
       usersLoadedRef.current = true
     } catch (err: any) {
       console.error('Error loading users:', err)
@@ -201,16 +232,16 @@ function AdminDashboardContent() {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     if (!(adminSession || (user && user.role === 'admin'))) return
-    const loadKey = `${adminSession ? 'session' : 'user'}:${user?.id ?? ''}:${user?.role ?? ''}`
+    const loadKey = `${adminSession ? 'session' : 'user'}:${user?.id ?? ''}:${user?.role ?? ''}:${roleFilter}`
     if (usersLoadedRef.current && lastLoadKeyRef.current === loadKey) return
     lastLoadKeyRef.current = loadKey
     void loadUsers()
     // Intentionally narrow deps: profile sync updates `user` object identity often — do not refetch on every enrichment.
-  }, [adminSession, user?.id, user?.role, loadUsers])
+  }, [adminSession, user?.id, user?.role, roleFilter, loadUsers])
 
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
@@ -311,11 +342,10 @@ function AdminDashboardContent() {
         return false
       }
       
-      // Filter by role
+      // Filter by category (server already scopes the fetch, this keeps the view consistent)
       if (activeSection === 'users' && roleFilter !== 'all') {
-        if (roleFilter === 'admin' && u.role !== 'admin') return false
-        if (roleFilter === 'hr' && u.company_role !== 'hr') return false
-        if (roleFilter === 'candidate' && u.company_role !== 'candidate') return false
+        const cat = u.category || (u.role === 'admin' ? 'admin' : 'other')
+        if (cat !== roleFilter) return false
       }
 
       // Filter by search term
@@ -530,6 +560,38 @@ function AdminDashboardContent() {
           </div>
         )}
 
+        {/* Category breakdown - capture the number of each user type */}
+        {activeSection === 'users' && counts && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {([
+              { key: 'all', label: 'All Users' },
+              { key: 'candidate', label: 'Candidates' },
+              { key: 'hr', label: 'HRs' },
+              { key: 'employer', label: 'Employers' },
+              { key: 'institution', label: 'Institutions' },
+              { key: 'admin', label: 'Admins' },
+            ] as { key: UserCategory; label: string }[]).map((c) => {
+              const isActive = roleFilter === c.key
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setRoleFilter(c.key)}
+                  className={`rounded-xl border p-4 text-left transition-colors ${
+                    isActive
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-border bg-white hover:border-primary/40 dark:bg-transparent'
+                  }`}
+                >
+                  <div className="text-2xl font-bold text-foreground">{counts[c.key]}</div>
+                  <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {c.label}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {/* Search & Filter - Only show for users section */}
         {activeSection === 'users' && (
           <Card className="border border-border dark:border-gray-800 shadow-sm">
@@ -543,31 +605,38 @@ function AdminDashboardContent() {
                   className="border-border dark:border-gray-700 bg-white pl-10 text-foreground placeholder:text-muted-foreground"
                 />
               </div>
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                <button
-                  onClick={() => setRoleFilter('all')}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${roleFilter === 'all' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setRoleFilter('hr')}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${roleFilter === 'hr' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  HR
-                </button>
-                <button
-                  onClick={() => setRoleFilter('candidate')}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${roleFilter === 'candidate' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Candidate
-                </button>
-                <button
-                  onClick={() => setRoleFilter('admin')}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${roleFilter === 'admin' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Admin
-                </button>
+              <div className="flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                {([
+                  { key: 'all', label: 'All' },
+                  { key: 'candidate', label: 'Candidates' },
+                  { key: 'hr', label: 'HRs' },
+                  { key: 'employer', label: 'Employers' },
+                  { key: 'institution', label: 'Institutions' },
+                  { key: 'admin', label: 'Admins' },
+                ] as { key: UserCategory; label: string }[]).map((tab) => {
+                  const count = counts ? counts[tab.key] : undefined
+                  const isActive = roleFilter === tab.key
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setRoleFilter(tab.key)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      {tab.label}
+                      {count !== undefined && (
+                        <span
+                          className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-xs font-semibold ${
+                            isActive
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </CardContent>
           </Card>

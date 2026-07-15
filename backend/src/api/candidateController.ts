@@ -7,6 +7,7 @@ import { LearningRoadmapService } from '../services/ai/learningRoadmapService.js
 import crypto from 'crypto'
 import path from 'path'
 import { saveFile } from '../utils/storage.js'
+import { cache, cacheKeys } from '../utils/redis.js'
 const candidateRepo = new CandidateProfileRepository()
 const certRepo = new CertificateRepository()
 const skillAnalysisService = new SkillAnalysisService()
@@ -237,13 +238,23 @@ export const getCandidateApplications = async (req: Request, res: Response): Pro
          a.updated_at,
          a.ai_score,
          a.ai_status,
+         a.interview_status,
          a.reasoning,
          a.resume_url,
          a.parsed_resume_json,
          a.phone,
          jp.job_posting_id,
          jp.job_title,
-         c.company_name
+         c.company_name,
+         CASE
+           WHEN upper(coalesce(a.interview_status::text,'')) = 'HIRED'
+             OR upper(coalesce(a.ai_status::text,'')) = 'HIRED' THEN 'placed'
+           WHEN upper(coalesce(a.ai_status::text,'')) = 'OFFER' THEN 'offer'
+           WHEN upper(coalesce(a.interview_status::text,'')) IN ('SCHEDULED','COMPLETED','INTERVIEWING')
+             OR a.interview_time IS NOT NULL THEN 'interviewing'
+           WHEN upper(coalesce(a.ai_status::text,'')) IN ('SHORTLIST','SHORTLISTED') THEN 'shortlisted'
+           ELSE lower(coalesce(a.ai_status, 'applied'))
+         END AS pipeline_status
        FROM applications a
        JOIN job_postings jp ON jp.job_posting_id = a.job_posting_id
        LEFT JOIN companies c ON c.company_id = a.company_id
@@ -253,7 +264,14 @@ export const getCandidateApplications = async (req: Request, res: Response): Pro
       [email]
     )
 
-    res.status(200).json({ applications: rows })
+    res.status(200).json({
+      applications: rows.map((r: any) => ({
+        ...r,
+        employer: r.company_name,
+        role: r.job_title,
+        placement_aligned: ['placed', 'offer'].includes(r.pipeline_status),
+      })),
+    })
   } catch (error) {
     console.error('Candidate applications fetch error:', error)
     res.status(500).json({ error: 'Failed to load application history', details: String(error?.stack || error?.message || error) })
@@ -846,5 +864,312 @@ export const alumniUpdate = async (req: Request, res: Response): Promise<void> =
   } catch (error: any) {
     console.error('Error updating alumni profile:', error)
     res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+}
+
+export const getProfileSettings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId!
+    const { rows: userRows } = await query<{ user_id: string; name: string | null; email: string }>(
+      `SELECT user_id, name, email FROM users WHERE user_id = $1 LIMIT 1`,
+      [userId]
+    )
+    if (userRows.length === 0) {
+      res.status(404).json({ success: false, error: 'User not found' })
+      return
+    }
+
+    let profile = await candidateRepo.getProfileByUserId(userId)
+    if (!profile) {
+      profile = await candidateRepo.createProfile(userId)
+      profile = await candidateRepo.getProfileByUserId(userId)
+    }
+
+    const metadata = profile?.metadata || {}
+    const skills = profile ? await candidateRepo.getSkills(profile.profile_id) : []
+    res.status(200).json({
+      success: true,
+      settings: {
+        name: userRows[0].name || '',
+        email: userRows[0].email,
+        universityId: profile?.university_id || null,
+        university: profile?.university || null,
+        linkedinUrl: metadata.linkedin_url || '',
+        githubUrl: metadata.github_url || '',
+        portfolioUrl: metadata.portfolio_url || '',
+        avatarUrl: metadata.avatar_url || '',
+        jobCategory: profile?.job_category || '',
+        targetRoleCount: Number(metadata.target_role_count) || 0,
+        targetRoles: Array.isArray(metadata.target_roles) ? metadata.target_roles : [],
+        skills: skills.map((s) => ({
+          name: s.skill_name,
+          score: s.proficiency_score,
+          verified: s.is_verified,
+        })),
+      },
+    })
+  } catch (error: any) {
+    console.error('Error loading profile settings:', error)
+    res.status(500).json({ success: false, error: 'Failed to load profile settings' })
+  }
+}
+
+export const updateProfileSettings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId!
+    const {
+      name, universityId, linkedinUrl, githubUrl, portfolioUrl, avatarUrl,
+      jobCategory, targetRoleCount, targetRoles,
+    } = req.body || {}
+
+    if (name !== undefined && typeof name !== 'string') {
+      res.status(400).json({ success: false, error: 'Invalid name' })
+      return
+    }
+
+    if (targetRoleCount !== undefined) {
+      const n = Number(targetRoleCount)
+      if (!Number.isFinite(n) || n < 0 || n > 20) {
+        res.status(400).json({ success: false, error: 'targetRoleCount must be between 0 and 20' })
+        return
+      }
+    }
+
+    if (targetRoles !== undefined && !Array.isArray(targetRoles)) {
+      res.status(400).json({ success: false, error: 'targetRoles must be an array' })
+      return
+    }
+
+    if (universityId) {
+      const { rows: uniRows } = await query(
+        `SELECT university_id FROM universities WHERE university_id = $1 AND is_active = true AND country = 'KE'`,
+        [universityId]
+      )
+      if (uniRows.length === 0) {
+        res.status(400).json({ success: false, error: 'Invalid university selected' })
+        return
+      }
+    }
+
+    let profile = await candidateRepo.getProfileByUserId(userId)
+    if (!profile) {
+      profile = await candidateRepo.createProfile(userId)
+    }
+
+    if (name !== undefined) {
+      await query(`UPDATE users SET name = $2, updated_at = NOW() WHERE user_id = $1`, [userId, name.trim() || null])
+    }
+
+    const normalizedRoles = Array.isArray(targetRoles)
+      ? targetRoles.slice(0, 20).map((r: any) => ({
+          id: String(r.id || r.slug || '').trim(),
+          title: String(r.title || r.label || '').trim(),
+          group: r.group || r.group_name || null,
+        })).filter((r: any) => r.id && r.title)
+      : undefined
+
+    if (normalizedRoles && targetRoleCount !== undefined && normalizedRoles.length > Number(targetRoleCount)) {
+      res.status(400).json({
+        success: false,
+        error: `You set ${targetRoleCount} target roles but selected ${normalizedRoles.length}. Reduce selections or increase the count.`,
+      })
+      return
+    }
+
+    const primaryCategory = jobCategory !== undefined
+      ? (jobCategory || null)
+      : (normalizedRoles?.[0]?.title || undefined)
+
+    const updatedProfile = await candidateRepo.updateProfileSettings(profile.profile_id, {
+      university_id: universityId !== undefined ? (universityId || null) : undefined,
+      linkedin_url: linkedinUrl !== undefined ? (linkedinUrl || null) : undefined,
+      github_url: githubUrl !== undefined ? (githubUrl || null) : undefined,
+      portfolio_url: portfolioUrl !== undefined ? (portfolioUrl || null) : undefined,
+      avatar_url: avatarUrl !== undefined ? (avatarUrl || null) : undefined,
+      job_category: primaryCategory,
+      target_role_count: targetRoleCount !== undefined ? Number(targetRoleCount) : undefined,
+      target_roles: normalizedRoles,
+    })
+
+    try {
+      await cache.del(cacheKeys.user(userId))
+    } catch {
+      // ignore cache failures
+    }
+
+    const metadata = updatedProfile.metadata || {}
+    const { rows: userRows } = await query<{ name: string | null; email: string }>(
+      `SELECT name, email FROM users WHERE user_id = $1`,
+      [userId]
+    )
+    const skills = await candidateRepo.getSkills(updatedProfile.profile_id)
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile settings saved',
+      settings: {
+        name: userRows[0]?.name || '',
+        email: userRows[0]?.email || '',
+        universityId: updatedProfile.university_id,
+        university: updatedProfile.university || null,
+        linkedinUrl: metadata.linkedin_url || '',
+        githubUrl: metadata.github_url || '',
+        portfolioUrl: metadata.portfolio_url || '',
+        avatarUrl: metadata.avatar_url || '',
+        jobCategory: updatedProfile.job_category || '',
+        targetRoleCount: Number(metadata.target_role_count) || 0,
+        targetRoles: Array.isArray(metadata.target_roles) ? metadata.target_roles : [],
+        skills: skills.map((s) => ({
+          name: s.skill_name,
+          score: s.proficiency_score,
+          verified: s.is_verified,
+        })),
+      },
+    })
+  } catch (error: any) {
+    console.error('Error updating profile settings:', error)
+    res.status(500).json({ success: false, error: 'Failed to save profile settings' })
+  }
+}
+
+/**
+ * POST /api/candidate/profile/suggest-roles
+ * Suggests roles from the catalog based on candidate skills (+ optional AI ranking).
+ */
+export const suggestTargetRoles = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId!
+    const requestedCount = Math.min(10, Math.max(1, Number(req.body?.count || 3)))
+
+    let profile = await candidateRepo.getProfileByUserId(userId)
+    if (!profile) profile = await candidateRepo.createProfile(userId)
+
+    const skills = await candidateRepo.getSkills(profile.profile_id)
+    let skillNames = skills.map((s) => s.skill_name).filter(Boolean)
+
+    // Fallback: talent_pool / metadata
+    if (skillNames.length === 0) {
+      const meta = profile.metadata || {}
+      if (Array.isArray(meta.skills)) skillNames = meta.skills.map(String)
+      if (Array.isArray(meta.parsed_cv?.skills)) {
+        skillNames = [...skillNames, ...meta.parsed_cv.skills.map(String)]
+      }
+      try {
+        const { rows } = await query<{ skills: string[] }>(
+          `SELECT skills FROM talent_pool WHERE lower(email) = (SELECT lower(email) FROM users WHERE user_id = $1) LIMIT 1`,
+          [userId]
+        )
+        if (rows[0]?.skills?.length) skillNames = [...skillNames, ...rows[0].skills]
+      } catch { /* ignore */ }
+    }
+
+    skillNames = Array.from(new Set(skillNames.map((s) => s.trim()).filter(Boolean)))
+
+    await query(`
+      CREATE TABLE IF NOT EXISTS job_roles (
+        role_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        slug TEXT UNIQUE NOT NULL,
+        title TEXT NOT NULL,
+        group_name TEXT,
+        keywords TEXT[] NOT NULL DEFAULT '{}',
+        related_skills TEXT[] NOT NULL DEFAULT '{}',
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )`)
+
+    const { rows: roleCount } = await query<{ n: string }>(`SELECT COUNT(*)::text AS n FROM job_roles`)
+    if (Number(roleCount[0]?.n || 0) === 0) {
+      const { SKILL_TAXONOMY } = await import('../lib/skillTaxonomy.js')
+      for (const cat of SKILL_TAXONOMY) {
+        const keywords = Array.from(new Set([...(cat.keywords || []), cat.label, ...cat.skills.slice(0, 5)]))
+        await query(
+          `INSERT INTO job_roles (slug, title, group_name, keywords, related_skills)
+           VALUES ($1,$2,$3,$4,$5) ON CONFLICT (slug) DO NOTHING`,
+          [cat.id, cat.label, cat.group, keywords, cat.skills]
+        )
+      }
+    }
+
+    // Score roles by skill / keyword overlap
+    const { rows: allRoles } = await query(
+      `SELECT slug, title, group_name, keywords, related_skills FROM job_roles WHERE is_active`
+    )
+
+    const skillLower = skillNames.map((s) => s.toLowerCase())
+    const scored = allRoles.map((r: any) => {
+      const hay = [
+        r.title,
+        ...(r.keywords || []),
+        ...(r.related_skills || []),
+      ].map((x: string) => String(x).toLowerCase())
+      let score = 0
+      for (const sk of skillLower) {
+        for (const h of hay) {
+          if (h.includes(sk) || sk.includes(h) || h.split(/[^a-z0-9]+/).includes(sk)) score += 2
+        }
+      }
+      if (profile.job_category && String(r.title).toLowerCase().includes(String(profile.job_category).toLowerCase())) {
+        score += 3
+      }
+      return {
+        id: r.slug,
+        title: r.title,
+        group: r.group_name,
+        relatedSkills: r.related_skills || [],
+        score,
+      }
+    }).filter((r) => r.score > 0 || skillNames.length === 0)
+      .sort((a, b) => b.score - a.score)
+
+    let suggestions = scored.slice(0, requestedCount)
+
+    // If few skill matches, fill from popular Software & IT / default groups
+    if (suggestions.length < requestedCount) {
+      const fillers = allRoles
+        .filter((r: any) => !suggestions.some((s) => s.id === r.slug))
+        .slice(0, requestedCount - suggestions.length)
+        .map((r: any) => ({
+          id: r.slug,
+          title: r.title,
+          group: r.group_name,
+          relatedSkills: r.related_skills || [],
+          score: 0,
+        }))
+      suggestions = [...suggestions, ...fillers]
+    }
+
+    // Optional AI re-rank / explain
+    let aiNote: string | null = null
+    try {
+      const { openRouterService } = await import('../services/ai/openRouterService.js')
+      if (openRouterService.isAvailable() && skillNames.length > 0) {
+        const catalog = suggestions.map((s) => s.title).join(', ')
+        const prompt = `A job seeker has these skills: ${skillNames.slice(0, 20).join(', ')}.
+They want to pursue approximately ${requestedCount} target role(s).
+From this catalog shortlist: ${catalog}.
+Reply with 1 short encouragement sentence (max 40 words) explaining why these roles fit. No bullet list.`
+        aiNote = await openRouterService.generateText(prompt, undefined, {
+          temperature: 0.5,
+          maxTokens: 120,
+          systemPrompt: 'You are an OptioHire career coach for Kenyan graduates. Be concrete and brief.',
+        })
+      }
+    } catch {
+      aiNote = null
+    }
+
+    res.status(200).json({
+      success: true,
+      count: requestedCount,
+      skillsUsed: skillNames.slice(0, 30),
+      suggestions: suggestions.slice(0, requestedCount).map(({ id, title, group, relatedSkills, score }) => ({
+        id, title, group, relatedSkills: relatedSkills.slice(0, 8), matchScore: score,
+      })),
+      aiNote,
+    })
+  } catch (error: any) {
+    console.error('suggestTargetRoles error:', error)
+    res.status(500).json({ success: false, error: 'Failed to suggest roles' })
   }
 }

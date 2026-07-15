@@ -737,7 +737,15 @@ export async function getFeatureFlags(req: Request, res: Response) {
 
     const flags: Record<string, boolean> = {}
     rows.forEach((row: any) => {
-      flags[row.setting_key] = JSON.parse(row.setting_value)
+      let value = row.setting_value
+      if (typeof value === 'string') {
+        try {
+          value = JSON.parse(value)
+        } catch {
+          // already a plain string jsonb scalar like "user"
+        }
+      }
+      flags[row.setting_key] = Boolean(value === true || value === 'true' || value === 1)
     })
 
     return res.json({ featureFlags: flags })

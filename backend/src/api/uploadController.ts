@@ -44,62 +44,86 @@ export const uploadCandidateDocumentMiddleware = multer({
   },
 })
 
+async function saveUploadedImage(req: Request, folder: string) {
+  const authReq = req as any
+  const userId = authReq.userId as string | undefined
+
+  if (!userId) {
+    return { status: 401 as const, body: { error: 'Unauthorized' } }
+  }
+
+  if (!req.file) {
+    return { status: 400 as const, body: { error: 'No file uploaded' } }
+  }
+
+  const file = req.file
+
+  if (file.size > 5 * 1024 * 1024) {
+    return { status: 400 as const, body: { error: 'File size exceeds 5MB limit' } }
+  }
+
+  const fileExt = path.extname(file.originalname).toLowerCase() || '.jpg'
+  const uniqueId = crypto.randomBytes(16).toString('hex')
+  const filename = `${folder}/${userId}/${uniqueId}${fileExt}`
+  const fileUrl = await saveFile(filename, file.buffer)
+
+  const publicBaseUrl =
+    process.env.PUBLIC_APP_URL ||
+    process.env.FRONTEND_URL ||
+    `${req.protocol}://${req.get('host')}`
+  const publicUrl = fileUrl.startsWith('http')
+    ? fileUrl
+    : `${publicBaseUrl.replace(/\/$/, '')}/storage/${filename}`
+
+  return {
+    status: 200 as const,
+    body: {
+      success: true,
+      url: publicUrl,
+      filename,
+    },
+    meta: { userId, filename, size: file.size, mimetype: file.mimetype },
+  }
+}
+
 /**
  * Upload company logo image
  * POST /api/upload/company-logo
  */
 export async function uploadCompanyLogo(req: Request, res: Response) {
   try {
-    const authReq = req as any
-    const userId = authReq.userId
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' })
+    const result = await saveUploadedImage(req, 'company-logos')
+    if (result.status !== 200) {
+      return res.status(result.status).json(result.body)
     }
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' })
-    }
-
-    const file = req.file
-
-    // Validate file size (already checked by multer, but double-check)
-    if (file.size > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: 'File size exceeds 5MB limit' })
-    }
-
-    // Generate unique filename
-    const fileExt = path.extname(file.originalname).toLowerCase() || '.jpg'
-    const uniqueId = crypto.randomBytes(16).toString('hex')
-    const filename = `company-logos/${userId}/${uniqueId}${fileExt}`
-
-    // Save file to storage (local or S3)
-    const fileUrl = await saveFile(filename, file.buffer)
-
-    logger.info('Company logo uploaded successfully', {
-      userId,
-      filename,
-      size: file.size,
-      mimetype: file.mimetype,
-    })
-
-    // Return the URL or path
-    // If it's a local path, convert to URL
-    const publicBaseUrl =
-      process.env.PUBLIC_APP_URL ||
-      process.env.FRONTEND_URL ||
-      `${req.protocol}://${req.get('host')}`
-    const publicUrl = fileUrl.startsWith('http')
-      ? fileUrl
-      : `${publicBaseUrl.replace(/\/$/, '')}/storage/${filename}`
-
-    return res.json({
-      success: true,
-      url: publicUrl,
-      filename,
-    })
+    logger.info('Company logo uploaded successfully', result.meta)
+    return res.json(result.body)
   } catch (error: any) {
     logger.error('Error uploading company logo:', error)
+    return res.status(500).json({
+      error: 'Failed to upload image',
+      details: error.message,
+    })
+  }
+}
+
+/**
+ * Upload profile / brand image (candidates, HR, institutions)
+ * POST /api/upload/profile-image
+ */
+export async function uploadProfileImage(req: Request, res: Response) {
+  try {
+    const folder = typeof req.query.folder === 'string' && /^[a-z0-9-]+$/i.test(req.query.folder)
+      ? req.query.folder
+      : 'profile-images'
+    const result = await saveUploadedImage(req, folder)
+    if (result.status !== 200) {
+      return res.status(result.status).json(result.body)
+    }
+    logger.info('Profile image uploaded successfully', result.meta)
+    return res.json(result.body)
+  } catch (error: any) {
+    logger.error('Error uploading profile image:', error)
     return res.status(500).json({
       error: 'Failed to upload image',
       details: error.message,

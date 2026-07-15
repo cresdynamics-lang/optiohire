@@ -12,8 +12,19 @@ import {
   getCandidateJobs,
   getCandidateApplications,
   submitCandidateApplication,
+  getProfileSettings,
+  updateProfileSettings,
+  suggestTargetRoles,
 } from '../api/candidateController.js'
 import { uploadCandidateDocumentMiddleware } from '../api/uploadController.js'
+import { createSupportTicket } from '../api/supportController.js'
+import rateLimit from 'express-rate-limit'
+
+const supportLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: { error: 'Too many support tickets created. Please try again later.' },
+})
 
 const router = Router()
 
@@ -32,6 +43,9 @@ router.get('/jobs', getCandidateJobs)
 router.get('/applications', getCandidateApplications)
 router.post('/applications', submitCandidateApplication)
 router.get('/roadmap', getLearningRoadmap)
+router.get('/profile/settings', getProfileSettings)
+router.patch('/profile/settings', updateProfileSettings)
+router.post('/profile/suggest-roles', suggestTargetRoles)
 
 router.post('/profile/onboarding', (req, res, next) => {
   const uploadMiddleware = uploadCandidateDocumentMiddleware.fields([
@@ -70,5 +84,6 @@ router.post('/profile/alumni-update', (req, res, next) => {
 
 router.post('/certificate', uploadCandidateDocumentMiddleware.single('certificate'), uploadCertificate)
 router.post('/missions/:missionId/complete', completeMission)
+router.post('/support', supportLimiter, createSupportTicket)
 
 export default router

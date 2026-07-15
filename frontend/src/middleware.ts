@@ -6,6 +6,9 @@ const SUBDOMAIN_MAPPING: Record<string, string> = {
   'console': '/admin',
   'admin': '/admin',
   'applications': '/candidate',
+  // Plural is the live production host; singular accepted as an alias.
+  'institutions': '/institutions',
+  'institution': '/institutions',
 }
 
 export function middleware(request: NextRequest) {
@@ -44,7 +47,14 @@ export function middleware(request: NextRequest) {
 
   
     if (!url.pathname.startsWith(internalPath)) {
-      const targetUrl = new URL(`${internalPath}${url.pathname === '/' ? '' : url.pathname}`, request.url)
+      // Institution portal has no root index page — send bare host to sign-in.
+      const suffix =
+        (subdomain === 'institutions' || subdomain === 'institution') && url.pathname === '/'
+          ? '/auth/signin'
+          : url.pathname === '/'
+            ? ''
+            : url.pathname
+      const targetUrl = new URL(`${internalPath}${suffix}`, request.url)
       
       requestHeaders.set('x-optiohire-subdomain', subdomain)
       

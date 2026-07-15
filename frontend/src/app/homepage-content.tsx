@@ -12,9 +12,17 @@ type InteractiveCardProps = {
   subtitle: string
   description: string
   index: number
+  /** HR uses soft neumorphism; candidates keep a lighter flat card */
+  variant?: 'hr' | 'candidate'
 }
 
-const InteractiveScrollCard = ({ title, subtitle, description, index }: InteractiveCardProps) => {
+const InteractiveScrollCard = ({
+  title,
+  subtitle,
+  description,
+  index,
+  variant = 'hr',
+}: InteractiveCardProps) => {
   const cardRef = useRef<HTMLDivElement | null>(null)
   const shouldReduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll({
@@ -22,25 +30,46 @@ const InteractiveScrollCard = ({ title, subtitle, description, index }: Interact
     offset: ['start 92%', 'end 15%'],
   })
 
-  const y = useTransform(scrollYProgress, [0, 1], [36, -18])
-  const scale = useTransform(scrollYProgress, [0, 1], [0.94, 1.03])
-  const rotate = useTransform(scrollYProgress, [0, 1], [index % 2 === 0 ? -2 : 2, 0])
-  const opacity = useTransform(scrollYProgress, [0, 0.25, 1], [0.3, 0.92, 1])
+  const y = useTransform(scrollYProgress, [0, 1], [28, -12])
+  const scale = useTransform(scrollYProgress, [0, 1], [0.97, 1.02])
+  const opacity = useTransform(scrollYProgress, [0, 0.25, 1], [0.45, 0.95, 1])
+  const isHr = variant === 'hr'
 
   return (
     <motion.div
       ref={cardRef}
-      style={shouldReduceMotion ? undefined : { y, scale, rotate, opacity }}
-      whileHover={shouldReduceMotion ? undefined : { y: -8, scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-      className="group relative overflow-hidden rounded-3xl border border-blue-200/70 bg-white/95 p-6 shadow-[0_16px_60px_-34px_rgba(45,45,221,0.55)]"
+      style={shouldReduceMotion ? undefined : { y, scale, opacity }}
+      whileHover={shouldReduceMotion ? undefined : { y: -6, scale: 1.015 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+      className={
+        isHr
+          ? 'neu-hr-raised group relative overflow-hidden rounded-3xl p-6'
+          : 'group relative overflow-hidden rounded-3xl border border-emerald-200/70 bg-white p-6 shadow-[0_12px_40px_-28px_rgba(16,185,129,0.45)]'
+      }
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(45,45,221,0.2),transparent_55%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="mb-5 inline-flex rounded-2xl border border-blue-200/70 bg-blue-50/80 p-3">
-        <span className="h-5 w-5 rounded-full bg-[#2D2DDD]/30" />
+      <div
+        className={`mb-5 inline-flex rounded-2xl p-3 ${
+          isHr ? 'neu-hr-inset' : 'border border-emerald-200/70 bg-emerald-50/80'
+        }`}
+      >
+        <span
+          className={`h-5 w-5 rounded-full ${isHr ? 'bg-[#2D2DDD]/35' : 'bg-emerald-500/35'}`}
+        />
       </div>
-      <p className="text-sm font-semibold uppercase tracking-wide text-[#2D2DDD]">{subtitle}</p>
-      <h3 className="headline-platform mt-2 text-lg sm:text-xl md:text-2xl !leading-snug">{title}</h3>
+      <p
+        className={`text-sm font-semibold uppercase tracking-wide ${
+          isHr ? 'text-[#2D2DDD]' : 'text-emerald-700'
+        }`}
+      >
+        {subtitle}
+      </p>
+      <h3
+        className={`mt-2 text-lg !leading-snug sm:text-xl md:text-2xl ${
+          isHr ? 'headline-platform' : 'font-semibold tracking-tight text-emerald-950'
+        }`}
+      >
+        {title}
+      </h3>
       <p className="mt-3 leading-relaxed text-slate-600">{description}</p>
     </motion.div>
   )
@@ -237,7 +266,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
               <Button variant="outline" className="rounded-2xl" onClick={() => router.push('/how-it-works')}>See How It Works</Button>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className={`grid grid-cols-1 gap-4 md:grid-cols-3 ${role === 'hr' ? 'rounded-3xl bg-[#eef0f5] p-4 sm:p-6' : ''}`}>
             {outcomes.map((outcome, index) => (
               <InteractiveScrollCard
                 key={outcome.title}
@@ -245,6 +274,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
                 subtitle={outcome.metric}
                 description={outcome.description}
                 index={index}
+                variant={role === 'hr' ? 'hr' : 'candidate'}
               />
             ))}
           </div>
@@ -258,7 +288,13 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="px-4 pb-4 sm:px-6"
       >
-        <div className="brand-dominant-surface mx-auto grid max-w-6xl gap-4 rounded-3xl border p-6 md:grid-cols-2">
+        <div
+          className={`mx-auto grid max-w-6xl gap-4 p-6 md:grid-cols-2 ${
+            role === 'hr'
+              ? 'neu-hr-raised rounded-3xl'
+              : 'brand-dominant-surface rounded-3xl border'
+          }`}
+        >
           <div>
             <h3 className="headline-platform text-2xl sm:text-3xl md:text-4xl">Sound familiar?</h3>
             <ul className="mt-4 space-y-2 text-slate-600">
@@ -279,9 +315,21 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
               )}
             </ul>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
-            <h4 className="headline-platform text-lg sm:text-xl md:text-2xl text-red-600">
-              <span className="oh-typing inline-block">OptioHire fixes this — with structure, not just software.</span>
+          <div
+            className={
+              role === 'hr'
+                ? 'neu-hr-inset rounded-2xl p-5'
+                : 'rounded-2xl border border-emerald-200/70 bg-emerald-50/50 p-5'
+            }
+          >
+            <h4
+              className={`text-lg sm:text-xl md:text-2xl ${
+                role === 'hr' ? 'headline-platform' : 'font-semibold tracking-tight text-emerald-900'
+              }`}
+            >
+              <span className="oh-typing inline-block">
+                OptioHire fixes this — with structure, not just software.
+              </span>
             </h4>
             <p className="mt-3 text-slate-600">
               {role === 'hr'
@@ -358,7 +406,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
               <span className="ml-2 text-xs">-&gt;</span>
             </Button>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${role === 'hr' ? 'rounded-3xl bg-[#eef0f5] p-4 sm:p-6' : ''}`}>
             {useCases.map((useCase, index) => (
               <InteractiveScrollCard
                 key={useCase.title}
@@ -366,6 +414,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
                 subtitle={`Use case ${index + 1}`}
                 description={useCase.description}
                 index={index}
+                variant={role === 'hr' ? 'hr' : 'candidate'}
               />
             ))}
           </div>

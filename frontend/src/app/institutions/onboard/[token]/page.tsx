@@ -468,11 +468,17 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
 
               <Link
                 href={`/institutions/${inst.id}/overview`}
-                className="btn btn-primary btn-lg"
-                style={{ textDecoration: 'none' }}
+                className="ob-primary-btn"
+                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                Open my Institution Console →
+                Open Institution Console
               </Link>
+              <p className="ob-meta" style={{ marginTop: 12, textAlign: 'center' }}>
+                Bookmark your login:{' '}
+                <a href="https://institutions.optiohire.com/auth/signin" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                  institutions.optiohire.com
+                </a>
+              </p>
             </div>
           </div>
         </main>

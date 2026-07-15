@@ -2914,8 +2914,9 @@ The OptioHire AI Team`;
     token: string;
     appUrl?: string;
   }) {
-    const baseUrl = data.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://optiohire.com';
-    const link = `${baseUrl}/institutions/onboard/${data.token}`;
+    const baseUrl = (data.appUrl || process.env.INSTITUTIONS_APP_URL || 'https://institutions.optiohire.com').replace(/\/$/, '');
+    // Prefer clean subdomain paths; middleware rewrites /onboard/:token → /institutions/onboard/:token
+    const link = `${baseUrl}/onboard/${data.token}`;
 
     const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #152A22;">
@@ -2958,8 +2959,8 @@ The OptioHire AI Team`;
     contactName: string;
     appUrl?: string;
   }) {
-    const baseUrl = data.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://optiohire.com';
-    const loginLink = `${baseUrl}/institutions/auth/signin`;
+    const baseUrl = (data.appUrl || process.env.INSTITUTIONS_APP_URL || 'https://institutions.optiohire.com').replace(/\/$/, '');
+    const loginLink = `${baseUrl}/auth/signin`;
 
     const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #152A22;">

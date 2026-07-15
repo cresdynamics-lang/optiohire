@@ -18,6 +18,7 @@ interface AuthUser {
   hiringManagerEmail?: string | null
   companyLogoUrl?: string | null
   companyLocation?: string | null
+  avatarUrl?: string | null
   admin_permissions?: Record<string, boolean>
   previous_login_at?: string | null
 }
@@ -44,6 +45,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: null | { message: string } }>
   signOut: (options?: SignOutOptions) => Promise<void>
   setSession: (token: string, user: any) => void
+  refreshUser: () => Promise<void>
   getSignInUrl: (mode?: 'signin' | 'signup') => string
 }
 
@@ -119,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       hiringManagerEmail: isCandidate ? undefined : (u.hiringManagerEmail || null),
       companyLogoUrl: isCandidate ? undefined : (u.companyLogoUrl || null),
       companyLocation: isCandidate ? undefined : (u.companyLocation || null),
+      avatarUrl: u.avatarUrl || null,
       previous_login_at: u.previous_login_at || null,
     }
     setUser(nextUser)
@@ -261,6 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             hiringManagerEmail: userData.hiring_manager_email || userData.hiringManagerEmail || null,
             companyLogoUrl: userData.companyLogoUrl || null,
             companyLocation: userData.companyLocation || null,
+            avatarUrl: userData.avatarUrl || null,
             previous_login_at: userData.previous_login_at || null,
           }
 
@@ -473,6 +477,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           hiringManagerEmail: isCandidate ? undefined : (u.hiringManagerEmail || null),
           companyLogoUrl: isCandidate ? undefined : (u.companyLogoUrl || null),
           companyLocation: isCandidate ? undefined : (u.companyLocation || null),
+          avatarUrl: u.avatarUrl || null,
           previous_login_at: u.previous_login_at || null,
         }
         setUser(nextUser)
@@ -575,6 +580,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return `/auth/options?${modeParam}`
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    if (!token) return
+
+    try {
+      const profileUrl =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/api/user/me`
+          : `${getBackendBaseUrl() || 'https://api.optiohire.com'}/api/user/me`
+      const resp = await fetch(profileUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      if (!resp.ok) return
+
+      const userData = await resp.json()
+      const mapped: AuthUser = {
+        name: userData.name || null,
+        username: userData.username || null,
+        email: userData.email,
+        id: userData.id || userData.user_id,
+        created_at: userData.created_at,
+        role: userData.role,
+        companyRole: normalizeCompanyRole(
+          userData.company_role || userData.companyRole || userData.role || null
+        ),
+        hasCompany: userData.hasCompany ?? false,
+        companyId: userData.companyId || null,
+        companyName: userData.companyName || null,
+        companyEmail: userData.companyEmail || null,
+        hrEmail: userData.hrEmail || null,
+        hiringManagerEmail: userData.hiring_manager_email || userData.hiringManagerEmail || null,
+        companyLogoUrl: userData.companyLogoUrl || null,
+        companyLocation: userData.companyLocation || null,
+        avatarUrl: userData.avatarUrl || null,
+        previous_login_at: userData.previous_login_at || null,
+      }
+      setUser(mapped)
+      fallbackUserRef.current = mapped
+    } catch {
+      // Keep current session user on refresh failure
+    }
+  }, [getBackendBaseUrl])
+
   const value = useMemo(() => ({
     user,
     loading,
@@ -582,8 +633,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     setSession,
+    refreshUser,
     getSignInUrl,
-  }), [user, loading, signUp, signIn, signOut, setSession, getSignInUrl])
+  }), [user, loading, signUp, signIn, signOut, setSession, refreshUser, getSignInUrl])
 
   return (
     <AuthContext.Provider value={value}>

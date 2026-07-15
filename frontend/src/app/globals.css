@@ -121,6 +121,70 @@
 }
 
 @layer components {
+  /* Soft neumorphism for HR marketing + dashboard chrome */
+  .neu-hr {
+    background: #eef0f5;
+    box-shadow:
+      9px 9px 18px rgba(163, 171, 191, 0.45),
+      -9px -9px 18px rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+  }
+
+  .neu-hr-inset {
+    background: #eef0f5;
+    box-shadow:
+      inset 5px 5px 12px rgba(163, 171, 191, 0.4),
+      inset -5px -5px 12px rgba(255, 255, 255, 0.9);
+  }
+
+  .neu-hr-raised {
+    background: linear-gradient(145deg, #f4f6fa, #e6e9f0);
+    box-shadow:
+      10px 10px 22px rgba(155, 164, 186, 0.5),
+      -8px -8px 20px rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+  }
+
+  @keyframes about-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .about-reveal {
+    animation: about-fade-up 0.45s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .about-reveal {
+      animation: none;
+    }
+  }
+
+  @keyframes oh-footer-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-33.333%);
+    }
+  }
+
+  .oh-footer-marquee {
+    animation: oh-footer-marquee 38s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .oh-footer-marquee {
+      animation: none;
+    }
+  }
+
   .gradient-text {
     @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
   }

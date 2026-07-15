@@ -11,9 +11,16 @@ export interface CandidateProfile {
   cv_url: string | null
   cover_letter_url: string | null
   recommendation_letter_url: string | null
+  university_id: string | null
   is_returning: boolean
   created_at: string
   updated_at: string
+  university?: {
+    university_id: string
+    name: string
+    short_name: string | null
+    type: string
+  } | null
 }
 
 export interface CandidateSkill {
@@ -42,11 +49,45 @@ export interface JobRecommendation {
 
 export class CandidateProfileRepository {
   async getProfileByUserId(userId: string): Promise<CandidateProfile | null> {
-    const { rows } = await query<CandidateProfile>(
-      `SELECT * FROM candidate_profiles WHERE user_id = $1 LIMIT 1`,
-      [userId]
-    )
-    return rows[0] || null
+    try {
+      const { rows } = await query<CandidateProfile & {
+        university_name?: string | null
+        university_short_name?: string | null
+        university_type?: string | null
+      }>(
+        `SELECT cp.*,
+                u.name AS university_name,
+                u.short_name AS university_short_name,
+                u.type AS university_type
+         FROM candidate_profiles cp
+         LEFT JOIN universities u ON u.university_id = cp.university_id
+         WHERE cp.user_id = $1
+         LIMIT 1`,
+        [userId]
+      )
+      if (!rows[0]) return null
+      const row = rows[0]
+      return {
+        ...row,
+        university: row.university_id
+          ? {
+              university_id: row.university_id,
+              name: row.university_name || '',
+              short_name: row.university_short_name ?? null,
+              type: row.university_type || 'public',
+            }
+          : null,
+      }
+    } catch (err: any) {
+      if (err?.code === '42P01' || err?.code === '42703') {
+        const { rows } = await query<CandidateProfile>(
+          `SELECT * FROM candidate_profiles WHERE user_id = $1 LIMIT 1`,
+          [userId]
+        )
+        return rows[0] || null
+      }
+      throw err
+    }
   }
 
   async createProfile(userId: string): Promise<CandidateProfile> {
@@ -194,5 +235,53 @@ export class CandidateProfileRepository {
     )
     if (rows.length === 0) throw new Error('Profile not found')
     return rows[0]
+  }
+
+  async updateProfileSettings(
+    profileId: string,
+    data: {
+      university_id?: string | null
+      linkedin_url?: string | null
+      github_url?: string | null
+      portfolio_url?: string | null
+      avatar_url?: string | null
+      job_category?: string | null
+      target_role_count?: number | null
+      target_roles?: Array<{ id: string; title: string; group?: string | null }> | null
+    }
+  ): Promise<CandidateProfile> {
+    const metaPatches: Record<string, unknown> = {}
+    if (data.linkedin_url !== undefined) metaPatches.linkedin_url = data.linkedin_url
+    if (data.github_url !== undefined) metaPatches.github_url = data.github_url
+    if (data.portfolio_url !== undefined) metaPatches.portfolio_url = data.portfolio_url
+    if (data.avatar_url !== undefined) metaPatches.avatar_url = data.avatar_url
+    if (data.target_role_count !== undefined) metaPatches.target_role_count = data.target_role_count
+    if (data.target_roles !== undefined) metaPatches.target_roles = data.target_roles
+
+    const sets: string[] = ['updated_at = NOW()']
+    const params: unknown[] = [profileId]
+    let idx = 2
+
+    if (data.university_id !== undefined) {
+      sets.push(`university_id = $${idx++}`)
+      params.push(data.university_id)
+    }
+    if (data.job_category !== undefined) {
+      sets.push(`job_category = $${idx++}`)
+      params.push(data.job_category)
+    }
+    if (Object.keys(metaPatches).length > 0) {
+      sets.push(`metadata = COALESCE(metadata, '{}'::jsonb) || $${idx++}::jsonb`)
+      params.push(JSON.stringify(metaPatches))
+    }
+
+    const { rows } = await query<CandidateProfile>(
+      `UPDATE candidate_profiles SET ${sets.join(', ')} WHERE profile_id = $1 RETURNING user_id`,
+      params
+    )
+    if (rows.length === 0) throw new Error('Profile not found')
+    const refreshed = await this.getProfileByUserId((rows[0] as any).user_id)
+    if (!refreshed) throw new Error('Profile not found after update')
+    return refreshed
   }
 }

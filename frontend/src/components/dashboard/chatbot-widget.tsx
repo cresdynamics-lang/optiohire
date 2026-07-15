@@ -367,18 +367,22 @@ export function ChatbotWidget() {
 
     setSupportStatus('sending')
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('auth_token') || localStorage.getItem('token')
+          : null
 
-      const resp = await fetch(`${backendUrl}/api/hr/support`, {
+      const resp = await fetch('/api/hr/support', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
+          subject: 'HR Support Request',
           message: supportMessage,
-          context: getPageContext()
+          source: 'hr',
+          context: getPageContext(),
         }),
       })
 

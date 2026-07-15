@@ -8,6 +8,8 @@ const SUBDOMAIN_MAP: Record<string, Portal> = {
   console: 'admin',
   admin: 'admin',
   applications: 'candidate',
+  institutions: 'institutions',
+  institution: 'institutions',
 }
 
 export function getSubdomain(hostname?: string): string {
@@ -45,10 +47,15 @@ export function getSubdomainRewritePath(hostname: string, pathname: string): str
     console: '/admin',
     admin: '/admin',
     applications: '/candidate',
+    institutions: '/institutions',
+    institution: '/institutions',
   }
   const internal = mapping[sub]
   if (!internal) return null
   if (pathname.startsWith(internal)) return null
   if (pathname.startsWith('/api') || pathname.startsWith('/assets') || pathname.includes('.')) return null
+  if ((sub === 'institutions' || sub === 'institution') && pathname === '/') {
+    return `${internal}/auth/signin`
+  }
   return `${internal}${pathname === '/' ? '' : pathname}`
 }

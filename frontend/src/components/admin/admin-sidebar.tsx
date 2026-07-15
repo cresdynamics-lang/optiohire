@@ -23,7 +23,9 @@ import {
   X,
   ShieldAlert,
   Cpu,
-  GraduationCap
+  GraduationCap,
+  Radio,
+  Megaphone
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -66,12 +68,14 @@ const navigationGroups: NavGroup[] = [
     label: 'Institutions',
     items: [
       { name: 'Institutions', href: '/admin/institutions', icon: GraduationCap },
+      { name: 'Institution Requests', href: '/admin/institutions/requests', icon: Radio, priority: true },
       { name: 'Onboarding Forms', href: '/admin/institutions/onboarding', icon: Send },
     ]
   },
   {
     label: 'System & Analytics',
     items: [
+      { name: 'Announcements', href: '/admin/announcements', icon: Megaphone, priority: true },
       { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, priority: true },
       { name: 'AI Usage', href: '/admin/ai-usage', icon: Cpu, priority: true },
       { name: 'Signups', href: '/admin/signups', icon: UserCheck },

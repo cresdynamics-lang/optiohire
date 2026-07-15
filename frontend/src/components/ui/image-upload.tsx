@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, Upload, X, Image as ImageIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -13,6 +13,10 @@ interface ImageUploadProps {
   accept?: string
   maxSizeMB?: number
   className?: string
+  /** Override upload endpoint (default company logo for HR) */
+  endpoint?: string
+  /** Explicit bearer token; defaults to localStorage `token` */
+  authToken?: string | null
 }
 
 export function ImageUpload({
@@ -22,11 +26,17 @@ export function ImageUpload({
   accept = 'image/*',
   maxSizeMB = 5,
   className = '',
+  endpoint = '/api/upload/company-logo',
+  authToken,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<string | null>(value || null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setPreview(value || null)
+  }, [value])
 
   const handleFileSelect = useCallback(async (file: File) => {
     // Validate file type
@@ -54,7 +64,7 @@ export function ImageUpload({
       reader.readAsDataURL(file)
 
       // Upload to backend
-      const token = localStorage.getItem('token')
+      const token = authToken ?? (typeof window !== 'undefined' ? localStorage.getItem('token') : null)
       if (!token) {
         throw new Error('Not authenticated')
       }
@@ -62,7 +72,7 @@ export function ImageUpload({
       const formData = new FormData()
       formData.append('image', file)
 
-      const response = await fetch('/api/upload/company-logo', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -84,7 +94,7 @@ export function ImageUpload({
     } finally {
       setUploading(false)
     }
-  }, [maxSizeMB, onChange])
+  }, [maxSizeMB, onChange, endpoint, authToken])
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

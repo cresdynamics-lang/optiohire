@@ -179,6 +179,7 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
     }
 
     // Job seekers never use employer company context in the app, even if a legacy company row exists.
+    let avatarUrl: string | null = null
     if (user.company_role === 'candidate') {
       hasCompany = false
       companyId = null
@@ -191,6 +192,18 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       websiteUrl = null
       linkedinUrl = null
       twitterUrl = null
+      try {
+        const { rows: avatarRows } = await query<{ avatar_url: string | null }>(
+          `SELECT metadata->>'avatar_url' AS avatar_url
+           FROM candidate_profiles
+           WHERE user_id = $1
+           LIMIT 1`,
+          [userId]
+        )
+        avatarUrl = avatarRows[0]?.avatar_url || null
+      } catch {
+        avatarUrl = null
+      }
     }
     
     const userData = {
@@ -214,7 +227,8 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
       companyLocation,
       websiteUrl,
       linkedinUrl,
-      twitterUrl
+      twitterUrl,
+      avatarUrl,
     }
 
     await cache.set(cacheKey, userData, 300)
@@ -233,7 +247,17 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    const { company_name, company_email, hr_email, company_logo_url, company_location, website_url, linkedin_url, twitter_url } = req.body || {}
+    const {
+      company_name,
+      company_email,
+      hr_email,
+      hiring_manager_email,
+      company_logo_url,
+      company_location,
+      website_url,
+      linkedin_url,
+      twitter_url,
+    } = req.body || {}
 
     if (!company_name || !company_email || !hr_email) {
       return res.status(400).json({ error: 'Company name, company email, and HR email are required' })
@@ -243,6 +267,9 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(company_email) || !emailRegex.test(hr_email)) {
       return res.status(400).json({ error: 'Invalid email format' })
+    }
+    if (hiring_manager_email && !emailRegex.test(hiring_manager_email)) {
+      return res.status(400).json({ error: 'Invalid hiring manager email format' })
     }
 
     // Find user's company
@@ -314,9 +341,9 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
     }
 
     // Update company
-    let updateQuery = `UPDATE companies SET company_name = $1, company_email = $2, hr_email = $3, company_domain = $4`
-    let queryParams: any[] = [company_name, company_email, hr_email, companyDomain]
-    let paramCount = 5
+    let updateQuery = `UPDATE companies SET company_name = $1, company_email = $2, hr_email = $3, company_domain = $4, hiring_manager_email = $5`
+    let queryParams: any[] = [company_name, company_email, hr_email, companyDomain, hiring_manager_email || null]
+    let paramCount = 6
 
     if (hasLogoColumn) {
       updateQuery += `, company_logo_url = $${paramCount}`
@@ -363,6 +390,7 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
         company_name,
         company_email,
         hr_email,
+        hiring_manager_email: hiring_manager_email || null,
         company_logo_url: hasLogoColumn ? (company_logo_url || null) : undefined,
         company_location: hasLocationColumn ? (company_location || null) : undefined,
         website_url: hasWebsiteColumn ? (website_url || null) : undefined,
@@ -373,6 +401,70 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
   } catch (err) {
     console.error('Error updating company:', err)
     return res.status(500).json({ error: 'Failed to update company' })
+  }
+}
+
+/** PATCH /api/user/profile — update HR personal profile (name) */
+export async function updateUserProfile(req: AuthRequest, res: Response) {
+  try {
+    const userId = req.userId
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+    const { name } = req.body || {}
+    if (name !== undefined && (typeof name !== 'string' || name.trim().length < 1)) {
+      return res.status(400).json({ error: 'Name must be a non-empty string' })
+    }
+    if (typeof name === 'string' && name.trim().length > 120) {
+      return res.status(400).json({ error: 'Name is too long' })
+    }
+
+    const { rows } = await query<{ user_id: string; name: string | null; email: string }>(
+      `UPDATE users SET name = COALESCE($2, name), updated_at = now()
+       WHERE user_id = $1
+       RETURNING user_id, name, email`,
+      [userId, name !== undefined ? name.trim() : null]
+    )
+    if (!rows.length) return res.status(404).json({ error: 'User not found' })
+
+    await cache.del(cacheKeys.user(userId))
+    return res.json({ success: true, user: rows[0] })
+  } catch (err) {
+    console.error('Error updating user profile:', err)
+    return res.status(500).json({ error: 'Failed to update profile' })
+  }
+}
+
+/** POST /api/user/password — change password with current password check */
+export async function changeUserPassword(req: AuthRequest, res: Response) {
+  try {
+    const userId = req.userId
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+    const { currentPassword, newPassword } = req.body || {}
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'currentPassword and newPassword are required' })
+    }
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters' })
+    }
+
+    const { rows } = await query<{ password_hash: string }>(
+      `SELECT password_hash FROM users WHERE user_id = $1 LIMIT 1`,
+      [userId]
+    )
+    if (!rows.length) return res.status(404).json({ error: 'User not found' })
+
+    const bcrypt = await import('bcryptjs')
+    const ok = await bcrypt.compare(currentPassword, rows[0].password_hash)
+    if (!ok) return res.status(401).json({ error: 'Current password is incorrect' })
+
+    const hash = await bcrypt.hash(newPassword, 10)
+    await query(`UPDATE users SET password_hash = $1, updated_at = now() WHERE user_id = $2`, [hash, userId])
+
+    return res.json({ success: true, message: 'Password updated successfully' })
+  } catch (err) {
+    console.error('Error changing password:', err)
+    return res.status(500).json({ error: 'Failed to change password' })
   }
 }
 

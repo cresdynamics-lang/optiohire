@@ -15,34 +15,73 @@ const SALT_ROUNDS = 12
 
 export async function getAllUsers(req: Request, res: Response) {
   try {
-    const { page = '1', limit = '50', search = '', role = '', status = '' } = req.query
+    const { page = '1', limit = '50', search = '', role = '', status = '', category = '' } = req.query
     const offset = (Number(page) - 1) * Number(limit)
 
+    // Check which optional columns / tables exist (defensive against older schemas)
+    const { rows: colCheck } = await query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'users' 
+      AND column_name IN ('admin_approval_status', 'admin_permissions', 'username', 'name', 'company_role')
+    `)
+
+    const hasApprovalStatus = colCheck.some((r: any) => r.column_name === 'admin_approval_status')
+    const hasPermissions = colCheck.some((r: any) => r.column_name === 'admin_permissions')
+    const hasUsername = colCheck.some((r: any) => r.column_name === 'username')
+    const hasName = colCheck.some((r: any) => r.column_name === 'name')
+    const hasCompanyRole = colCheck.some((r: any) => r.column_name === 'company_role')
+
+    const { rows: tblCheck } = await query(`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_name IN ('institution_admins', 'talent_pool', 'applications', 'companies')
+    `)
+    const hasInstitutionAdmins = tblCheck.some((r: any) => r.table_name === 'institution_admins')
+    const hasTalentPool = tblCheck.some((r: any) => r.table_name === 'talent_pool')
+    const hasApplications = tblCheck.some((r: any) => r.table_name === 'applications')
+    const hasCompanies = tblCheck.some((r: any) => r.table_name === 'companies')
+
+    // Classify every user into a single business category.
+    // Precedence: admin > institution > hr > employer > candidate > other
+    const companyRoleCol = hasCompanyRole ? 'users.company_role' : `NULL::text`
+    const instBranch = hasInstitutionAdmins
+      ? `WHEN EXISTS (SELECT 1 FROM institution_admins ia WHERE ia.user_id = users.user_id) THEN 'institution'`
+      : ''
+    const hrBranch = `WHEN ${companyRoleCol} = 'hr'${hasCompanies ? ` OR EXISTS (SELECT 1 FROM companies c WHERE LOWER(c.hr_email) = LOWER(users.email))` : ''} THEN 'hr'`
+    const employerBranch = `WHEN ${companyRoleCol} = 'hiring_manager'${hasCompanies ? ` OR EXISTS (SELECT 1 FROM companies c WHERE c.user_id = users.user_id OR LOWER(c.hiring_manager_email) = LOWER(users.email))` : ''} THEN 'employer'`
+    const candidateExists: string[] = []
+    if (hasTalentPool) candidateExists.push(`EXISTS (SELECT 1 FROM talent_pool tp WHERE LOWER(tp.email) = LOWER(users.email))`)
+    if (hasApplications) candidateExists.push(`EXISTS (SELECT 1 FROM applications a WHERE LOWER(a.email) = LOWER(users.email))`)
+    const candidateBranch = `WHEN ${companyRoleCol} = 'candidate'${candidateExists.length ? ` OR ${candidateExists.join(' OR ')}` : ''} THEN 'candidate'`
+    const categoryCase = `CASE
+        WHEN users.role = 'admin' THEN 'admin'
+        ${instBranch}
+        ${hrBranch}
+        ${employerBranch}
+        ${candidateBranch}
+        ELSE 'other'
+      END`
+
+    // WHERE params are numbered from $1 so the same clause can be reused by the
+    // count query; LIMIT/OFFSET are appended after the filter params.
     const conditions: string[] = []
-    const params: any[] = [Number(limit), offset]
-    let paramIndex = 3
-    
+    const whereParams: any[] = []
+    let paramIndex = 1
+
     if (search) {
       conditions.push(`email ILIKE $${paramIndex++}`)
-      params.push(`%${search}%`)
+      whereParams.push(`%${search}%`)
     }
-    if (role) {
-      if (role === 'admin') {
-        conditions.push(`role = $${paramIndex++}`)
-        params.push('admin')
-      } else if (role === 'hr') {
-        // HR if company_role is hr, or if they are linked to a company
-        conditions.push(`(company_role = 'hr' OR EXISTS (SELECT 1 FROM companies c WHERE c.user_id = users.user_id OR LOWER(c.hr_email) = LOWER(users.email)))`)
-      } else if (role === 'candidate') {
-        // Candidate if company_role is candidate, or in talent pool, or applied to a job
-        conditions.push(`(company_role = 'candidate' OR EXISTS (SELECT 1 FROM talent_pool tp WHERE LOWER(tp.email) = LOWER(users.email)) OR EXISTS (SELECT 1 FROM applications a WHERE LOWER(a.email) = LOWER(users.email)))`)
-      } else if (role === 'user') {
-        conditions.push(`role = 'user'`)
-      } else {
-        conditions.push(`role = $${paramIndex++}`)
-        params.push(role)
-      }
+
+    // Category filter (accepts `category` or legacy `role` param; `user` => `other`)
+    let activeCategory = String(category || role || '').toLowerCase()
+    if (activeCategory === 'user') activeCategory = 'other'
+    const validCategories = ['admin', 'institution', 'hr', 'employer', 'candidate', 'other']
+    if (validCategories.includes(activeCategory)) {
+      conditions.push(`(${categoryCase}) = $${paramIndex++}`)
+      whereParams.push(activeCategory)
     }
+
     if (status === 'active') {
       conditions.push(`is_active = true`)
     } else if (status === 'inactive') {
@@ -50,20 +89,8 @@ export async function getAllUsers(req: Request, res: Response) {
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
-
-    // Check which columns exist
-    const { rows: colCheck } = await query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'users' 
-      AND column_name IN ('admin_approval_status', 'admin_permissions', 'username', 'name', 'company_role')
-    `)
-    
-    const hasApprovalStatus = colCheck.some((r: any) => r.column_name === 'admin_approval_status')
-    const hasPermissions = colCheck.some((r: any) => r.column_name === 'admin_permissions')
-    const hasUsername = colCheck.some((r: any) => r.column_name === 'username')
-    const hasName = colCheck.some((r: any) => r.column_name === 'name')
-    const hasCompanyRole = colCheck.some((r: any) => r.column_name === 'company_role')
+    const limitIdx = paramIndex
+    const offsetIdx = paramIndex + 1
     
     // Admin can see passwords (password_hash) - this is for admin dashboard
     const selectFields = [
@@ -78,7 +105,8 @@ export async function getAllUsers(req: Request, res: Response) {
       'users.created_at',
       hasApprovalStatus ? 'users.admin_approval_status' : 'NULL::text as admin_approval_status',
       hasPermissions ? 'users.admin_permissions' : 'NULL::jsonb as admin_permissions',
-      'EXISTS (SELECT 1 FROM talent_pool tp WHERE LOWER(tp.email) = LOWER(users.email)) as in_talent_pool'
+      `${hasTalentPool ? 'EXISTS (SELECT 1 FROM talent_pool tp WHERE LOWER(tp.email) = LOWER(users.email))' : 'FALSE'} as in_talent_pool`,
+      `(${categoryCase}) as category`
     ].join(', ')
 
     const { rows: users } = await query<{
@@ -94,13 +122,14 @@ export async function getAllUsers(req: Request, res: Response) {
       admin_approval_status?: string | null
       admin_permissions?: Record<string, boolean> | null
       in_talent_pool: boolean
+      category: string
     }>(
       `SELECT ${selectFields}
        FROM users 
        ${whereClause}
        ORDER BY users.created_at DESC 
-       LIMIT $1 OFFSET $2`,
-      params
+       LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      [...whereParams, Number(limit), offset]
     )
 
     type CompanyRow = {
@@ -158,16 +187,48 @@ export async function getAllUsers(req: Request, res: Response) {
 
     const { rows: countRows } = await query<{ count: string }>(
       `SELECT COUNT(*) as count FROM users ${whereClause}`,
-      params.slice(2)
+      whereParams
     )
+
+    // Per-category counts across the full set (respects search + status, ignores the
+    // active category filter/pagination) so the UI can show totals for every category.
+    const countConditions: string[] = []
+    const countParams: any[] = []
+    let cIdx = 1
+    if (search) {
+      countConditions.push(`email ILIKE $${cIdx++}`)
+      countParams.push(`%${search}%`)
+    }
+    if (status === 'active') countConditions.push(`is_active = true`)
+    else if (status === 'inactive') countConditions.push(`is_active = false`)
+    const countWhere = countConditions.length > 0 ? `WHERE ${countConditions.join(' AND ')}` : ''
+
+    const counts: Record<string, number> = {
+      all: 0, admin: 0, institution: 0, employer: 0, hr: 0, candidate: 0, other: 0
+    }
+    try {
+      const { rows: catRows } = await query<{ category: string; count: string }>(
+        `SELECT (${categoryCase}) as category, COUNT(*)::int as count FROM users ${countWhere} GROUP BY 1`,
+        countParams
+      )
+      for (const r of catRows) {
+        const n = Number(r.count)
+        if (r.category in counts) counts[r.category] = n
+        counts.all += n
+      }
+    } catch (err) {
+      console.error('Error computing user category counts:', err)
+    }
 
     return res.json({
       users: usersWithCompanies,
       total: Number(countRows[0].count),
+      counts,
       page: Number(page),
       limit: Number(limit)
     })
   } catch (err) {
+    console.error('getAllUsers error:', err)
     return res.status(500).json({ error: 'Failed to fetch users' })
   }
 }

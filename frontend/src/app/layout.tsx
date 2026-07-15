@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import { DM_Sans, Playfair_Display, Syne } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/hooks/use-auth'
 import { ConditionalLayout } from '@/components/layout/conditional-layout'
@@ -10,18 +11,28 @@ import { BottomCtaBanner } from '@/components/ui/bottom-cta-banner'
 import { CaptchaProvider } from '@/components/providers/captcha-provider'
 import { Toaster } from 'react-hot-toast'
 
-const dmSans = {
+const dmSans = DM_Sans({
+  subsets: ['latin'],
   variable: '--font-dm-sans',
-  className: 'font-sans'
-}
+  display: 'swap',
+  preload: true,
+})
 
-const syne = {
-  variable: '--font-syne'
-}
+const syne = Syne({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-syne',
+  display: 'swap',
+})
 
-const playfairDisplay = {
-  variable: '--font-playfair-display'
-}
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  weight: ['500', '600', '700'],
+  variable: '--font-playfair-display',
+  display: 'swap',
+  preload: true,
+})
 
 // Get metadata base URL - prioritize NEXT_PUBLIC_APP_URL, then VERCEL_URL, fallback to localhost
 const getMetadataBase = () => {
@@ -106,7 +117,6 @@ export default function RootLayout({
         {/* Preconnect to external domains for faster resource loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
         {/* Prefetch auth routes in production only — dev HMR + prefetch causes noisy RSC fetches that feel like endless reloads */}
         {process.env.NODE_ENV === 'production' && (
           <>

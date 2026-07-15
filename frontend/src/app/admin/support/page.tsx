@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Loader2, MessageSquare, AlertCircle, Calendar, CheckCircle } from 'lucide-react'
+import { Loader2, MessageSquare, AlertCircle, Calendar, CheckCircle, GraduationCap, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -110,7 +111,9 @@ export default function AdminSupportTicketsPage() {
     <div className="p-8 max-w-6xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Support & Demos</h1>
-        <p className="text-muted-foreground">View messages, issues, and demo requests from HR users.</p>
+        <p className="text-muted-foreground">
+          Tickets from HR, candidates, and institutions — plus scheduled demos.
+        </p>
       </div>
 
       {error && (
@@ -124,6 +127,9 @@ export default function AdminSupportTicketsPage() {
         <TabsList className="mb-4">
           <TabsTrigger value="tickets" className="flex gap-2">
             <MessageSquare className="h-4 w-4" /> Support Tickets
+          </TabsTrigger>
+          <TabsTrigger value="institution" className="flex gap-2">
+            <GraduationCap className="h-4 w-4" /> Institution (live)
           </TabsTrigger>
           <TabsTrigger value="demos" className="flex gap-2">
             <Calendar className="h-4 w-4" /> Scheduled Demos
@@ -140,16 +146,42 @@ export default function AdminSupportTicketsPage() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {tickets.map((ticket) => (
+              {tickets.map((ticket) => {
+                const source =
+                  ticket.context_data?.source ||
+                  (ticket.subject?.startsWith('[Institution]') ? 'institution' : null) ||
+                  (ticket.subject?.toLowerCase().includes('candidate') ? 'candidate' : 'hr')
+                const sourceLabel =
+                  source === 'institution'
+                    ? 'Institution'
+                    : source === 'candidate'
+                      ? 'Candidate'
+                      : source === 'admin'
+                        ? 'Admin'
+                        : 'HR / Employer'
+                const sourceVariant =
+                  source === 'institution'
+                    ? 'default'
+                    : source === 'candidate'
+                      ? 'secondary'
+                      : 'outline'
+
+                return (
                 <Card key={ticket.ticket_id} className="overflow-hidden">
                   <CardHeader className="bg-background/50 pb-4 border-b">
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle className="text-lg flex items-center gap-2">
+                        <CardTitle className="text-lg flex flex-wrap items-center gap-2">
                           {ticket.subject}
-                          <Badge variant={ticket.status === 'open' ? 'destructive' : 'secondary'} className="ml-2 uppercase text-[10px]">
+                          <Badge variant={ticket.status === 'open' ? 'destructive' : 'secondary'} className="uppercase text-[10px]">
                             {ticket.status}
                           </Badge>
+                          <Badge variant={sourceVariant as any} className="uppercase text-[10px]">
+                            {sourceLabel}
+                          </Badge>
+                          {ticket.priority === 'high' && (
+                            <Badge className="bg-amber-100 text-amber-800 uppercase text-[10px]">High</Badge>
+                          )}
                         </CardTitle>
                         <CardDescription className="mt-1 font-medium text-slate-600">
                           From: {ticket.user_email}
@@ -173,9 +205,26 @@ export default function AdminSupportTicketsPage() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                )
+              })}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="institution">
+          <Card>
+            <CardContent className="py-10 text-center space-y-4">
+              <GraduationCap className="h-10 w-10 mx-auto text-blue-600" />
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Institution support tickets and onboarding session requests stream to the dedicated live panel (10s refresh + admin email alert).
+              </p>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                <Link href="/admin/institutions/requests">
+                  Open Institution Requests <ExternalLink className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="demos">

@@ -47,153 +47,245 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
         const role = await ensureAdminAccess(req.userId!, institutionId)
         if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
 
-        // Get cohortId from query param if available, otherwise get the most recent active cohort
-        const reqCohortId = req.query.cohortId as string | undefined
-        let cohort = null
+        const { syncInstitutionPlacementsFromApplications } = await import('../services/institutionPlacementSync.js')
+        await syncInstitutionPlacementsFromApplications(institutionId)
 
-        if (reqCohortId) {
-            const { rows: cohortRows } = await query<{ id: string; name: string }>(
-                `SELECT id, name FROM cohorts
-                 WHERE institution_id = $1 AND id = $2`,
-                [institutionId, reqCohortId]
-            )
-            cohort = cohortRows[0]
-        } else {
-            const { rows: cohortRows } = await query<{ id: string; name: string }>(
-                `SELECT id, name FROM cohorts
-                 WHERE institution_id = $1 AND status = 'active'
-                 ORDER BY created_at DESC LIMIT 1`,
-                [institutionId]
-            )
-            cohort = cohortRows[0]
-        }
-
-        let stats = {
-            enrolled: 0, activated: 0, shortlisted: 0, interviewing: 0, placed: 0, interning: 0, requires_review: 0, pool: 0
-        }
-        let topEmployers: any[] = []
-        let recentActivity: any[] = []
-
-        if (cohort) {
-            const { rows: statRows } = await query<{ row_status: string; count: string }>(
-                `SELECT row_status, COUNT(*) as count
-                 FROM cohort_candidates
-                 WHERE cohort_id = $1
-                 GROUP BY row_status`,
-                [cohort.id]
-            )
-            statRows.forEach(r => {
-                const key = r.row_status as keyof typeof stats
-                if (key in stats) stats[key] = parseInt(r.count)
-            })
-
-            // Aggregate placements/internships by employer from matched_to
-            const { rows: employerRows } = await query<{ matched_to: string; count: string; avg_score: string }>(
-                `SELECT matched_to, COUNT(*) as count, AVG(match_score) as avg_score
-                 FROM cohort_candidates
-                 WHERE cohort_id = $1 AND row_status IN ('placed', 'interning') AND matched_to IS NOT NULL AND matched_to != ''
-                 GROUP BY matched_to
-                 ORDER BY count DESC, avg_score DESC
-                 LIMIT 5`,
-                [cohort.id]
-            )
-            topEmployers = employerRows.map(r => {
-                const parts = r.matched_to.split(/—|-/);
-                const employer = parts[0]?.trim() || r.matched_to;
-                const roleType = parts[1]?.trim() || 'General';
-                return {
-                    employer,
-                    role_type: roleType,
-                    placed: parseInt(r.count),
-                    avg_score: r.avg_score ? Math.round(parseFloat(r.avg_score)) : 0
-                };
-            })
-
-            // Get recent activity timeline for this cohort
-            const { rows: activityRows } = await query<{ candidate_name: string; row_status: string; matched_to: string | null; last_activity: Date }>(
-                `SELECT candidate_name, row_status, matched_to, last_activity
-                 FROM cohort_candidates
-                 WHERE cohort_id = $1 AND last_activity IS NOT NULL
-                 ORDER BY last_activity DESC
-                 LIMIT 10`,
-                [cohort.id]
-            )
-            recentActivity = activityRows.map(r => {
-                let title = '';
-                let desc = '';
-                const name = r.candidate_name || 'Candidate';
-
-                switch (r.row_status) {
-                    case 'placed':
-                        title = `${name} placed`;
-                        desc = `Placed at ${r.matched_to || 'Employer'}`;
-                        break;
-                    case 'interning':
-                        title = `${name} started internship`;
-                        desc = `Interning at ${r.matched_to || 'Employer'}`;
-                        break;
-                    case 'interviewing':
-                        title = `${name} interviewing`;
-                        desc = `Interviewing for ${r.matched_to || 'Role'}`;
-                        break;
-                    case 'shortlisted':
-                        title = `${name} shortlisted`;
-                        desc = `Shortlisted for ${r.matched_to || 'Role'}`;
-                        break;
-                    case 'activated':
-                        title = `${name} activated account`;
-                        desc = `Completed profile setup`;
-                        break;
-                    case 'invited':
-                        title = `Invitation sent to ${name}`;
-                        desc = `Awaiting account activation`;
-                        break;
-                    case 'requires_review':
-                        title = `Review required for ${name}`;
-                        desc = `Low-confidence CV extraction flagged`;
-                        break;
-                    default:
-                        title = `${name} status updated to ${r.row_status}`;
-                        desc = r.matched_to || '';
-                }
-
-                return {
-                    title,
-                    desc,
-                    time: r.last_activity
-                };
-            })
-        }
-
-        // Institution metadata
-        const { rows: instRows } = await query<{ id: string; name: string; slug: string; contact_email: string; brand_accent_hex: string; country: string }>(
-            `SELECT id, name, slug, contact_email, brand_accent_hex, country FROM institutions WHERE id = $1`,
+        const { rows: instRows } = await query<{
+            id: string; name: string; slug: string; contact_email: string;
+            brand_accent_hex: string; country: string; email_signature: string | null
+        }>(
+            `SELECT id, name, slug, contact_email, brand_accent_hex, country, email_signature
+             FROM institutions WHERE id = $1`,
             [institutionId]
         )
         const institution = instRows[0]
+        if (!institution) return res.status(404).json({ error: 'Institution not found' })
 
-        // Recent cohorts
+        // ── Key KPI row (spec) ──────────────────────────────────────────────
+        const { rows: kpiRows } = await query<{
+            total_students: string
+            matched_this_month: string
+            contacted_this_week: string
+            placements_total: string
+        }>(
+            `SELECT
+               COUNT(*)::text AS total_students,
+               COUNT(*) FILTER (
+                 WHERE cc.row_status IN ('shortlisted','interviewing','placed','interning')
+                   AND cc.last_activity >= date_trunc('month', NOW())
+               )::text AS matched_this_month,
+               COUNT(*) FILTER (
+                 WHERE cc.row_status IN ('shortlisted','interviewing','placed','interning')
+                   AND cc.last_activity >= NOW() - INTERVAL '7 days'
+               )::text AS contacted_this_week,
+               COUNT(*) FILTER (
+                 WHERE cc.row_status IN ('placed','interning')
+               )::text AS placements_total
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1`,
+            [institutionId]
+        )
+        const kpi = {
+            total_students_onboarded: Number(kpiRows[0]?.total_students || 0),
+            matched_this_month: Number(kpiRows[0]?.matched_this_month || 0),
+            contacted_this_week: Number(kpiRows[0]?.contacted_this_week || 0),
+            placements_confirmed: Number(kpiRows[0]?.placements_total || 0),
+        }
+
+        // Legacy pipeline stats (all cohorts)
+        const { rows: statRows } = await query<{ row_status: string; count: string }>(
+            `SELECT cc.row_status, COUNT(*)::text AS count
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1
+             GROUP BY cc.row_status`,
+            [institutionId]
+        )
+        const stats = {
+            enrolled: 0, activated: 0, shortlisted: 0, interviewing: 0,
+            placed: 0, interning: 0, requires_review: 0, pool: 0, invited: 0,
+        }
+        for (const r of statRows) {
+            const key = r.row_status as keyof typeof stats
+            if (key in stats) stats[key] = Number(r.count)
+        }
+
+        // Activity feed
+        const { rows: activityRows } = await query<{
+            candidate_name: string; row_status: string; matched_to: string | null;
+            department: string | null; last_activity: Date
+        }>(
+            `SELECT cc.candidate_name, cc.row_status, cc.matched_to, cc.department, cc.last_activity
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1 AND cc.last_activity IS NOT NULL
+             ORDER BY cc.last_activity DESC
+             LIMIT 25`,
+            [institutionId]
+        )
+        const recent_activity = activityRows.map((r) => {
+            const name = r.candidate_name || 'Student'
+            const employer = (r.matched_to || '').split(/—|-/).map((s) => s.trim())[0] || 'an employer'
+            let message = `${name} updated status to ${r.row_status}`
+            if (r.row_status === 'placed') message = `Student ${name} was placed at ${employer}`
+            else if (r.row_status === 'interning') message = `Student ${name} started interning at ${employer}`
+            else if (r.row_status === 'shortlisted') message = `Student ${name} was matched / shortlisted${r.matched_to ? ` for ${r.matched_to}` : ''}`
+            else if (r.row_status === 'interviewing') message = `Employer contacted ${name} for an interview`
+            else if (r.row_status === 'activated') message = `${name} created / activated their profile`
+            else if (r.row_status === 'invited') message = `Invitation sent to ${name}`
+            return {
+                message,
+                candidate_name: name,
+                status: r.row_status,
+                department: r.department,
+                matched_to: r.matched_to,
+                time: r.last_activity,
+            }
+        })
+
+        // Employer engagement — week buckets last 30 days
+        const { rows: engRows } = await query<{ week_start: string; engagements: string }>(
+            `SELECT to_char(date_trunc('week', cc.last_activity), 'YYYY-MM-DD') AS week_start,
+                    COUNT(*)::text AS engagements
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1
+               AND cc.row_status IN ('shortlisted','interviewing','placed','interning')
+               AND cc.last_activity >= NOW() - INTERVAL '30 days'
+             GROUP BY 1
+             ORDER BY 1 ASC`,
+            [institutionId]
+        )
+        const employer_engagement = engRows.map((r) => ({
+            week: r.week_start,
+            engagements: Number(r.engagements),
+        }))
+
+        // Department breakdown
+        const { rows: deptRows } = await query<{ department: string; count: string; active: string }>(
+            `SELECT COALESCE(NULLIF(TRIM(cc.department), ''), 'Unspecified') AS department,
+                    COUNT(*)::text AS count,
+                    COUNT(*) FILTER (WHERE cc.row_status IN ('activated','shortlisted','interviewing','placed','interning'))::text AS active
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1
+             GROUP BY 1
+             ORDER BY COUNT(*) DESC`,
+            [institutionId]
+        )
+        const departments = deptRows.map((r) => ({
+            department: r.department,
+            total: Number(r.count),
+            active: Number(r.active),
+        }))
+
+        // Top matched skills (from department / matched_to / programme heuristics + optional metadata)
+        const { rows: skillRows } = await query<{ skill: string; count: string }>(
+            `SELECT skill, COUNT(*)::text AS count FROM (
+               SELECT unnest(string_to_array(
+                 lower(coalesce(cc.department,'') || ' ' || coalesce(cc.matched_to,'') || ' ' || coalesce(c.programme,'')),
+                 ' '
+               )) AS skill
+               FROM cohort_candidates cc
+               JOIN cohorts c ON c.id = cc.cohort_id
+               WHERE c.institution_id = $1
+                 AND cc.row_status IN ('shortlisted','interviewing','placed','interning')
+                 AND cc.last_activity >= date_trunc('month', NOW())
+             ) s
+             WHERE length(skill) > 3
+               AND skill NOT IN ('the','and','for','with','from','into','role','at','to','of','in','a','an','or')
+             GROUP BY skill
+             ORDER BY COUNT(*) DESC
+             LIMIT 5`,
+            [institutionId]
+        )
+        const top_skills = skillRows.map((r) => ({ skill: r.skill, count: Number(r.count) }))
+
+        // Top employers
+        const { rows: employerRows } = await query<{ matched_to: string; count: string }>(
+            `SELECT matched_to, COUNT(*)::text AS count
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1
+               AND cc.matched_to IS NOT NULL AND cc.matched_to != ''
+               AND cc.row_status IN ('shortlisted','interviewing','placed','interning')
+             GROUP BY matched_to
+             ORDER BY COUNT(*) DESC
+             LIMIT 8`,
+            [institutionId]
+        )
+        const top_employers = employerRows.map((r) => {
+            const parts = r.matched_to.split(/—|-/)
+            return {
+                employer: parts[0]?.trim() || r.matched_to,
+                role_type: parts[1]?.trim() || 'General',
+                engagements: Number(r.count),
+                matched_to: r.matched_to,
+            }
+        })
+
+        // Upcoming / recent onboarding sessions (from uploads + optional sessions table)
+        let upcoming_onboarding: any[] = []
+        try {
+            const { rows } = await query(
+                `SELECT s.id, s.scheduled_at, s.department, s.expected_count, s.status, s.facilitator
+                 FROM institution_onboarding_sessions s
+                 WHERE s.institution_id = $1
+                   AND (s.scheduled_at >= NOW() - INTERVAL '1 day' OR s.status = 'scheduled')
+                 ORDER BY s.scheduled_at ASC
+                 LIMIT 5`,
+                [institutionId]
+            )
+            upcoming_onboarding = rows
+        } catch {
+            // Table may not exist yet — fall back to recent uploads as sessions
+            const { rows } = await query(
+                `SELECT cu.id, cu.created_at AS scheduled_at, cu.row_count AS expected_count,
+                        cu.status, c.name AS department, cu.original_filename
+                 FROM cohort_uploads cu
+                 JOIN cohorts c ON c.id = cu.cohort_id
+                 WHERE c.institution_id = $1
+                 ORDER BY cu.created_at DESC
+                 LIMIT 5`,
+                [institutionId]
+            )
+            upcoming_onboarding = rows.map((r: any) => ({
+                id: r.id,
+                scheduled_at: r.scheduled_at,
+                department: r.department,
+                expected_count: r.expected_count,
+                status: r.status,
+                facilitator: 'Bulk upload',
+                note: r.original_filename,
+            }))
+        }
+
         const { rows: cohorts } = await query(
             `SELECT c.id, c.name, c.programme, c.academic_level, c.status, c.created_at,
-              COUNT(cc.id) AS total_candidates,
-              COUNT(cc.id) FILTER (WHERE cc.row_status = 'activated') AS activated,
-              COUNT(cc.id) FILTER (WHERE cc.row_status IN ('placed','interning')) AS placed
-       FROM cohorts c
-       LEFT JOIN cohort_candidates cc ON cc.cohort_id = c.id
-       WHERE c.institution_id = $1
-       GROUP BY c.id
-       ORDER BY c.created_at DESC
-       LIMIT 5`,
+                    COUNT(cc.id)::int AS total_candidates,
+                    COUNT(cc.id) FILTER (WHERE cc.row_status = 'activated')::int AS activated,
+                    COUNT(cc.id) FILTER (WHERE cc.row_status IN ('placed','interning'))::int AS placed
+             FROM cohorts c
+             LEFT JOIN cohort_candidates cc ON cc.cohort_id = c.id
+             WHERE c.institution_id = $1
+             GROUP BY c.id
+             ORDER BY c.created_at DESC
+             LIMIT 8`,
             [institutionId]
         )
 
         return res.json({
             institution,
-            current_cohort: cohort || null,
+            kpi,
             stats,
+            recent_activity,
+            employer_engagement,
+            departments,
+            top_skills,
+            top_employers,
+            upcoming_onboarding,
             cohorts,
-            top_employers: topEmployers,
-            recent_activity: recentActivity
         })
     } catch (err) {
         logger.error('getInstitutionDashboard error', { err })
@@ -529,17 +621,56 @@ export async function updateSettings(req: AuthRequest, res: Response) {
         const role = await ensureAdminAccess(req.userId!, institutionId, ['owner'])
         if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
 
-        const { name, contact_email, brand_accent_hex, email_signature } = req.body
-        const { rows } = await query(
-            `UPDATE institutions
-       SET name              = COALESCE($1, name),
-           contact_email     = COALESCE($2, contact_email),
-           brand_accent_hex  = COALESCE($3, brand_accent_hex),
-           email_signature   = COALESCE($4, email_signature)
-       WHERE id = $5
-       RETURNING *`,
-            [name, contact_email, brand_accent_hex, email_signature, institutionId]
-        )
+        const { name, contact_email, brand_accent_hex, email_signature, logo_url, admin_name } = req.body
+
+        const sets: string[] = []
+        const params: unknown[] = []
+        let idx = 1
+        if (name !== undefined) {
+            sets.push(`name = $${idx++}`)
+            params.push(name)
+        }
+        if (contact_email !== undefined) {
+            sets.push(`contact_email = $${idx++}`)
+            params.push(contact_email)
+        }
+        if (brand_accent_hex !== undefined) {
+            sets.push(`brand_accent_hex = $${idx++}`)
+            params.push(brand_accent_hex)
+        }
+        if (email_signature !== undefined) {
+            sets.push(`email_signature = $${idx++}`)
+            params.push(email_signature)
+        }
+        if (logo_url !== undefined) {
+            sets.push(`logo_url = $${idx++}`)
+            params.push(logo_url || null)
+        }
+
+        if (sets.length === 0 && admin_name === undefined) {
+            return res.status(400).json({ error: 'No settings to update' })
+        }
+
+        let rows: any[] = []
+        if (sets.length > 0) {
+            params.push(institutionId)
+            const result = await query(
+                `UPDATE institutions SET ${sets.join(', ')} WHERE id = $${idx} RETURNING *`,
+                params
+            )
+            rows = result.rows
+        } else {
+            const result = await query(`SELECT * FROM institutions WHERE id = $1`, [institutionId])
+            rows = result.rows
+        }
+
+        if (admin_name !== undefined && req.userId) {
+            await query(
+                `UPDATE users SET name = $2, updated_at = NOW() WHERE user_id = $1`,
+                [req.userId, typeof admin_name === 'string' ? admin_name.trim() || null : null]
+            )
+        }
+
         return res.json(rows[0])
     } catch (err) {
         logger.error('updateSettings error', { err })
@@ -595,8 +726,8 @@ export async function institutionSignin(req: Request, res: Response) {
         if (!user.is_active) return res.status(401).json({ error: 'Account inactive' })
 
         // Verify the user is an institution admin
-        const { rows: instRows } = await query<{ id: string; name: string; slug: string; role: string }>(
-            `SELECT i.id, i.name, i.slug, ia.role
+        const { rows: instRows } = await query<{ id: string; name: string; slug: string; role: string; logo_url: string | null }>(
+            `SELECT i.id, i.name, i.slug, i.logo_url, ia.role
        FROM institutions i
        JOIN institution_admins ia ON ia.institution_id = i.id
        WHERE ia.user_id = $1
@@ -615,7 +746,7 @@ export async function institutionSignin(req: Request, res: Response) {
         return res.json({
             token,
             user: { id: user.user_id, email, name: user.name, role: user.role },
-            institution: { id: inst.id, name: inst.name, slug: inst.slug, my_role: inst.role }
+            institution: { id: inst.id, name: inst.name, slug: inst.slug, my_role: inst.role, logo_url: inst.logo_url || null }
         })
     } catch (err) {
         logger.error('institutionSignin error', { err })
@@ -1041,5 +1172,511 @@ export async function activateInstitution(req: Request, res: Response) {
     } catch (err) {
         logger.error('Error activating institution:', err);
         return res.status(500).json({ error: 'Failed to activate institution' });
+    }
+}
+
+// ─────────────────────────────────────────────
+// STUDENTS (institution-wide roster)
+// ─────────────────────────────────────────────
+
+export async function listInstitutionStudents(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId)
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        const search = String(req.query.search || '').trim()
+        const department = String(req.query.department || '').trim()
+        const status = String(req.query.status || '').trim()
+        const page = Math.max(1, Number(req.query.page || 1))
+        const limit = Math.min(100, Math.max(1, Number(req.query.limit || 50)))
+        const offset = (page - 1) * limit
+
+        const conditions = ['c.institution_id = $1']
+        const params: any[] = [institutionId]
+        let idx = 2
+        if (search) {
+            conditions.push(`(cc.candidate_name ILIKE $${idx} OR cc.email ILIKE $${idx} OR cc.student_id ILIKE $${idx})`)
+            params.push(`%${search}%`)
+            idx++
+        }
+        if (department) {
+            conditions.push(`cc.department ILIKE $${idx}`)
+            params.push(`%${department}%`)
+            idx++
+        }
+        if (status === 'active') {
+            conditions.push(`cc.row_status IN ('activated','shortlisted','interviewing')`)
+        } else if (status === 'placed') {
+            conditions.push(`cc.row_status IN ('placed','interning')`)
+        } else if (status === 'inactive') {
+            conditions.push(`cc.row_status IN ('invited','enrolled','pool','requires_review')`)
+        } else if (status) {
+            conditions.push(`cc.row_status = $${idx}`)
+            params.push(status)
+            idx++
+        }
+
+        const where = conditions.join(' AND ')
+        const { rows: countRows } = await query<{ count: string }>(
+            `SELECT COUNT(*)::text AS count
+             FROM cohort_candidates cc JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE ${where}`,
+            params
+        )
+        const { rows } = await query(
+            `SELECT cc.id, cc.candidate_name, cc.email, cc.student_id, cc.department,
+                    cc.row_status, cc.match_score, cc.matched_to, cc.last_activity, cc.invited_at, cc.activated_at,
+                    c.name AS cohort_name, c.programme,
+                    CASE
+                      WHEN cc.row_status IN ('placed','interning') THEN 100
+                      WHEN cc.row_status = 'interviewing' THEN 80
+                      WHEN cc.row_status = 'shortlisted' THEN 65
+                      WHEN cc.row_status = 'activated' THEN 50
+                      WHEN cc.row_status = 'invited' THEN 20
+                      ELSE 10
+                    END AS profile_completion,
+                    CASE
+                      WHEN cc.row_status IN ('placed','interning') THEN 'placed'
+                      WHEN cc.row_status IN ('activated','shortlisted','interviewing') THEN 'active'
+                      ELSE 'inactive'
+                    END AS employment_status
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE ${where}
+             ORDER BY cc.last_activity DESC NULLS LAST, cc.candidate_name ASC
+             LIMIT $${idx} OFFSET $${idx + 1}`,
+            [...params, limit, offset]
+        )
+
+        return res.json({
+            students: rows,
+            total: Number(countRows[0]?.count || 0),
+            page,
+            limit,
+        })
+    } catch (err) {
+        logger.error('listInstitutionStudents error', { err })
+        return res.status(500).json({ error: 'Failed to list students' })
+    }
+}
+
+export async function listEmployerActivity(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId)
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        const { syncInstitutionPlacementsFromApplications } = await import('../services/institutionPlacementSync.js')
+        await syncInstitutionPlacementsFromApplications(institutionId)
+
+        // Live application pipeline for roster students (email match) + roster matched_to
+        const { rows: appRows } = await query(
+            `SELECT cc.id AS candidate_row_id, cc.candidate_name, cc.department, cc.email,
+                    c.name AS cohort_name, a.application_id, a.ai_status, a.interview_status,
+                    a.ai_score, COALESCE(a.updated_at, a.created_at) AS contacted_at,
+                    jp.job_title, co.company_name
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             JOIN applications a ON lower(a.email) = lower(cc.email)
+             JOIN job_postings jp ON jp.job_posting_id = a.job_posting_id
+             LEFT JOIN companies co ON co.company_id = COALESCE(a.company_id, jp.company_id)
+             WHERE c.institution_id = $1
+               AND (
+                 upper(coalesce(a.ai_status::text,'')) IN ('SHORTLIST','SHORTLISTED','FLAG','HIRED','OFFER')
+                 OR upper(coalesce(a.interview_status::text,'')) IN ('SCHEDULED','COMPLETED','INTERVIEWING','HIRED')
+                 OR a.interview_time IS NOT NULL
+               )
+             ORDER BY COALESCE(a.updated_at, a.created_at) DESC
+             LIMIT 200`,
+            [institutionId]
+        )
+
+        const activityFromApps = appRows.map((r: any) => {
+            let status = 'shortlisted'
+            const ai = String(r.ai_status || '').toUpperCase()
+            const iv = String(r.interview_status || '').toUpperCase()
+            if (ai === 'HIRED' || iv === 'HIRED') status = 'placed'
+            else if (ai === 'OFFER') status = 'interning'
+            else if (['SCHEDULED', 'COMPLETED', 'INTERVIEWING'].includes(iv) || r.interview_status) status = 'interviewing'
+            return {
+                id: `${r.candidate_row_id}-${r.application_id}`,
+                employer: r.company_name || 'Employer',
+                role: r.job_title || 'Role under consideration',
+                student_name: r.candidate_name,
+                department: r.department,
+                status,
+                match_score: r.ai_score,
+                contacted_at: r.contacted_at,
+                cohort_name: r.cohort_name,
+                source: 'application',
+            }
+        })
+
+        const { rows } = await query(
+            `SELECT cc.id, cc.candidate_name, cc.department, cc.matched_to, cc.row_status,
+                    cc.match_score, cc.last_activity, c.name AS cohort_name
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1
+               AND cc.matched_to IS NOT NULL AND cc.matched_to != ''
+               AND cc.row_status IN ('shortlisted','interviewing','placed','interning')
+             ORDER BY cc.last_activity DESC NULLS LAST
+             LIMIT 200`,
+            [institutionId]
+        )
+
+        const activityFromRoster = rows.map((r: any) => {
+            const parts = String(r.matched_to || '').split(/—|-/)
+            return {
+                id: r.id,
+                employer: parts[0]?.trim() || r.matched_to,
+                role: parts.slice(1).join(' - ').trim() || 'Role under consideration',
+                student_name: r.candidate_name,
+                department: r.department,
+                status: r.row_status,
+                match_score: r.match_score,
+                contacted_at: r.last_activity,
+                cohort_name: r.cohort_name,
+                source: 'roster',
+            }
+        })
+
+        // Prefer application-backed rows; append roster-only unique students
+        const seen = new Set(activityFromApps.map((a: any) => `${a.student_name}|${a.employer}|${a.role}`))
+        const merged = [
+            ...activityFromApps,
+            ...activityFromRoster.filter((a: any) => !seen.has(`${a.student_name}|${a.employer}|${a.role}`)),
+        ]
+        return res.json({ activity: merged.slice(0, 200) })
+    } catch (err) {
+        logger.error('listEmployerActivity error', { err })
+        return res.status(500).json({ error: 'Failed to load employer activity' })
+    }
+}
+
+export async function listPlacements(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId)
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        const { syncInstitutionPlacementsFromApplications } = await import('../services/institutionPlacementSync.js')
+        await syncInstitutionPlacementsFromApplications(institutionId)
+
+        // Prefer live applications (email-matched hire) then roster matched_to
+        const { rows: appPlacements } = await query(
+            `SELECT DISTINCT ON (lower(cc.email), jp.job_posting_id)
+                    cc.id, cc.candidate_name, cc.department, cc.email, cc.row_status,
+                    c.name AS cohort_name, c.programme,
+                    coalesce(co.company_name, 'Employer') AS employer,
+                    jp.job_title AS role,
+                    a.application_id, jp.job_posting_id,
+                    COALESCE(a.updated_at, a.created_at) AS placed_at,
+                    CASE
+                      WHEN upper(coalesce(a.interview_status::text,'')) = 'HIRED'
+                        OR upper(coalesce(a.ai_status::text,'')) = 'HIRED' THEN 'placed'
+                      ELSE 'interning'
+                    END AS placement_type
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             JOIN applications a ON lower(a.email) = lower(cc.email)
+             JOIN job_postings jp ON jp.job_posting_id = a.job_posting_id
+             LEFT JOIN companies co ON co.company_id = COALESCE(a.company_id, jp.company_id)
+             WHERE c.institution_id = $1
+               AND (
+                 upper(coalesce(a.interview_status::text,'')) = 'HIRED'
+                 OR upper(coalesce(a.ai_status::text,'')) IN ('HIRED','OFFER')
+               )
+             ORDER BY lower(cc.email), jp.job_posting_id, COALESCE(a.updated_at, a.created_at) DESC`,
+            [institutionId]
+        )
+
+        const { rows } = await query(
+            `SELECT cc.id, cc.candidate_name, cc.department, cc.email, cc.matched_to, cc.row_status,
+                    cc.last_activity, c.name AS cohort_name, c.programme
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1
+               AND cc.row_status IN ('placed','interning')
+             ORDER BY cc.last_activity DESC NULLS LAST`,
+            [institutionId]
+        )
+
+        const fromApps = appPlacements.map((r: any) => ({
+            id: `app-${r.application_id || r.id}`,
+            student_name: r.candidate_name,
+            student_email: r.email,
+            department: r.department,
+            employer: r.employer,
+            role: r.role,
+            placement_type: r.placement_type,
+            placed_at: r.placed_at,
+            cohort_name: r.cohort_name,
+            programme: r.programme,
+            application_id: r.application_id,
+            job_posting_id: r.job_posting_id,
+            source: 'application',
+        }))
+
+        const seenEmails = new Set(fromApps.map((p: any) => String(p.student_email || '').toLowerCase()))
+        const fromRoster = rows
+            .filter((r: any) => !seenEmails.has(String(r.email || '').toLowerCase()))
+            .map((r: any) => {
+                const parts = String(r.matched_to || '').split(/—|-/)
+                return {
+                    id: r.id,
+                    student_name: r.candidate_name,
+                    student_email: r.email,
+                    department: r.department,
+                    employer: parts[0]?.trim() || 'Employer',
+                    role: parts.slice(1).join(' - ').trim() || (r.row_status === 'interning' ? 'Internship' : 'Role'),
+                    placement_type: r.row_status,
+                    placed_at: r.last_activity,
+                    cohort_name: r.cohort_name,
+                    programme: r.programme,
+                    application_id: null,
+                    job_posting_id: null,
+                    source: 'roster',
+                }
+            })
+
+        const placements = [...fromApps, ...fromRoster]
+        return res.json({ placements, total: placements.length })
+    } catch (err) {
+        logger.error('listPlacements error', { err })
+        return res.status(500).json({ error: 'Failed to load placements' })
+    }
+}
+
+export async function getReportsSummary(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId)
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        const { rows: byDept } = await query(
+            `SELECT COALESCE(NULLIF(TRIM(cc.department),''),'Unspecified') AS department,
+                    COUNT(*)::int AS students,
+                    COUNT(*) FILTER (WHERE cc.row_status IN ('placed','interning'))::int AS placed,
+                    COUNT(*) FILTER (WHERE cc.row_status IN ('shortlisted','interviewing'))::int AS in_pipeline
+             FROM cohort_candidates cc
+             JOIN cohorts c ON c.id = cc.cohort_id
+             WHERE c.institution_id = $1
+             GROUP BY 1 ORDER BY students DESC`,
+            [institutionId]
+        )
+        const { rows: byCohort } = await query(
+            `SELECT c.id, c.name, c.programme, c.academic_level,
+                    COUNT(cc.id)::int AS students,
+                    COUNT(cc.id) FILTER (WHERE cc.row_status IN ('placed','interning'))::int AS placed
+             FROM cohorts c
+             LEFT JOIN cohort_candidates cc ON cc.cohort_id = c.id
+             WHERE c.institution_id = $1
+             GROUP BY c.id ORDER BY c.created_at DESC`,
+            [institutionId]
+        )
+        return res.json({ by_department: byDept, by_cohort: byCohort, generated_at: new Date().toISOString() })
+    } catch (err) {
+        logger.error('getReportsSummary error', { err })
+        return res.status(500).json({ error: 'Failed to load report summary' })
+    }
+}
+
+export async function listOnboardingSessions(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId)
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        try {
+            const { rows } = await query(
+                `SELECT * FROM institution_onboarding_sessions
+                 WHERE institution_id = $1
+                 ORDER BY scheduled_at DESC`,
+                [institutionId]
+            )
+            return res.json({ sessions: rows })
+        } catch {
+            const { rows } = await query(
+                `SELECT cu.id, cu.created_at AS scheduled_at, cu.row_count AS expected_count,
+                        cu.valid_rows AS onboarded_count, cu.status, c.name AS department,
+                        cu.original_filename, 'Bulk upload' AS facilitator
+                 FROM cohort_uploads cu
+                 JOIN cohorts c ON c.id = cu.cohort_id
+                 WHERE c.institution_id = $1
+                 ORDER BY cu.created_at DESC`,
+                [institutionId]
+            )
+            return res.json({ sessions: rows })
+        }
+    } catch (err) {
+        logger.error('listOnboardingSessions error', { err })
+        return res.status(500).json({ error: 'Failed to load onboarding sessions' })
+    }
+}
+
+export async function requestOnboardingSession(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId, ['owner', 'roster_manager'])
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        const { preferred_date, department, expected_count, notes } = req.body || {}
+        if (!preferred_date) return res.status(400).json({ error: 'preferred_date required' })
+
+        try {
+            const { rows } = await query(
+                `INSERT INTO institution_onboarding_sessions
+                   (institution_id, scheduled_at, department, expected_count, status, facilitator, notes)
+                 VALUES ($1, $2, $3, $4, 'scheduled', 'Pending OptioHire facilitator', $5)
+                 RETURNING *`,
+                [institutionId, preferred_date, department || null, Number(expected_count) || 0, notes || null]
+            )
+            const { fanOutInstitutionRequestToAdmin } = await import('../services/institutionAdminFanout.js')
+            await fanOutInstitutionRequestToAdmin({
+                institutionId,
+                userId: req.userId,
+                userEmail: req.userEmail,
+                requestType: 'onboarding_session',
+                subject: `Onboarding session — ${department || 'All departments'}`,
+                message: [
+                    `Preferred date: ${preferred_date}`,
+                    `Expected students: ${Number(expected_count) || 0}`,
+                    notes ? `Notes: ${notes}` : '',
+                ].filter(Boolean).join('\n'),
+                referenceId: rows[0].id,
+                meta: { department, expected_count: Number(expected_count) || 0, preferred_date },
+            })
+            return res.status(201).json({ session: rows[0] })
+        } catch (e: any) {
+            // Ensure table then retry once
+            await query(`
+              CREATE TABLE IF NOT EXISTS institution_onboarding_sessions (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                institution_id UUID REFERENCES institutions(id) ON DELETE CASCADE,
+                scheduled_at TIMESTAMPTZ NOT NULL,
+                department TEXT,
+                expected_count INT DEFAULT 0,
+                status TEXT DEFAULT 'scheduled',
+                facilitator TEXT,
+                notes TEXT,
+                created_at TIMESTAMPTZ DEFAULT now()
+              )`)
+            const { rows } = await query(
+                `INSERT INTO institution_onboarding_sessions
+                   (institution_id, scheduled_at, department, expected_count, status, facilitator, notes)
+                 VALUES ($1, $2, $3, $4, 'scheduled', 'Pending OptioHire facilitator', $5)
+                 RETURNING *`,
+                [institutionId, preferred_date, department || null, Number(expected_count) || 0, notes || null]
+            )
+            const { fanOutInstitutionRequestToAdmin } = await import('../services/institutionAdminFanout.js')
+            await fanOutInstitutionRequestToAdmin({
+                institutionId,
+                userId: req.userId,
+                userEmail: req.userEmail,
+                requestType: 'onboarding_session',
+                subject: `Onboarding session — ${department || 'All departments'}`,
+                message: [
+                    `Preferred date: ${preferred_date}`,
+                    `Expected students: ${Number(expected_count) || 0}`,
+                    notes ? `Notes: ${notes}` : '',
+                ].filter(Boolean).join('\n'),
+                referenceId: rows[0].id,
+                meta: { department, expected_count: Number(expected_count) || 0, preferred_date },
+            })
+            return res.status(201).json({ session: rows[0] })
+        }
+    } catch (err) {
+        logger.error('requestOnboardingSession error', { err })
+        return res.status(500).json({ error: 'Failed to request onboarding session' })
+    }
+}
+
+export async function listAnnouncements(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId)
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+
+        req.query.audience = 'institution'
+        req.query.institution_id = institutionId
+        const { listPlatformAnnouncements } = await import('./announcementsController.js')
+        return listPlatformAnnouncements(req, res)
+    } catch (err) {
+        logger.error('listAnnouncements error', { err })
+        return res.status(500).json({ error: 'Failed to load announcements' })
+    }
+}
+
+export async function listSupportTickets(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId)
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+        try {
+            await query(`
+              CREATE TABLE IF NOT EXISTS institution_support_tickets (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                institution_id UUID REFERENCES institutions(id) ON DELETE CASCADE,
+                created_by UUID,
+                subject TEXT NOT NULL,
+                message TEXT NOT NULL,
+                status TEXT DEFAULT 'open',
+                created_at TIMESTAMPTZ DEFAULT now()
+              )`)
+            const { rows } = await query(
+                `SELECT * FROM institution_support_tickets WHERE institution_id = $1 ORDER BY created_at DESC`,
+                [institutionId]
+            )
+            return res.json({ tickets: rows, response_sla: 'Within 1 business day' })
+        } catch (e: any) {
+            return res.json({ tickets: [], response_sla: 'Within 1 business day' })
+        }
+    } catch (err) {
+        logger.error('listSupportTickets error', { err })
+        return res.status(500).json({ error: 'Failed to load support tickets' })
+    }
+}
+
+export async function createSupportTicket(req: AuthRequest, res: Response) {
+    try {
+        const { id: institutionId } = req.params
+        const role = await ensureAdminAccess(req.userId!, institutionId)
+        if (!role && req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied' })
+        const { subject, message } = req.body || {}
+        if (!subject || !message) return res.status(400).json({ error: 'subject and message required' })
+
+        await query(`
+          CREATE TABLE IF NOT EXISTS institution_support_tickets (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            institution_id UUID REFERENCES institutions(id) ON DELETE CASCADE,
+            created_by UUID,
+            subject TEXT NOT NULL,
+            message TEXT NOT NULL,
+            status TEXT DEFAULT 'open',
+            created_at TIMESTAMPTZ DEFAULT now()
+          )`)
+        const { rows } = await query(
+            `INSERT INTO institution_support_tickets (institution_id, created_by, subject, message)
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+            [institutionId, req.userId, subject, message]
+        )
+
+        const { fanOutInstitutionRequestToAdmin } = await import('../services/institutionAdminFanout.js')
+        await fanOutInstitutionRequestToAdmin({
+            institutionId,
+            userId: req.userId,
+            userEmail: req.userEmail,
+            requestType: 'support',
+            subject,
+            message,
+            referenceId: rows[0].id,
+        })
+
+        return res.status(201).json({ ticket: rows[0], response_sla: 'Within 1 business day' })
+    } catch (err) {
+        logger.error('createSupportTicket error', { err })
+        return res.status(500).json({ error: 'Failed to create support ticket' })
     }
 }

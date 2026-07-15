@@ -401,7 +401,7 @@ export default function AdminInstitutionsPage() {
                       </button>
                     )}
                     <Link
-                      href={`/institutions/onboard/${inst.onboardToken}`}
+                      href={`https://institutions.optiohire.com/onboard/${inst.onboardToken}`}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 5,
                         padding: '5px 10px', borderRadius: 6, border: '1.5px solid #DCE1D5',

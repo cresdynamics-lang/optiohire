@@ -202,7 +202,7 @@ export default function AdminOnboardingFormsPage() {
                   <td style={{ padding: '13px 14px' }}>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <Link
-                        href={`/institutions/onboard/${r.token}`}
+                        href={`https://institutions.optiohire.com/onboard/${r.token}`}
                         target="_blank"
                         title="Preview form"
                         style={{

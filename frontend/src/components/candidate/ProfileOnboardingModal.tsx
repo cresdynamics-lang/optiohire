@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, UploadCloud, FileText } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
@@ -24,11 +23,31 @@ export function ProfileOnboardingModal({
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success'>('idle')
   const [bio, setBio] = useState('')
   const [jobCategory, setJobCategory] = useState('')
+  const [roleId, setRoleId] = useState('')
+  const [roleQuery, setRoleQuery] = useState('')
+  const [roleResults, setRoleResults] = useState<{ id: string; title: string; group?: string }[]>([])
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null)
   const [recLetterFile, setRecLetterFile] = useState<File | null>(null)
 
+  useEffect(() => {
+    const q = roleQuery.trim()
+    if (q.length < 1) {
+      setRoleResults([])
+      return
+    }
+    const t = setTimeout(async () => {
+      const res = await fetch(`/api/roles?q=${encodeURIComponent(q)}&limit=12`)
+      if (res.ok) {
+        const data = await res.json()
+        setRoleResults(data.roles || [])
+      }
+    }, 250)
+    return () => clearTimeout(t)
+  }, [roleQuery])
+
   const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault()
     setLoading(true)
 
@@ -54,12 +73,28 @@ export function ProfileOnboardingModal({
         }
       }
 
-      xhr.onload = () => {
+      xhr.onload = async () => {
         setLoading(false)
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const data = JSON.parse(xhr.responseText)
             if (data.success) {
+              if (roleId && jobCategory) {
+                try {
+                  await fetch('/api/candidate/profile/settings', {
+                    method: 'PATCH',
+                    headers: {
+                      Authorization: `Bearer ${localStorage.getItem('token')}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      targetRoleCount: 1,
+                      targetRoles: [{ id: roleId, title: jobCategory }],
+                      jobCategory,
+                    }),
+                  })
+                } catch { /* non-blocking */ }
+              }
               setUploadStatus('success')
               toast.success('Profile updated successfully!')
               setTimeout(() => {
@@ -147,22 +182,40 @@ export function ProfileOnboardingModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="category" className="text-sm font-semibold text-slate-700">Job Category</Label>
-            <Select value={jobCategory} onValueChange={setJobCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select your primary field" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Engineering">Software Engineering</SelectItem>
-                <SelectItem value="Finance">Finance & Accounting</SelectItem>
-                <SelectItem value="Marketing">Marketing & Sales</SelectItem>
-                <SelectItem value="Design">Design & UX</SelectItem>
-                <SelectItem value="Product">Product Management</SelectItem>
-                <SelectItem value="HR">Human Resources</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-2 relative">
+            <Label className="text-sm font-semibold text-slate-700">Target role</Label>
+            <Input
+              placeholder="Search roles (Frontend Engineering, Data Analyst…)"
+              value={roleQuery || jobCategory}
+              onChange={(e) => {
+                setRoleQuery(e.target.value)
+                setJobCategory(e.target.value)
+                setRoleId('')
+              }}
+            />
+            {jobCategory && roleId && (
+              <p className="text-xs text-indigo-600 font-medium">Selected: {jobCategory}</p>
+            )}
+            {roleResults.length > 0 && (
+              <div className="absolute z-30 mt-1 max-h-44 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                {roleResults.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    onClick={() => {
+                      setJobCategory(r.title)
+                      setRoleId(r.id)
+                      setRoleQuery('')
+                      setRoleResults([])
+                    }}
+                  >
+                    <span className="font-medium">{r.title}</span>
+                    {r.group && <span className="text-xs text-slate-500">{r.group}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

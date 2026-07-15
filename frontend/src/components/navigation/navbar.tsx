@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Briefcase, ChevronRight, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+
 const hrNavigation = [
   { name: 'Home', href: '/' },
   { name: 'Jobs', href: '/jobs' },
@@ -16,18 +17,23 @@ const hrNavigation = [
   { name: 'Demo', href: '/demo' },
 ]
 
+/** Marketing pages with full-bleed / dark heroes — navbar overlays until scroll */
+const OVERLAY_PATHS = ['/use-cases', '/how-it-works', '/about']
+
 export function Navbar() {
   const { user } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [candidateMode, setCandidateMode] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
+  const overlayHero = OVERLAY_PATHS.some((p) => pathname === p || pathname?.startsWith(`${p}/`))
+  const onDark = overlayHero && !scrolled && !mobileMenuOpen
 
-  // Get dashboard link based on role
   const getDashboardLink = () => {
     if (!user) return '/auth/options?mode=signin'
     if (user.role === 'admin') return '/admin'
-    
+
     const normalizedCompanyRole = user?.companyRole?.toLowerCase()
     const normalizedRole = user?.role?.toLowerCase()
     const isJobSeeker =
@@ -37,17 +43,26 @@ export function Navbar() {
       normalizedRole === 'candidate' ||
       normalizedRole === 'job_seeker' ||
       normalizedRole === 'jobseeker'
-      
+
     return isJobSeeker ? '/candidate' : '/hr'
   }
 
-  // Auto-detect candidate mode based on pathname
   useEffect(() => {
     const isJobsRoute = pathname?.startsWith('/jobs') || pathname?.startsWith('/apply')
     setCandidateMode(isJobsRoute || false)
   }, [pathname])
 
-  // Close mobile menu on resize or route change
+  useEffect(() => {
+    if (!overlayHero) {
+      setScrolled(true)
+      return
+    }
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [overlayHero])
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) setMobileMenuOpen(false)
@@ -67,38 +82,55 @@ export function Navbar() {
     }
   }, [mobileMenuOpen])
 
+  const linkIdle = onDark
+    ? 'text-white/70 hover:bg-white/10 hover:text-white'
+    : 'text-slate-600 hover:bg-white/80 hover:text-slate-900'
+  const linkActive = onDark
+    ? 'bg-white/15 text-white'
+    : 'bg-white text-slate-900 shadow-sm'
+
   return (
-    <header className="sticky left-0 right-0 top-0 z-[100] border-b border-slate-200 bg-white">
+    <header
+      className={`fixed left-0 right-0 top-0 z-[100] transition-[background-color,border-color,backdrop-filter] duration-300 ${
+        onDark
+          ? 'border-b border-transparent bg-transparent'
+          : 'border-b border-slate-200/90 bg-white/95 backdrop-blur-md'
+      }`}
+    >
       <nav ref={navRef} className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6 lg:px-8">
-        {/* Logo */}
-        <div className="flex items-center flex-shrink-0 z-10">
-          <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
+        <div className="z-10 flex flex-shrink-0 items-center">
+          <Link href="/" className="-m-1.5 flex items-center gap-2.5 p-1.5">
             <Image
-              src="/assets/logo/optiohire_mark_light.png"
+              src={onDark ? '/assets/logo/optiohire_mark_light.png' : '/assets/logo/optiohire_mark_dark.png'}
               alt="OptioHire logo"
-              width={56}
-              height={56}
-              className="h-14 w-14 rounded-md object-contain"
+              width={44}
+              height={44}
+              className="h-11 w-11 object-contain"
               priority
             />
-            <span className="headline-platform text-xl tracking-tight md:text-2xl !font-semibold">
+            <span
+              className={`font-[family-name:var(--font-display-italic)] text-xl tracking-tight md:text-2xl ${
+                onDark ? 'text-white' : 'text-[#0c121c]'
+              }`}
+            >
               OptioHire
             </span>
           </Link>
         </div>
 
-        {/* Desktop center nav — HR mode */}
         {!candidateMode && (
           <div className="hidden lg:flex lg:flex-1 lg:justify-center">
-            <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+            <div
+              className={`flex items-center gap-0.5 rounded-full p-1 ${
+                onDark ? 'border border-white/15 bg-white/5' : 'border border-slate-200 bg-slate-50'
+              }`}
+            >
               {hrNavigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                    pathname === item.href
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:bg-white/80 hover:text-slate-900'
+                  className={`whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition-colors duration-200 ${
+                    pathname === item.href ? linkActive : linkIdle
                   }`}
                 >
                   {item.name}
@@ -108,13 +140,12 @@ export function Navbar() {
           </div>
         )}
 
-        {/* Desktop center nav — Candidate mode */}
         {candidateMode && (
           <div className="hidden lg:flex lg:flex-1 lg:justify-center">
-            <div className="flex items-center gap-1 rounded-xl border border-blue-100 bg-blue-50 p-1">
+            <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 p-1">
               <Link
                 href="/jobs"
-                className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                   pathname === '/jobs' || pathname?.startsWith('/jobs/')
                     ? 'bg-white text-blue-700 shadow-sm'
                     : 'text-blue-600 hover:bg-white/80 hover:text-blue-700'
@@ -124,7 +155,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="https://applications.optiohire.com"
-                className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-white/80 hover:text-blue-700 transition-colors duration-200"
+                className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-blue-600 transition-colors duration-200 hover:bg-white/80 hover:text-blue-700"
               >
                 My Applications
               </Link>
@@ -132,17 +163,23 @@ export function Navbar() {
           </div>
         )}
 
-        {/* Desktop right side */}
-        <div className="hidden lg:flex lg:items-center lg:flex-shrink-0 lg:gap-2">
-          {/* Mode toggle pill */}
-          <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs font-medium mr-1">
+        <div className="hidden lg:flex lg:flex-shrink-0 lg:items-center lg:gap-2">
+          <div
+            className={`mr-1 flex items-center gap-1 rounded-full p-0.5 text-xs font-medium ${
+              onDark ? 'border border-white/15 bg-white/5' : 'border border-slate-200 bg-slate-50'
+            }`}
+          >
             <Link
               href="/"
               onClick={() => setCandidateMode(false)}
-              className={`rounded-full px-3 py-1.5 transition-all duration-200 whitespace-nowrap ${
+              className={`whitespace-nowrap rounded-full px-3 py-1.5 transition-all duration-200 ${
                 !candidateMode
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? onDark
+                    ? 'bg-white text-[#0c121c] shadow-sm'
+                    : 'bg-slate-900 text-white shadow-sm'
+                  : onDark
+                    ? 'text-white/60 hover:text-white'
+                    : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               For HR
@@ -150,10 +187,12 @@ export function Navbar() {
             <Link
               href="/jobs"
               onClick={() => setCandidateMode(true)}
-              className={`rounded-full px-3 py-1.5 transition-all duration-200 whitespace-nowrap flex items-center gap-1 ${
+              className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 transition-all duration-200 ${
                 candidateMode
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                  : onDark
+                    ? 'text-white/60 hover:text-white'
+                    : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               <Briefcase className="h-3 w-3" />
@@ -164,8 +203,12 @@ export function Navbar() {
           {user ? (
             <Link
               href={getDashboardLink()}
-              className={`whitespace-nowrap rounded-2xl px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 flex items-center gap-2 ${
-                candidateMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-900 hover:bg-black'
+              className={`flex items-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200 ${
+                candidateMode
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : onDark
+                    ? 'bg-white text-[#0c121c] hover:bg-white/90'
+                    : 'bg-[#0c121c] text-white hover:bg-black'
               }`}
             >
               <LayoutDashboard className="h-4 w-4" />
@@ -174,7 +217,7 @@ export function Navbar() {
           ) : candidateMode ? (
             <Link
               href="/jobs"
-              className="whitespace-nowrap rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 flex items-center gap-1.5"
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700"
             >
               Browse Jobs
               <ChevronRight className="h-3.5 w-3.5" />
@@ -183,13 +226,21 @@ export function Navbar() {
             <>
               <Link
                 href="/auth/options?mode=signin"
-                className="whitespace-nowrap rounded-2xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:text-slate-900"
+                className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  onDark
+                    ? 'border border-white/25 text-white hover:bg-white/10'
+                    : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                }`}
               >
                 Sign In
               </Link>
               <Link
                 href="/auth/options?mode=signup"
-                className="whitespace-nowrap rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-black"
+                className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200 ${
+                  onDark
+                    ? 'bg-white text-[#0c121c] hover:bg-white/90'
+                    : 'bg-[#0c121c] text-white hover:bg-black'
+                }`}
               >
                 Start Free Trial
               </Link>
@@ -197,38 +248,35 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Mobile menu button */}
         <button
           type="button"
-          className="relative z-10 flex min-h-[40px] min-w-[40px] flex-shrink-0 items-center justify-center p-2 text-slate-700 transition-colors hover:text-slate-900 lg:hidden"
+          className={`relative z-10 flex min-h-[40px] min-w-[40px] flex-shrink-0 items-center justify-center p-2 transition-colors lg:hidden ${
+            onDark ? 'text-white hover:text-white/80' : 'text-slate-700 hover:text-slate-900'
+          }`}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
           aria-expanded={mobileMenuOpen}
         >
-          {mobileMenuOpen ? (
-            <X className="h-6 w-6 text-slate-900" aria-hidden="true" />
-          ) : (
-            <Menu className="h-6 w-6 text-slate-900" aria-hidden="true" />
-          )}
+          {mobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
         </button>
 
-        {/* Mobile menu dropdown */}
         {mobileMenuOpen && (
-          <div className="absolute left-0 right-0 top-full z-[200] mt-2 translate-y-0 overflow-hidden rounded-2xl border border-slate-200 bg-white opacity-100 shadow-xl shadow-slate-900/10 transition-all duration-200 lg:hidden">
-            <div className="px-4 py-4 space-y-2">
-              {/* Mode toggle in mobile */}
-              <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 mb-3">
+          <div className="absolute left-3 right-3 top-full z-[200] mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 lg:hidden">
+            <div className="space-y-2 px-4 py-4">
+              <div className="mb-3 flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
                 <button
+                  type="button"
                   onClick={() => setCandidateMode(false)}
                   className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-200 ${
-                    !candidateMode ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500'
+                    !candidateMode ? 'bg-[#0c121c] text-white shadow-sm' : 'text-slate-500'
                   }`}
                 >
                   For HR Teams
                 </button>
                 <button
+                  type="button"
                   onClick={() => setCandidateMode(true)}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all duration-200 ${
                     candidateMode ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500'
                   }`}
                 >
@@ -246,7 +294,7 @@ export function Navbar() {
                       className={`block rounded-xl px-4 py-3 text-sm font-medium transition-colors duration-200 ${
                         pathname === item.href
                           ? 'bg-slate-100 text-slate-900'
-                          : 'text-slate-700 hover:bg-slate-50/80 hover:text-slate-900'
+                          : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
@@ -256,7 +304,7 @@ export function Navbar() {
                   {user ? (
                     <Link
                       href={getDashboardLink()}
-                      className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white flex items-center justify-center gap-2"
+                      className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-[#0c121c] px-4 py-3 text-center text-sm font-medium text-white"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <LayoutDashboard className="h-4 w-4" />
@@ -273,7 +321,7 @@ export function Navbar() {
                       </Link>
                       <Link
                         href="/auth/options?mode=signup"
-                        className="mt-2 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white"
+                        className="mt-2 block rounded-xl bg-[#0c121c] px-4 py-3 text-center text-sm font-medium text-white"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Start Free Trial
@@ -285,7 +333,7 @@ export function Navbar() {
                 <>
                   <Link
                     href="/jobs"
-                    className="block rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-sm font-medium text-blue-700"
+                    className="block rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Browse All Jobs
@@ -300,7 +348,7 @@ export function Navbar() {
                   {user && (
                     <Link
                       href={getDashboardLink()}
-                      className="mt-2 block rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white flex items-center justify-center gap-2"
+                      className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <LayoutDashboard className="h-4 w-4" />

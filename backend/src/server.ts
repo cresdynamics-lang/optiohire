@@ -30,6 +30,9 @@ import { router as webhooksRouter } from './routes/webhooks.js'
 import { router as templatesRouter } from './routes/templates.js'
 import { router as demosRouter } from './routes/demos.js'
 import { router as institutionsRouter } from './routes/institutions.js'
+import { router as universitiesRouter } from './routes/universities.js'
+import { router as rolesRouter } from './routes/roles.js'
+import { router as announcementsRouter } from './routes/announcements.js'
 import { router as adminCertificatesRouter } from './routes/certificates.js'
 
 import { ensureStorageDir } from './utils/storage.js'
@@ -137,6 +140,9 @@ app.use('/institution-applications', institutionApplicationsRouter)
 app.use('/auth', authRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/institutions', institutionsRouter)
+app.use('/api/universities', universitiesRouter)
+app.use('/api/roles', rolesRouter)
+app.use('/api/announcements', announcementsRouter)
 app.use('/api/user', userRouter)
 
 app.use('/api/user/preferences', userPreferencesRouter)

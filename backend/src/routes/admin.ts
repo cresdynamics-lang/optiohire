@@ -141,9 +141,12 @@ router.patch('/settings/feature-flags/:flagKey', updateFeatureFlag)
 
 // Institution Onboarding
 import { createOnboardingInvite, getOnboardingInvites, resendOnboardingInvite } from '../api/adminInstitutionController.js'
+import { getInstitutionLiveRequests, markInstitutionRequestSeen } from '../api/adminInstitutionRequestsController.js'
 router.post('/institutions/onboarding/invite', createOnboardingInvite)
 router.get('/institutions/onboarding', getOnboardingInvites)
 router.post('/institutions/onboarding/:id/resend', resendOnboardingInvite)
+router.get('/institutions/requests', getInstitutionLiveRequests)
+router.put('/institutions/requests/:type/:id/seen', markInstitutionRequestSeen)
 
 // Time Tracking & Activity
 router.get('/activity', getActivityLogs)
@@ -206,3 +209,15 @@ router.post('/talent-pool/bulk-custom-html-email', authenticate, requireAdmin, b
 // Security Audit Logs
 import { getSecurityLogs } from '../api/adminSecurityLogsController.js'
 router.get('/security-logs', authenticate, requireAdmin, getSecurityLogs)
+
+// Platform announcements (broadcast to all user types)
+import {
+  listAdminAnnouncements,
+  createAdminAnnouncement,
+  updateAdminAnnouncement,
+  deleteAdminAnnouncement,
+} from '../api/adminAnnouncementsController.js'
+router.get('/announcements', listAdminAnnouncements)
+router.post('/announcements', createAdminAnnouncement)
+router.patch('/announcements/:id', updateAdminAnnouncement)
+router.delete('/announcements/:id', deleteAdminAnnouncement)

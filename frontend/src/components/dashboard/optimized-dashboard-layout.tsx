@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/toaster'
-import { Bell, X, CheckCircle2, Briefcase } from 'lucide-react'
+import { Bell, X, CheckCircle2, Briefcase, Megaphone } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { NotificationProvider, useNotifications } from '@/contexts/notification-context'
 import { Sidebar } from './sidebar'
@@ -340,6 +340,34 @@ const LazyProfileSection = dynamic(
   }
 )
 
+const LazyHrSettingsSection = dynamic(
+  () => {
+    return import('./sections/hr-settings-section')
+      .then((mod: any) => {
+        if (!mod || typeof mod !== 'object') {
+          throw new Error('HrSettingsSection module not found')
+        }
+        const Export = mod.HrSettingsSection
+        if (!Export || typeof Export !== 'function') {
+          throw new Error('HrSettingsSection not found in module')
+        }
+        return { default: Export }
+      })
+      .catch((err: any) => {
+        console.error('Error loading HrSettingsSection:', err)
+        return {
+          default: function HrSettingsErrorFallback() {
+            return <SectionLoader sectionName="settings" />
+          },
+        }
+      })
+  },
+  {
+    loading: () => <SectionLoader sectionName="settings" />,
+    ssr: false,
+  }
+)
+
 const LazyCreateJobSection = dynamic(
   () => {
     return import('./sections/create-job-section')
@@ -454,10 +482,10 @@ const LazyTalentProfileSection = dynamic(
 
 function dashboardPageMeta(pathname: string | null, isJobSeeker: boolean) {
   const p = pathname || ''
-  if (p.startsWith('/hr/profile') || p.startsWith('/candidate/settings')) {
+  if (p.startsWith('/hr/settings') || p.startsWith('/hr/profile') || p.startsWith('/candidate/settings')) {
     return isJobSeeker
       ? { eyebrow: 'Candidate', title: 'My profile' }
-      : { eyebrow: 'Workspace', title: 'Profile & company' }
+      : { eyebrow: 'Workspace', title: 'Settings' }
   }
   if (p.startsWith('/candidate/profile')) {
     return { eyebrow: 'Candidate workspace', title: 'Talent Profile' }
@@ -503,11 +531,15 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
   /** Nav drawer open by default on desktop; automatically handled by useEffect for mobile. */
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  // Auto-close sidebar on mobile/tablet on mount
+  // Auto-close sidebar on mobile/tablet; keep open on desktop
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setIsSidebarOpen(false)
+    const syncSidebar = () => {
+      if (typeof window === 'undefined') return
+      setIsSidebarOpen(window.innerWidth >= 1024)
     }
+    syncSidebar()
+    window.addEventListener('resize', syncSidebar)
+    return () => window.removeEventListener('resize', syncSidebar)
   }, [])
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } = useNotifications()
@@ -560,8 +592,8 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
       setActiveSection('talent-profile')
       return
     }
-    if (pathname === '/dashboard/profile' || pathname?.startsWith('/dashboard/profile/') || pathname === '/hr/profile' || pathname?.startsWith('/hr/profile/') || pathname === '/candidate/settings' || pathname?.startsWith('/candidate/settings/')) {
-      setActiveSection('profile')
+    if (pathname === '/dashboard/profile' || pathname?.startsWith('/dashboard/profile/') || pathname === '/hr/profile' || pathname?.startsWith('/hr/profile/') || pathname === '/hr/settings' || pathname?.startsWith('/hr/settings/') || pathname === '/candidate/settings' || pathname?.startsWith('/candidate/settings/')) {
+      setActiveSection('settings')
       return
     }
     if (pathname === '/dashboard/jobs/new' || pathname === '/hr/jobs/new') {
@@ -585,7 +617,8 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
       return
     }
     if (!isJobSeeker && (pathname === '/dashboard/templates' || pathname?.startsWith('/dashboard/templates/') || pathname === '/hr/templates' || pathname?.startsWith('/hr/templates/'))) {
-      setActiveSection('templates')
+      setActiveSection('settings')
+      return
     }
   }, [pathname, isJobSeeker])
 
@@ -613,8 +646,10 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
           return <LazyTemplatesSection />
         case 'interviews':
           return isJobSeeker ? <LazyJobSeekerInterviewsSection /> : <LazyInterviewsSection />
+        case 'templates':
         case 'profile':
-          return <LazyProfileSection />
+        case 'settings':
+          return isJobSeeker ? <LazyProfileSection /> : <LazyHrSettingsSection />
         default:
           return isJobSeeker ? <LazyJobSeekerOverviewSection /> : <LazyOverviewSection />
       }
@@ -670,7 +705,9 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
           'edit-job': pathname || '/hr/jobs',
           reports: '/hr/reports',
           interviews: '/hr/interviews',
-          profile: '/hr/profile',
+          profile: '/hr/settings',
+          settings: '/hr/settings',
+          templates: '/hr/settings?tab=templates',
         }
     const newPath = sectionMap[section] || (isJobSeeker ? '/candidate' : '/hr')
     router.push(newPath)
@@ -692,9 +729,9 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-gray-950 text-foreground [background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_42%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] dark:[background-image:radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_42%)]" >
-      {isSidebarOpen && !isJobSeeker && (
+      {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]"
+          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px] lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
           aria-hidden
         />
@@ -705,8 +742,8 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
         role="navigation"
         aria-label="Dashboard navigation"
         className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] max-h-[100dvh] w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] flex-shrink-0 border-r border-slate-200/90 bg-white shadow-xl shadow-slate-900/10 transform transition-transform duration-300 ease-out supports-[padding:max(0px)]:pl-[env(safe-area-inset-left)]  dark:bg-slate-950 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
-        }`}
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${!isSidebarOpen ? 'pointer-events-none lg:pointer-events-auto' : ''}`}
       >
         <ErrorBoundary fallback={<div className="w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen p-4 flex items-center justify-center"><p className="text-gray-600 dark:text-gray-400">Sidebar unavailable. Refresh the page.</p></div>}>
           <Sidebar
@@ -719,9 +756,7 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
       </aside>
       
       <main 
-        className={`min-w-0 flex-1 overflow-auto bg-transparent transition-all duration-300 ease-out ${
-          isSidebarOpen ? 'lg:ml-[18rem]' : ''
-        }`}
+        className="min-w-0 flex-1 overflow-auto bg-transparent transition-all duration-300 ease-out lg:ml-[18rem]"
       >
         {/* Top bar: wayfinding + notifications */}
         <div className="sticky top-0 z-10 border-b border-slate-200/90 bg-white/95 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-900/[0.06] backdrop-blur-xl  dark:bg-slate-950/90">
@@ -759,6 +794,16 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
               </div>
             </div>
             <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+              <Button
+                asChild
+                variant="outline"
+                className="relative hidden h-11 min-h-[44px] rounded-xl border border-slate-200 bg-white px-3 shadow-sm hover:bg-slate-50 sm:inline-flex"
+              >
+                <Link href={isJobSeeker ? '/candidate/announcements' : '/hr/announcements'} prefetch={false}>
+                  <Megaphone className="mr-1.5 h-4 w-4" />
+                  <span className="text-xs font-medium">Announcements</span>
+                </Link>
+              </Button>
               {!isJobSeeker && (
                 <>
                   <Button

@@ -864,27 +864,29 @@ export function OverviewSection() {
         </motion.div>
       )}
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {metricsData.map((metric, index) => {
-          const tourId = metric.title === 'Active Jobs' ? 'active-jobs' :
-                        metric.title === 'Total Jobs' ? 'total-jobs' :
-                        metric.title === 'Reports Generated' ? 'reports-generated' :
-                        metric.title === 'Ready Reports' ? 'ready-reports' : null
-          
-          return (
-            <div key={metric.title} data-tour={tourId || undefined}>
-              <MetricCard
-                title={metric.title}
-                value={metric.value}
-                icon={metric.icon}
-                trend={metric.trend}
-                tone={metric.tone}
-                delay={index * 0.1}
-              />
-            </div>
-          )
-        })}
+      {/* Metrics Grid — soft neumorphic tray */}
+      <div className="neu-hr rounded-3xl p-3 sm:p-4">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {metricsData.map((metric, index) => {
+            const tourId = metric.title === 'Active Jobs' ? 'active-jobs' :
+                          metric.title === 'Total Jobs' ? 'total-jobs' :
+                          metric.title === 'Reports Generated' ? 'reports-generated' :
+                          metric.title === 'Ready Reports' ? 'ready-reports' : null
+            
+            return (
+              <div key={metric.title} data-tour={tourId || undefined}>
+                <MetricCard
+                  title={metric.title}
+                  value={metric.value}
+                  icon={metric.icon}
+                  trend={metric.trend}
+                  tone={metric.tone}
+                  delay={index * 0.1}
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Applicant Analytics Section */}
@@ -896,7 +898,7 @@ export function OverviewSection() {
       >
         <Card 
           data-tour="applicant-analytics-title"
-          className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-[0_24px_70px_-48px_rgba(15,23,42,0.4)] dark:border-gray-800 dark:bg-gray-900"
+          className="neu-hr-raised overflow-hidden rounded-3xl border-0 dark:border dark:border-gray-800 dark:bg-gray-900 dark:shadow-none"
         >
           <CardHeader className="pb-4">
             <div className="flex-1 min-w-0">
@@ -1013,10 +1015,10 @@ export function OverviewSection() {
                 key={action.key}
                 onMouseEnter={action.onHover}
                 onClick={action.onClick}
-                className="group relative flex flex-col items-start p-6 rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#2D2DDD]/30 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#2D2DDD]/50"
+                className="neu-hr-raised group relative flex flex-col items-start rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 dark:border dark:border-gray-800 dark:bg-gray-900 dark:shadow-none"
                 type="button"
               >
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-white dark:border-gray-800 dark:bg-gray-800">
+                <div className="neu-hr-inset mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105 dark:border dark:border-gray-800 dark:bg-gray-800 dark:shadow-none">
                   <Icon className="h-6 w-6 text-[#2D2DDD]" />
                 </div>
                 <div className="flex w-full items-center justify-between gap-2">

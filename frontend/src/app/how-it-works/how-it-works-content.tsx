@@ -16,8 +16,6 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import VideoSection from '@/components/ui/video-section'
-import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { InstitutionApplyDialog } from '@/components/landing/institution-apply-dialog'
 
 const CARD = 'rounded-3xl border border-white/10 bg-white/[0.04]'
@@ -151,33 +149,33 @@ export default function HowItWorksContent() {
   return (
     <div className="relative min-h-screen bg-[#0f1729] text-slate-100">
       {/* Hero */}
-      <section className="relative px-4 pb-12 pt-28 sm:px-6 sm:pt-32">
-        <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-blue-400/10 blur-3xl" aria-hidden />
+      <section className="relative px-4 pb-8 pt-20 sm:px-6 sm:pb-10 sm:pt-24">
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-blue-400/10 blur-3xl" aria-hidden />
         <div className="relative mx-auto max-w-4xl text-center">
           <Reveal>
             <Eyebrow>How it works</Eyebrow>
           </Reveal>
           <Reveal delay={0.05}>
-            <h1 className="mt-7 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl">
+            <h1 className="mt-5 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:mt-6 sm:text-5xl md:text-6xl">
               From 300 applications
               <span className="mt-2 block text-[#8ea6cf]">to your top 5.</span>
             </h1>
           </Reveal>
           <Reveal delay={0.1}>
-            <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-slate-400 sm:text-xl">
+            <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-slate-400 sm:mt-6 sm:text-xl">
               OptioHire is built for HR managers and hiring managers. Create a job, receive applications in one
               pipeline, get fair AI-assisted screening, and move shortlisted candidates to interviews faster.
             </p>
-            <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-relaxed text-slate-500">
+            <p className="mx-auto mt-3 max-w-2xl text-pretty text-base leading-relaxed text-slate-500 sm:mt-4">
               Every step is transparent and traceable — so your team can explain hiring decisions with confidence
               and maintain a professional candidate experience.
             </p>
           </Reveal>
           <Reveal delay={0.15}>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:mt-8">
               <Button asChild size="lg" className="gap-2 rounded-2xl bg-white px-7 py-6 text-base font-semibold text-slate-900 hover:bg-slate-200">
-                <a href="#video">
-                  See it in action <ArrowRight className="h-5 w-5" />
+                <a href="#process">
+                  See the workflow <ArrowRight className="h-5 w-5" />
                 </a>
               </Button>
               <Button asChild variant="outline" size="lg" className="rounded-2xl border-white/15 bg-transparent px-7 py-6 text-base font-medium text-white hover:bg-white/5">
@@ -189,7 +187,7 @@ export default function HowItWorksContent() {
       </section>
 
       {/* Stats */}
-      <section className="px-4 pb-8 sm:px-6">
+      <section className="px-4 pb-6 sm:px-6 sm:pb-8">
         <div className={`mx-auto max-w-5xl ${CARD} p-6 sm:p-8`}>
           <div className="grid gap-6 sm:grid-cols-3">
             {STATS.map((s, i) => (
@@ -205,19 +203,8 @@ export default function HowItWorksContent() {
         </div>
       </section>
 
-      {/* Video */}
-      <div id="video">
-        <ErrorBoundary fallback={null}>
-          <VideoSection
-            useHowdyGo={false}
-            title="See it in action"
-            description="Watch how OptioHire handles real hiring workflows — from application intake to interview scheduling."
-          />
-        </ErrorBoundary>
-      </div>
-
       {/* 3-step process */}
-      <section className="px-4 py-20 sm:px-6">
+      <section id="process" className="scroll-mt-24 px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <Reveal className="mx-auto mb-14 max-w-3xl text-center">
             <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>The process</p>
