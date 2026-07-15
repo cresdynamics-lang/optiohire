@@ -212,14 +212,14 @@ export default function VideoSection({
                   >
                     <iframe
                       id="howdygo-frame"
-                      src="https://app.howdygo.com/prescreen-embed/23af4d85-e442-49a7-a4c3-854d8d8f6ce2?bdBlur=0&mobileStrategy=newTab&launchButton=Launch+interactive+demo"
+                      src="https://app.howdygo.com/prescreen-embed/23af4d85-e442-49a7-a4c3-854d8d8f6ce2?bdBlur=0&mobileStrategy=newTab&launchButton=Launch+walkthrough"
                       frameBorder="0"
                       scrolling="no"
                       allow="autoplay"
                       allowFullScreen
                       className="absolute top-0 left-0 w-full h-full"
                       loading="lazy"
-                      title="Product Demo - Interactive Walkthrough"
+                      title="OptioHire — Interactive product walkthrough"
                       style={{
                         border: 'none',
                       }}
@@ -237,7 +237,7 @@ export default function VideoSection({
                     <div className="text-center p-8">
                       <div className="w-16 h-16 border-4 border-[#4a0dba] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                       <p className="text-gray-600 text-sm md:text-base">
-                        Loading interactive demo...
+                        Loading interactive walkthrough...
                       </p>
                     </div>
                   </div>

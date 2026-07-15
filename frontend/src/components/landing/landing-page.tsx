@@ -581,9 +581,6 @@ function FinalCta() {
                 Start Free Trial <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-2xl border-white/15 bg-transparent px-8 py-6 text-base font-medium text-white hover:bg-white/5">
-              <Link href="/demo">Request a demo</Link>
-            </Button>
           </div>
         </Reveal>
       </div>

@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils'
 import {
   Mail,
   Phone,
-  Bot,
   ShieldCheck,
   MessageSquare,
   LifeBuoy,
@@ -402,32 +401,6 @@ export default function ContactPage() {
               <p className="text-xs font-figtree font-light text-gray-300">
                 Looking to automate interview scheduling? Ask about our autonomous agent pilots powered by <span className="text-white">OptioHire</span>.
               </p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="px-4 pb-24 sm:pb-28">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            {...fadeUp(0, disableMotion)}
-            className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/10 px-6 py-12 text-center backdrop-blur-xl sm:px-10"
-          >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#2D2DDD22,transparent_75%)]" aria-hidden="true" />
-            <div className="relative z-10 space-y-5">
-              <h2 className="headline-platform-dark text-[28px] sm:text-[40px] leading-tight">
-                Schedule a live product walkthrough
-              </h2>
-              <p className="mx-auto max-w-2xl text-sm sm:text-lg font-figtree font-light text-gray-100">
-                Experience the autonomous sourcing engine, adaptive interviews, and analytics cockpit in a 30-minute session tailored to your roles.
-              </p>
-              <a
-                href="mailto:demo@optiohire.com"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2D2DDD] px-8 py-3 text-sm font-figtree font-medium text-white transition hover:bg-[#2424c0]"
-              >
-                Request my demo
-                <Bot className="h-5 w-5" />
-              </a>
             </div>
           </motion.div>
         </div>

@@ -55,7 +55,7 @@ export function BottomCtaBanner() {
                   onClick={() => router.push('/hr/auth/signup')}
                   className="px-4 py-2 bg-white text-teal-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm whitespace-nowrap"
                 >
-                  Request Demo
+                  Start Free Trial
                 </button>
                 <button
                   onClick={() => router.push('/contact')}

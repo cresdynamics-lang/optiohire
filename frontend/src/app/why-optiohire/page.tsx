@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { ArrowRight, AlertTriangle, TrendingDown, Target, Shield, Users } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -257,10 +258,13 @@ export default function WhyOptioHirePage() {
             Join teams who've discovered that better hiring isn't about having more
             data — it's about having the right insights.
           </p>
-          <button className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-blue-700">
-            Request a Demo
+          <Link
+            href="/auth/options?mode=signup"
+            className="inline-flex items-center rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-blue-700"
+          >
+            Start free trial
             <ArrowRight className="ml-2 w-5 h-5" />
-          </button>
+          </Link>
           </div>
         </div>
       </section>

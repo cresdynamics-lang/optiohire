@@ -100,14 +100,6 @@ export default function AboutContent() {
                   Read the story <ArrowRight className="ml-1 h-4 w-4" />
                 </a>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-2xl border-white/35 bg-white/10 px-6 py-5 text-sm font-medium text-white hover:bg-white/20 sm:text-base"
-              >
-                <Link href="/demo">Book a demo</Link>
-              </Button>
             </div>
           </div>
         </div>
@@ -296,8 +288,8 @@ export default function AboutContent() {
               size="lg"
               className="rounded-2xl bg-white px-7 py-5 font-semibold text-[#2D2DDD] hover:bg-white/95"
             >
-              <Link href="/demo">
-                Request a demo <ArrowRight className="ml-1 h-5 w-5" />
+              <Link href="/auth/options?mode=signup">
+                Start free trial <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
             </Button>
             <Button

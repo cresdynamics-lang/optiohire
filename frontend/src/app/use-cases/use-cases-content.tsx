@@ -170,14 +170,6 @@ export default function UseCasesContent() {
                   Explore scenarios <ArrowRight className="ml-1 h-5 w-5" />
                 </a>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-2xl border-white/25 bg-transparent px-7 py-6 text-base font-medium text-white hover:bg-white/10"
-              >
-                <Link href="/demo">Book a demo</Link>
-              </Button>
             </div>
           </motion.div>
         </div>
@@ -247,12 +239,6 @@ export default function UseCasesContent() {
                           ))}
                         </ul>
                       </div>
-                      <Link
-                        href="/demo"
-                        className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#2D2DDD] transition-colors hover:text-[#2525c4]"
-                      >
-                        Talk through this scenario <ArrowRight className="h-4 w-4" />
-                      </Link>
                     </div>
                   </article>
                 </Reveal>
@@ -346,8 +332,8 @@ export default function UseCasesContent() {
                 size="lg"
                 className="rounded-2xl bg-white px-8 py-6 text-base font-semibold text-[#0c121c] hover:bg-white/90"
               >
-                <Link href="/demo">
-                  Request a demo <ArrowRight className="ml-1 h-5 w-5" />
+                <Link href="/auth/options?mode=signup">
+                  Start free trial <ArrowRight className="ml-1 h-5 w-5" />
                 </Link>
               </Button>
               <Button

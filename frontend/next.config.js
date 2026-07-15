@@ -67,7 +67,10 @@ const nextConfig = {
   },
 
   async redirects() {
-    return [{ source: '/favicon.ico', destination: '/icon', permanent: false }]
+    return [
+      { source: '/favicon.ico', destination: '/icon', permanent: false },
+      { source: '/demo', destination: '/refer', permanent: true },
+    ]
   },
 
   async rewrites() {

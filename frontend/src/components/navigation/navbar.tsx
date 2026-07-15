@@ -14,7 +14,7 @@ const hrNavigation = [
   { name: 'Use Cases', href: '/use-cases' },
   { name: 'About', href: '/about' },
   { name: 'Security', href: '/security' },
-  { name: 'Demo', href: '/demo' },
+  { name: 'Refer a friend', href: '/refer' },
 ]
 
 /** Marketing pages with full-bleed / dark heroes — navbar overlays until scroll */

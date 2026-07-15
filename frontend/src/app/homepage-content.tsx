@@ -262,7 +262,6 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
                 : 'OptioHire helps ambitious professionals cut through the noise, stand out to top employers, and track their applications with full transparency.'}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button className="rounded-2xl" onClick={() => router.push('/demo')}>Request Demo</Button>
               <Button variant="outline" className="rounded-2xl" onClick={() => router.push('/how-it-works')}>See How It Works</Button>
             </div>
           </div>
