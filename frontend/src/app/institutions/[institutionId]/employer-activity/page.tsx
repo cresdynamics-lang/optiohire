@@ -33,7 +33,7 @@ export default function EmployerActivityPage({ params }: { params: Promise<{ ins
       <p style={eyebrow}>Employer activity</p>
       <h1 style={pageTitle}>Who is engaging your students</h1>
       <p style={pageSub}>
-        Employers who contacted or shortlisted your graduates — without exposing private student message content.
+        Employers who contacted or shortlisted your graduates - without exposing private student message content.
       </p>
 
       <div style={{ ...card, marginTop: 22 }}>
@@ -65,7 +65,7 @@ export default function EmployerActivityPage({ params }: { params: Promise<{ ins
                       <div style={{ fontSize: 12, color: INST.inkSoft }}>{a.department || a.cohort_name}</div>
                     </td>
                     <td style={td}>{a.role}</td>
-                    <td style={td}>{a.contacted_at ? new Date(a.contacted_at).toLocaleDateString() : '—'}</td>
+                    <td style={td}>{a.contacted_at ? new Date(a.contacted_at).toLocaleDateString() : '-'}</td>
                     <td style={td}><span style={statusBadge(a.status)}>{a.status}</span></td>
                   </tr>
                 ))}

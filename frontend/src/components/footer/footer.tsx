@@ -58,7 +58,7 @@ export function Footer() {
 
   return (
     <footer className="relative overflow-hidden bg-[#0e1118] text-[#e8eaef]">
-      {/* Atmosphere — ink + cool teal, not purple bloom */}
+      {/* Atmosphere - ink + cool teal, not purple bloom */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -106,7 +106,7 @@ export function Footer() {
               OptioHire · Cres Dynamics
             </p>
             <p className="mt-4 max-w-xl font-[family-name:var(--font-display-italic)] text-[clamp(2.1rem,5vw,3.75rem)] italic leading-[1.05] tracking-tight text-white">
-              Hire on capability —
+              Hire on capability -
               <span className="text-[#7dd3c0]"> not CV volume.</span>
             </p>
           </div>

@@ -88,7 +88,7 @@
     font-stretch: expanded;
   }
 
-  /* Dominant marketing headlines — same voice as “Stop screening CVs manually…” */
+  /* Dominant marketing headlines - same voice as “Stop screening CVs manually…” */
   .headline-platform {
     font-family: var(--font-display-italic), 'Playfair Display', Georgia, serif;
     font-style: italic;

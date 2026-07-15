@@ -103,7 +103,7 @@ export default function AdminLayout({
     <AdminErrorBoundary>
       <AdminGuard>
         <div className="admin-neu relative min-h-screen">
-          {/* Mobile top bar with hamburger — sidebar stays fixed on desktop, no toggle needed */}
+          {/* Mobile top bar with hamburger - sidebar stays fixed on desktop, no toggle needed */}
           <header className="admin-neu sticky top-0 z-30 flex h-16 items-center gap-3 px-4 lg:hidden">
             <Button
               type="button"

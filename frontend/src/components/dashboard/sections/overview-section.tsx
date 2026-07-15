@@ -833,7 +833,7 @@ export function OverviewSection() {
         </motion.div>
       )}
 
-      {/* Metrics Grid — soft neumorphic tray */}
+      {/* Metrics Grid - soft neumorphic tray */}
       <div className="neu-hr rounded-3xl p-3 sm:p-4">
         <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {metricsData.map((metric, index) => {

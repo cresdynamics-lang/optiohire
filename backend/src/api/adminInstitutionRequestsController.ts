@@ -77,7 +77,7 @@ async function fetchOnboardingSessionRequests(since?: string): Promise<LiveReque
       type: 'onboarding_session' as const,
       institution_id: r.institution_id,
       institution_name: r.institution_name,
-      subject: `Onboarding session — ${r.department || 'All departments'}`,
+      subject: `Onboarding session - ${r.department || 'All departments'}`,
       message: [
         `Preferred: ${r.scheduled_at ? new Date(r.scheduled_at).toLocaleString() : 'TBD'}`,
         `Expected students: ${r.expected_count ?? 0}`,

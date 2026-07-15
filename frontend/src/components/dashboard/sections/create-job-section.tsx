@@ -254,7 +254,7 @@ export function CreateJobSection() {
           application_deadline: formData.application_deadline,
           meeting_link: formData.interview_meeting_link || undefined,
           job_poster_url: formData.job_poster_url || undefined,
-          // custom_questions are optional — strip any blank ones before sending
+          // custom_questions are optional - strip any blank ones before sending
           custom_questions: (formData.custom_questions || []).filter((q: any) => q.question?.trim())
         })
       })
@@ -436,7 +436,7 @@ export function CreateJobSection() {
                     <Input
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
-                      placeholder="Add skills — type one or paste a comma-separated list"
+                      placeholder="Add skills - type one or paste a comma-separated list"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                       onPaste={handleSkillPaste}
                       className="h-11 border-slate-200"

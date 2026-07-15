@@ -14,7 +14,7 @@ const SCENARIOS = [
     title: 'High-growth startups',
     lead: 'Hiring your first twenty people should not feel like a gamble.',
     challenge: 'Lean teams cannot spend days sorting CVs when every hire changes the company.',
-    help: 'OptioHire turns applications into a ranked shortlist with a clear role-fit score — so you interview the right five, not the loudest twenty.',
+    help: 'OptioHire turns applications into a ranked shortlist with a clear role-fit score - so you interview the right five, not the loudest twenty.',
     outcomes: ['Shorter shortlist cycles', 'Higher confidence in final interviews', 'Hiring records you can defend'],
     image:
       'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80',
@@ -24,7 +24,7 @@ const SCENARIOS = [
     id: 'smes',
     label: '02',
     title: 'Scaling SMEs',
-    lead: 'Nairobi, Mombasa, Kisumu — one hiring standard across every city.',
+    lead: 'Nairobi, Mombasa, Kisumu - one hiring standard across every city.',
     challenge: 'Different managers use different barometers, and quality drifts between teams.',
     help: 'One shared scorecard and process for every vacancy keeps feedback aligned and decisions consistent.',
     outcomes: ['Consistent candidate quality', 'Aligned interviewer feedback', 'Faster cross-site decisions'],
@@ -48,7 +48,7 @@ const SCENARIOS = [
     id: 'ngos',
     label: '04',
     title: 'NGOs & development orgs',
-    lead: 'Donor-funded roles need fair, documented selection — without slowing the panel.',
+    lead: 'Donor-funded roles need fair, documented selection - without slowing the panel.',
     challenge: 'Funding stakeholders expect traceable, bias-aware decisions you can show, not just claim.',
     help: 'Structured scoring and full audit trails make fairness evidence, not a side note in the minutes.',
     outcomes: ['Documented fairness', 'Compliance-ready reporting', 'Faster panel alignment'],
@@ -62,7 +62,7 @@ const SCALE = [
   {
     range: '1–50',
     title: 'Early stage',
-    body: 'Quality over volume — focused hires that set culture and momentum.',
+    body: 'Quality over volume - focused hires that set culture and momentum.',
   },
   {
     range: '51–500',
@@ -115,7 +115,7 @@ export default function UseCasesContent() {
 
   return (
     <div className="min-h-screen bg-[#f7f6f3] text-[#1a1f2c]">
-      {/* Hero — one composition: brand, headline, line, CTA, full-bleed image */}
+      {/* Hero - one composition: brand, headline, line, CTA, full-bleed image */}
       <section className="relative isolate min-h-[min(92vh,760px)] overflow-hidden">
         <Image
           src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2400&q=80"
@@ -157,7 +157,7 @@ export default function UseCasesContent() {
               Built for how Kenyan teams actually hire
             </h1>
             <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-white/75 sm:text-lg">
-              Skills-first screening, shared scorecards, and auditable decisions — whether you are filling
+              Skills-first screening, shared scorecards, and auditable decisions - whether you are filling
               your first roles or coordinating departments nationwide.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -175,7 +175,7 @@ export default function UseCasesContent() {
         </div>
       </section>
 
-      {/* Scenarios — one purpose each, editorial not card grid */}
+      {/* Scenarios - one purpose each, editorial not card grid */}
       <section id="scenarios" className="scroll-mt-24 px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <Reveal className="max-w-2xl">
@@ -248,7 +248,7 @@ export default function UseCasesContent() {
         </div>
       </section>
 
-      {/* Scale — one section, no card chrome */}
+      {/* Scale - one section, no card chrome */}
       <section className="border-y border-[#1a1f2c]/08 bg-white px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <Reveal className="max-w-2xl">
@@ -257,7 +257,7 @@ export default function UseCasesContent() {
               The same clarity at every company size
             </h2>
             <p className="mt-4 text-base leading-relaxed text-[#1a1f2c]/65 sm:text-lg">
-              From your first ten hires to multi-team recruitment — process depth grows with you, without
+              From your first ten hires to multi-team recruitment - process depth grows with you, without
               rewriting how fair decisions get made.
             </p>
           </Reveal>
@@ -275,7 +275,7 @@ export default function UseCasesContent() {
         </div>
       </section>
 
-      {/* Industries — text list, no fake counters */}
+      {/* Industries - text list, no fake counters */}
       <section className="px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <Reveal>
@@ -284,7 +284,7 @@ export default function UseCasesContent() {
               Role-fit that travels across sectors
             </h2>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-[#1a1f2c]/65">
-              Scorecards adapt to the job — technical screens for product teams, compliance depth for finance
+              Scorecards adapt to the job - technical screens for product teams, compliance depth for finance
               and NGOs, volume workflows for retail and hospitality.
             </p>
           </Reveal>
@@ -323,8 +323,8 @@ export default function UseCasesContent() {
               OptioHire for your next hire
             </p>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg">
-              Tell us your scenario — startup first hires, multi-city SMEs, enterprise panels, or
-              donor-funded roles — and we will show the workflow that fits.
+              Tell us your scenario - startup first hires, multi-city SMEs, enterprise panels, or
+              donor-funded roles - and we will show the workflow that fits.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
               <Button

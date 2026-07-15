@@ -412,7 +412,7 @@ export async function getDeadLetterEmails(req: Request, res: Response) {
        ) as exists`
     )
     if (!tableCheck[0]?.exists) {
-      console.warn('[getDeadLetterEmails] email_logs table not found — returning empty list')
+      console.warn('[getDeadLetterEmails] email_logs table not found - returning empty list')
       return res.json({
         emails: [],
         total: 0,

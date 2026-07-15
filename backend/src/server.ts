@@ -55,7 +55,7 @@ const port = Number(process.env.PORT || 3001)
 const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS || 1)
 app.set('trust proxy', true)
 
-// Temporarily add to app.ts or any router — remove after testing
+// Temporarily add to app.ts or any router - remove after testing
 app.get('/debug/ip', (req, res) => {
   res.json({
     'req.ip': req.ip,

@@ -29,7 +29,7 @@ export async function syncInstitutionPlacementsFromApplications(institutionId: s
        )
        UPDATE cohort_candidates cc
        SET row_status = h.row_status,
-           matched_to = h.employer || ' — ' || h.role_title,
+           matched_to = h.employer || ' - ' || h.role_title,
            last_activity = COALESCE(h.placed_at, NOW())
        FROM hired h, cohorts co
        WHERE co.id = cc.cohort_id
@@ -70,7 +70,7 @@ export async function syncInstitutionPlacementsFromApplications(institutionId: s
              WHEN cc.row_status IN ('placed','interning') THEN cc.row_status
              ELSE e.row_status
            END,
-           matched_to = COALESCE(NULLIF(cc.matched_to,''), e.employer || ' — ' || e.role_title),
+           matched_to = COALESCE(NULLIF(cc.matched_to,''), e.employer || ' - ' || e.role_title),
            last_activity = GREATEST(COALESCE(cc.last_activity, 'epoch'::timestamptz), e.activity_at)
        FROM engaged e, cohorts co
        WHERE co.id = cc.cohort_id

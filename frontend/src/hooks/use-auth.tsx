@@ -353,7 +353,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         portalPrefix = '/hr'
       }
 
-      // Use same-origin proxy (server resolves BACKEND_URL) — avoids CORS and 405 errors on production.
+      // Use same-origin proxy (server resolves BACKEND_URL) - avoids CORS and 405 errors on production.
       const signUpUrl =
         typeof window !== 'undefined'
           ? `${window.location.origin}/api${portalPrefix}/auth/signup`
@@ -449,7 +449,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         portal = 'admin'
       }
 
-      // Same-origin proxy (server resolves BACKEND_URL / NEXT_PUBLIC_BACKEND_URL) — avoids :3001 in the browser network log and CORS edge cases.
+      // Same-origin proxy (server resolves BACKEND_URL / NEXT_PUBLIC_BACKEND_URL) - avoids :3001 in the browser network log and CORS edge cases.
       const portalPrefix = portal === 'hr' ? '/hr' : (portal === 'candidate' ? '/candidate' : '')
       const signInUrl =
         typeof window !== 'undefined'
@@ -551,7 +551,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const next = options?.next === false ? null : options?.next || nextPath
 
     // Full navigation avoids an extra React pass where the dashboard shows a skeleton while
-    // `router.push` runs — the main cause of “logout just keeps loading”.
+    // `router.push` runs - the main cause of “logout just keeps loading”.
     if (typeof window !== 'undefined' && next) {
       window.location.replace(next)
       return

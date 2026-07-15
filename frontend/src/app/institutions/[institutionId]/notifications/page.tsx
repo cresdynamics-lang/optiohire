@@ -50,7 +50,7 @@ export default function NotificationsPage({ params }: { params: Promise<{ instit
             <div className="tl-icon" style={{ background: 'var(--sky-pale)', color: 'var(--sky)' }}>✉</div>
             <div className="tl-body">
               <div className="t">Weekly Placement Digest Sent</div>
-              <div className="d">Delivered to careers@strathmore.edu — 14 new placements this week.</div>
+              <div className="d">Delivered to careers@strathmore.edu - 14 new placements this week.</div>
               <div className="time">3 days ago</div>
             </div>
           </div>

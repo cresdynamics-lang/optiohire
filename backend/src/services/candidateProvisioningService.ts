@@ -10,7 +10,7 @@ const SALT_ROUNDS = 10
  * 
  * Flow:
  * 1. Check if a user already exists with this email.
- * 2. If yes, return existing user info (no temp password — they already have one).
+ * 2. If yes, return existing user info (no temp password - they already have one).
  * 3. If no, create a new user with role='candidate', a random temp password,
  *    and return the credentials so the email can include them.
  */
@@ -44,7 +44,7 @@ export async function provisionCandidateAccount(data: {
     const temporaryPassword = crypto.randomBytes(4).toString('hex') // e.g. "a3f1b2c9"
     const passwordHash = await bcrypt.hash(temporaryPassword, SALT_ROUNDS)
 
-    // 3. Build insert query — check which columns exist
+    // 3. Build insert query - check which columns exist
     const { rows: colCheck } = await query(`
       SELECT column_name 
       FROM information_schema.columns 
@@ -114,7 +114,7 @@ export async function provisionCandidateAccount(data: {
       }
     } catch (profileErr) {
       logger.warn(`[CandidateProvisioning] Could not create candidate_profiles row:`, profileErr)
-      // Non-fatal — the user account was still created
+      // Non-fatal - the user account was still created
     }
 
     return {
@@ -124,7 +124,7 @@ export async function provisionCandidateAccount(data: {
     }
   } catch (err) {
     logger.error(`[CandidateProvisioning] Failed to provision candidate account for ${userEmail}:`, err)
-    // Don't throw — this is a non-critical enhancement. The application was already saved.
+    // Don't throw - this is a non-critical enhancement. The application was already saved.
     return {
       userId: '',
       isNewAccount: false,

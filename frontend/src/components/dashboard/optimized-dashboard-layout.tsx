@@ -44,7 +44,7 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
   }
 }
 
-// Shown only while auth is unknown (no token yet in client tree) — not a spinner
+// Shown only while auth is unknown (no token yet in client tree) - not a spinner
 const DashboardChromeSkeleton = () => (
   <div className="flex min-h-screen flex-col lg:flex-row">
     <div className="hidden h-screen w-[min(18rem,calc(100vw-1.5rem))] max-w-[18rem] shrink-0 animate-pulse border-r border-slate-200 bg-slate-100   lg:block" />
@@ -544,7 +544,7 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
   }, [])
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } = useNotifications()
-  /** Avoid firing duplicate client navigations on every paint — feels like the site is “constantly refreshing”. */
+  /** Avoid firing duplicate client navigations on every paint - feels like the site is “constantly refreshing”. */
   const redirectOnceRef = useRef<{ signIn?: boolean; admin?: boolean; companySetup?: boolean }>({})
 
   // STRICT: Check if user has company (except admin)
@@ -623,7 +623,7 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
     }
   }, [pathname, isJobSeeker])
 
-  // Optimized section rendering with lazy loading (no artificial preload gate — avoids double loading UX)
+  // Optimized section rendering with lazy loading (no artificial preload gate - avoids double loading UX)
   const renderSection = useCallback(() => {
     if (!user) {
       return <SectionLoader sectionName="dashboard" />
@@ -714,12 +714,12 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
     router.push(newPath)
   }, [router, isJobSeeker, pathname])
 
-  // No session: redirect runs in useEffect — avoid skeleton (reads as “stuck loading”) during client nav / sign-out
+  // No session: redirect runs in useEffect - avoid skeleton (reads as “stuck loading”) during client nav / sign-out
   if (!user) {
     return <div className="min-h-screen bg-slate-50 dark:bg-gray-950" aria-hidden />
   }
 
-  // Company setup redirect in flight — minimal pulse (effect calls router.replace)
+  // Company setup redirect in flight - minimal pulse (effect calls router.replace)
   if (user.role !== 'admin' && !isJobSeeker && user.hasCompany === false && !user.companyId) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-gray-950 [background-image:linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] dark:[background-image:none]">

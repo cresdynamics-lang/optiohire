@@ -249,18 +249,18 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                                             </div>
                                         </div>
                                     </td>
-                                    <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, verticalAlign: 'middle' }}>{c.department || '—'}</td>
+                                    <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, verticalAlign: 'middle' }}>{c.department || '-'}</td>
                                     <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', verticalAlign: 'middle' }}><StatusSeal status={c.row_status} /></td>
-                                    <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, color: '#3E5449', verticalAlign: 'middle' }}>{c.matched_to || '—'}</td>
+                                    <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, color: '#3E5449', verticalAlign: 'middle' }}>{c.matched_to || '-'}</td>
                                     <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, verticalAlign: 'middle' }}>
                                         {c.match_score ? (
                                             <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600, color: c.match_score >= 80 ? '#2A7A52' : c.match_score >= 65 ? '#B98A2E' : '#3E5449' }}>
                                                 {Math.round(c.match_score)}%
                                             </span>
-                                        ) : <span style={{ color: '#3E5449' }}>—</span>}
+                                        ) : <span style={{ color: '#3E5449' }}>-</span>}
                                     </td>
                                     <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 12, color: '#3E5449', verticalAlign: 'middle' }}>
-                                        {c.last_activity ? new Date(c.last_activity).toLocaleDateString() : c.row_status === 'invited' ? "Hasn't opened invite" : '—'}
+                                        {c.last_activity ? new Date(c.last_activity).toLocaleDateString() : c.row_status === 'invited' ? "Hasn't opened invite" : '-'}
                                     </td>
                                     <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', verticalAlign: 'middle' }}>
                                         <div style={{ display: 'flex', gap: 6 }}>
@@ -325,15 +325,15 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                 <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
                                     <span style={{ color: '#3E5449', fontWeight: 500 }}>Student ID</span>
-                                    <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>{selectedCandidate.student_id || '—'}</span>
+                                    <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>{selectedCandidate.student_id || '-'}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
                                     <span style={{ color: '#3E5449', fontWeight: 500 }}>Department</span>
-                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.department || '—'}</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.department || '-'}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
                                     <span style={{ color: '#3E5449', fontWeight: 500 }}>Phone</span>
-                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.phone || '—'}</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.phone || '-'}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
                                     <span style={{ color: '#3E5449', fontWeight: 500 }}>Funnel Status</span>
@@ -341,15 +341,15 @@ export default function RosterPage({ params }: { params: Promise<{ institutionId
                                 </div>
                                 <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
                                     <span style={{ color: '#3E5449', fontWeight: 500 }}>Matched Role</span>
-                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.matched_to || '—'}</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.matched_to || '-'}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
                                     <span style={{ color: '#3E5449', fontWeight: 500 }}>Match Score</span>
-                                    <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>{selectedCandidate.match_score ? `${Math.round(selectedCandidate.match_score)}%` : '—'}</span>
+                                    <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontWeight: 600 }}>{selectedCandidate.match_score ? `${Math.round(selectedCandidate.match_score)}%` : '-'}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyStyle: 'space-between', fontSize: 13, borderBottom: '1px solid #F3F5EF', paddingBottom: 6 }}>
                                     <span style={{ color: '#3E5449', fontWeight: 500 }}>Last Activity</span>
-                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.last_activity ? new Date(selectedCandidate.last_activity).toLocaleString() : '—'}</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCandidate.last_activity ? new Date(selectedCandidate.last_activity).toLocaleString() : '-'}</span>
                                 </div>
                             </div>
                         </div>

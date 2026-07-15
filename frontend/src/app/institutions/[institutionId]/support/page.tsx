@@ -130,7 +130,7 @@ export default function SupportPage({ params }: { params: Promise<{ institutionI
                         <div style={{ fontSize: 12, color: INST.inkSoft, marginTop: 2 }}>{t.message?.slice(0, 80)}</div>
                       </td>
                       <td style={td}><span style={statusBadge(t.status)}>{t.status}</span></td>
-                      <td style={td}>{t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}</td>
+                      <td style={td}>{t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

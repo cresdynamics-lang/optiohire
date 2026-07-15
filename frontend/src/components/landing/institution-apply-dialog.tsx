@@ -46,7 +46,7 @@ export function InstitutionApplyDialog({ children }: { children: ReactNode }) {
         const err = await res.json().catch(() => ({}))
         throw new Error(err?.message || 'Failed to submit application')
       }
-      toast.success("Application received — we'll reach out to onboard you shortly.")
+      toast.success("Application received - we'll reach out to onboard you shortly.")
       reset({ organizationType: 'enterprise' })
       setOpen(false)
     } catch (e) {

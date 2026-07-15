@@ -95,7 +95,7 @@ async function runMigrations() {
     console.log('\n✅ All migrations completed successfully!')
   } catch (error) {
     await client.query('ROLLBACK')
-    console.error('\n❌ Migration failed — rolled back:', error)
+    console.error('\n❌ Migration failed - rolled back:', error)
     process.exit(1)
   } finally {
     client.release()

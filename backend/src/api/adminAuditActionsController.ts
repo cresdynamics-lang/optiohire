@@ -5,7 +5,7 @@ import { logAdminAction } from '../utils/adminLogger.js'
 import { logger } from '../utils/logger.js'
 import { EmailService } from '../services/emailService.js'
 
-// Max applications per bulk-rescore request — keeps AI worker (concurrency 5)
+// Max applications per bulk-rescore request - keeps AI worker (concurrency 5)
 // and batch scoring service (concurrency 3) safe from rate-limit spikes.
 const BULK_RESCORE_CAP = 10
 // Stagger delay between queue insertions (ms)
@@ -63,7 +63,7 @@ export async function rescoreApplication(req: AuthRequest, res: Response) {
 
     const app = rows[0]
     if (!app.resume_url) {
-      return res.status(400).json({ error: 'Application has no resume — cannot rescore' })
+      return res.status(400).json({ error: 'Application has no resume - cannot rescore' })
     }
 
     // Mark as PENDING so the UI shows it's re-processing

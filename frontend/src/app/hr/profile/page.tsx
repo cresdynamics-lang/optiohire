@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-/** Legacy profile URL — HR settings now lives at /hr/settings */
+/** Legacy profile URL - HR settings now lives at /hr/settings */
 export default function HrProfileRedirectPage() {
   const router = useRouter()
   useEffect(() => {

@@ -276,7 +276,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
             <div className="step-eyebrow">Step 3 of 4</div>
             <h1 className="step-title">Cohort preferences</h1>
             <p className="step-desc">
-              Tell us what your graduates are looking for. These defaults apply to all cohorts you upload — you can override them per cohort later.
+              Tell us what your graduates are looking for. These defaults apply to all cohorts you upload - you can override them per cohort later.
             </p>
 
             <div className="form-section">
@@ -442,7 +442,7 @@ export default function OnboardPage({ params }: { params: Promise<{ token: strin
                   <div>
                     <strong>Upload your graduating cohort CSV</strong><br />
                     <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
-                      Go to Bulk Onboarding and drag in your student list — name, email, student ID, department.
+                      Go to Bulk Onboarding and drag in your student list - name, email, student ID, department.
                     </span>
                   </div>
                 </div>

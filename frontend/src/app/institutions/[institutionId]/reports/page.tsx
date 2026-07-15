@@ -59,7 +59,7 @@ export default function ReportsPage({ params }: { params: Promise<{ institutionI
       <p style={eyebrow}>Reports · Compliance</p>
       <h1 style={pageTitle}>Graduate activity reports</h1>
       <p style={pageSub}>
-        Download quarterly summaries for CUE, TVETA, or TVET-CDACC — filter by date, department, or cohort.
+        Download quarterly summaries for CUE, TVETA, or TVET-CDACC - filter by date, department, or cohort.
       </p>
 
       <div style={{ ...card, marginTop: 22, marginBottom: 16 }}>
@@ -83,7 +83,7 @@ export default function ReportsPage({ params }: { params: Promise<{ institutionI
         </div>
         {(from || to || dept) && (
           <p style={{ fontSize: 12, color: INST.inkSoft, marginTop: 10 }}>
-            Filters applied in export label only for now — summary reflects live platform data
+            Filters applied in export label only for now - summary reflects live platform data
             {dept ? ` · highlighting “${dept}”` : ''}.
           </p>
         )}
@@ -136,7 +136,7 @@ export default function ReportsPage({ params }: { params: Promise<{ institutionI
                   {(summary?.by_cohort || []).map((c: any) => (
                     <tr key={c.id}>
                       <td style={td}>{c.name}</td>
-                      <td style={td}>{c.programme || '—'}</td>
+                      <td style={td}>{c.programme || '-'}</td>
                       <td style={td}>{c.students}</td>
                       <td style={td}>{c.placed}</td>
                     </tr>

@@ -270,7 +270,7 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
             <div style={{ marginBottom: 26 }}>
                 <div style={{ fontSize: 11, letterSpacing: '.09em', textTransform: 'uppercase', color: '#B98A2E', fontWeight: 600, marginBottom: 4 }}>Bulk Onboarding</div>
                 <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: 26, fontWeight: 600, margin: 0, letterSpacing: '-0.01em' }}>Bring a new cohort into OptioHire</h1>
-                <p style={{ color: '#3E5449', fontSize: 13.5, marginTop: 4, maxWidth: 520 }}>Upload your student list once. Everyone gets an account, an email, and a place in the pipeline — automatically.</p>
+                <p style={{ color: '#3E5449', fontSize: 13.5, marginTop: 4, maxWidth: 520 }}>Upload your student list once. Everyone gets an account, an email, and a place in the pipeline - automatically.</p>
             </div>
 
             <div style={{ background: '#fff', border: '1px solid #DCE1D5', borderRadius: 10, boxShadow: '0 1px 2px rgba(21,42,34,0.06), 0 6px 20px rgba(21,42,34,0.06)' }}>
@@ -344,7 +344,7 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                 {step === 2 && (
                     <div style={{ padding: 20 }}>
                         <div style={{ marginBottom: 14, fontSize: 13, color: '#3E5449' }}>
-                            <strong>{filename}</strong> — {csvRows.length} rows detected. Match each column to an OptioHire field.
+                            <strong>{filename}</strong> - {csvRows.length} rows detected. Match each column to an OptioHire field.
                         </div>
                         {OPTIOHIRE_FIELDS.map(field => (
                             <div key={field.key} style={{ display: 'grid', gridTemplateColumns: '1fr 32px 1fr', gap: 10, alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #DCE1D5' }}>
@@ -354,7 +354,7 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                                 <div style={{ textAlign: 'center', color: '#3E5449' }}>→</div>
                                 <select value={mapping[field.key] || ''} onChange={e => setMapping(m => ({ ...m, [field.key]: e.target.value }))}
                                     style={{ width: '100%', border: '1px solid #DCE1D5', borderRadius: 6, padding: '7px 8px', fontSize: 12.5 }}>
-                                    <option value="">— skip —</option>
+                                    <option value="">- skip -</option>
                                     {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
                                 </select>
                             </div>
@@ -396,8 +396,8 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                                         {validated.valid.slice(0, 4).map((r, i) => (
                                             <tr key={i}>
                                                 <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>{r.candidate_name}</td>
-                                                <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>{r.student_id || '—'}</td>
-                                                <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>{r.department || '—'}</td>
+                                                <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13, fontFamily: 'IBM Plex Mono, monospace' }}>{r.student_id || '-'}</td>
+                                                <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>{r.department || '-'}</td>
                                                 <td style={{ padding: '12px 14px', borderBottom: '1px solid #DCE1D5', fontSize: 13 }}>{r.email}</td>
                                             </tr>
                                         ))}
@@ -412,7 +412,7 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
                             <button onClick={() => setStep(2)} style={{ border: '1px solid #DCE1D5', background: '#fff', padding: '9px 15px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Back</button>
                             <button onClick={() => setStep(4)} style={{ background: '#1F4D3D', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                                Looks good — continue
+                                Looks good - continue
                             </button>
                         </div>
                     </div>
@@ -443,7 +443,7 @@ export default function BulkOnboardingPage({ params }: { params: Promise<{ insti
                                 <div style={{ background: '#F3F5EF', border: '1px solid #DCE1D5', borderRadius: 10, padding: '16px 20px', maxWidth: 520, margin: '0 auto 20px' }}>
                                     <div style={{ marginBottom: 10 }}>
                                         <label style={{ fontSize: 12, fontWeight: 600, color: '#3E5449', display: 'block', marginBottom: 6 }}>Email subject line</label>
-                                        <input defaultValue={`Your ${localStorage.getItem('institution_data') ? JSON.parse(localStorage.getItem('institution_data') || '{}').name : 'University'} Career Profile is ready — activate on OptioHire`}
+                                        <input defaultValue={`Your ${localStorage.getItem('institution_data') ? JSON.parse(localStorage.getItem('institution_data') || '{}').name : 'University'} Career Profile is ready - activate on OptioHire`}
                                             style={{ width: '100%', border: '1px solid #DCE1D5', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', background: '#fff' }} />
                                     </div>
                                 </div>

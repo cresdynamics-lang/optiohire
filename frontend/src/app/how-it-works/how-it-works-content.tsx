@@ -106,14 +106,14 @@ const STEPS = [
     num: '02',
     icon: ScanLine,
     title: 'AI screening + fair ranking',
-    desc: 'Each application is analyzed against your job requirements and scored with transparent reasoning. Candidates are categorized — shortlist, flagged, or reject — using the same criteria every time.',
+    desc: 'Each application is analyzed against your job requirements and scored with transparent reasoning. Candidates are categorized - shortlist, flagged, or reject - using the same criteria every time.',
     bullets: ['Requirement-based scoring', 'Reasoning visible to HR', 'Consistent evaluation across all candidates'],
   },
   {
     num: '03',
     icon: CalendarClock,
     title: 'Updates + interview scheduling',
-    desc: 'OptioHire sends outcome emails automatically. HR schedules interviews for shortlisted candidates from the dashboard and sends invites with meeting links — all with a full decision trail.',
+    desc: 'OptioHire sends outcome emails automatically. HR schedules interviews for shortlisted candidates from the dashboard and sends invites with meeting links - all with a full decision trail.',
     bullets: ['Automated shortlist/rejection communication', 'One-click interview scheduling', 'Full decision trail for internal review'],
   },
 ]
@@ -167,7 +167,7 @@ export default function HowItWorksContent() {
               pipeline, get fair AI-assisted screening, and move shortlisted candidates to interviews faster.
             </p>
             <p className="mx-auto mt-3 max-w-2xl text-pretty text-base leading-relaxed text-slate-500 sm:mt-4">
-              Every step is transparent and traceable — so your team can explain hiring decisions with confidence
+              Every step is transparent and traceable - so your team can explain hiring decisions with confidence
               and maintain a professional candidate experience.
             </p>
           </Reveal>
@@ -344,7 +344,7 @@ export default function HowItWorksContent() {
               Ready to experience better hiring?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-lg text-slate-400">
-              Replace scattered hiring steps with one professional workflow your HR team can trust — from job post to
+              Replace scattered hiring steps with one professional workflow your HR team can trust - from job post to
               interview scheduling.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">

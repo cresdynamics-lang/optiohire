@@ -323,7 +323,7 @@ export default function JobsPage() {
             <span className="italic text-blue-300">Opportunity</span>
           </h1>
           <p className="mx-auto mb-10 max-w-xl text-lg text-blue-100">
-            Curated roles from leading companies. Apply directly — no middleman, no noise.
+            Curated roles from leading companies. Apply directly - no middleman, no noise.
           </p>
 
           {/* Search bar */}

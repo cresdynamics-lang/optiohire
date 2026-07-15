@@ -328,7 +328,7 @@ export function ReportsSection() {
               Reports & analytics
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base dark:text-gray-400">
-              Pipeline composition and hiring signals across your roles — refine faster with clearer numbers.
+              Pipeline composition and hiring signals across your roles - refine faster with clearer numbers.
             </p>
           </div>
           

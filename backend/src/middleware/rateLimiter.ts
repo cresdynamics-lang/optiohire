@@ -6,7 +6,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 /**
  * General API rate limiter
  * Production: 100 requests per 15 minutes per IP.
- * Development: much higher — Next.js HMR, prefetch, and dashboard polling burn through 100 quickly and cause 429 spam that feels like the app is “reloading” or breaking.
+ * Development: much higher - Next.js HMR, prefetch, and dashboard polling burn through 100 quickly and cause 429 spam that feels like the app is “reloading” or breaking.
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

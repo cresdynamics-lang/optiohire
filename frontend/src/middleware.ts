@@ -47,7 +47,7 @@ export function middleware(request: NextRequest) {
 
   
     if (!url.pathname.startsWith(internalPath)) {
-      // Institution portal has no root index page — send bare host to sign-in.
+      // Institution portal has no root index page - send bare host to sign-in.
       const suffix =
         (subdomain === 'institutions' || subdomain === 'institution') && url.pathname === '/'
           ? '/auth/signin'

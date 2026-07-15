@@ -57,7 +57,7 @@ export async function createInstitutionApplication(req: Request, res: Response) 
 
     const applicationId = result.rows?.[0]?.id
 
-    // Fire-and-forget notifications — never block the applicant on email delivery.
+    // Fire-and-forget notifications - never block the applicant on email delivery.
     const inbox = (process.env.SALES_RECEIVER_EMAIL || process.env.CONTACT_RECEIVER_EMAIL || process.env.APPLICATION_INBOX_EMAIL || process.env.IMAP_USER || 'jobs@optiohire.com')
       .toLowerCase()
       .trim()
@@ -67,10 +67,10 @@ export async function createInstitutionApplication(req: Request, res: Response) 
       type: escapeHtml(type),
       name: escapeHtml(String(contactName)),
       email: escapeHtml(String(contactEmail)),
-      phone: escapeHtml(contactPhone ? String(contactPhone) : '—'),
-      country: escapeHtml(country ? String(country) : '—'),
-      teamSize: escapeHtml(teamSize ? String(teamSize) : '—'),
-      message: escapeHtml(message ? String(message) : '—').replace(/\n/g, '<br/>'),
+      phone: escapeHtml(contactPhone ? String(contactPhone) : '-'),
+      country: escapeHtml(country ? String(country) : '-'),
+      teamSize: escapeHtml(teamSize ? String(teamSize) : '-'),
+      message: escapeHtml(message ? String(message) : '-').replace(/\n/g, '<br/>'),
     }
 
     try {
@@ -102,12 +102,12 @@ Organization: ${organizationName}
 Type: ${type}
 Contact: ${contactName}
 Email: ${contactEmail}
-Phone: ${contactPhone || '—'}
-Country: ${country || '—'}
-Team size: ${teamSize || '—'}
+Phone: ${contactPhone || '-'}
+Country: ${country || '-'}
+Team size: ${teamSize || '-'}
 
 Message:
-${message || '—'}
+${message || '-'}
 
 Application ID: ${applicationId || 'n/a'}`,
       })
@@ -120,19 +120,19 @@ Application ID: ${applicationId || 'n/a'}`,
         html: `
           <h2>Thanks, ${safe.name} 👋</h2>
           <p>We've received ${safe.org}'s request to get started with OptioHire.</p>
-          <p>Our team will reach out shortly to onboard you and coordinate next steps — including setup, a walkthrough, and tailoring the platform to your hiring workflow.</p>
+          <p>Our team will reach out shortly to onboard you and coordinate next steps - including setup, a walkthrough, and tailoring the platform to your hiring workflow.</p>
           <p>In the meantime, feel free to reply to this email with anything you'd like us to know.</p>
-          <p>— The OptioHire Team</p>
+          <p>- The OptioHire Team</p>
         `,
         text: `Thanks, ${contactName}.
 
 We've received ${organizationName}'s request to get started with OptioHire. Our team will reach out shortly to onboard you and coordinate next steps.
 
-— The OptioHire Team`,
+- The OptioHire Team`,
       })
     } catch (emailErr) {
       logger.error('Failed to send institution application emails', { error: (emailErr as Error)?.message })
-      // Application is already stored — don't fail the request over email.
+      // Application is already stored - don't fail the request over email.
     }
 
     return res.status(201).json({ message: 'Application received.', id: applicationId })

@@ -219,7 +219,7 @@ export default function VideoSection({
                       allowFullScreen
                       className="absolute top-0 left-0 w-full h-full"
                       loading="lazy"
-                      title="OptioHire — Interactive product walkthrough"
+                      title="OptioHire - Interactive product walkthrough"
                       style={{
                         border: 'none',
                       }}

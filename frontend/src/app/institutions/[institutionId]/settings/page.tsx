@@ -429,7 +429,7 @@ export default function SettingsPage({ params }: { params: Promise<{ institution
                 <button style={btnPrimary} onClick={() => { savePrefs({ reportSchedule }); setMsg('Report schedule saved.') }}>
                   Save schedule
                 </button>
-                <button style={btnGhost} onClick={() => setMsg('On-demand report requested — check Reports to export now.')}>
+                <button style={btnGhost} onClick={() => setMsg('On-demand report requested - check Reports to export now.')}>
                   Request on-demand report
                 </button>
               </div>
@@ -449,7 +449,7 @@ export default function SettingsPage({ params }: { params: Promise<{ institution
                 <li>Request a data audit via Support</li>
                 <li>Student data is used for matching, placement reporting, and partnership analytics only</li>
               </ul>
-              <button style={{ ...btnPrimary, marginTop: 8 }} onClick={() => setMsg('Data audit request noted — open Support to follow up with our team.')}>
+              <button style={{ ...btnPrimary, marginTop: 8 }} onClick={() => setMsg('Data audit request noted - open Support to follow up with our team.')}>
                 Request data audit
               </button>
             </div>

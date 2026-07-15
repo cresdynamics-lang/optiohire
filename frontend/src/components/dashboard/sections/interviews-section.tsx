@@ -196,7 +196,7 @@ export function InterviewsSection() {
             Interviews
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base dark:text-gray-400">
-            Upcoming conversations tied to your postings — stay aligned with candidates and hiring managers.
+            Upcoming conversations tied to your postings - stay aligned with candidates and hiring managers.
           </p>
         </div>
       </motion.div>

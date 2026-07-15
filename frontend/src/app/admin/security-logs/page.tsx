@@ -129,7 +129,7 @@ export default function SecurityLogsPage() {
             ) : logs.length === 0 ? (
               <div className="text-center py-12">
                 <ShieldCheck className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                <p className="text-muted-foreground">No scan logs found — all clear!</p>
+                <p className="text-muted-foreground">No scan logs found - all clear!</p>
               </div>
             ) : (
               <div className="space-y-3">

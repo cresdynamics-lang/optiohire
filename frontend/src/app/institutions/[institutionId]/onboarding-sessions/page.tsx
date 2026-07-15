@@ -97,10 +97,10 @@ export default function OnboardingSessionsPage({ params }: { params: Promise<{ i
                   )}
                   {sessions.map((s) => (
                     <tr key={s.id}>
-                      <td style={td}>{s.scheduled_at ? new Date(s.scheduled_at).toLocaleString() : '—'}</td>
-                      <td style={td}>{s.department || '—'}</td>
+                      <td style={td}>{s.scheduled_at ? new Date(s.scheduled_at).toLocaleString() : '-'}</td>
+                      <td style={td}>{s.department || '-'}</td>
                       <td style={td}>{s.onboarded_count ?? s.expected_count ?? 0}</td>
-                      <td style={td}>{s.facilitator || '—'}</td>
+                      <td style={td}>{s.facilitator || '-'}</td>
                       <td style={td}><span style={statusBadge(s.status || 'scheduled')}>{s.status || 'scheduled'}</span></td>
                     </tr>
                   ))}

@@ -34,7 +34,7 @@ export default function NotFound() {
 
         {/* Subtext */}
         <p className="text-slate-400 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
-          The page you're looking for doesn't exist or has been moved. But don't worry — great opportunities are just one click away.
+          The page you're looking for doesn't exist or has been moved. But don't worry - great opportunities are just one click away.
         </p>
 
         {/* CTA Buttons */}

@@ -240,7 +240,7 @@ function AdminDashboardContent() {
     if (usersLoadedRef.current && lastLoadKeyRef.current === loadKey) return
     lastLoadKeyRef.current = loadKey
     void loadUsers()
-    // Intentionally narrow deps: profile sync updates `user` object identity often — do not refetch on every enrichment.
+    // Intentionally narrow deps: profile sync updates `user` object identity often - do not refetch on every enrichment.
   }, [adminSession, user?.id, user?.role, roleFilter, loadUsers])
 
   const handleDeleteUser = async (userId: string) => {

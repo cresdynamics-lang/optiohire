@@ -121,7 +121,7 @@ function Hero() {
         <Reveal delay={0.1}>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-slate-400 sm:text-xl">
             OptioHire receives applications, screens CVs, scores candidates fairly, and hands your team
-            interview-ready shortlists — all on one transparent, end-to-end platform.
+            interview-ready shortlists - all on one transparent, end-to-end platform.
           </p>
         </Reveal>
         <Reveal delay={0.15}>
@@ -180,7 +180,7 @@ function Stats() {
 /* ---------- 3. The stakes ---------- */
 
 const STAKES = [
-  { stat: '300+', label: 'CVs per open role — too many to read fairly' },
+  { stat: '300+', label: 'CVs per open role - too many to read fairly' },
   { stat: '4 days', label: 'Manual shortlisting for a single position' },
   { stat: '75%', label: 'Candidates never hear back at all' },
   { stat: '<1%', label: 'Get any actionable feedback' },
@@ -193,7 +193,7 @@ function Stakes() {
         <Reveal className="mx-auto mb-12 max-w-3xl text-center">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c98d8d]">The stakes</p>
           <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">
-            Great hires are lost in the pile — every single week.
+            Great hires are lost in the pile - every single week.
           </h2>
           <p className="mt-4 text-lg text-slate-400">
             The volume of applications has outgrown the humans meant to review them. The cost is measured in
@@ -263,12 +263,12 @@ function WhyOldWayFails() {
 /* ---------- 5. Process chain ---------- */
 
 const STEPS = [
-  { icon: Inbox, title: 'Ingest', desc: 'Applications arrive by email or portal — captured automatically.' },
+  { icon: Inbox, title: 'Ingest', desc: 'Applications arrive by email or portal - captured automatically.' },
   { icon: ScanLine, title: 'Parse', desc: 'CVs are read and structured into clean, comparable data.' },
   { icon: Scale, title: 'Score', desc: 'Every candidate is evaluated against the same role criteria.' },
   { icon: ListChecks, title: 'Shortlist', desc: 'Interview-ready rankings with transparent reasoning.' },
   { icon: CalendarClock, title: 'Interview', desc: 'Schedule and message candidates from one place.' },
-  { icon: Trophy, title: 'Hire', desc: 'Decide with confidence — and a full audit trail.' },
+  { icon: Trophy, title: 'Hire', desc: 'Decide with confidence - and a full audit trail.' },
 ]
 
 function ProcessChain() {
@@ -277,7 +277,7 @@ function ProcessChain() {
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-14 max-w-3xl text-center">
           <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>The engine</p>
-          <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">One chain — from application to hire.</h2>
+          <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">One chain - from application to hire.</h2>
           <p className="mt-4 text-lg text-slate-400">
             Six steps that turn a flooded inbox into a fair, fast, defensible hiring decision.
           </p>
@@ -377,7 +377,7 @@ function EnterpriseInstitutions() {
                 Ready to scale hiring across your organization?
               </h2>
               <p className="mt-4 text-lg text-slate-400">
-                Apply now and our team will onboard you, coordinate setup, and take you through everything —
+                Apply now and our team will onboard you, coordinate setup, and take you through everything -
                 from a tailored walkthrough to going live with your teams and cohorts.
               </p>
               <div className="mt-8">
@@ -414,7 +414,7 @@ function EnterpriseInstitutions() {
 /* ---------- 9. Values ---------- */
 
 const VALUES = [
-  { letter: 'F', icon: Scale, title: 'Fairness', desc: 'Every candidate is judged on the same criteria — structure over gut feel.' },
+  { letter: 'F', icon: Scale, title: 'Fairness', desc: 'Every candidate is judged on the same criteria - structure over gut feel.' },
   { letter: 'S', icon: Zap, title: 'Speed', desc: 'Shortlists in hours, not weeks. Momentum wins the best people.' },
   { letter: 'T', icon: Eye, title: 'Transparency', desc: 'Clear reasoning and a full audit trail behind every decision.' },
 ]
@@ -482,7 +482,7 @@ function Testimonials() {
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto mb-12 max-w-3xl text-center">
           <p className={`text-xs font-bold uppercase tracking-[0.2em] ${ACCENT}`}>Real journeys</p>
-          <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">From stuck to hired — step by step.</h2>
+          <h2 className="mt-4 text-3xl font-bold text-white sm:text-5xl">From stuck to hired - step by step.</h2>
         </Reveal>
         <div className="grid gap-5 md:grid-cols-3">
           {TESTIMONIALS.map((t, i) => (
@@ -573,7 +573,7 @@ function FinalCta() {
             The future of hiring is being built right now.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-slate-400">
-            Screen smarter, decide fairer, and hire faster — all in one place.
+            Screen smarter, decide fairer, and hire faster - all in one place.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="gap-2 rounded-2xl bg-white px-8 py-6 text-base font-semibold text-slate-900 hover:bg-slate-200">

@@ -1,7 +1,7 @@
 -- ============================================================================
 -- OptiHire Supplemental Schema
 -- Talent Pool tables + support_tickets (the only truly missing tables)
--- Safe to run multiple times — IF NOT EXISTS throughout
+-- Safe to run multiple times - IF NOT EXISTS throughout
 -- ============================================================================
 
 -- TALENT POOL: add missing columns to existing table

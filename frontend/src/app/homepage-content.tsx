@@ -258,7 +258,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
             </h2>
             <p className="mt-4 text-lg text-slate-600">
               {role === 'hr'
-                ? 'OptioHire helps Kenyan teams cut through hundreds of applicants — fairly, fast, and with a clear audit trail your stakeholders can trust.'
+                ? 'OptioHire helps Kenyan teams cut through hundreds of applicants - fairly, fast, and with a clear audit trail your stakeholders can trust.'
                 : 'OptioHire helps ambitious professionals cut through the noise, stand out to top employers, and track their applications with full transparency.'}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -300,7 +300,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
               {role === 'hr' ? (
                 <>
                   <li>• Your inbox has 300 applications for one role</li>
-                  <li>• Shortlisting took your team 4 days — for one position</li>
+                  <li>• Shortlisting took your team 4 days - for one position</li>
                   <li>• A rejected candidate asks why they were not selected and you have no clear answer</li>
                   <li>• Different interviewers score differently and alignment is a nightmare</li>
                 </>
@@ -327,7 +327,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
               }`}
             >
               <span className="oh-typing inline-block">
-                OptioHire fixes this — with structure, not just software.
+                OptioHire fixes this - with structure, not just software.
               </span>
             </h4>
             <p className="mt-3 text-slate-600">
@@ -349,8 +349,8 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
               </p>
               <h2 className="headline-platform-dark mt-4 text-3xl sm:text-4xl md:text-5xl">
                 {role === 'hr' 
-                  ? 'From 300 applicants to 5 final interviews — in under 48 hours'
-                  : 'From browsing roles to your final interview — in one place'}
+                  ? 'From 300 applicants to 5 final interviews - in under 48 hours'
+                  : 'From browsing roles to your final interview - in one place'}
               </h2>
               <p className="mt-4 max-w-2xl text-slate-200">
                 {role === 'hr'
@@ -564,7 +564,7 @@ export default function HomePageContent({ role }: { role: 'hr' | 'candidate' }) 
                 Keep your candidate data protected and your hiring process explainable at every stage.
               </p>
               <p className="mt-2 text-sm text-slate-500">
-                Hosted with data residency standards — your candidate data stays protected, in line with Kenya&apos;s Data Protection Act 2019.
+                Hosted with data residency standards - your candidate data stays protected, in line with Kenya&apos;s Data Protection Act 2019.
               </p>
               <Button className="mt-6 rounded-2xl" onClick={() => router.push('/trust-security')}>
                 Learn About Security

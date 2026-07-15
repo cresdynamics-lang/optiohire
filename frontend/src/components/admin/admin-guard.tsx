@@ -77,7 +77,7 @@ export function AdminGuard({ children }: { children: ReactNode }) {
 
     const events: (keyof WindowEventMap)[] = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll']
     const onActivity = () => {
-      // Ignore activity while the warning is up — user must explicitly click Continue.
+      // Ignore activity while the warning is up - user must explicitly click Continue.
       if (!warnStart.current) lastActivity.current = Date.now()
     }
     events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }))

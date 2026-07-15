@@ -191,7 +191,7 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
                       ) : (
                         <>
                           <span className="text-white/80 text-[11px] font-bold uppercase tracking-widest">ASAP</span>
-                          <span className="text-white text-2xl font-bold leading-none mt-1.5">—</span>
+                          <span className="text-white text-2xl font-bold leading-none mt-1.5">-</span>
                         </>
                       )}
                     </div>
@@ -467,7 +467,7 @@ export default function JobDetailClient({ jobId }: { jobId: string }) {
                   Join our Elite Talent Pool
                 </h3>
                 <p className="mb-6 text-sm text-slate-600 leading-relaxed">
-                  OptioHire partners with top companies worldwide. Create a free candidate profile and let our AI do the heavy lifting. We'll instantly email you when the perfect role finds you—no hustling required.
+                  OptioHire partners with top companies worldwide. Create a free candidate profile and let our AI do the heavy lifting. We'll instantly email you when the perfect role finds you-no hustling required.
                 </p>
                 <Link
                   href="/candidate/auth/signup"

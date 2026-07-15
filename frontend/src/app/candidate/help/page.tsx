@@ -190,7 +190,7 @@ function CandidateHelpContent() {
             {error && <p className="text-sm text-red-600">{error}</p>}
             {status === 'success' && (
               <p className="text-sm text-emerald-700 flex items-center gap-1.5">
-                <CheckCircle className="h-4 w-4" /> Ticket submitted — our team will respond soon.
+                <CheckCircle className="h-4 w-4" /> Ticket submitted - our team will respond soon.
               </p>
             )}
             <Button

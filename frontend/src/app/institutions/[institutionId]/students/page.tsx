@@ -48,7 +48,7 @@ export default function StudentsPage({ params }: { params: Promise<{ institution
     <div style={pageWrap}>
       <p style={eyebrow}>Students</p>
       <h1 style={pageTitle}>Student roster</h1>
-      <p style={pageSub}>Every student from your institution on OptioHire — searchable and filterable.</p>
+      <p style={pageSub}>Every student from your institution on OptioHire - searchable and filterable.</p>
 
       <div style={{ ...card, marginTop: 22, marginBottom: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
@@ -105,10 +105,10 @@ export default function StudentsPage({ params }: { params: Promise<{ institution
               {students.map((s) => (
                 <tr key={s.id}>
                   <td style={td}>
-                    <div style={{ fontWeight: 600 }}>{s.candidate_name || '—'}</div>
+                    <div style={{ fontWeight: 600 }}>{s.candidate_name || '-'}</div>
                     <div style={{ fontSize: 12, color: INST.inkSoft }}>{s.email}</div>
                   </td>
-                  <td style={td}>{s.department || '—'}</td>
+                  <td style={td}>{s.department || '-'}</td>
                   <td style={td}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ flex: 1, height: 6, background: INST.line, borderRadius: 99, maxWidth: 80 }}>
@@ -122,7 +122,7 @@ export default function StudentsPage({ params }: { params: Promise<{ institution
                   </td>
                   <td style={td}>{s.matched_to ? 1 : 0}</td>
                   <td style={td}><span style={statusBadge(s.employment_status || s.row_status)}>{s.employment_status || s.row_status}</span></td>
-                  <td style={td}>{s.cohort_name || '—'}</td>
+                  <td style={td}>{s.cohort_name || '-'}</td>
                 </tr>
               ))}
             </tbody>

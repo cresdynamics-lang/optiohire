@@ -112,7 +112,7 @@ export default function AdminSupportTicketsPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Support & Demos</h1>
         <p className="text-muted-foreground">
-          Tickets from HR, candidates, and institutions — plus scheduled demos.
+          Tickets from HR, candidates, and institutions - plus scheduled demos.
         </p>
       </div>
 

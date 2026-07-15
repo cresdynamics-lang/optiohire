@@ -81,14 +81,14 @@ export const createSupportTicket = async (req: AuthRequest, res: Response) => {
       const emailService = new EmailService()
       await emailService.sendEmail({
         to: adminEmail,
-        subject: `[OptioHire Admin] New ${source} support ticket — ${ticketSubject}`,
+        subject: `[OptioHire Admin] New ${source} support ticket - ${ticketSubject}`,
         html: `
           <p><strong>${userEmail}</strong> (${source}) submitted a support ticket.</p>
           <p><strong>Subject:</strong> ${ticketSubject}</p>
           <p style="white-space:pre-wrap">${String(message).trim()}</p>
           <p>Open <strong>Admin → Support Tickets</strong> to respond.</p>
         `,
-        text: `${userEmail} (${source}) — ${ticketSubject}\n\n${String(message).trim()}`,
+        text: `${userEmail} (${source}) - ${ticketSubject}\n\n${String(message).trim()}`,
       })
     } catch (emailErr) {
       logger.warn('Support ticket admin alert email failed (ticket still saved)', { emailErr })

@@ -39,7 +39,7 @@ export class CertificateRepository {
     const tables = ['certificate_approvals', 'candidate_skills', 'candidate_profiles']
     for (const t of tables) {
       if (!(await tableExists(t))) {
-        console.warn(`[CertificateRepository] Table "${t}" not found — returning empty pending list`)
+        console.warn(`[CertificateRepository] Table "${t}" not found - returning empty pending list`)
         return []
       }
     }

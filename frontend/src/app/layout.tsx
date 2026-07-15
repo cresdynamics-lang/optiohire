@@ -118,7 +118,7 @@ export default function RootLayout({
         {/* Preconnect to external domains for faster resource loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Prefetch auth routes in production only — dev HMR + prefetch causes noisy RSC fetches that feel like endless reloads */}
+        {/* Prefetch auth routes in production only - dev HMR + prefetch causes noisy RSC fetches that feel like endless reloads */}
         {process.env.NODE_ENV === 'production' && (
           <>
             <link rel="prefetch" href="/auth/options?mode=signin" />

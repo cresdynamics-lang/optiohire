@@ -58,14 +58,14 @@ export async function fanOutInstitutionRequestToAdmin(opts: {
       const emailService = new EmailService()
       await emailService.sendEmail({
         to: adminEmail,
-        subject: `[OptioHire Admin] New institution ${opts.requestType.replace('_', ' ')} — ${institutionName}`,
+        subject: `[OptioHire Admin] New institution ${opts.requestType.replace('_', ' ')} - ${institutionName}`,
         html: `
           <p><strong>${institutionName}</strong> submitted a new ${opts.requestType.replace('_', ' ')}.</p>
           <p><strong>Subject:</strong> ${opts.subject}</p>
           <p style="white-space:pre-wrap">${opts.message}</p>
           <p>Open the <strong>Admin → Institution Requests</strong> panel for live updates.</p>
         `,
-        text: `${institutionName} — ${opts.subject}\n\n${opts.message}`,
+        text: `${institutionName} - ${opts.subject}\n\n${opts.message}`,
       })
     } catch (emailErr) {
       logger.warn('Institution admin alert email failed (ticket still queued)', { emailErr })

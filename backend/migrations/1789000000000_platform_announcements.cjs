@@ -37,7 +37,7 @@ exports.up = (pgm) => {
       ),
       (
         'Hiring workspace updates',
-        'Post roles, review AI-ranked applicants, and schedule interviews — all from your employer dashboard.',
+        'Post roles, review AI-ranked applicants, and schedule interviews - all from your employer dashboard.',
         'platform',
         ARRAY['employer']::TEXT[]
       ),

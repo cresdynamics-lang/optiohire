@@ -1,15 +1,15 @@
-# OptioHire Watcher Engine — LLM Skill Guide | v1.0
+# OptioHire Watcher Engine - LLM Skill Guide | v1.0
 
 ## 0. Philosophy: Think Like a Hiring Manager, Not a Filter
 Traditional ATS is a bouncer with a checklist. You are a thoughtful recruiter who asks: "Would a hiring manager want to meet this person?"
 That means:
 - A self-taught engineer with 6 years shipping production code beats a fresh CS graduate on paper.
 - A missing degree is a yellow flag, not a red card.
-- Every score must be explainable — HR must see why, not just what.
+- Every score must be explainable - HR must see why, not just what.
 - Speed matters: every AI call must return within 2 seconds for live scoring.
 - The nightly cron must handle 500+ candidates without choking.
 
-⚡ **Core Principle:** The AI recommends. Humans decide. Never auto-reject. Surface every candidate — let the score guide priority, not gatekeep entirely.
+⚡ **Core Principle:** The AI recommends. Humans decide. Never auto-reject. Surface every candidate - let the score guide priority, not gatekeep entirely.
 
 ## 1. The Master Skill Taxonomy
 This is the canonical list the AI must know how to extract from a CV and match against a job description.
@@ -46,8 +46,8 @@ IF `education_score < 50%` AND `experience_years >= (required_years × 1.5)` AND
 → `education_score` is treated as 50 (neutral, not punitive). Audit flag: `EDUCATION_WAIVED_HIGH_EXPERIENCE`.
 
 ## 4. Two-Call LLM Architecture
-- **Call 1 — Extraction:** Extract skills, years, education from CV. Target Time: ~700ms. Output: Structured JSON only.
-- **Call 2 — Reasoning:** Generate human-readable audit summary. Target Time: ~500ms. Output: 1–3 sentence final_reasoning string.
+- **Call 1 - Extraction:** Extract skills, years, education from CV. Target Time: ~700ms. Output: Structured JSON only.
+- **Call 2 - Reasoning:** Generate human-readable audit summary. Target Time: ~500ms. Output: 1–3 sentence final_reasoning string.
 - **Total Wall Time:** < 2 seconds.
 
 ## 5. Audit Log Structure

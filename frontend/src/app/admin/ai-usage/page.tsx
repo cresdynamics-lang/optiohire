@@ -54,7 +54,7 @@ function formatTokens(n: number) {
 }
 
 function ChangeIndicator({ value }: { value: number }) {
-  if (value === 0) return <span className="text-xs text-muted-foreground">— No change</span>
+  if (value === 0) return <span className="text-xs text-muted-foreground">- No change</span>
   const isUp = value > 0
   return (
     <span className={`text-xs flex items-center gap-0.5 ${isUp ? 'text-emerald-500' : 'text-red-500'}`}>
@@ -280,7 +280,7 @@ export default function AiUsagePage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-xs font-mono text-muted-foreground tabular-nums">
-                        {log.speed ? `${log.speed.toFixed(1)} t/s` : '—'}
+                        {log.speed ? `${log.speed.toFixed(1)} t/s` : '-'}
                       </td>
                       <td className="px-6 py-4 font-medium text-foreground tabular-nums">
                         <span className="text-muted-foreground text-xs">{log.promptTokens.toLocaleString()} / {log.completionTokens.toLocaleString()}</span>
@@ -289,8 +289,8 @@ export default function AiUsagePage() {
                       </td>
                       <td className="px-6 py-4 font-medium text-foreground tabular-nums">${log.costEstimate.toFixed(4)}</td>
                       <td className="px-6 py-4">
-                        <div className="text-xs font-mono text-muted-foreground truncate max-w-[120px]">{log.sessionId || '—'}</div>
-                        <div className="text-xs text-muted-foreground truncate max-w-[120px] mt-1" title={log.userEmail}>{log.userEmail || '—'}</div>
+                        <div className="text-xs font-mono text-muted-foreground truncate max-w-[120px]">{log.sessionId || '-'}</div>
+                        <div className="text-xs text-muted-foreground truncate max-w-[120px] mt-1" title={log.userEmail}>{log.userEmail || '-'}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-muted-foreground text-sm">{timeAgo(log.createdAt)}</div>

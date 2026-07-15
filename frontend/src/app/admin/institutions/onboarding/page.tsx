@@ -25,7 +25,7 @@ const STATUS_CONFIG: Record<FormStatus, { label: string; icon: React.ReactNode; 
     bg: '#E4EEE7', color: '#1F4D3D',
   },
   opened: {
-    label: 'Opened — in progress',
+    label: 'Opened - in progress',
     icon: <Clock size={13} />,
     bg: '#F5EAD2', color: '#B98A2E',
   },
@@ -116,7 +116,7 @@ export default function AdminOnboardingFormsPage() {
   const notOpened = records.filter(r => r.status === 'not_opened').length;
 
   const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '—';
+    if (!dateStr) return '-';
     return format(new Date(dateStr), 'MMM d, yyyy · HH:mm');
   };
 
@@ -131,7 +131,7 @@ export default function AdminOnboardingFormsPage() {
             </h1>
           </div>
           <p style={{ fontSize: 13, color: '#3E5449', margin: 0 }}>
-            Track all institution onboarding invitations — who has opened, completed, or not yet responded.
+            Track all institution onboarding invitations - who has opened, completed, or not yet responded.
           </p>
         </div>
         <button 
@@ -150,7 +150,7 @@ export default function AdminOnboardingFormsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
         {[
           { label: 'Completed', value: completed, ...STATUS_CONFIG.completed },
-          { label: 'Opened — in progress', value: opened, ...STATUS_CONFIG.opened },
+          { label: 'Opened - in progress', value: opened, ...STATUS_CONFIG.opened },
           { label: 'Not opened', value: notOpened, ...STATUS_CONFIG.not_opened },
         ].map(s => (
           <div key={s.label} style={{ background: '#fff', border: '1px solid #DCE1D5', borderRadius: 10, padding: '16px 20px' }}>

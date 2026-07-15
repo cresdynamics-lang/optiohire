@@ -404,7 +404,7 @@ export async function updateUserCompany(req: AuthRequest, res: Response) {
   }
 }
 
-/** PATCH /api/user/profile — update HR personal profile (name) */
+/** PATCH /api/user/profile - update HR personal profile (name) */
 export async function updateUserProfile(req: AuthRequest, res: Response) {
   try {
     const userId = req.userId
@@ -434,7 +434,7 @@ export async function updateUserProfile(req: AuthRequest, res: Response) {
   }
 }
 
-/** POST /api/user/password — change password with current password check */
+/** POST /api/user/password - change password with current password check */
 export async function changeUserPassword(req: AuthRequest, res: Response) {
   try {
     const userId = req.userId

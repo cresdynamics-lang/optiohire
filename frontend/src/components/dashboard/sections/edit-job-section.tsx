@@ -460,7 +460,7 @@ export function EditJobSection() {
                     <Input
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
-                      placeholder="Add skills — type one or paste a comma-separated list"
+                      placeholder="Add skills - type one or paste a comma-separated list"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                       onPaste={handleSkillPaste}
                       className="h-11 border-slate-200"

@@ -33,7 +33,7 @@ export default function PlacementsPage({ params }: { params: Promise<{ instituti
       <p style={eyebrow}>Placements</p>
       <h1 style={pageTitle}>Confirmed placements</h1>
       <p style={pageSub}>
-        Students hired or interning through OptioHire — feeds TVETA and accreditation reporting.
+        Students hired or interning through OptioHire - feeds TVETA and accreditation reporting.
       </p>
 
       <div style={{ ...card, marginTop: 22 }}>
@@ -62,12 +62,12 @@ export default function PlacementsPage({ params }: { params: Promise<{ instituti
                 {placements.map((p) => (
                   <tr key={p.id}>
                     <td style={{ ...td, fontWeight: 600 }}>{p.student_name}</td>
-                    <td style={td}>{p.department || '—'}</td>
+                    <td style={td}>{p.department || '-'}</td>
                     <td style={td}>{p.employer}</td>
                     <td style={td}>{p.role}</td>
                     <td style={td}><span style={statusBadge(p.placement_type)}>{p.placement_type}</span></td>
                     <td style={td}>{p.source === 'application' ? 'Live hire' : 'Roster'}</td>
-                    <td style={td}>{p.placed_at ? new Date(p.placed_at).toLocaleDateString() : '—'}</td>
+                    <td style={td}>{p.placed_at ? new Date(p.placed_at).toLocaleDateString() : '-'}</td>
                   </tr>
                 ))}
               </tbody>

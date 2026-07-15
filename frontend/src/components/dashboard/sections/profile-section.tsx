@@ -721,7 +721,7 @@ export function ProfileSection() {
                           Email for applications & candidate contact
                         </p>
                         <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 break-all">
-                          {formData.hr_email || formData.company_email || '—'}
+                          {formData.hr_email || formData.company_email || '-'}
                         </p>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           Applications and candidate replies use this address. It is shown in shortlist and rejection emails as the company contact.
@@ -751,7 +751,7 @@ export function ProfileSection() {
                       <div className="space-y-1">
                         <p className="text-xs uppercase text-muted-foreground">Hiring manager email</p>
                         <p className="text-sm font-medium text-foreground break-all">
-                          {user?.hiringManagerEmail || '—'}
+                          {user?.hiringManagerEmail || '-'}
                         </p>
                       </div>
                       <div className="space-y-1">
@@ -759,7 +759,7 @@ export function ProfileSection() {
                         <p className="text-sm font-medium text-foreground break-all">
                           {formData.website_url ? (
                             <a href={formData.website_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{formData.website_url}</a>
-                          ) : '—'}
+                          ) : '-'}
                         </p>
                       </div>
                       <div className="space-y-1">
@@ -767,7 +767,7 @@ export function ProfileSection() {
                         <p className="text-sm font-medium text-foreground break-all">
                           {formData.linkedin_url ? (
                             <a href={formData.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{formData.linkedin_url}</a>
-                          ) : '—'}
+                          ) : '-'}
                         </p>
                       </div>
                       <div className="space-y-1">
@@ -775,7 +775,7 @@ export function ProfileSection() {
                         <p className="text-sm font-medium text-foreground break-all">
                           {formData.twitter_url ? (
                             <a href={formData.twitter_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{formData.twitter_url}</a>
-                          ) : '—'}
+                          ) : '-'}
                         </p>
                       </div>
                     </div>

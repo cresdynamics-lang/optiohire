@@ -256,7 +256,7 @@ export default function WhyOptioHirePage() {
           </h2>
           <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
             Join teams who've discovered that better hiring isn't about having more
-            data — it's about having the right insights.
+            data - it's about having the right insights.
           </p>
           <Link
             href="/auth/options?mode=signup"

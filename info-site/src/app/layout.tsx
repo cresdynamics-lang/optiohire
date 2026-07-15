@@ -24,7 +24,7 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OptioHire — The Smarter Way to Hire in Africa",
+  title: "OptioHire - The Smarter Way to Hire in Africa",
   description: "OptioHire eliminates manual CV screening with AI. Post jobs, receive applications, get ranked shortlists delivered to your inbox. Built for African HR teams.",
 };
 

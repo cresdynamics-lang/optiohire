@@ -243,7 +243,7 @@ export function JobSeekerProfileSection() {
       setTargetRoles(suggested.slice(0, formData.targetRoleCount || 3))
       setAiNote(data.aiNote || null)
       if (!suggested.length) {
-        setSaveMessage({ type: 'error', text: 'No role matches yet — add skills or search roles below.' })
+        setSaveMessage({ type: 'error', text: 'No role matches yet - add skills or search roles below.' })
       }
     } catch (error: any) {
       setSaveMessage({ type: 'error', text: error.message || 'AI suggestion failed' })
@@ -329,7 +329,7 @@ export function JobSeekerProfileSection() {
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl ">My profile</h1>
           <p className="mt-3 max-w-lg text-pretty text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            Manage how employers reach you. Set how many roles your skills support — search the catalog or let AI suggest fits.
+            Manage how employers reach you. Set how many roles your skills support - search the catalog or let AI suggest fits.
           </p>
         </div>
       </div>
@@ -581,7 +581,7 @@ export function JobSeekerProfileSection() {
             </p>
             <p className="mt-1 text-foreground">
               {selectedUniversityName || (
-                <span className="text-muted-foreground">Not set — tap Edit Profile to choose your university</span>
+                <span className="text-muted-foreground">Not set - tap Edit Profile to choose your university</span>
               )}
             </p>
           </div>
@@ -610,7 +610,7 @@ export function JobSeekerProfileSection() {
             </p>
             <p className="mt-1 flex items-center gap-2 text-foreground">
               <Mail className="h-4 w-4 shrink-0 text-slate-400" />
-              <span className="break-all">{user?.email || '—'}</span>
+              <span className="break-all">{user?.email || '-'}</span>
             </p>
           </div>
           <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center dark:border-gray-800">

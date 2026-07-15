@@ -126,7 +126,7 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
         )
         const recent_activity = activityRows.map((r) => {
             const name = r.candidate_name || 'Student'
-            const employer = (r.matched_to || '').split(/—|-/).map((s) => s.trim())[0] || 'an employer'
+            const employer = (r.matched_to || '').split(/-|-/).map((s) => s.trim())[0] || 'an employer'
             let message = `${name} updated status to ${r.row_status}`
             if (r.row_status === 'placed') message = `Student ${name} was placed at ${employer}`
             else if (r.row_status === 'interning') message = `Student ${name} started interning at ${employer}`
@@ -144,7 +144,7 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
             }
         })
 
-        // Employer engagement — week buckets last 30 days
+        // Employer engagement - week buckets last 30 days
         const { rows: engRows } = await query<{ week_start: string; engagements: string }>(
             `SELECT to_char(date_trunc('week', cc.last_activity), 'YYYY-MM-DD') AS week_start,
                     COUNT(*)::text AS engagements
@@ -216,7 +216,7 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
             [institutionId]
         )
         const top_employers = employerRows.map((r) => {
-            const parts = r.matched_to.split(/—|-/)
+            const parts = r.matched_to.split(/-|-/)
             return {
                 employer: parts[0]?.trim() || r.matched_to,
                 role_type: parts[1]?.trim() || 'General',
@@ -239,7 +239,7 @@ export async function getInstitutionDashboard(req: AuthRequest, res: Response) {
             )
             upcoming_onboarding = rows
         } catch {
-            // Table may not exist yet — fall back to recent uploads as sessions
+            // Table may not exist yet - fall back to recent uploads as sessions
             const { rows } = await query(
                 `SELECT cu.id, cu.created_at AS scheduled_at, cu.row_count AS expected_count,
                         cu.status, c.name AS department, cu.original_filename
@@ -902,8 +902,8 @@ async function sendCohortInviteEmail(
     <p>Your profile for the <strong>${institutionName}</strong> graduating cohort has been created on OptioHire.</p>
     <p>Activate your account to complete your profile, upload your CV, and start matching with top employers.</p>
     <div style="background-color: #FAFBF7; padding: 16px; border-radius: 6px; border: 1px solid #DCE1D5; margin: 20px 0;">
-      <div style="margin-bottom: 8px;"><strong>Student ID:</strong> ${studentId || '—'}</div>
-      <div><strong>Department:</strong> ${department || '—'}</div>
+      <div style="margin-bottom: 8px;"><strong>Student ID:</strong> ${studentId || '-'}</div>
+      <div><strong>Department:</strong> ${department || '-'}</div>
     </div>
     <div style="text-align: center; margin: 24px 0;">
       <a href="${activationUrl}" style="background-color: #B98A2E; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Activate Profile</a>
@@ -913,11 +913,11 @@ async function sendCohortInviteEmail(
   </div>
 </div>
     `
-    const text = `Hello ${candidateName},\n\nYour profile for the ${institutionName} graduating cohort has been created on OptioHire.\n\nActivate your account to complete your profile, upload your CV, and start matching with top employers.\n\nStudent ID: ${studentId || '—'}\nDepartment: ${department || '—'}\n\nActivate here: ${activationUrl}`
+    const text = `Hello ${candidateName},\n\nYour profile for the ${institutionName} graduating cohort has been created on OptioHire.\n\nActivate your account to complete your profile, upload your CV, and start matching with top employers.\n\nStudent ID: ${studentId || '-'}\nDepartment: ${department || '-'}\n\nActivate here: ${activationUrl}`
 
     await emailService.sendEmail({
         to: candidateEmail,
-        subject: `Your ${institutionName} Career Profile is ready — activate on OptioHire`,
+        subject: `Your ${institutionName} Career Profile is ready - activate on OptioHire`,
         html,
         text,
         emailType: 'onboarding_invite',
@@ -1327,7 +1327,7 @@ export async function listEmployerActivity(req: AuthRequest, res: Response) {
         )
 
         const activityFromRoster = rows.map((r: any) => {
-            const parts = String(r.matched_to || '').split(/—|-/)
+            const parts = String(r.matched_to || '').split(/-|-/)
             return {
                 id: r.id,
                 employer: parts[0]?.trim() || r.matched_to,
@@ -1423,7 +1423,7 @@ export async function listPlacements(req: AuthRequest, res: Response) {
         const fromRoster = rows
             .filter((r: any) => !seenEmails.has(String(r.email || '').toLowerCase()))
             .map((r: any) => {
-                const parts = String(r.matched_to || '').split(/—|-/)
+                const parts = String(r.matched_to || '').split(/-|-/)
                 return {
                     id: r.id,
                     student_name: r.candidate_name,
@@ -1539,7 +1539,7 @@ export async function requestOnboardingSession(req: AuthRequest, res: Response) 
                 userId: req.userId,
                 userEmail: req.userEmail,
                 requestType: 'onboarding_session',
-                subject: `Onboarding session — ${department || 'All departments'}`,
+                subject: `Onboarding session - ${department || 'All departments'}`,
                 message: [
                     `Preferred date: ${preferred_date}`,
                     `Expected students: ${Number(expected_count) || 0}`,
@@ -1576,7 +1576,7 @@ export async function requestOnboardingSession(req: AuthRequest, res: Response) 
                 userId: req.userId,
                 userEmail: req.userEmail,
                 requestType: 'onboarding_session',
-                subject: `Onboarding session — ${department || 'All departments'}`,
+                subject: `Onboarding session - ${department || 'All departments'}`,
                 message: [
                     `Preferred date: ${preferred_date}`,
                     `Expected students: ${Number(expected_count) || 0}`,

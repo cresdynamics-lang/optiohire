@@ -105,11 +105,11 @@ async function testSMTP() {
       </div>
     </div>
     <p style="font-size: 14px; color: #666;">Enter this code on the password reset page. This code will expire in 1 hour.</p>
-    <p style="font-size: 12px; color: #999;">This is a verification test — the code above is not valid. Real reset codes are sent when you use Forgot Password in the app.</p>
+    <p style="font-size: 12px; color: #999;">This is a verification test - the code above is not valid. Real reset codes are sent when you use Forgot Password in the app.</p>
     <p style="font-size: 12px; color: #999;">Best regards,<br>The OptioHire Team</p>
   </div>
 </body></html>`
-      const resetText = `Password Reset Code\n\nHello ${TEST_NAME},\n\nWe received a request to reset your password for your OptioHire account.\n\nYour password reset code is: ${dummyCode}\n\nEnter this code on the password reset page. This code will expire in 1 hour.\n\n(This is a verification test — the code above is not valid.)\n\nBest regards,\nThe OptioHire Team`
+      const resetText = `Password Reset Code\n\nHello ${TEST_NAME},\n\nWe received a request to reset your password for your OptioHire account.\n\nYour password reset code is: ${dummyCode}\n\nEnter this code on the password reset page. This code will expire in 1 hour.\n\n(This is a verification test - the code above is not valid.)\n\nBest regards,\nThe OptioHire Team`
       await transporter.sendMail({
         from: fromAddr,
         to: TEST_TO,
@@ -161,7 +161,7 @@ async function main() {
   console.log('')
   if (TEST_TO) {
     console.log('Test recipient:', TEST_TO)
-    console.log('Sent: (1) generic  (2) password-reset  (3) shortlist  (4) rejection — all use same pipeline as real emails to applicants.')
+    console.log('Sent: (1) generic  (2) password-reset  (3) shortlist  (4) rejection - all use same pipeline as real emails to applicants.')
   } else {
     console.log('Set NOTIFICATION_TEST_TO=your@email.com to send generic + password-reset test emails.')
   }

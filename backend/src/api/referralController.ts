@@ -64,7 +64,7 @@ async function ensureReferralCode(userId: string): Promise<string> {
       )
       if (again.rows[0]?.referral_code) return again.rows[0].referral_code
     } catch {
-      // unique collision — retry
+      // unique collision - retry
     }
   }
   throw new Error('Failed to allocate referral code')

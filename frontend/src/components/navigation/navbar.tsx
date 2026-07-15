@@ -16,7 +16,7 @@ const hrNavigation = [
   { name: 'Security', href: '/security' },
 ]
 
-/** Marketing pages with full-bleed / dark heroes — navbar overlays until scroll */
+/** Marketing pages with full-bleed / dark heroes - navbar overlays until scroll */
 const OVERLAY_PATHS = ['/use-cases', '/how-it-works', '/about']
 
 export function Navbar() {

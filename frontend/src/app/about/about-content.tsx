@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 const BELIEFS = [
   {
     title: 'Skills over pedigree',
-    body: 'Credentials add context — they should not drown out what someone can do on the job.',
+    body: 'Credentials add context - they should not drown out what someone can do on the job.',
   },
   {
     title: 'Fairness is a process',
@@ -15,11 +15,11 @@ const BELIEFS = [
   },
   {
     title: 'Decisions you can explain',
-    body: 'Leave every panel able to say why someone advanced — not shrug at a black-box rank.',
+    body: 'Leave every panel able to say why someone advanced - not shrug at a black-box rank.',
   },
   {
     title: 'Built for Kenyan reality',
-    body: 'High volumes, multi-city teams, donor audits, lean HR — not Silicon Valley theatre.',
+    body: 'High volumes, multi-city teams, donor audits, lean HR - not Silicon Valley theatre.',
   },
 ]
 
@@ -27,7 +27,7 @@ const PILLARS = [
   {
     label: '01',
     title: 'Smart screening',
-    body: 'One pipeline. Role-fit ranking from skills and readiness — shortlists in hours, not weeks of CV triage.',
+    body: 'One pipeline. Role-fit ranking from skills and readiness - shortlists in hours, not weeks of CV triage.',
   },
   {
     label: '02',
@@ -57,7 +57,7 @@ const CANDIDATE_AUDIENCES = [
 export default function AboutContent() {
   return (
     <div className="min-h-screen bg-[#f4f5f8] text-[#12162a]">
-      {/* Instant hero — solid brand blue, no remote images */}
+      {/* Instant hero - solid brand blue, no remote images */}
       <section className="relative isolate overflow-hidden bg-[#2D2DDD]">
         <div
           className="pointer-events-none absolute inset-0 opacity-40"
@@ -87,7 +87,7 @@ export default function AboutContent() {
               Our story starts in Nairobi
             </h1>
             <p className="mt-4 max-w-md text-pretty text-sm leading-relaxed text-white/90 sm:text-base">
-              Skills-first hiring software so African teams can move past CV piles — and choose people who
+              Skills-first hiring software so African teams can move past CV piles - and choose people who
               can do the work.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
@@ -125,12 +125,12 @@ export default function AboutContent() {
               , a Nairobi company building practical AI for African organisations.
             </p>
             <p>
-              A role opens, hundreds apply, a small HR team skims CVs at night — then the best candidates
+              A role opens, hundreds apply, a small HR team skims CVs at night - then the best candidates
               vanish into the pile. We built OptioHire for high volume, fairness, and decisions that stand
               up to founders, boards, and donors.
             </p>
             <p className="font-medium text-[#12162a]">
-              Mission: hire on capability — fairly, quickly, and with confidence.
+              Mission: hire on capability - fairly, quickly, and with confidence.
             </p>
           </div>
         </div>
@@ -195,7 +195,7 @@ export default function AboutContent() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2D2DDD]">For HR</p>
             <h2 className="headline-platform mt-3 text-3xl">Hiring teams</h2>
             <p className="mt-2 text-sm text-[#12162a]/65">
-              Professional neumorphic surfaces — soft depth, clear hierarchy, built for all-day use.
+              Professional neumorphic surfaces - soft depth, clear hierarchy, built for all-day use.
             </p>
             <div className="mt-6 grid gap-4">
               {HR_AUDIENCES.map((a) => (
@@ -280,7 +280,7 @@ export default function AboutContent() {
         <div className="mx-auto max-w-2xl text-center about-reveal">
           <p className="headline-platform-dark text-3xl sm:text-4xl">Hire the next chapter with us</p>
           <p className="mx-auto mt-4 max-w-lg text-sm text-white/80 sm:text-base">
-            Walk the OptioHire workflow with your team — HR, campus, or candidate journeys.
+            Walk the OptioHire workflow with your team - HR, campus, or candidate journeys.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button

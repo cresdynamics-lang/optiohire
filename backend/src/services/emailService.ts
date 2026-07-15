@@ -965,7 +965,7 @@ ${hrEmail}`
   }
 
   /**
-   * FLAG band (51–79): candidate is not rejected or shortlisted yet — HR review in progress.
+   * FLAG band (51–79): candidate is not rejected or shortlisted yet - HR review in progress.
    */
   async sendFlagReviewEmail(data: {
     candidateEmail: string
@@ -1034,7 +1034,7 @@ Please change your password after your first login for security.
   <div class="container">
     <p>Dear ${candidateName},</p>
     <p>Thank you for applying for the <strong>${jobTitle}</strong> role at <strong>${companyName}</strong>.</p>
-    <p>Your CV has been received and assessed. Your profile is <strong>still under review</strong> by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.</p>
+    <p>Your CV has been received and assessed. Your profile is <strong>still under review</strong> by our hiring team. This is not a rejection - we may need a little more time to evaluate your fit against the role requirements.</p>
     <p>We will contact you again if we move forward with your application. If you have questions, please reach us at <a href="mailto:${hrEmail}">${hrEmail}</a>.</p>
     ${dashboardBlock}
     <p>Kind regards,<br>
@@ -1049,7 +1049,7 @@ Please change your password after your first login for security.
 
 Thank you for applying for the ${jobTitle} role - ${companyName}.
 
-Your CV has been received and assessed. Your profile is still under review by our hiring team. This is not a rejection — we may need a little more time to evaluate your fit against the role requirements.
+Your CV has been received and assessed. Your profile is still under review by our hiring team. This is not a rejection - we may need a little more time to evaluate your fit against the role requirements.
 
 We will contact you again if we move forward with your application. If you have questions, please reach us at ${hrEmail}.
 ${dashboardBlockText}
@@ -1236,7 +1236,7 @@ HireBit System
     const jobLocation = data.jobLocation || ''
     const employmentType = data.employmentType || ''
 
-    // Build meta items — only show non-empty ones
+    // Build meta items - only show non-empty ones
     const metaItems = [companyName, department, jobLocation, employmentType].filter(Boolean)
     const metaHtml = metaItems.map((item, i) =>
       i === 0
@@ -1321,7 +1321,7 @@ HireBit System
   <div class="body">
     <p class="greeting">
       Hi <strong>${hrName}</strong>,<br /><br />
-      Great news — your job posting has been successfully created on OptioHire.
+      Great news - your job posting has been successfully created on OptioHire.
       The system is now actively receiving and shortlisting applications on your behalf.
       Below is a summary of your posting and everything you need to start sourcing candidates.
     </p>
@@ -1340,7 +1340,7 @@ HireBit System
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
       </div>
       <p>
-        <strong>AI shortlisting is active.</strong> Every application — whether submitted through the OptioHire platform or via email — will be automatically scored and ranked based on your job requirements. You will see all candidates in your dashboard. Application deadline: <strong>${deadlineText}</strong>.
+        <strong>AI shortlisting is active.</strong> Every application - whether submitted through the OptioHire platform or via email - will be automatically scored and ranked based on your job requirements. You will see all candidates in your dashboard. Application deadline: <strong>${deadlineText}</strong>.
       </p>
     </div>
     <div class="div-label">
@@ -1349,7 +1349,7 @@ HireBit System
       <hr />
     </div>
     <p class="share-intro">
-      Want to reach candidates outside the platform — through LinkedIn, WhatsApp groups, or your own network?
+      Want to reach candidates outside the platform - through LinkedIn, WhatsApp groups, or your own network?
       Copy and share the message below exactly as written. It includes all the instructions applicants need to apply correctly so the system can process their submissions automatically.
     </p>
     <div class="share-box">
@@ -1374,7 +1374,7 @@ HireBit System
         <p>We look forward to receiving your application!</p>
       </div>
     </div>
-    <p class="copy-hint">&#128274; The subject line above is unique to this job posting — it must not be changed.</p>
+    <p class="copy-hint">&#128274; The subject line above is unique to this job posting - it must not be changed.</p>
     <div class="cta-row">
       <div class="cta-text">
         <p>View your applications dashboard</p>
@@ -1427,11 +1427,11 @@ To apply, send an email to applicationsoptiohire@gmail.com or jobs@optiohire.com
 We look forward to receiving your application!
 ---
 
-The subject line above is unique to this posting — it must not be changed.
+The subject line above is unique to this posting - it must not be changed.
 
 View your dashboard: https://optiohire.com/dashboard
 
-OptioHire — AI-Powered Recruitment
+OptioHire - AI-Powered Recruitment
 optiohire.com`
 
     await this.sendEmail({
@@ -1757,7 +1757,7 @@ OptioHire on behalf of ${companyName}`
   <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
     <div style="background: #2D2DDD; padding: 28px 24px; text-align: center;">
       <h1 style="color: white; margin: 0; font-size: 22px;">✅ Interview Scheduled</h1>
-      <p style="color: #c7d2fe; margin: 6px 0 0 0; font-size: 14px;">OptioHire — Interview Confirmation</p>
+      <p style="color: #c7d2fe; margin: 6px 0 0 0; font-size: 14px;">OptioHire - Interview Confirmation</p>
     </div>
     <div style="padding: 28px;">
       <p style="margin: 0 0 20px 0;">Hi, an interview has been successfully scheduled via OptioHire. Here are the full details:</p>
@@ -1780,13 +1780,13 @@ OptioHire on behalf of ${companyName}`
       <p style="font-size: 13px; color: #6b7280; margin: 20px 0 0 0;">The candidate has been notified via email with the same details. No further action is required on your end unless you need to reschedule.</p>
     </div>
     <div style="background: #f8fafc; padding: 14px 28px; border-top: 1px solid #e2e8f0; text-align: center;">
-      <p style="margin: 0; font-size: 12px; color: #9ca3af;">OptioHire — AI-Powered Recruitment for ${companyName}</p>
+      <p style="margin: 0; font-size: 12px; color: #9ca3af;">OptioHire - AI-Powered Recruitment for ${companyName}</p>
     </div>
   </div>
 </body>
 </html>`
 
-    const text = `Interview Scheduled — OptioHire Confirmation
+    const text = `Interview Scheduled - OptioHire Confirmation
 
 Candidate: ${data.candidate.name}
 Email:     ${data.candidate.email}
@@ -1796,7 +1796,7 @@ Format:    ${isInPerson ? 'In-Person' : 'Online (Video Call)'}
 ${locationText}
 The candidate has been notified via email with the same details.
 
-OptioHire — AI-Powered Recruitment for ${companyName}`
+OptioHire - AI-Powered Recruitment for ${companyName}`
 
     await this.sendEmail({
       to: data.hr_email,
@@ -2287,7 +2287,7 @@ ${data.companyEmail}`
     } | null
   }): Promise<void> {
     const safeTitle = cleanJobTitle(opts.jobTitle)
-    const subject = `[OptioHire] AI screening update — ${safeTitle} at ${opts.companyName}`
+    const subject = `[OptioHire] AI screening update - ${safeTitle} at ${opts.companyName}`
 
     const rankTableRows = opts.rankedRows
       .map(
@@ -2295,7 +2295,7 @@ ${data.companyEmail}`
           `<tr><td style="padding:8px;border-bottom:1px solid #eee">${r.rank}</td>` +
           `<td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(r.name)}</td>` +
           `<td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(r.email)}</td>` +
-          `<td style="padding:8px;border-bottom:1px solid #eee">${r.score ?? '—'}</td>` +
+          `<td style="padding:8px;border-bottom:1px solid #eee">${r.score ?? '-'}</td>` +
           `<td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(r.status)}</td></tr>`
       )
       .join('')
@@ -2320,7 +2320,7 @@ ${data.companyEmail}`
   <h2 style="font-size:15px">How we pick the “best” candidate (same order as your dashboard)</h2>
   <ul style="font-size:14px;padding-left:20px">
     <li><strong>Shortlist</strong> (AI score typically 80–100): strongest fit to the job description and required skills.</li>
-    <li><strong>Flag</strong> (about 50–79): mixed signals — manual review recommended.</li>
+    <li><strong>Flag</strong> (about 50–79): mixed signals - manual review recommended.</li>
     <li><strong>Reject</strong> (below threshold): weaker fit for this posting.</li>
     <li>Among equal status, higher <strong>AI score</strong> ranks first; then earlier applications break ties.</li>
   </ul>
@@ -2348,19 +2348,19 @@ ${data.companyEmail}`
 </body></html>`
 
     const text = [
-      `OptioHire — AI screening digest`,
+      `OptioHire - AI screening digest`,
       `Job: ${safeTitle} @ ${opts.companyName}`,
       ``,
-      `Just analyzed: ${opts.latestCandidate.name} <${opts.latestCandidate.email}> — score ${opts.latestCandidate.score}, status ${opts.latestCandidate.status}`,
+      `Just analyzed: ${opts.latestCandidate.name} <${opts.latestCandidate.email}> - score ${opts.latestCandidate.score}, status ${opts.latestCandidate.status}`,
       opts.latestCandidate.reasoningPreview,
       ``,
       ...(opts.bestPick ? [
-        `Best pick: ${opts.bestPick.name} <${opts.bestPick.email}> — ${opts.bestPick.explanation}`,
+        `Best pick: ${opts.bestPick.name} <${opts.bestPick.email}> - ${opts.bestPick.explanation}`,
       ] : []),
       ``,
       `Pipeline (top ${opts.rankedRows.length}):`,
       ...opts.rankedRows.map(
-        (r) => `  ${r.rank}. ${r.name} <${r.email}> — ${r.score ?? '—'} — ${r.status}`
+        (r) => `  ${r.rank}. ${r.name} <${r.email}> - ${r.score ?? '-'} - ${r.status}`
       ),
       ``,
       opts.meetingLink ? `Meeting link: ${opts.meetingLink}` : 'No default meeting link on job.',
@@ -2592,7 +2592,7 @@ OptioHire Admin Team`
       ${data.rejectionReason}
     </div>
 
-    <p>Don't worry — you can <strong>appeal this decision</strong> or simply re-upload a clearer or updated certificate directly from your Candidate Dashboard.</p>
+    <p>Don't worry - you can <strong>appeal this decision</strong> or simply re-upload a clearer or updated certificate directly from your Candidate Dashboard.</p>
     
     <p>If you have any questions, feel free to reply to this email.</p>
     
@@ -2609,7 +2609,7 @@ We have reviewed your uploaded certificate for ${data.skillName}. Unfortunately,
 Reason for Rejection:
 ${data.rejectionReason}
 
-Don't worry — you can appeal this decision or simply re-upload a clearer or updated certificate directly from your Candidate Dashboard.
+Don't worry - you can appeal this decision or simply re-upload a clearer or updated certificate directly from your Candidate Dashboard.
 
 If you have any questions, feel free to reply to this email.
 

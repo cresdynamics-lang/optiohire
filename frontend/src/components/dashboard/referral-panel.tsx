@@ -89,7 +89,7 @@ export function ReferralPanel({ compact }: ReferralPanelProps) {
 
   const handleShare = async () => {
     if (!data) return
-    const text = `Join me on OptioHire — skills-first hiring. Use my link and I earn ${data.rewardPerReferral} coins when you sign up.`
+    const text = `Join me on OptioHire - skills-first hiring. Use my link and I earn ${data.rewardPerReferral} coins when you sign up.`
     try {
       if (navigator.share) {
         await navigator.share({ title: 'OptioHire', text, url: data.referralLink })

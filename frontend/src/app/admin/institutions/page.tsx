@@ -362,10 +362,10 @@ export default function AdminInstitutionsPage() {
                 </td>
                 <td style={{ padding: '14px 14px' }}><StatusBadge status={inst.status} /></td>
                 <td style={{ padding: '14px 14px', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: inst.candidatesInPool > 0 ? '#1F4D3D' : '#999' }}>
-                  {inst.candidatesInPool > 0 ? inst.candidatesInPool.toLocaleString() : '—'}
+                  {inst.candidatesInPool > 0 ? inst.candidatesInPool.toLocaleString() : '-'}
                 </td>
                 <td style={{ padding: '14px 14px', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: inst.cohortsCount > 0 ? '#152A22' : '#999' }}>
-                  {inst.cohortsCount > 0 ? inst.cohortsCount : '—'}
+                  {inst.cohortsCount > 0 ? inst.cohortsCount : '-'}
                 </td>
                 <td style={{ padding: '14px 14px', fontSize: 12.5, color: inst.onboardedAt ? '#152A22' : '#999' }}>
                   {inst.onboardedAt || 'Not yet'}

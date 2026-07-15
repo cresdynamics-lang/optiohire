@@ -28,7 +28,7 @@ export default function Home() {
               <span className="hl">OptioHire fixes it.</span>
             </h1>
             <p className="hero-sub">
-              Your inbox shouldn't be the battleground for 300 CVs. Let AI do the screening — you make the decisions.
+              Your inbox shouldn't be the battleground for 300 CVs. Let AI do the screening - you make the decisions.
             </p>
             <div className="hero-actions">
               <Link href="https://optiohire.com/auth/signup" className="btn btn-primary btn-xl">
@@ -80,7 +80,7 @@ export default function Home() {
               <div className="section-label">📌 The Problem</div>
               <h2 className="section-title">You shouldn't spend a week reading CVs</h2>
               <p className="section-sub">
-                The average African HR team receives 250+ applications per role. Without tools, that's 3–5 days of grinding — before a single interview is even booked.
+                The average African HR team receives 250+ applications per role. Without tools, that's 3–5 days of grinding - before a single interview is even booked.
               </p>
             </div>
           </div>
@@ -93,12 +93,12 @@ export default function Home() {
             <div className="problem-card">
               <div className="problem-number">4 days</div>
               <div className="problem-title">Lost to manual shortlisting</div>
-              <div className="problem-desc">Before OptioHire, teams reported spending 3 to 5 business days building a shortlist — time stolen from strategy, onboarding, and team culture work.</div>
+              <div className="problem-desc">Before OptioHire, teams reported spending 3 to 5 business days building a shortlist - time stolen from strategy, onboarding, and team culture work.</div>
             </div>
             <div className="problem-card">
               <div className="problem-number">0%</div>
               <div className="problem-title">Auditability in traditional hiring</div>
-              <div className="problem-desc">When a rejected candidate asks "Why wasn't I selected?" — most HR teams have no documented answer. That's a legal and reputational risk every time.</div>
+              <div className="problem-desc">When a rejected candidate asks "Why wasn't I selected?" - most HR teams have no documented answer. That's a legal and reputational risk every time.</div>
             </div>
             <div className="problem-card">
               <div className="problem-number">60%</div>
@@ -115,7 +115,7 @@ export default function Home() {
             <div style={{ maxWidth: 560 }}>
               <div className="section-label">⚡ The OptioHire Way</div>
               <h2 className="section-title">Post. Collect. Shortlist.<br />Interview. Hire.</h2>
-              <p className="section-sub">The entire hiring workflow — from posting to signed offer — lives in one place. The AI handles the volume. You handle the judgment.</p>
+              <p className="section-sub">The entire hiring workflow - from posting to signed offer - lives in one place. The AI handles the volume. You handle the judgment.</p>
             </div>
             <div className="flow-cards">
               <div className="flow-card">
@@ -130,7 +130,7 @@ export default function Home() {
                 <div className="flow-icon">📡</div>
                 <div className="flow-step">Step 02</div>
                 <div className="flow-title">Applications Come In</div>
-                <div className="flow-desc">Via web form, your unique link, or email — all three channels feed the same pipeline.</div>
+                <div className="flow-desc">Via web form, your unique link, or email - all three channels feed the same pipeline.</div>
               </div>
               <div className="flow-card">
                 <div className="flow-arrow">→</div>
@@ -143,7 +143,7 @@ export default function Home() {
                 <div className="flow-icon">📅</div>
                 <div className="flow-step">Step 04</div>
                 <div className="flow-title">You Hire</div>
-                <div className="flow-desc">Review the shortlist, send interview invites, and mark your hire — all in one dashboard.</div>
+                <div className="flow-desc">Review the shortlist, send interview invites, and mark your hire - all in one dashboard.</div>
               </div>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function Home() {
             </div>
             <div className="stat-item">
               <div className="stat-number">∞</div>
-              <div className="stat-label">Talent Pool — no application wasted</div>
+              <div className="stat-label">Talent Pool - no application wasted</div>
             </div>
           </div>
         </section>
@@ -188,7 +188,7 @@ export default function Home() {
               <Link href="/guide" className="feature-card">
                 <div className="feature-card-icon">📡</div>
                 <div className="feature-card-title">3-Channel Applications</div>
-                <div className="feature-card-desc">Web form, shareable link, or email CV — all three produce identical application records. Candidates apply the way that feels natural to them.</div>
+                <div className="feature-card-desc">Web form, shareable link, or email CV - all three produce identical application records. Candidates apply the way that feels natural to them.</div>
                 <div className="feature-card-link">Learn more →</div>
               </Link>
               <Link href="/guide" className="feature-card">

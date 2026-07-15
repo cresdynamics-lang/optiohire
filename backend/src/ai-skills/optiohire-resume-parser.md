@@ -6,7 +6,7 @@ description: >
   channels: web form upload, shareable link submission, and inbound email attachment.
   Triggers on any task involving `resumeParser.ts`, CV text extraction, PDF/DOCX parsing,
   candidate profile creation, or the phrase "parse resume", "extract skills", "process CV",
-  or "ingest application". Always use this skill before any scoring or matching step —
+  or "ingest application". Always use this skill before any scoring or matching step -
   parsing is the required first stage of the Watcher Engine pipeline.
 ---
 
@@ -29,7 +29,7 @@ tables. This is **Job 1** of the Watcher Engine three-job pipeline.
 
 ## Step-by-Step Implementation
 
-### Step 1 — Extract raw text from the uploaded file
+### Step 1 - Extract raw text from the uploaded file
 Before calling the LLM, extract plain text from the uploaded file:
 ```ts
 import pdfParse from 'pdf-parse';
@@ -37,7 +37,7 @@ import pdfParse from 'pdf-parse';
 ```
 If text extraction fails or returns < 100 characters, flag the application and skip the LLM call.
 
-### Step 2 — Build the OpenRouter prompt
+### Step 2 - Build the OpenRouter prompt
 Send the raw text to OpenRouter with this exact system + user prompt structure:
 
 ```ts
@@ -82,7 +82,7 @@ Parse this resume and return a JSON object with this exact structure:
       "graduation_year": number | null
     }
   ],
-  "confidence": number  // 0.0 to 1.0 — your confidence in the extraction accuracy
+  "confidence": number  // 0.0 to 1.0 - your confidence in the extraction accuracy
 }
 
 Resume text:
@@ -90,7 +90,7 @@ Resume text:
 `;
 ```
 
-### Step 3 — Call OpenRouter
+### Step 3 - Call OpenRouter
 ```ts
 const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
   method: 'POST',
@@ -106,7 +106,7 @@ const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    temperature: 0.1,  // Low temp — we want deterministic extraction, not creativity
+    temperature: 0.1,  // Low temp - we want deterministic extraction, not creativity
     max_tokens: 2000
   })
 });
@@ -115,7 +115,7 @@ const data = await response.json();
 const raw = data.choices[0].message.content;
 ```
 
-### Step 4 — Parse and validate the JSON response
+### Step 4 - Parse and validate the JSON response
 ```ts
 let parsed;
 try {
@@ -123,7 +123,7 @@ try {
   const clean = raw.replace(/\`\`\`json|\`\`\`/g, '').trim();
   parsed = JSON.parse(clean);
 } catch (err) {
-  // Parsing failed — flag for review, do not crash the job
+  // Parsing failed - flag for review, do not crash the job
   await markRequiresReview(applicationId, 'JSON parse failed from LLM response');
   return;
 }
@@ -131,11 +131,11 @@ try {
 // Confidence gate
 if (!parsed.confidence || parsed.confidence < 0.7) {
   await markRequiresReview(applicationId, \`Low confidence: \${parsed.confidence}\`);
-  // Still write what we have — partial profiles are better than nothing
+  // Still write what we have - partial profiles are better than nothing
 }
 ```
 
-### Step 5 — Write to database (PostgreSQL)
+### Step 5 - Write to database (PostgreSQL)
 ```ts
 import { query } from '../db/index.js';
 
@@ -161,7 +161,7 @@ for (const skill of parsed.skills) {
 }
 ```
 
-### Step 6 — Enqueue scoring
+### Step 6 - Enqueue scoring
 After writing the profile, generate an embedding if needed.
 Then immediately trigger the `match-job` scoring logic (Job 2).
 

@@ -2,7 +2,7 @@
 /**
  * skillTaxonomy.ts
  *
- * OptioHire — Master Skill Taxonomy (100 Professional Categories)
+ * OptioHire - Master Skill Taxonomy (100 Professional Categories)
  *
  * This file is intentionally NOT injected into the LLM prompt in full.
  * It lives in Node.js memory and is queried by the JIT Taxonomy Router
@@ -19,7 +19,7 @@
  *
  * UNIVERSAL_SOFT_SKILLS is a separate add-on layer, always available to
  * the router to optionally append regardless of which category(ies)
- * matched — it is NOT one of the 100 numbered categories.
+ * matched - it is NOT one of the 100 numbered categories.
  */
 
 export interface TaxonomyCategory {
@@ -1920,7 +1920,7 @@ export interface RoutedTaxonomyResult {
  *
  * Fast, local, pre-LLM router. Given a job title and a list of
  * required skill strings, returns the 2-4 most relevant taxonomy
- * categories (NOT the AI prompt itself — this never touches the
+ * categories (NOT the AI prompt itself - this never touches the
  * model). The caller (ai-scoring.ts) is responsible for serializing
  * the returned skills into a compact prompt fragment.
  *
@@ -1953,7 +1953,7 @@ export function getRelevantTaxonomyCategories(
     if (scores.size === 0) {
         // Fallback: no keyword hit at all. Give the AI a small, broadly
         // applicable set rather than nothing. We deliberately keep this
-        // tiny — it's a safety net, not a substitute for good keywords.
+        // tiny - it's a safety net, not a substitute for good keywords.
         const fallbackIds = [
             "operations_management_coo",
             "customer_support_ops",
@@ -1981,7 +1981,7 @@ export function getRelevantTaxonomyCategories(
  *
  * Converts the routed categories (+ optional universal soft-skills
  * layer) into a compact text block for injection into the AI prompt.
- * This is what keeps token usage low — only ~100-200 words instead
+ * This is what keeps token usage low - only ~100-200 words instead
  * of the full ~5,000-word taxonomy.
  *
  * @param categories          Output of getRelevantTaxonomyCategories().categories
@@ -2005,13 +2005,13 @@ export function serializeTaxonomyForPrompt(
 }
 
 /**
- * getCategoryById — convenience lookup, e.g. for admin UI / debugging.
+ * getCategoryById - convenience lookup, e.g. for admin UI / debugging.
  */
 export function getCategoryById(id: string): TaxonomyCategory | undefined {
     return SKILL_TAXONOMY.find((c) => c.id === id);
 }
 
 /**
- * Sanity export — lets you assert SKILL_TAXONOMY.length === 100 in tests.
+ * Sanity export - lets you assert SKILL_TAXONOMY.length === 100 in tests.
  */
 export const TAXONOMY_CATEGORY_COUNT = SKILL_TAXONOMY.length;

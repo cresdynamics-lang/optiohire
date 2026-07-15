@@ -34,7 +34,7 @@ export default function InstitutionSignInPage() {
             localStorage.setItem('institution_user', JSON.stringify(data.user))
             router.push(`/institutions/${data.institution.id}`)
         } catch {
-            setError('Network error — please try again')
+            setError('Network error - please try again')
         } finally {
             setLoading(false)
         }

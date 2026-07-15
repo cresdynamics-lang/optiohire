@@ -150,7 +150,7 @@ function HRPanel() {
         </button>
         {scheduled && (
           <p className="mt-1.5 text-center text-[11px] font-semibold text-[#15a36b]">
-            ✓ Confirmed — Thu 29 May, 10:00 AM
+            ✓ Confirmed - Thu 29 May, 10:00 AM
           </p>
         )}
       </div>

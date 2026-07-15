@@ -73,7 +73,7 @@ function jobTextOverlap(haystack: string, job: JobRequirements): number {
 
 /**
  * Heuristic screening when full AI pipeline is unavailable (e.g. cron batch).
- * Uses full parsed payload + fuzzy skills + job-text overlap — not only parsed.skills[].
+ * Uses full parsed payload + fuzzy skills + job-text overlap - not only parsed.skills[].
  */
 export async function scoreCandidate(
   parsed: ParsedResume,
@@ -116,7 +116,7 @@ export async function scoreCandidate(
     return m >= 0.35 && m < 0.85
   }).length
 
-  const reasoning = `Heuristic match: weighted skill coverage ${Math.round(skillCoverage * 100)}% vs ${required.length} listed skills (${strong} strong / ${partial} partial overlaps). Job-description keyword overlap: ${overlap}. ${thin ? 'Limited structured resume data — scores favor human review.' : ''}`
+  const reasoning = `Heuristic match: weighted skill coverage ${Math.round(skillCoverage * 100)}% vs ${required.length} listed skills (${strong} strong / ${partial} partial overlaps). Job-description keyword overlap: ${overlap}. ${thin ? 'Limited structured resume data - scores favor human review.' : ''}`
 
   return { score, status, reasoning }
 }

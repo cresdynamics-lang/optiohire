@@ -100,7 +100,7 @@ export default function AdminInstitutionRequestsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <GraduationCap className="h-6 w-6 text-blue-600" />
-            <h1 className="text-2xl font-bold tracking-tight">Institution requests — live</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Institution requests - live</h1>
             {live && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-600 border border-red-100">
                 <Radio className="h-3 w-3 animate-pulse" /> Live · 10s
