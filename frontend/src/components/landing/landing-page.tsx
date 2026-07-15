@@ -61,7 +61,7 @@ function Counter({
   value,
   prefix = '',
   suffix = '',
-  duration = 60,
+  duration = 20,
 }: {
   value: number
   prefix?: string
