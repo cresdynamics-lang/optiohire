@@ -10,7 +10,6 @@ const PRODUCT = [
   { label: 'Home', href: '/' },
   { label: 'How it works', href: '/how-it-works' },
   { label: 'Use cases', href: '/use-cases' },
-  { label: 'Refer a friend', href: '/refer' },
 ]
 
 const COMPANY = [
@@ -116,13 +115,6 @@ export function Footer() {
               Skills-first screening for Kenyan teams that need fair shortlists, clear scorecards,
               and decisions they can stand behind.
             </p>
-            <Link
-              href="/refer"
-              className="group inline-flex items-center gap-2 self-start font-[family-name:var(--font-display-italic)] text-xl italic text-white transition-colors hover:text-[#7dd3c0] lg:self-end"
-            >
-              Share with a friend
-              <ArrowUpRight className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-            </Link>
           </div>
         </div>
 

@@ -40,7 +40,8 @@ interface AuthContextType {
     company_email: string,
     hr_email: string,
     hiring_manager_email: string,
-    captchaToken?: string
+    captchaToken?: string,
+    referralCode?: string
   ) => Promise<{ error: null | { message: string }; needsEmailVerification?: boolean; email?: string }>
   signIn: (email: string, password: string) => Promise<{ error: null | { message: string } }>
   signOut: (options?: SignOutOptions) => Promise<void>
@@ -336,7 +337,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     company_email: string,
     hr_email: string,
     hiring_manager_email: string,
-    captchaToken?: string
+    captchaToken?: string,
+    referralCode?: string
   ) => {
     try {
       // Detect portal from current URL to decide which bridge endpoint to call
@@ -358,6 +360,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           : `${getBackendBaseUrl() || 'https://api.optiohire.com'}${portalPrefix}/auth/signup`
           
       const normalizedSignupRole = normalizeCompanyRole(company_role) || company_role
+      const storedRef =
+        referralCode ||
+        (typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search).get('ref') || localStorage.getItem('oh_referral_code') || undefined
+          : undefined)
       const resp = await fetch(signUpUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -370,10 +377,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           company_email, 
           hr_email,
           hiring_manager_email,
-          captchaToken
+          captchaToken,
+          ...(storedRef ? { referral_code: String(storedRef).trim().toUpperCase() } : {}),
         }),
         signal: AbortSignal.timeout(20000)
       })
+      if (storedRef && typeof window !== 'undefined' && resp.ok) {
+        localStorage.removeItem('oh_referral_code')
+      }
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) {
         return { error: { message: data?.error || data?.details || 'Sign up failed' } }

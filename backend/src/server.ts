@@ -33,6 +33,7 @@ import { router as institutionsRouter } from './routes/institutions.js'
 import { router as universitiesRouter } from './routes/universities.js'
 import { router as rolesRouter } from './routes/roles.js'
 import { router as announcementsRouter } from './routes/announcements.js'
+import { router as referralsRouter } from './routes/referrals.js'
 import { router as adminCertificatesRouter } from './routes/certificates.js'
 
 import { ensureStorageDir } from './utils/storage.js'
@@ -143,6 +144,7 @@ app.use('/api/institutions', institutionsRouter)
 app.use('/api/universities', universitiesRouter)
 app.use('/api/roles', rolesRouter)
 app.use('/api/announcements', announcementsRouter)
+app.use('/api/referrals', referralsRouter)
 app.use('/api/user', userRouter)
 
 app.use('/api/user/preferences', userPreferencesRouter)

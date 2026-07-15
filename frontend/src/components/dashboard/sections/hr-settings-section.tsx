@@ -16,6 +16,7 @@ import {
   EyeOff,
   Save,
   Trash2,
+  Gift,
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -25,12 +26,14 @@ import { Switch } from '@/components/ui/switch'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { useAuth } from '@/hooks/use-auth'
 import { TemplatesSection } from './templates-section'
+import { ReferralPanel } from '@/components/dashboard/referral-panel'
 
-type Tab = 'profile' | 'company' | 'notifications' | 'templates' | 'security'
+type Tab = 'profile' | 'company' | 'notifications' | 'templates' | 'security' | 'referrals'
 
 const TABS: { id: Tab; label: string; icon: typeof User }[] = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'company', label: 'Company', icon: Building2 },
+  { id: 'referrals', label: 'Referrals', icon: Gift },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'templates', label: 'Templates', icon: Mail },
   { id: 'security', label: 'Security', icon: Shield },
@@ -489,6 +492,18 @@ export function HrSettingsSection() {
                 </Button>
               </CardContent>
             </Card>
+          )}
+
+          {tab === 'referrals' && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Refer a friend</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Share your personal invite. When someone joins OptioHire with your link, you earn 5 coins.
+                </p>
+              </div>
+              <ReferralPanel />
+            </div>
           )}
 
           {tab === 'templates' && (

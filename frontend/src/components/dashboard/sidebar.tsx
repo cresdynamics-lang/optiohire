@@ -15,11 +15,13 @@ import {
   HelpCircle,
   LogOut,
   Trophy,
-  Megaphone
+  Megaphone,
+  Coins
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, usePathname } from 'next/navigation'
 import { SidebarAnnouncements } from './sidebar-announcements'
+import { useReferralStatus } from './referral-panel'
 
 const sidebarItems = [
   {
@@ -132,6 +134,7 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
   const { user, signOut } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const { data: referral } = useReferralStatus()
   
   useEffect(() => {
     setMounted(true)
@@ -258,6 +261,19 @@ export function Sidebar({ onSectionChange }: SidebarProps) {
             )
           })}
           </div>
+
+          <Link
+            href={isJobSeeker ? '/candidate/settings#referrals' : '/hr/settings?tab=referrals'}
+            className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-amber-200/80 bg-amber-50/80 px-3.5 py-2.5 text-left transition hover:bg-amber-50"
+          >
+            <span className="flex items-center gap-2 text-sm font-medium text-amber-950">
+              <Coins className="h-4 w-4 text-amber-600" aria-hidden />
+              Refer a friend
+            </span>
+            <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-amber-800 shadow-sm">
+              {referral?.coinBalance ?? 0} coins
+            </span>
+          </Link>
 
           <SidebarAnnouncements
             audience={isJobSeeker ? 'candidate' : 'employer'}

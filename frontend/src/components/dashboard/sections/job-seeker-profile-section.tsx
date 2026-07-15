@@ -26,6 +26,7 @@ import {
   X
 } from 'lucide-react'
 import { ImageUpload } from '@/components/ui/image-upload'
+import { ReferralPanel } from '@/components/dashboard/referral-panel'
 
 interface TargetRole {
   id: string
@@ -317,6 +318,9 @@ export function JobSeekerProfileSection() {
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-2xl space-y-8 px-1 pb-10 sm:px-0">
+      <div id="referrals" className="scroll-mt-24">
+        <ReferralPanel />
+      </div>
       <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-5 shadow-[0_30px_80px_-56px_rgba(15,23,42,0.45)] sm:p-8 dark:border-gray-800 dark:bg-gray-900">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/70 to-transparent dark:from-slate-800/50" aria-hidden />
         <div className="relative">

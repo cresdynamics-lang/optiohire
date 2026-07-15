@@ -14,6 +14,7 @@ import { Sidebar } from './sidebar'
 import { ChatbotWidget } from './chatbot-widget'
 import { ProfileCompletenessBanner } from '@/components/candidate/ProfileCompletenessBanner'
 import { ReturningCandidateWelcomeModal } from '@/components/candidate/ReturningCandidateWelcomeModal'
+import { ReferralInvitePopup } from '@/components/dashboard/referral-panel'
 
 // Simple Error Boundary component
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
@@ -965,6 +966,7 @@ function DashboardContent({ children }: { children?: React.ReactNode }) {
           }} 
         />
       )}
+      <ReferralInvitePopup />
     </div>
   )
 }

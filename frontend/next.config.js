@@ -69,7 +69,9 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/favicon.ico', destination: '/icon', permanent: false },
-      { source: '/demo', destination: '/refer', permanent: true },
+      { source: '/demo', destination: '/', permanent: true },
+      { source: '/refer', destination: '/', permanent: true },
+      { source: '/auth/demo', destination: '/', permanent: true },
     ]
   },
 
@@ -95,6 +97,8 @@ const nextConfig = {
       { source: '/api/roles/:path*', destination: `${backendUrl}/api/roles/:path*` },
       { source: '/api/announcements', destination: `${backendUrl}/api/announcements` },
       { source: '/api/announcements/:path*', destination: `${backendUrl}/api/announcements/:path*` },
+      { source: '/api/referrals', destination: `${backendUrl}/api/referrals` },
+      { source: '/api/referrals/:path*', destination: `${backendUrl}/api/referrals/:path*` },
       { source: '/api/templates/:path*', destination: `${backendUrl}/api/templates/:path*` },
       { source: '/api/contact', destination: `${backendUrl}/contact` },
       { source: '/api/institution-applications', destination: `${backendUrl}/institution-applications` },

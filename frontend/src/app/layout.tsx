@@ -10,6 +10,7 @@ import { ServiceWorker } from '@/components/service-worker'
 import { BottomCtaBanner } from '@/components/ui/bottom-cta-banner'
 import { CaptchaProvider } from '@/components/providers/captcha-provider'
 import { Toaster } from 'react-hot-toast'
+import { ReferralCodeCapture } from '@/components/dashboard/referral-panel'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -133,6 +134,7 @@ export default function RootLayout({
         <CookieProvider>
           <CaptchaProvider>
             <AuthProvider>
+              <ReferralCodeCapture />
               <ErrorBoundary>
                 <div className="min-h-screen bg-background">
                   <ConditionalLayout>{children}</ConditionalLayout>

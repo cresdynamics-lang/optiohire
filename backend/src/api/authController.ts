@@ -29,7 +29,8 @@ const SignupSchema = z.object({
   company_email: CleanEmail.optional(),
   hr_email: CleanEmail.optional(),
   hiring_manager_email: CleanEmail.optional(),
-  captchaToken: z.string()
+  captchaToken: z.string(),
+  referral_code: z.string().optional(),
 })
 
 const SigninSchema = z.object({
@@ -65,7 +66,7 @@ export async function signup(req: Request, res: Response) {
     return res.status(400).json({ error: 'Invalid input', details: result.error.format() })
   }
 
-  const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email, captchaToken } = result.data
+  const { name, email, password, company_role, company_name, company_email, hr_email, hiring_manager_email, captchaToken, referral_code } = result.data
   
   const isCandidate = ['candidate', 'jobseeker', 'job seeker', 'job-seeker', 'job_seeker'].includes(company_role)
   const isEmployerAlias = ['employer', 'company', 'recruiter'].includes(company_role)
@@ -140,6 +141,17 @@ export async function signup(req: Request, res: Response) {
     }
 
     await client.query('COMMIT')
+
+    try {
+      const { processReferralOnSignup } = await import('./referralController.js')
+      await processReferralOnSignup({
+        refereeUserId: userId,
+        referralCode: referral_code,
+        refereeAudience: isCandidate ? 'candidate' : 'employer',
+      })
+    } catch (refErr) {
+      console.error('Referral processing failed (non-fatal):', refErr)
+    }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const expires = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_HOURS * 3600000)

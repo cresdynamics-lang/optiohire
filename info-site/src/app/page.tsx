@@ -266,7 +266,7 @@ export default function Home() {
             <p className="cta-sub">Join the forward-thinking HR teams across Africa using OptioHire to find the best talent faster.</p>
             <div className="cta-actions">
               <Link href="https://optiohire.com/auth/signup" className="btn btn-primary btn-xl">Create Free Account</Link>
-              <Link href="https://optiohire.com/refer" className="btn btn-ghost btn-xl" style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#fff' }}>Share with a friend</Link>
+              <Link href="https://optiohire.com/auth/options?mode=signup" className="btn btn-ghost btn-xl" style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#fff' }}>Get started</Link>
             </div>
           </div>
         </section>
