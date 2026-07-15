@@ -76,7 +76,12 @@ export function ReturningCandidateWelcomeModal({
             const data = JSON.parse(xhr.responseText)
             if (data.success) {
               setUploadStatus('success')
-              toast.success('Upload successful. Your profile score is being updated in the background.')
+              const mapped = data.mapping
+              const detail =
+                mapped?.skills?.length
+                  ? ` Mapped ${mapped.skills.length} skills${mapped.roles?.length ? ` and ${mapped.roles.length} roles` : ''}.`
+                  : ''
+              toast.success((data.message || 'Profile updated.') + detail)
               setTimeout(() => {
                 if (onSuccess) onSuccess()
                 handleClose()
@@ -85,7 +90,7 @@ export function ReturningCandidateWelcomeModal({
               }, 2000)
             } else {
               setUploadStatus('idle')
-              toast.error(data.details || data.error || 'Failed to update profile')
+              toast.error(data.message || data.details || data.error || 'Failed to update profile')
             }
           } catch (e) {
             setUploadStatus('idle')
@@ -93,7 +98,12 @@ export function ReturningCandidateWelcomeModal({
           }
         } else {
           setUploadStatus('idle')
-          toast.error('Failed to update profile')
+          try {
+            const data = JSON.parse(xhr.responseText)
+            toast.error(data.message || data.error || 'Failed to update profile')
+          } catch {
+            toast.error('Failed to update profile')
+          }
         }
       }
 
@@ -138,10 +148,12 @@ export function ReturningCandidateWelcomeModal({
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-3">
-                <Label htmlFor="bio" className="text-sm font-semibold text-slate-700">What's new with you?</Label>
+                <Label htmlFor="bio" className="text-sm font-semibold text-slate-700">
+                  What&apos;s new with you? (or paste profile text if CV won&apos;t read)
+                </Label>
                 <Textarea
                   id="bio"
-                  placeholder="Describe any new skills you've acquired, projects you've completed, or experience gained..."
+                  placeholder="Describe your experience, skills, and summary. If your PDF is a scan and AI cannot read it, paste the details here so we can map your profile."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   className="resize-none min-h-[100px] text-base"
@@ -149,7 +161,7 @@ export function ReturningCandidateWelcomeModal({
               </div>
 
               <div className="space-y-3">
-                <Label className="text-sm font-semibold text-slate-700">Upload Proof (CV, Cover Letter, Certificates, Badges)</Label>
+                <Label className="text-sm font-semibold text-slate-700">Upload CV / resume (Word .docx preferred)</Label>
                 <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 hover:bg-slate-100 hover:border-indigo-300 transition-all">
                   <div className="flex flex-col items-center justify-center text-slate-500">
                     {getFileIcon()}
@@ -161,15 +173,15 @@ export function ReturningCandidateWelcomeModal({
                       )}
                     </p>
                     {!uploadFile && (
-                      <p className="text-xs text-slate-400 mt-2 text-center max-w-[250px]">
-                        Supports PDF, DOCX, PNG, JPG (Max 10MB). Audio and video formats are excluded.
+                      <p className="text-xs text-slate-400 mt-2 text-center max-w-[280px]">
+                        PDF or Word (.docx). If the PDF is image-only / unreadable, upload Word or paste your details above.
                       </p>
                     )}
                   </div>
                   <input
                     type="file"
                     className="hidden"
-                    accept="*/*"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
                       if (file) {

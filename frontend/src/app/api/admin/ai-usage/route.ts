@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'https://api.optiohire.com'
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://127.0.0.1:3001'
     const searchParams = request.nextUrl.searchParams.toString()
     const res = await fetch(`${backendUrl}/api/admin/ai-usage${searchParams ? `?${searchParams}` : ''}`, {
       headers: {

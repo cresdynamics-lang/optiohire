@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const backendUrl = (
       process.env.BACKEND_URL ||
       process.env.NEXT_PUBLIC_BACKEND_URL ||
-      'https://api.optiohire.com'
+      'http://127.0.0.1:3001'
     )
       .trim()
       .replace(/\/$/, '')
@@ -50,7 +50,7 @@ export async function DELETE(request: NextRequest) {
     const backendUrl = (
       process.env.BACKEND_URL ||
       process.env.NEXT_PUBLIC_BACKEND_URL ||
-      'https://api.optiohire.com'
+      'http://127.0.0.1:3001'
     )
       .trim()
       .replace(/\/$/, '')

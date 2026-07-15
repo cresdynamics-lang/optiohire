@@ -76,7 +76,10 @@ const nextConfig = {
   },
 
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'https://api.optiohire.com';
+    const backendUrl =
+      process.env.BACKEND_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      'http://127.0.0.1:3001'
 
     return [
       { source: '/api/upload/:path*', destination: `${backendUrl}/api/upload/:path*` },

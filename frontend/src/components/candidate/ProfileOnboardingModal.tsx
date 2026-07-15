@@ -105,7 +105,7 @@ export function ProfileOnboardingModal({
               }, 1000)
             } else {
               setUploadStatus('idle')
-              toast.error(data.error || 'Failed to update profile')
+              toast.error(data.message || data.error || 'Failed to update profile')
             }
           } catch (e) {
             setUploadStatus('idle')
@@ -113,7 +113,12 @@ export function ProfileOnboardingModal({
           }
         } else {
           setUploadStatus('idle')
-          toast.error('Failed to update profile')
+          try {
+            const data = JSON.parse(xhr.responseText)
+            toast.error(data.message || data.error || 'Failed to update profile')
+          } catch {
+            toast.error('Failed to update profile')
+          }
         }
       }
 
@@ -144,6 +149,7 @@ export function ProfileOnboardingModal({
         <input
           type="file"
           className="hidden"
+          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
           onChange={(e) => {
             const file = e.target.files?.[0]
             if (file) {
@@ -171,15 +177,18 @@ export function ProfileOnboardingModal({
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="bio" className="text-sm font-semibold text-slate-700">Professional Bio</Label>
+            <Label htmlFor="bio" className="text-sm font-semibold text-slate-700">Professional bio / profile text</Label>
             <Textarea
               id="bio"
-              placeholder="Tell recruiters a bit about yourself..."
+              placeholder="Paste your experience, skills, and summary here - especially if your PDF cannot be read."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               className="resize-none"
-              rows={3}
+              rows={4}
             />
+            <p className="text-xs text-slate-500">
+              AI maps this into your talent profile. Prefer Word (.docx) if your PDF is a scan.
+            </p>
           </div>
 
           <div className="space-y-2 relative">

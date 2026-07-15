@@ -7,6 +7,8 @@ import { saveAuditLog } from './auditLogger.js'
 
 type ParsedResume = {
   personal?: { name?: string; email?: string; phone?: string }
+  summary?: string
+  current_title?: string
   education?: Array<{ school?: string; degree?: string; year?: string }>
   experience?: Array<{ company?: string; role?: string; start?: string; end?: string; summary?: string }>
   skills?: string[]
@@ -55,7 +57,8 @@ export async function parseResumeText(text: string): Promise<ParsedResume> {
 
   // --- SECURITY LAYER 2: PROMPT SANDBOXING ---
   const rawSystemPrompt = `You are a resume parsing engine. Extract JSON with keys:
-personal{name,email,phone}, education[{school,degree,year}], experience[{company,role,start,end,summary}],
+personal{name,email,phone}, summary (2-4 sentence professional summary), current_title,
+education[{school,degree,year}], experience[{company,role,start,end,summary}],
 skills[string[]], links{github,linkedin,portfolio[string[]]}, awards[string[]], projects[{name,description,link}].
 Return ONLY strict JSON, no markdown formatting.`
   

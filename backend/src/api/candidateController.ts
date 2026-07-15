@@ -699,13 +699,13 @@ export const onboardProfile = async (req: Request, res: Response): Promise<void>
       console.warn('ensureCandidateFeatureTables error:', e)
     }
 
-    const { bio, jobCategory } = req.body
+    const { bio, jobCategory, profileText } = req.body
+    const narrativeText = String(profileText || bio || '').trim()
     
     let profile = await candidateRepo.getProfileByUserId(userId)
     if (!profile) {
       profile = await candidateRepo.createProfile(userId)
     }
-
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } || {}
     
@@ -720,31 +720,194 @@ export const onboardProfile = async (req: Request, res: Response): Promise<void>
       return fileUrl.startsWith('http') ? fileUrl : `${publicBaseUrl.replace(/\/$/, '')}/storage/${filename}`
     }
 
+    const cvFile = files['cv']?.[0]
+    let extractedCvText = ''
+    let cvReadable: boolean | null = null
+
+    if (cvFile) {
+      try {
+        const { CVParser } = await import('../lib/cv-parser.js')
+        const parser = new CVParser()
+        const mime = cvFile.mimetype || 'application/pdf'
+        const parsed = await parser.parseCVBuffer(cvFile.buffer, mime)
+        extractedCvText = String(parsed?.textContent || '').trim()
+        cvReadable = extractedCvText.length >= 80
+      } catch (extractErr: any) {
+        console.warn('CV text extraction failed:', extractErr?.message || extractErr)
+        cvReadable = false
+      }
+
+      const isPdf =
+        (cvFile.mimetype || '').includes('pdf') ||
+        path.extname(cvFile.originalname).toLowerCase() === '.pdf'
+
+      if (!cvReadable && isPdf && narrativeText.length < 80) {
+        res.status(422).json({
+          success: false,
+          error: 'unreadable_cv',
+          message:
+            'This PDF could not be read (it may be a scan or image-only file). Please upload a Word document (.docx), or paste your experience, skills, and summary in the text box so AI can map your profile.',
+        })
+        return
+      }
+
+      if (!cvReadable && !isPdf && narrativeText.length < 80) {
+        res.status(422).json({
+          success: false,
+          error: 'unreadable_cv',
+          message:
+            'We could not extract enough text from that file. Please upload a Word (.docx) CV, or paste your experience, skills, and summary in the text box.',
+        })
+        return
+      }
+    }
+
+    if (!cvFile && narrativeText.length < 40) {
+      res.status(400).json({
+        success: false,
+        error: 'Tell us about yourself in the text box, or upload a readable CV (Word preferred).',
+      })
+      return
+    }
+
     const cvUrl = await uploadSingleFile(files['cv'], 'cv')
     const coverLetterUrl = await uploadSingleFile(files['coverLetter'], 'cover_letters')
     const recommendationLetterUrl = await uploadSingleFile(files['recommendationLetter'], 'recommendations')
 
-    // Initial Scoring Logic
     let score = profile.total_score || 0
-    if (bio && !profile.bio) score += 10
+    if ((narrativeText || bio) && !profile.bio) score += 10
     if (jobCategory && !profile.job_category) score += 10
     if (cvUrl && !profile.cv_url) score += 30
     if (coverLetterUrl && !profile.cover_letter_url) score += 10
     if (recommendationLetterUrl && !profile.recommendation_letter_url) score += 10
 
+    let mappedSummary = narrativeText || undefined
+    let mappedCategory = jobCategory || undefined
+    let mappedSkills: string[] = []
+    let mappedRoles: Array<{ id: string; title: string; group?: string | null }> = []
+    let parsedCv: any = null
+
+    const sourceForAi = extractedCvText.length >= 80 ? extractedCvText : narrativeText
+    if (sourceForAi.length >= 40) {
+      try {
+        const { parseResumeText } = await import('../services/ai/resumeParser.js')
+        parsedCv = await parseResumeText(sourceForAi.slice(0, 28000))
+
+        const aiSummary = String(
+          (parsedCv as any)?.summary ||
+            (parsedCv as any)?.personal?.summary ||
+            ''
+        ).trim()
+        if (aiSummary) mappedSummary = aiSummary
+
+        const experience = Array.isArray(parsedCv?.experience) ? parsedCv.experience : []
+        const roleTitles = [
+          ...experience.map((e: any) => String(e?.role || e?.title || '').trim()).filter(Boolean),
+          String((parsedCv as any)?.current_title || '').trim(),
+        ].filter(Boolean)
+
+        if (!mappedCategory && roleTitles[0]) mappedCategory = roleTitles[0]
+
+        const rawSkills = Array.isArray(parsedCv?.skills) ? parsedCv.skills : []
+        mappedSkills = rawSkills
+          .map((s: any) => (typeof s === 'string' ? s : s?.skill_name || s?.name || ''))
+          .map((s: string) => s.trim())
+          .filter(Boolean)
+          .slice(0, 40)
+
+        // Match experience titles against job_roles catalog when available
+        try {
+          for (const title of [...new Set(roleTitles)].slice(0, 8)) {
+            const { rows } = await query<{ role_id: string; title: string; group_name: string | null }>(
+              `SELECT role_id, title, group_name
+               FROM job_roles
+               WHERE is_active = true AND (
+                 lower(title) = lower($1)
+                 OR lower(title) LIKE lower($2)
+               )
+               ORDER BY CASE WHEN lower(title) = lower($1) THEN 0 ELSE 1 END
+               LIMIT 1`,
+              [title, `%${title}%`]
+            )
+            if (rows[0]) {
+              mappedRoles.push({
+                id: rows[0].role_id,
+                title: rows[0].title,
+                group: rows[0].group_name,
+              })
+            } else {
+              mappedRoles.push({
+                id: `custom:${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`,
+                title,
+                group: null,
+              })
+            }
+          }
+          mappedRoles = mappedRoles.slice(0, 5)
+        } catch (roleErr) {
+          console.warn('Role mapping skipped:', roleErr)
+        }
+      } catch (aiErr) {
+        console.warn('AI resume mapping failed (non-fatal):', aiErr)
+      }
+    }
+
     const updatedProfile = await candidateRepo.updateProfileOnboarding(profile.profile_id, {
-      bio,
-      job_category: jobCategory,
+      bio: mappedSummary || narrativeText || bio || undefined,
+      job_category: mappedCategory || undefined,
       cv_url: cvUrl || undefined,
       cover_letter_url: coverLetterUrl || undefined,
-      recommendation_letter_url: recommendationLetterUrl || undefined
+      recommendation_letter_url: recommendationLetterUrl || undefined,
     })
 
-    await candidateRepo.setInitialAlternativeScore(profile.profile_id, score)
-    updatedProfile.total_score = score
+    // Persist skills on the talent profile
+    for (const skill of mappedSkills) {
+      try {
+        await candidateRepo.addSkill(profile.profile_id, skill, 55)
+        score += 2
+      } catch {
+        // ignore duplicates / transient errors
+      }
+    }
 
-    // Trigger AI background parsing and Talent Pool Sync
-    if (cvUrl || bio) {
+    // Persist experience + target roles in metadata + optional name fill
+    try {
+      const metaPatch: Record<string, any> = {
+        ...(typeof updatedProfile.metadata === 'object' && updatedProfile.metadata
+          ? (updatedProfile.metadata as any)
+          : {}),
+      }
+      if (parsedCv) metaPatch.parsed_cv = parsedCv
+      if (mappedRoles.length) {
+        metaPatch.target_roles = mappedRoles
+        metaPatch.target_role_count = Math.max(Number(metaPatch.target_role_count) || 0, mappedRoles.length)
+      }
+      if (extractedCvText) metaPatch.cv_text_excerpt = extractedCvText.slice(0, 4000)
+
+      await query(
+        `UPDATE candidate_profiles
+         SET metadata = COALESCE(metadata, '{}'::jsonb) || $2::jsonb,
+             updated_at = NOW()
+         WHERE profile_id = $1`,
+        [profile.profile_id, JSON.stringify(metaPatch)]
+      )
+
+      const aiName = String(parsedCv?.personal?.name || '').trim()
+      if (aiName) {
+        await query(
+          `UPDATE users SET name = COALESCE(NULLIF(name, ''), $2), updated_at = NOW() WHERE user_id = $1`,
+          [userId, aiName]
+        )
+      }
+    } catch (metaErr) {
+      console.warn('Failed to persist parsed CV metadata:', metaErr)
+    }
+
+    await candidateRepo.setInitialAlternativeScore(profile.profile_id, Math.min(score, 100))
+    updatedProfile.total_score = Math.min(score, 100)
+
+    // Still queue background talent-pool sync when we have a CV URL
+    if (cvUrl || mappedSummary) {
       try {
         const { rows: userRows } = await query('SELECT email, name FROM users WHERE user_id = $1', [userId])
         if (userRows.length > 0) {
@@ -753,38 +916,29 @@ export const onboardProfile = async (req: Request, res: Response): Promise<void>
             profileId: profile.profile_id, 
             userId, 
             cvUrl: cvUrl || profile.cv_url, 
-            bio: bio || profile.bio, 
-            jobCategory: jobCategory || profile.job_category,
+            bio: mappedSummary || profile.bio, 
+            jobCategory: mappedCategory || profile.job_category,
             email: userRows[0].email,
             name: userRows[0].name
           })
-
-          // Notify admins of new profile document upload
-          if (cvUrl || coverLetterUrl || recommendationLetterUrl) {
-            const { EmailService } = await import('../services/emailService.js')
-            const emailService = new EmailService()
-            const frontendUrl = process.env.FRONTEND_URL || 'https://optiohire.com'
-            const { rows: admins } = await query("SELECT email FROM users WHERE role = 'admin' AND is_active = true")
-            
-            for (const admin of admins) {
-              emailService.sendAdminUploadNotificationEmail({
-                adminEmail: admin.email,
-                candidateName: userRows[0].name || userRows[0].email.split('@')[0],
-                documentType: 'Profile Documents (CV/Cover Letter/Rec Letter)',
-                dashboardLink: `${frontendUrl}/admin/candidates`
-              }).catch(err => console.warn('Failed to send admin notification for profile upload', err))
-            }
-          }
         }
       } catch (err) {
-        console.warn('Failed to enqueue parse-candidate-profile job or notify admins', err)
+        console.warn('Failed to enqueue parse-candidate-profile job', err)
       }
     }
 
     res.status(200).json({
       success: true,
-      message: 'Profile onboarding completed successfully. Parsing is queued.',
-      profile: updatedProfile
+      message: mappedSkills.length
+        ? `Profile updated. Mapped ${mappedSkills.length} skills${mappedRoles.length ? ` and ${mappedRoles.length} roles` : ''} from your ${cvReadable === false ? 'description' : 'CV'}.`
+        : 'Profile onboarding completed successfully.',
+      profile: updatedProfile,
+      mapping: {
+        skills: mappedSkills,
+        roles: mappedRoles,
+        summary: mappedSummary || null,
+        cvReadable,
+      },
     })
   } catch (error: any) {
     console.error('Error onboarding profile:', error)

@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.optiohire.com'
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:3001'
     const { searchParams } = new URL(request.url)
     const queryString = searchParams.toString()
     

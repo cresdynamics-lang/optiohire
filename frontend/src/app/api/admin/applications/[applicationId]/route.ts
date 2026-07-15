@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const resolvedParams = await params
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'https://api.optiohire.com'
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://127.0.0.1:3001'
     const res = await fetch(`${backendUrl}/api/admin/applications/${resolvedParams.applicationId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
